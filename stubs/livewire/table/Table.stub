@@ -1,0 +1,55 @@
+<?php
+
+namespace [namespace];
+
+use Neura\Kit\Components\Atoms\Table as BaseTable;
+use Neura\Kit\Support\Table\Column;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder as QueryBuilder;
+
+class [class] extends BaseTable
+{
+    public $perPage = 10;
+
+    public function query(): Builder|QueryBuilder
+    {
+        // TODO: Return your query builder
+        // Example with Eloquent:
+        // return \App\Models\User::query();
+        
+        // Example with Query Builder:
+        // return \Illuminate\Support\Facades\DB::table('users');
+        
+        throw new \Exception('Please implement the query() method');
+    }
+
+    public function columns(): array
+    {
+        return [
+            Column::text('id', 'ID')
+                ->sortable()
+                ->width(80),
+            
+            Column::text('name', 'Name')
+                ->sortable()
+                ->searchable()
+                ->width(200),
+            
+            // Add more columns as needed
+        ];
+    }
+
+    public function actions(): array
+    {
+        return [
+            // Add action buttons here
+            // Example:
+            // view('neura::table.action', [
+            //     'label' => 'New Item',
+            //     'icon' => 'plus',
+            //     'wireClick' => 'create',
+            // ]),
+        ];
+    }
+}
+

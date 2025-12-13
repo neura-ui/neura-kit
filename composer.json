@@ -1,0 +1,67 @@
+{
+    "name": "neura/neura-kit",
+    "version": "1.0.0",
+    "authors": [
+        {
+            "name": "Neura",
+            "email": "support@neura.com"
+        }
+    ],
+    "homepage": "https://neura.com",
+    "support": {
+        "issues": "https://github.com/neura/neura-kit/issues",
+        "source": "https://github.com/neura/neura-kit"
+    },
+    "description": "A beautiful component library for Laravel applications",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "laravel",
+        "components",
+        "blade",
+        "ui",
+        "kit"
+    ],
+    "require": {
+        "php": "^8.2",
+        "illuminate/support": "^11.0|^12.0",
+        "illuminate/view": "^11.0|^12.0",
+        "livewire/livewire": "^3.0|^4.0",
+        "wireui/heroicons": "^2.0"
+    },
+    "suggest": {
+        "livewire/livewire": "^3.0|^4.0 Required for Livewire components (ModalManager, Table, ModalComponent)",
+        "wireui/heroicons": "^2.0 Required for icon components"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^9.0|^10.0",
+        "phpunit/phpunit": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Neura\\Kit\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Neura\\Kit\\NeuraKitServiceProvider"
+            ],
+            "aliases": {
+                "NeuraTable": "Neura\\Kit\\Support\\Table\\Column",
+                "NeuraToast": "Neura\\Kit\\Support\\Toasts\\Toast"
+            }
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Neura\\Kit\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
+
+
+
+

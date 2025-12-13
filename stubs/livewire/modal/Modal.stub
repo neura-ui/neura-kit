@@ -1,0 +1,15 @@
+<?php
+
+namespace [namespace];
+
+use Neura\Kit\Support\Modal\ModalComponent;
+use Illuminate\Contracts\View\View;
+
+class [class] extends ModalComponent
+{
+    public function render(): View
+    {
+        return view('[view]');
+    }
+}
+

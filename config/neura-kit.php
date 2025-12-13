@@ -1,0 +1,72 @@
+<?php
+
+use Neura\Kit\Enum\Packs;
+use Neura\Kit\NeuraKitConfig as Config;
+
+return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Component Prefix
+    |--------------------------------------------------------------------------
+    |
+    | This option controls the prefix for NeuraKit components.
+    | By default, components are accessed via x-neura:component-name
+    |
+    */
+
+    'component_prefix' => 'neura',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Global Styles
+    |--------------------------------------------------------------------------
+    |
+    | This option controls the global styles for NeuraKit components.
+    | These values will be used as defaults when 'global' is specified.
+    |
+    */
+
+    'style' => [
+        'shadow' => Packs\Shadow::SM,
+        'rounded' => Packs\Rounded::LG,
+        'color' => Packs\Color::PRIMARY,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Component Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configure defaults and packs for each component type.
+    | You can override default values and swap pack classes.
+    |
+    */
+
+    'button' => Config::button(),
+
+    'badge' => Config::badge(),
+
+    'alert' => Config::alert(),
+
+    'avatar' => Config::avatar(),
+
+    'input' => Config::input(),
+
+    'textarea' => Config::input(),
+
+    'select' => Config::input(),
+
+    'modal' => Config::modal(),
+
+    'card' => Config::card(),
+
+    'dropdown' => Config::dropdown(),
+
+    'checkbox' => Config::checkbox(),
+
+    'radio' => Config::radio(),
+
+    'toggle' => Config::toggle(),
+
+];

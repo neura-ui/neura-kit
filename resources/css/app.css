@@ -1,0 +1,25 @@
+@layer base {
+    [x-cloak] { display: none !important; }
+
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: rgb(212 212 212) transparent;
+    }
+    
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgb(212 212 212); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgb(163 163 163); }
+    
+    .dark * {
+        scrollbar-color: rgb(64 64 64) transparent;
+    }
+    
+    .dark ::-webkit-scrollbar-thumb { background: rgb(64 64 64); }
+    .dark ::-webkit-scrollbar-thumb:hover { background: rgb(82 82 82); }
+}
+
+@layer utilities {
+    .z-100 { z-index: 100; }
+    .z-9999 { z-index: 9999; }
+}
