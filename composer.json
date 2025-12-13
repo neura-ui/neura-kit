@@ -1,20 +1,15 @@
 {
-    "name": "neura/neura-kit",
-    "version": "1.0.0",
+    "name": "neura-ui/neura-kit",
     "authors": [
         {
-            "name": "Neura",
-            "email": "support@neura.com"
+            "name": "Neura UI",
+            "email": "support@neuraui.dev"
         }
     ],
-    "homepage": "https://neura.com",
-    "support": {
-        "issues": "https://github.com/neura/neura-kit/issues",
-        "source": "https://github.com/neura/neura-kit"
-    },
+    "homepage": "https://neuraui.dev",
     "description": "A beautiful component library for Laravel applications",
     "type": "library",
-    "license": "MIT",
+    "license": "proprietary",
     "keywords": [
         "laravel",
         "components",
@@ -57,9 +52,7 @@
         "psr-4": {
             "Neura\\Kit\\Tests\\": "tests/"
         }
-    },
-    "minimum-stability": "stable",
-    "prefer-stable": true
+    }
 }
 
 
