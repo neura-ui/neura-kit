@@ -4,28 +4,48 @@ use Neura\Kit\Services\License\LicenseService;
 use Neura\Kit\Support\PackResolver;
 
 if (!function_exists('neura_trans')) {
-    function neura_trans($key, $default = null) {
-        $locale = app()->getLocale();
-        $translationsPath = resource_path("lang/{$locale}.json");
+    function neura_trans($key, $replace = null, $default = null) {
+        static $translationsCache = [];
 
-        if (!file_exists($translationsPath)) {
-            $translationsPath = resource_path("lang/en.json");
+        $locale = app()->getLocale();
+
+        if (!isset($translationsCache[$locale])) {
+            $translationsCache[$locale] = neura_load_translations($locale);
         }
 
-        if (!file_exists($translationsPath)) {
-            $packagePath = __DIR__ . "/../resources/lang/{$locale}.json";
-            if (file_exists($packagePath)) {
-                $translationsPath = $packagePath;
-            } else {
-                $translationsPath = __DIR__ . "/../resources/lang/en.json";
+        $translation = $translationsCache[$locale][$key] ?? $default ?? $key;
+
+        if (is_array($replace)) {
+            foreach ($replace as $search => $value) {
+                $translation = str_replace('{' . $search . '}', $value, $translation);
+            }
+        } elseif (is_string($replace) && $default === null) {
+            return $translationsCache[$locale][$key] ?? $replace ?? $key;
+        }
+
+        return $translation;
+    }
+}
+
+if (!function_exists('neura_load_translations')) {
+    function neura_load_translations(string $locale): array {
+        $paths = [
+            resource_path("lang/{$locale}.json"),
+            resource_path("lang/en.json"),
+            __DIR__ . "/../resources/lang/{$locale}.json",
+            __DIR__ . "/../resources/lang/en.json",
+        ];
+
+        foreach ($paths as $path) {
+            if (file_exists($path)) {
+                $translations = json_decode(file_get_contents($path), true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($translations)) {
+                    return $translations;
+                }
             }
         }
 
-        $translations = file_exists($translationsPath)
-            ? json_decode(file_get_contents($translationsPath), true)
-            : [];
-
-        return $translations[$key] ?? $default ?? $key;
+        return [];
     }
 }
 

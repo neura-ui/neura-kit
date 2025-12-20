@@ -9,6 +9,9 @@ use Neura\Kit\Exceptions\LicenseException;
 
 final class LicenseService
 {
+    private ?bool $isActivatedCache = null;
+    private ?array $verifiedLicenseCache = null;
+
     public function __construct(
         private LicenseCache $cache,
         private LicenseValidator $validator,
@@ -17,35 +20,49 @@ final class LicenseService
 
     public function isActivated(): bool
     {
+        if ($this->isActivatedCache !== null) {
+            return $this->isActivatedCache;
+        }
+
         $license = $this->cache->get();
 
         if (!$license) {
+            $this->isActivatedCache = false;
             return false;
         }
 
         if (!$this->validator->verify($license)) {
+            $this->isActivatedCache = false;
             return false;
         }
 
         if ($this->validator->isExpired($license)) {
+            $this->isActivatedCache = false;
             return false;
         }
 
+        $this->verifiedLicenseCache = $license;
+        $this->isActivatedCache = true;
         return true;
     }
 
     public function getLicense(): ?array
     {
+        if ($this->verifiedLicenseCache !== null) {
+            return $this->verifiedLicenseCache;
+        }
+
+        if ($this->isActivatedCache === false) {
+            return null;
+        }
+
         $license = $this->cache->get();
 
-        if (!$license) {
+        if (!$license || !$this->validator->verify($license)) {
             return null;
         }
 
-        if (!$this->validator->verify($license)) {
-            return null;
-        }
-
+        $this->verifiedLicenseCache = $license;
         return $license;
     }
 
@@ -59,6 +76,8 @@ final class LicenseService
         }
 
         $this->cache->put($licenseData);
+        $this->verifiedLicenseCache = $licenseData;
+        $this->isActivatedCache = true;
 
         return $licenseData;
     }
@@ -127,6 +146,8 @@ final class LicenseService
     public function clearCache(): void
     {
         $this->cache->forget();
+        $this->verifiedLicenseCache = null;
+        $this->isActivatedCache = null;
     }
 
     private function buildActivationPayload(string $licenseKey): array

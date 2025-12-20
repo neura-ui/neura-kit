@@ -11,32 +11,36 @@ final class LicenseCache
 {
     private const LICENSE_CACHE_PATH = 'neura-kit/license.json';
 
+    private ?array $cachedLicense = null;
+    private bool $licenseLoaded = false;
+    private ?bool $hasDatabaseSupportCache = null;
+
     public function get(): ?array
     {
-        $fileLicense = $this->getFromFile();
-        $dbLicense = $this->getFromDatabase();
-
-        if ($fileLicense) {
-            return $fileLicense;
+        if ($this->licenseLoaded) {
+            return $this->cachedLicense;
         }
 
-        if ($dbLicense) {
-            return $dbLicense;
-        }
+        $this->cachedLicense = $this->getFromFile() ?? $this->getFromDatabase();
+        $this->licenseLoaded = true;
 
-        return null;
+        return $this->cachedLicense;
     }
 
     public function put(array $licenseData): void
     {
         $this->saveToDatabase($licenseData);
         $this->saveToFile($licenseData);
+        $this->cachedLicense = $licenseData;
+        $this->licenseLoaded = true;
     }
 
     public function forget(): void
     {
         $this->clearDatabase();
         $this->clearFile();
+        $this->cachedLicense = null;
+        $this->licenseLoaded = false;
     }
 
     private function getFromFile(): ?array
@@ -168,11 +172,17 @@ final class LicenseCache
 
     private function hasDatabaseSupport(): bool
     {
-        try {
-            return DB::getSchemaBuilder()->hasTable('neura_kit_licenses');
-        } catch (\Exception $e) {
-            return false;
+        if ($this->hasDatabaseSupportCache !== null) {
+            return $this->hasDatabaseSupportCache;
         }
+
+        try {
+            $this->hasDatabaseSupportCache = DB::getSchemaBuilder()->hasTable('neura_kit_licenses');
+        } catch (\Exception $e) {
+            $this->hasDatabaseSupportCache = false;
+        }
+
+        return $this->hasDatabaseSupportCache;
     }
 
     private function getProjectIdentifier(): string

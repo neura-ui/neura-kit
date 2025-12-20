@@ -15,6 +15,8 @@ use Neura\Kit\Services\License\LicenseValidator;
 
 class NeuraKitServiceProvider extends ServiceProvider
 {
+    private ?bool $licenseActivatedCache = null;
+
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/neura-kit.php', 'neura-kit');
@@ -165,10 +167,16 @@ class NeuraKitServiceProvider extends ServiceProvider
 
     protected function isLicenseActivated(): bool
     {
-        try {
-            return $this->app->make(LicenseService::class)->isActivated();
-        } catch (\Exception $e) {
-            return false;
+        if ($this->licenseActivatedCache !== null) {
+            return $this->licenseActivatedCache;
         }
+
+        try {
+            $this->licenseActivatedCache = $this->app->make(LicenseService::class)->isActivated();
+        } catch (\Exception $e) {
+            $this->licenseActivatedCache = false;
+        }
+
+        return $this->licenseActivatedCache;
     }
 }

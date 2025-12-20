@@ -68,5 +68,10 @@
     "allFiles": "Tous les fichiers",
     "max": "Max",
     "noCardsYet": "Aucune carte pour le moment.",
-    "fileExceedsMaxSize": "Le fichier {fileName} dépasse la taille maximale de {maxSize}MB"
+    "fileExceedsMaxSize": "Le fichier {fileName} dépasse la taille maximale de {maxSize}MB",
+    "rowSelected": "ligne sélectionnée",
+    "rowsSelected": "lignes sélectionnées",
+    "selectAllRows": "Sélectionner toutes les {count} lignes",
+    "allRowsSelected": "Toutes les {count} lignes sont sélectionnées",
+    "deselectAll": "Tout désélectionner"
 }

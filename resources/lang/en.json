@@ -68,6 +68,11 @@
     "allFiles": "All files",
     "max": "Max",
     "noCardsYet": "No cards yet.",
-    "fileExceedsMaxSize": "File {fileName} exceeds maximum size of {maxSize}MB"
+    "fileExceedsMaxSize": "File {fileName} exceeds maximum size of {maxSize}MB",
+    "rowSelected": "row selected",
+    "rowsSelected": "rows selected",
+    "selectAllRows": "Select all {count} rows",
+    "allRowsSelected": "All {count} rows are selected",
+    "deselectAll": "Deselect all"
 }
 
