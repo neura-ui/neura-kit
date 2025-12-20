@@ -5,7 +5,7 @@
     'url' => null,
     'wireClick' => null,
     'variant' => 'primary',
-    'size' => 'sm',
+    'size' => 'md',
 ])
 
 @php

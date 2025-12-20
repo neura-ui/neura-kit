@@ -100,14 +100,21 @@ class NeuraKitConfig
     {
         return self::mix([
             'default' => [
-                'max-width' => 'lg',
-                'rounded' => Rounded::LG->value,
+                'max-width' => 'xl',
                 'close-on-click-away' => true,
                 'close-on-escape' => true,
             ],
             'packs' => [
                 'rounders' => Packs\Rounded::class,
             ],
+            'component_defaults' => [
+                'modal_max_width' => 'xl',
+                'close_modal_on_click_away' => true,
+                'close_modal_on_escape' => true,
+                'close_modal_on_escape_is_forceful' => true,
+                'dispatch_close_event' => true,
+                'destroy_on_close' => true,
+            ]
         ], $options);
     }
 

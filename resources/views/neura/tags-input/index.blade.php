@@ -2,6 +2,7 @@
     'disabled' => false,
     'name' => $attributes->whereStartsWith('wire:model')->first() ?? $attributes->whereStartsWith('x-model')->first(),
     'placeholder' => neura_trans('addTags'),
+    'suffix' => null,
     'maxTags' => null,
     'minTagLength' => 1,
     'maxTagLength' => 50,
@@ -31,9 +32,37 @@
 ])
 
 @php
+    use Illuminate\View\ComponentSlot;
+    use Neura\Kit\Support\PackResolver;
+
+    $inputColors = PackResolver::inputColor('base');
+    $sizeClasses = PackResolver::inputSize($size ?? 'md');
+    $roundedClass = PackResolver::rounded($rounded ?? 'lg');
+
+    $invalid ??= $name && $errors->has($name);
+
     $inputClasses = [
-        'input relative w-full border-none outline-none py-1.5 px-2 text-base text-neutral-800 transition bg-transparent duration-75 placeholder:text-neutral-400 focus:ring-0 disabled:text-neutral-500 dark:text-white dark:placeholder:text-neutral-500'
+        'z-10',
+        'inline-block border w-full text-neutral-900 disabled:text-neutral-500 placeholder-neutral-400 disabled:placeholder-neutral-400/70 dark:text-neutral-100 dark:disabled:text-neutral-500 dark:placeholder-neutral-500 dark:disabled:placeholder-neutral-600',
+        'bg-white dark:bg-neutral-950 disabled:bg-neutral-50 dark:disabled:bg-neutral-900',
+        'disabled:cursor-not-allowed transition-colors duration-150',
+        'shadow-sm disabled:shadow-none',
+        'focus:ring-offset-0 focus:outline-none',
+        $roundedClass,
+        $inputColors['border'] => !$invalid,
+        $inputColors['focus'] => !$invalid,
+        $inputColors['invalid'] => $invalid,
+        $sizeClasses,
     ];
+
+    // Extract wire:model property name
+    $wireModel = null;
+    foreach ($attributes->getAttributes() as $key => $value) {
+        if (str_starts_with($key, 'wire:model')) {
+            $wireModel = $value;
+            break;
+        }
+    }
 @endphp
 
 <div
@@ -43,9 +72,11 @@
         newTag: '',
         focused: false,
         trimWhitespace: @js($trimWhitespace),
-
+        wireProperty: @js($wireModel),
+        isLiveWire: false,
         error: '',
         dragIndex: -1,
+        isSyncing: false, // Prevent sync loops
 
         splitKeys: @js($splitKeys),
 
@@ -77,21 +108,87 @@
             invalid: @js($invalidMessage),
             empty: @js($emptyMessage)
         },
-        init: function() {
 
+        init: function() {
+            // Check if using wire:model.live
+            if (this.wireProperty) {
+                // Check the actual attribute on the element
+                const wireModelAttr = Array.from(this.$root.attributes)
+                    .find(attr => attr.name.startsWith('wire:model'));
+                this.isLiveWire = wireModelAttr?.name.includes('.live') || false;
+            }
+
+            // Initialize state from Livewire/Alpine model
+            this.$nextTick(() => {
+                this.syncFromWire();
+            });
+
+            // Watch for changes from Livewire (Livewire -> Alpine)
+            if (this.wireProperty && this.$wire) {
+                this.$wire.$watch(this.wireProperty, (value) => {
+                    if (this.isSyncing) return; // Prevent loop
+
+                    this.isSyncing = true;
+                    this.state = Array.isArray(value) ? value : (value ? [value] : []);
+
+                    this.$nextTick(() => {
+                        this.isSyncing = false;
+                    });
+                });
+            }
+
+            // Watch state changes and sync back to Livewire/Alpine (Alpine -> Livewire)
             this.$watch('state', (value) => {
-               if (this.sortTags) {
-                    Alpine.nextTick(() => {
-                        this.state = [...value].sort((a, b) => {
-                            const result = a.localeCompare(b);
-                            return this.sortDirection === 'desc' ? -result : result;
+                if (this.isSyncing) return; // Prevent loop
+
+                // Apply sorting if enabled
+                if (this.sortTags) {
+                    const sorted = [...value].sort((a, b) => {
+                        const result = a.localeCompare(b);
+                        return this.sortDirection === 'desc' ? -result : result;
+                    });
+
+                    // Only update if actually different
+                    if (JSON.stringify(sorted) !== JSON.stringify(value)) {
+                        this.isSyncing = true;
+                        this.state = sorted;
+                        this.$nextTick(() => {
+                            this.isSyncing = false;
                         });
+                        return;
+                    }
+                }
+
+                // Sync to Alpine x-model
+                if (this.$root?._x_model) {
+                    this.$root._x_model.set(value);
+                }
+
+                // Sync to Livewire wire:model
+                if (this.wireProperty && this.$wire) {
+                    this.isSyncing = true;
+
+                    // Use $commit for .live modifier, set for regular
+                    if (this.isLiveWire) {
+                        this.$wire.$commit();
+                    }
+                    this.$wire.set(this.wireProperty, value);
+
+                    this.$nextTick(() => {
+                        this.isSyncing = false;
                     });
                 }
             });
-            Alpine.effect(()=> {
-                this.$root?._x_model?.set(this.state);
-            })
+        },
+
+        syncFromWire: function() {
+            if (this.wireProperty && this.$wire) {
+                const wireValue = this.$wire.get(this.wireProperty);
+                this.state = Array.isArray(wireValue) ? wireValue : (wireValue ? [wireValue] : []);
+            } else if (this.$root?._x_model) {
+                const modelValue = this.$root._x_model.get();
+                this.state = Array.isArray(modelValue) ? modelValue : (modelValue ? [modelValue] : []);
+            }
         },
 
         addTag: function(tag) {
@@ -114,7 +211,7 @@
                 return false;
             }
 
-            // check for duplication - FIXED: this.message -> this.messages
+            // check for duplication
             if (!this.allowDuplicates) {
                 const exists = this.state.some(t => t.toLowerCase() === tag.toLowerCase());
                 if (exists) {
@@ -129,11 +226,8 @@
                 return false;
             }
 
-            // add new tag and prevent any ui lags
-            Alpine.mutateDom(() => {
-                this.state.push(tag);
-            });
-
+            // add new tag - use immutable update for better reactivity
+            this.state = [...this.state, tag];
             this.newTag = '';
             this.clearError();
             return true;
@@ -165,17 +259,13 @@
                 index = this.state.findIndex(tag => tag === index);
             }
             if (index >= 0 && index < this.state.length) {
-                Alpine.mutateDom(() => {
-                    this.state.splice(index, 1);
-                });
+                this.state = this.state.filter((_, i) => i !== index);
                 this.clearError();
             }
         },
 
         clearAllTags: function() {
-             Alpine.mutateDom(() => {
-                this.state = [];
-            });
+            this.state = [];
             this.clearError();
         },
 
@@ -198,6 +288,7 @@
             this.showSuggestions = false;
             this.selectedSuggestionIndex = -1;
         },
+
         updateSuggestions: function() {
             const query = this.newTag.toLowerCase().trim();
 
@@ -242,15 +333,16 @@
                 this.deleteTag(this.state.length - 1);
             }
         },
+
         handlePaste: function(event) {
             if (!this.createOnPaste) return;
 
-            Alpine.nextTick(() => {
+            this.$nextTick(() => {
                 this.processSplitKeys(this.newTag);
             });
         },
-        handleInput: function(event) {
 
+        handleInput: function(event) {
             const inputValue = event.target.value;
             const lastChar = inputValue.slice(-1);
 
@@ -277,22 +369,24 @@
                 this.updateSuggestions();
             }
         },
+
         processSplitKeys: function(text) {
             const pattern = this.splitKeys
-                .map(key => key.replace(/[/\\\\^$*+?.()|[\\]{}]/g, '\\\\$&'))
+                .map(key => key.replace(/[/\\^$*+?.()|[\]{}]/g, '\\$&'))
                 .join('|');
 
-            const state = text.split(new RegExp(pattern, 'g'));
+            const tags = text.split(new RegExp(pattern, 'g'));
 
-            if (state.length > 1) {
+            if (tags.length > 1) {
                 this.newTag = '';
-                state.forEach(tag => {
+                tags.forEach(tag => {
                     if (tag.trim()) {
                         this.addTag(tag);
                     }
                 });
             }
         },
+
         hasMaxTags: function() {
             return this.maxTags && this.state.length >= this.maxTags;
         },
@@ -300,6 +394,7 @@
         isEmpty: function() {
             return this.state.length === 0;
         },
+
         tagCount: function() {
             return this.state.length;
         },
@@ -311,76 +406,66 @@
         onDrop: function(event, dropIndex){
             if(this.dragIndex === -1 || this.dragIndex === dropIndex) return;
 
-            Alpine.mutateDom(() => {
-                const updatedTags = [...this.state];
+            const updatedTags = [...this.state];
+            const [movedTag] = updatedTags.splice(this.dragIndex, 1);
+            updatedTags.splice(dropIndex, 0, movedTag);
 
-                // Remove the dragged item from its original position
-                const [movedTag] = updatedTags.splice(this.dragIndex, 1);
-
-                // insert the moved h tag exactly to the new state array
-                updatedTags.splice(dropIndex, 0, movedTag);
-
-                this.state = updatedTags;
-                this.dragIndex = -1;
-            });
+            this.state = updatedTags;
+            this.dragIndex = -1;
         }
     }"
     x-id="['tags-input']"
     x-modelable="state"
-    {{ $attributes->whereStartsWith('wire:model') }}
-    {{ $attributes->whereStartsWith('x-model') }}
     class="contents"
 >
-    <div {{ $attributes->class('rounded-box bg-white dark:bg-neutral-900 w-full shadow-sm border border-primary-200 transition duration-75 focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-500/15 dark:border-primary-800 dark:focus-within:border-primary-400 dark:focus-within:ring-primary-400/15') }}>
+    <div {{ $attributes->class('rounded-box w-full transition duration-75') }}>
 
         @if($showCounter || $showClearAll)
-        <div class="flex items-center justify-between p-2 ">
-            @if($showCounter)
-            <span class="text-sm text-neutral-500 dark:text-neutral-400">
-                <span x-text="tagCount"></span>
-                @if($maxTags)
-                / {{ $maxTags }}
+            <div class="flex items-center justify-between p-2 ">
+                @if($showCounter)
+                    <span class="text-sm text-neutral-500 dark:text-neutral-400">
+                        <span x-text="tagCount()"></span>
+                        @if($maxTags)
+                            / {{ $maxTags }}
+                        @endif
+                        @if(empty($suffix))
+                            {{ neura_trans('tags') }}
+                        @else
+                            {!! $suffix !!}
+                        @endif
+                    </span>
                 @endif
-                {{ neura_trans('tags') }}
-            </span>
-            @endif
 
-            @if($showClearAll)
-                <button
-                    type="button"
-                    x-on:click="clearAllTags()"
-                    x-bind:disabled="isEmpty"
-                    class="text-sm hover:opacity-70 transition-opacity text-neutral-400 dark:text-neutral-300 duration-300 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                    <neura::icon name="trash" class="size-5"/>
-
-                </button>
-            @endif
-        </div>
+                @if($showClearAll)
+                    <button
+                        type="button"
+                        x-on:click="clearAllTags()"
+                        x-bind:disabled="isEmpty()"
+                        class="text-sm hover:opacity-70 transition-opacity text-neutral-400 dark:text-neutral-300 duration-300 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                        <neura::icon name="trash" class="size-5"/>
+                    </button>
+                @endif
+            </div>
         @endif
 
         <input
             type="text"
             @class(Arr::toCssClasses($inputClasses))
-            name="{{ $name }}"
             placeholder="{{ $placeholder }}"
             x-bind:disabled="hasMaxTags() || @js($disabled)"
             x-on:focus="focused = true"
             x-on:blur="focused = false; createOnBlur && newTag.trim() && addTag(newTag); hideSuggestions()"
             x-on:paste="handlePaste"
             x-model="newTag"
-
             x-on:input.stop="handleInput"
             x-on:change.stop
-
             x-bind:id="$id('tags-input')"
             x-ref="input"
-
             role="textbox"
             x-bind:aria-label="@js($ariaLabel)"
             x-bind:aria-describedby="error ? 'error-message' : ''"
             x-on:keydown="handleKeydown"
-
         >
 
         <div
@@ -397,18 +482,15 @@
                     x-on:keydown.enter="addTag(suggestion); hideSuggestions()"
                     x-text="suggestion"
                     class="px-3 py-2 text-sm cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-700"
-                    :class="{
-                        'bg-white/5 ': selectedSuggestionIndex === index
-                    }"
+                    :class="{ 'bg-white/5': selectedSuggestionIndex === index }"
                 ></div>
             </template>
         </div>
 
         <div wire:ignore class="inline-block w-full">
             <template x-if="state?.length">
-                <div class="flex w-full  flex-wrap gap-1.5 p-2 border-t border-t-neutral-200 dark:border-t-white/10">
+                <div class="flex w-full flex-wrap gap-1.5 p-2 border-t border-t-neutral-200 dark:border-t-white/10">
                     <template x-for="(tag, index) in state" :key="`${tag}-${index}`">
-
                         <neura::tags-input.tag
                             :$tagVariant
                             :$tagColor
@@ -418,7 +500,7 @@
             </template>
         </div>
 
-        <div x-show="error" style="display: none;" x-transition class="p-2 text-sm text-red-600 dark:text-red-400" id="error-message">
+        <div x-show="error" x-transition class="p-2 text-sm text-red-600 dark:text-red-400" id="error-message">
             <span x-text="error"></span>
         </div>
     </div>

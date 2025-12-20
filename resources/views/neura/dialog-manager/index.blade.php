@@ -40,7 +40,7 @@
                 inputValue: options.inputValue || '',
                 inputPlaceholder: options.inputPlaceholder || '',
                 showInput: options.showInput || false,
-                size: options.size || 'sm',
+                size: options.size || 'md',
             };
 
             this.dialogs.push(dialog);
@@ -91,39 +91,40 @@
                 'md': 'max-w-md',
                 'lg': 'max-w-lg',
                 'xl': 'max-w-xl',
-            }[size] || 'max-w-sm';
+            }[size] || 'max-w-md';
         }
     }"
     x-on:dialog.window="showDialog($event.detail)"
-    class="relative z-[9999]"
+    class="relative z-9999"
 >
     <template x-for="dialog in dialogs" :key="dialog.id">
         <div
-            class="fixed inset-0 flex items-center justify-center p-4"
-            x-transition:enter="ease-out duration-200"
+            class="fixed inset-0 overflow-y-auto"
+            x-transition:enter="ease-out duration-300"
             x-transition:enter-start="opacity-0"
             x-transition:enter-end="opacity-100"
-            x-transition:leave="ease-in duration-150"
+            x-transition:leave="ease-in duration-200"
             x-transition:leave-start="opacity-100"
             x-transition:leave-end="opacity-0"
         >
             <div
-                class="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-sm"
+                class="fixed inset-0 bg-black/50 dark:bg-black/70"
                 x-on:click="cancel(dialog.id)"
             ></div>
 
-            <div
-                class="relative bg-white dark:bg-neutral-900 rounded-xl shadow-2xl w-full border border-neutral-200 dark:border-neutral-800 overflow-hidden"
-                :class="getSizeClass(dialog.size)"
-                x-on:click.stop
-                x-on:keydown.escape.window="cancel(dialog.id)"
-                x-transition:enter="ease-out duration-200"
-                x-transition:enter-start="opacity-0 scale-95 translate-y-4"
-                x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-                x-transition:leave="ease-in duration-150"
-                x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-                x-transition:leave-end="opacity-0 scale-95 translate-y-4"
-            >
+            <div class="flex min-h-full items-center justify-center p-4">
+                <div
+                    class="relative bg-white dark:bg-neutral-900 rounded-lg shadow-xl w-full border border-neutral-200 dark:border-neutral-800 overflow-hidden"
+                    :class="getSizeClass(dialog.size)"
+                    x-on:click.stop
+                    x-on:keydown.escape.window="cancel(dialog.id)"
+                    x-transition:enter="ease-out duration-300"
+                    x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                    x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                    x-transition:leave="ease-in duration-200"
+                    x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                    x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                >
                 <div class="p-6">
                     <div class="flex items-start gap-4">
                         <div
@@ -146,16 +147,16 @@
 
                         <div class="flex-1 min-w-0">
                             <h3
-                                class="text-base font-semibold text-neutral-900 dark:text-neutral-100"
+                                class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2"
                                 x-text="dialog.title"
                             ></h3>
                             <p
-                                class="mt-1 text-sm text-neutral-600 dark:text-neutral-400"
+                                class="text-sm text-neutral-600 dark:text-neutral-400 mb-6"
                                 x-show="dialog.message"
                                 x-text="dialog.message"
                             ></p>
 
-                            <div x-show="dialog.showInput" class="mt-4">
+                            <div x-show="dialog.showInput" class="mb-6">
                                 <input
                                     type="text"
                                     x-model="dialog.inputValue"
@@ -166,9 +167,8 @@
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="flex items-center justify-end gap-3 px-6 py-4 bg-neutral-50 dark:bg-neutral-800/50 border-t border-neutral-200 dark:border-neutral-800">
+                    <div class="flex items-center justify-end gap-3">
                     <button
                         x-show="dialog.showCancel"
                         x-on:click="cancel(dialog.id)"
@@ -188,6 +188,7 @@
                         }"
                         x-text="dialog.confirmText"
                     ></button>
+                    </div>
                 </div>
             </div>
         </div>

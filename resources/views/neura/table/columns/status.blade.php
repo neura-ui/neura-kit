@@ -17,30 +17,41 @@
             $enum = $statusEnum::tryFrom($status);
         }
 
-        $label = $enum?->label() ?? $status;
-        $color = $enum?->color() ?? 'gray';
+        $label = $enum?->label() ?? (string) $status;
+        $color = $enum?->color() ?? 'neutral';
     } else {
-        $label = $status;
-        $color = $colorMap[$status] ?? 'gray';
+        $label = (string) $status;
+        $color = $colorMap[$status] ?? 'neutral';
     }
 
-    $colorClasses = match($color) {
-        'yellow' => 'bg-yellow-500 dark:bg-yellow-600',
-        'green' => 'bg-green-500 dark:bg-green-600',
-        'orange' => 'bg-orange-500 dark:bg-orange-600',
-        'red' => 'bg-red-500 dark:bg-red-600',
-        'blue' => 'bg-blue-500 dark:bg-blue-600',
-        'purple' => 'bg-purple-500 dark:bg-purple-600',
-        'teal' => 'bg-teal-500 dark:bg-teal-600',
-        default => 'bg-neutral-500 dark:bg-neutral-600',
+    /**
+     * Calm, table-friendly color system
+     */
+    $colorClasses = match ($color) {
+        'green', 'success' => 'bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-300',
+        'yellow', 'warning' => 'bg-yellow-50 text-yellow-700 dark:bg-yellow-950/40 dark:text-yellow-300',
+        'orange' => 'bg-orange-50 text-orange-700 dark:bg-orange-950/40 dark:text-orange-300',
+        'red', 'danger' => 'bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300',
+        'blue', 'info' => 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300',
+        'purple' => 'bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300',
+        'teal' => 'bg-teal-50 text-teal-700 dark:bg-teal-950/40 dark:text-teal-300',
+        default => 'bg-neutral-100 text-neutral-700 dark:bg-neutral-900 dark:text-neutral-300',
     };
 @endphp
 
-<div class="flex">
-    <div @class([
-        'text-white rounded-xl px-2 py-1 uppercase font-bold text-xs',
-        $colorClasses,
-    ])>
+<div class="flex items-center">
+    <span
+        @class([
+            'inline-flex items-center gap-1.5',
+            'rounded-lg px-2 py-1',
+            'text-sm font-medium leading-4',
+            'whitespace-nowrap select-none',
+            $colorClasses,
+        ])
+    >
+        {{-- Optional dot indicator --}}
+        <span class="h-1.5 w-1.5 rounded-full bg-current opacity-70"></span>
+
         {{ $label }}
-    </div>
+    </span>
 </div>

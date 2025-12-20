@@ -3,6 +3,7 @@
 namespace Neura\Kit\Console;
 
 use Illuminate\Console\Command;
+use Neura\Kit\Services\License\LicenseService;
 
 class InstallDependenciesCommand extends Command
 {
@@ -23,8 +24,13 @@ class InstallDependenciesCommand extends Command
         '@tiptap/extension-highlight' => '^2.0.0',
     ];
 
-    public function handle(): int
+    public function handle(LicenseService $licenseService): int
     {
+        if (!$licenseService->isActivated()) {
+            $this->error('Neura Kit is not activated. Please run: php artisan neura-kit:activate');
+            return self::FAILURE;
+        }
+
         $packageJsonPath = base_path('package.json');
         
         if (!file_exists($packageJsonPath)) {

@@ -7,6 +7,7 @@
     'alt' => '',
     'target' => '_self',
     'logoClass' => '',
+    'align' => 'left', // left | center | right
 ])
 
 @props([
@@ -18,6 +19,7 @@
     'alt' => '',
     'target' => '_self',
     'logoClass' => '',
+    'align' => 'left',
 ])
 
 @php
@@ -34,13 +36,27 @@
 
     $hasThemeLogos = $logoLight || $logoDark;
     $hasAnyLogo = $logo || $hasThemeLogos;
+
+    $alignClass = match ($align) {
+        'center' => 'justify-center',
+        'right'  => 'justify-end',
+        default  => 'justify-start',
+    };
 @endphp
 
 <a
     href="{{ $href }}"
     target="{{ $target }}"
     {{ $attributes->merge([
-        'class' => 'flex items-center justify-center gap-x-3 transition-opacity hover:opacity-80 text-black dark:text-white',
+        'class' => "
+            group
+            flex items-center gap-x-3
+            transition-opacity hover:opacity-80
+            text-black dark:text-white
+            {$alignClass}
+
+            in-[:has([data-collapsed]_&)]:justify-center
+        ",
     ]) }}
 >
     {{-- Logo --}}
@@ -66,7 +82,12 @@
     @if ($name)
         <div
             data-slot="brand-name"
-            class="font-semibold text-lg whitespace-nowrap"
+            class="
+                font-semibold text-lg whitespace-nowrap
+                transition-opacity
+
+                in-[:has([data-collapsed]_&)]:hidden
+            "
         >
             {{ $name }}
         </div>

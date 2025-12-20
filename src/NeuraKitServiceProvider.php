@@ -4,16 +4,34 @@ namespace Neura\Kit;
 
 use Illuminate\Contracts\Foundation\CachesRoutes;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
+use Neura\Kit\Contracts\LicenseVerifier;
+use Neura\Kit\Services\License\ActivationClient;
+use Neura\Kit\Services\License\LicenseCache;
+use Neura\Kit\Services\License\LicenseService;
+use Neura\Kit\Services\License\LicenseValidator;
 
 class NeuraKitServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/neura-kit.php', 'neura-kit');
-        
-        // Register the tag compiler
+
+        $this->app->singleton(LicenseCache::class);
+        $this->app->singleton(LicenseValidator::class);
+        $this->app->singleton(ActivationClient::class);
+        $this->app->singleton(LicenseVerifier::class, LicenseValidator::class);
+
+        $this->app->singleton(LicenseService::class, function ($app) {
+            return new LicenseService(
+                $app->make(LicenseCache::class),
+                $app->make(LicenseValidator::class),
+                $app->make(ActivationClient::class)
+            );
+        });
+
         $this->app->singleton('neura.compiler', function ($app) {
             return new NeuraTagCompiler(
                 $app['blade.compiler']->getClassComponentAliases(),
@@ -25,11 +43,16 @@ class NeuraKitServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        $this->configurePublishing();
+
+        if (!$this->isLicenseActivated()) {
+            return;
+        }
+
         $this->registerHelpers();
         $this->registerRoutes();
         $this->bootComponentPath();
         $this->bootTagCompiler();
-        $this->configurePublishing();
         $this->configureComponents();
     }
 
@@ -41,14 +64,14 @@ class NeuraKitServiceProvider extends ServiceProvider
             return;
         }
 
-        \Illuminate\Support\Facades\Route::get('/neura-kit/lang/{locale}.json', function ($locale) {
+        Route::get('/neura-kit/lang/{locale}.json', function ($locale) {
             $locale = $this->sanitizeLocale($locale);
             $translations = $this->loadTranslations($locale);
-            
+
             if (empty($translations)) {
                 return response()->json([], 404);
             }
-            
+
             return response()->json($translations, 200, [
                 'Content-Type' => 'application/json; charset=utf-8',
                 'Cache-Control' => 'public, max-age=3600',
@@ -64,18 +87,18 @@ class NeuraKitServiceProvider extends ServiceProvider
     protected function loadTranslations(string $locale): array
     {
         $paths = $this->getTranslationPaths($locale);
-        
+
         foreach ($paths as $path) {
             if (file_exists($path)) {
                 $contents = file_get_contents($path);
                 $translations = json_decode($contents, true);
-                
+
                 if (json_last_error() === JSON_ERROR_NONE && is_array($translations)) {
                     return $translations;
                 }
             }
         }
-        
+
         return [];
     }
 
@@ -126,7 +149,20 @@ class NeuraKitServiceProvider extends ServiceProvider
         if (!$this->app->runningInConsole()) {
             return;
         }
-        
+
+        $this->commands([
+            Console\ActivateCommand::class,
+            Console\LicenseStatusCommand::class,
+            Console\InstallNeuraKitCommand::class,
+            Console\InstallDependenciesCommand::class,
+            Console\MakeModalCommand::class,
+            Console\MakeTableCommand::class,
+        ]);
+
+        if (!$this->isLicenseActivated()) {
+            return;
+        }
+
         $this->publishes([
             __DIR__.'/../config/neura-kit.php' => config_path('neura-kit.php'),
         ], 'neura-kit-config');
@@ -143,23 +179,21 @@ class NeuraKitServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__.'/../resources/lang' => resource_path('lang'),
         ], 'neura-kit-lang');
-
-        $this->commands([
-            Console\InstallNeuraKitCommand::class,
-            Console\InstallDependenciesCommand::class,
-            Console\MakeModalCommand::class,
-            Console\MakeTableCommand::class,
-        ]);
     }
 
     protected function configureComponents(): void
     {
-        // Register the Blade directive
+        if (!$this->isLicenseActivated()) {
+            Blade::directive('neuraKit', function () {
+                return '';
+            });
+            return;
+        }
+
         Blade::directive('neuraKit', function () {
             return "<?php echo view('neura-kit::components.neura-kit-managers')->render(); ?>";
         });
 
-        // Register Livewire components
         if (class_exists(Livewire::class)) {
             Livewire::component('neura-kit.modal-manager', Components\Atoms\ModalManager::class);
         }
@@ -169,6 +203,15 @@ class NeuraKitServiceProvider extends ServiceProvider
     {
         if (!function_exists('neura_trans')) {
             require_once __DIR__ . '/Helpers.php';
+        }
+    }
+
+    protected function isLicenseActivated(): bool
+    {
+        try {
+            return $this->app->make(LicenseService::class)->isActivated();
+        } catch (\Exception $e) {
+            return false;
         }
     }
 }

@@ -7,7 +7,6 @@
 
 @php
     $placement = match($position) {
-        'bottom-right' => 'bottom-0 right-0 pr-4 pb-4',
         'bottom-left' => 'bottom-0 left-0 pl-4 pb-4',
         'top-right' => 'top-0 right-0 pr-4 pt-4',
         'top-left' => 'top-0 left-0 pl-4 pt-4',
@@ -131,6 +130,6 @@
     aria-live="polite"
 >
     <template x-for="toast in toasts" :key="toast.id">
-        <neura::toast.item />
+        <neura::toast.item/>
     </template>
 </div>

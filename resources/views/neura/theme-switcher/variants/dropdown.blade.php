@@ -8,7 +8,7 @@
         aria-controls="theme-menu"
     >
         <neura::icon :name="$darkIcon" :variant="$iconVariant" class="dark:hidden inline-flex"/>
-        <neura::icon :name="$lightIcon" :variant="$iconVariant" class="hidden dark:inline-flex"/>
+        <neura::icon :name="$lightIcon" :variant="$iconVariant" class="hidden dark:inline-flex dark:text-white text-black"/>
     </x-slot:button>
 
     <x-slot:menu>

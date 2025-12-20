@@ -3,6 +3,7 @@
 namespace Neura\Kit\Console;
 
 use Illuminate\Console\Command;
+use Neura\Kit\Services\License\LicenseService;
 
 class InstallNeuraKitCommand extends Command
 {
@@ -10,8 +11,13 @@ class InstallNeuraKitCommand extends Command
     
     protected $description = 'Install Neura Kit assets automatically in Vite configuration';
 
-    public function handle(): int
+    public function handle(LicenseService $licenseService): int
     {
+        if (!$licenseService->isActivated()) {
+            $this->error('Neura Kit is not activated. Please run: php artisan neura-kit:activate');
+            return self::FAILURE;
+        }
+
         $viteConfigPath = base_path('vite.config.js');
         
         if (!file_exists($viteConfigPath)) {
@@ -33,14 +39,14 @@ class InstallNeuraKitCommand extends Command
             return self::FAILURE;
         }
 
-        $vendorPath = base_path('vendor/neura/neura-kit/resources/js/index.ts');
+        $vendorPath = base_path('vendor/neura-ui/neura-kit/resources/js/index.ts');
         
         if (!file_exists($vendorPath)) {
             $this->error('Neura Kit package not found in vendor directory!');
             return self::FAILURE;
         }
         
-        $pluginImport = "import neuraKit from './vendor/neura/neura-kit/resources/js/index.ts';";
+        $pluginImport = "import neuraKit from './vendor/neura-ui/neura-kit/resources/js/index.ts';";
 
         $viteConfig = $this->ensureImport($viteConfig, $pluginImport);
 
@@ -81,14 +87,14 @@ class InstallNeuraKitCommand extends Command
         
         if (!file_exists($cssPath)) {
             $this->warn('⚠️  resources/css/app.css not found. Please add manually:');
-            $this->line("@source '../../vendor/neura/neura-kit/**/*.{js,ts,vue,blade.php,php}';");
+            $this->line("@source '../../vendor/neura-ui/neura-kit/**/*.{js,ts,vue,blade.php,php}';");
             return;
         }
 
         $cssContent = file_get_contents($cssPath);
-        $sourceDirective = "@source '../../vendor/neura/neura-kit/**/*.{js,ts,vue,blade.php,php}';";
+        $sourceDirective = "@source '../../vendor/neura-ui/neura-kit/**/*.{js,ts,vue,blade.php,php}';";
 
-        if (str_contains($cssContent, 'vendor/neura/neura-kit')) {
+        if (str_contains($cssContent, 'vendor/neura-ui/neura-kit')) {
             $this->info('✅ Tailwind source directive already configured in app.css');
             return;
         }

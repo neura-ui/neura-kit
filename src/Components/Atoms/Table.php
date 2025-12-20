@@ -1,195 +1,452 @@
 <?php
 
 namespace Neura\Kit\Components\Atoms;
- 
+
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as QueryBuilder;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Str;
+use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Neura\Kit\Support\Table\EmptyState;
 
 abstract class Table extends Component
 {
     use WithPagination;
 
-    public $perPage = 10;
+    public int $perPage = 10;
+    public string $sortBy = '';
 
-    public $sortBy = '';
+    /* -----------------------------------------------------------------
+     | Table state
+     |----------------------------------------------------------------- */
+    public string $sortDirection = 'asc';
+    public string $search = '';
+    public array $filters = [];
+    public array $visibleColumns = [];
+    public array $columnWidths = [];
+    /** @var array<int,string> */
+    public array $selected = [];
+    public bool $selectPage;
 
-    public $sortDirection = 'asc';
+    /* -----------------------------------------------------------------
+     | Bulk selection
+     |----------------------------------------------------------------- */
+    /** @var array<int,object> */
+    protected array $cachedColumns = [];
+    protected ?LengthAwarePaginator $cachedData = null;
 
-    public $search = '';
+    public bool $selectAll = false;
 
-    public $filters = [];
+    public function selectAllRows(): void
+    {
+        $this->selectAll = true;
+        $this->selectPage = true;
 
-    public $visibleColumns = [];
+        // Get ALL row IDs (not just current page)
+        $this->selected = $this->getAllRowIds();
+    }
 
-    public $columnWidths = [];
+    public function deselectAllRows(): void
+    {
+        $this->selectAll = false;
+        $this->selectPage = false;
+        $this->selected = [];
+    }
 
-    public abstract function query(): Builder|QueryBuilder;
+    protected function getAllRowIds(): array
+    {
+        return $this->applySorting(
+            $this->applyFilters(
+                $this->applySearch(
+                    $this->query()
+                )
+            )
+        )
+            ->pluck($this->getRowKey())
+            ->map(fn($id) => (string)$id)
+            ->values()
+            ->all();
+    }
 
-    public abstract function columns(): array;
+    public function getSelectedCountProperty(): int
+    {
+        return count($this->selected);
+    }
+
+    public function getTotalRowsProperty(): int
+    {
+        return $this->applySorting(
+            $this->applyFilters(
+                $this->applySearch(
+                    $this->query()
+                )
+            )
+        )->count();
+    }
+
+    public function updatedSelectPage($value): void
+    {
+        if ($value) {
+            // Select all on current page
+            $this->selected = $this->currentPageRowIds();
+        } else {
+            // Deselect all
+            $this->selectAll = false;
+            $pageIds = $this->currentPageRowIds();
+            $this->selected = array_values(
+                array_filter(
+                    $this->selected,
+                    fn($id) => !in_array($id, $pageIds, true)
+                )
+            );
+        }
+
+        // Force array re-index to avoid Livewire __rm__ markers
+        $this->selected = array_values($this->selected);
+    }
+
+    public function updatedSelected($value): void
+    {
+        // Ensure it's an array and re-indexed
+        $this->selected = array_values(
+            collect(is_array($value) ? $value : [])
+                ->filter(fn($v) => $v !== '__rm__') // Filter out Livewire removal markers
+                ->map(fn($id) => (string)$id)
+                ->unique()
+                ->all()
+        );
+
+        $pageIds = $this->currentPageRowIds();
+
+        // selectPage should be checked only when ALL current page rows are selected
+        $this->selectPage = !empty($pageIds)
+            && count(array_diff($pageIds, $this->selected)) === 0;
+
+        // Check if all rows are selected (not just current page)
+        if ($this->selectAll && count($this->selected) < $this->totalRows) {
+            $this->selectAll = false;
+        }
+    }
+    /* -----------------------------------------------------------------
+     | Required overrides
+     |----------------------------------------------------------------- */
 
     public function actions(): array
     {
         return [];
     }
 
-    public function mount()
+    public function hasBulkActions(): bool
     {
-        $this->initializeVisibleColumns();
-        $this->initializeColumnWidths();
+        return !empty($this->bulkActions());
     }
 
-    protected function initializeColumnWidths()
+    /* -----------------------------------------------------------------
+     | Optional overrides
+     |----------------------------------------------------------------- */
+
+    public function bulkActions(): array
     {
-        foreach ($this->columns() as $column) {
-            if (!isset($this->columnWidths[$column->key]) && $column->width) {
-                $this->columnWidths[$column->key] = $column->width;
+        return [];
+    }
+
+    public function mount(): void
+    {
+        $this->initializeColumns();
+    }
+
+    protected function initializeColumns(): void
+    {
+        foreach ($this->getColumns() as $column) {
+            if (!isset($column->key)) {
+                continue;
+            }
+
+            $this->visibleColumns[$column->key] ??= true;
+
+            if (!empty($column->width)) {
+                $this->columnWidths[$column->key] ??= (int)$column->width;
             }
         }
     }
 
-    protected function initializeVisibleColumns()
+    protected function getColumns(): array
     {
-        if (empty($this->visibleColumns)) {
-            foreach ($this->columns() as $column) {
-                $this->visibleColumns[$column->key] = true;
-            }
+        return $this->cachedColumns
+            ?: $this->cachedColumns = $this->columns();
+    }
+
+    /**
+     * Expected: key, label, sortable, searchable, filterable, width, etc.
+     *
+     * @return array<int,object>
+     */
+    abstract protected function columns(): array;
+
+    /* -----------------------------------------------------------------
+     | Lifecycle
+     |----------------------------------------------------------------- */
+
+    #[On('table-refresh')]
+    public function handleRefresh(): void
+    {
+        $this->refreshTable();
+    }
+
+    public function refreshTable(bool $resetPage = true): void
+    {
+        if ($resetPage) {
+            $this->resetPage();
         }
+
+        $this->cachedData = null;
+        $this->selected = [];
+        $this->selectPage = false;
     }
 
-    public function getVisibleColumns()
+    public function visibleColumns(): array
     {
-        return array_filter($this->columns(), function ($column) {
-            return $this->visibleColumns[$column->key] ?? true;
-        });
+        if ($this->hasActiveFilters() || filled($this->search)) {
+            return $this->getColumns();
+        }
+
+        return array_values(array_filter(
+            $this->getColumns(),
+            fn($col) => $this->visibleColumns[$col->key] ?? true
+        ));
     }
 
-    public function toggleColumn($key)
+    public function hasActiveFilters(): bool
     {
-        $this->visibleColumns[$key] = !($this->visibleColumns[$key] ?? true);
+        return count(array_filter($this->filters)) > 0;
     }
 
-    public function updateColumnWidth($key, $width)
+    /* -----------------------------------------------------------------
+     | Column helpers
+     |----------------------------------------------------------------- */
+
+    public function sort(string $key): void
     {
-        $this->columnWidths[$key] = $width;
+        if (!in_array($key, $this->sortableKeys(), true)) {
+            return;
+        }
+
+        $this->resetPage();
+        $this->cachedData = null;
+
+        $this->sortDirection = $this->sortBy === $key
+            ? ($this->sortDirection === 'asc' ? 'desc' : 'asc')
+            : 'asc';
+
+        $this->sortBy = $key;
     }
 
-    public function updatedSearch()
+    protected function sortableKeys(): array
+    {
+        return array_map(
+            fn($c) => $c->key,
+            array_filter($this->getColumns(), fn($c) => $c->sortable ?? false)
+        );
+    }
+
+    public function updatedSearch(): void
     {
         $this->resetPage();
+        $this->cachedData = null;
     }
 
-    public function updatedFilters()
+    public function updatedFilters(): void
     {
         $this->resetPage();
+        $this->cachedData = null;
     }
 
-    protected function applySearch(Builder|QueryBuilder $query)
+    public function clearFilters(): void
     {
-        if (empty($this->search)) {
+        $this->filters = [];
+        $this->search = '';
+        $this->refreshTable();
+    }
+
+    /* -----------------------------------------------------------------
+     | Query pipeline
+     |----------------------------------------------------------------- */
+
+    public function hasSearchableColumns(): bool
+    {
+        return !empty($this->searchableKeys());
+    }
+
+    protected function searchableKeys(): array
+    {
+        return array_map(
+            fn($c) => $c->key,
+            array_filter($this->getColumns(), fn($c) => $c->searchable ?? false)
+        );
+    }
+
+    public function hasFilterableColumns(): bool
+    {
+        return !empty($this->getFilterableColumns());
+    }
+
+    /* -----------------------------------------------------------------
+     | Data
+     |----------------------------------------------------------------- */
+
+    public function getFilterableColumns(): array
+    {
+        return array_values(array_filter(
+            $this->getColumns(),
+            fn($col) => $col->filterable ?? false
+        ));
+    }
+
+    /* -----------------------------------------------------------------
+     | Sorting / filters
+     |----------------------------------------------------------------- */
+
+    /**
+     * IDs on the current page (as strings).
+     *
+     * @return array<int,string>
+     */
+    protected function currentPageRowIds(): array
+    {
+        return $this->data()
+            ->getCollection()
+            ->pluck($this->getRowKey())
+            ->map(fn($id) => (string)$id)
+            ->values()
+            ->all();
+    }
+
+    public function data(): LengthAwarePaginator
+    {
+        return $this->cachedData ??= $this->applySorting(
+            $this->applyFilters(
+                $this->applySearch(
+                    $this->query()
+                )
+            )
+        )->paginate($this->perPage);
+    }
+
+    protected function applySorting($query)
+    {
+        if (!in_array($this->sortBy, $this->sortableKeys(), true)) {
             return $query;
         }
 
-        $searchableColumns = $this->getSearchableColumns();
-        
-        if (empty($searchableColumns)) {
+        return $query->orderBy(
+            $this->sortBy,
+            $this->sortDirection === 'desc' ? 'desc' : 'asc'
+        );
+    }
+
+    protected function applyFilters($query)
+    {
+        if (empty($this->filters)) {
             return $query;
         }
 
-        $searchTerm = strtolower($this->search);
+        $columns = collect($this->getColumns())->keyBy('key');
 
-        return $query->where(function ($q) use ($searchableColumns, $searchTerm) {
-            foreach ($searchableColumns as $index => $column) {
-                if ($index === 0) {
-                    $q->whereRaw('LOWER(' . $q->getGrammar()->wrap($column) . ') LIKE ?', ['%' . $searchTerm . '%']);
-                } else {
-                    $q->orWhereRaw('LOWER(' . $q->getGrammar()->wrap($column) . ') LIKE ?', ['%' . $searchTerm . '%']);
-                }
-            }
-        });
-    }
-
-    protected function getSearchableColumns()
-    {
-        $columns = [];
-        foreach ($this->columns() as $column) {
-            if ($column->searchable) {
-                $columns[] = $column->key;
-            }
-        }
-        return $columns;
-    }
-
-    public function getFilterableColumns()
-    {
-        return array_filter($this->columns(), fn($col) => $col->filterable ?? false);
-    }
-
-    public function hasActiveFilters()
-    {
-        return count(array_filter($this->filters ?? [])) > 0;
-    }
-
-    protected function applyFilters(Builder|QueryBuilder $query)
-    {
         foreach ($this->filters as $key => $value) {
-            if ($value === null || $value === '' || (is_array($value) && empty($value))) {
+            if (blank($value)) {
                 continue;
             }
 
-            $column = collect($this->columns())->firstWhere('key', $key);
-            
-            if (!$column || !$column->filterable) {
+            $column = $columns->get($key);
+            if (!$column || !($column->filterable ?? false)) {
                 continue;
             }
 
-            if ($column->filterQuery) {
+            if (!empty($column->filterQuery) && is_callable($column->filterQuery)) {
                 ($column->filterQuery)($query, $value, $key);
-            } else {
-                $filterTerm = strtolower($value);
-                $query->whereRaw('LOWER(' . $query->getGrammar()->wrap($key) . ') LIKE ?', ['%' . $filterTerm . '%']);
+                continue;
             }
+
+            $wrapped = $query->getGrammar()->wrap($key);
+
+            is_string($value)
+                ? $query->whereRaw("LOWER($wrapped) LIKE ?", ['%' . Str::lower($value) . '%'])
+                : $query->where($key, $value);
         }
 
         return $query;
     }
 
-    public function data()
+    protected function applySearch($query)
     {
-        $query = $this->query();
-        
-        $query = $this->applySearch($query);
-        $query = $this->applyFilters($query);
-        
-        return $query
-            ->when($this->sortBy !== '', function ($q) {
-                $q->orderBy($this->sortBy, $this->sortDirection);
-            })
-            ->paginate($this->perPage);
+        if (!filled($this->search)) {
+            return $query;
+        }
+
+        $columns = $this->searchableKeys();
+        if (empty($columns)) {
+            return $query;
+        }
+
+        $term = Str::lower($this->search);
+
+        return $query->where(function ($q) use ($columns, $term) {
+            foreach ($columns as $col) {
+                $wrapped = $q->getGrammar()->wrap($col);
+                $q->orWhereRaw("LOWER($wrapped) LIKE ?", ["%{$term}%"]);
+            }
+        });
     }
 
-    public function sort($key)
+    abstract protected function query(): Builder|QueryBuilder;
+
+    protected function getRowKey(): string
     {
-        $this->resetPage();
+        return 'id';
+    }
 
-        if ($this->sortBy === $key) {
-            $direction = $this->sortDirection === 'asc' ? 'desc' : 'asc';
-            $this->sortDirection = $direction;
-
+    public function runBulkAction(string $key): void
+    {
+        if (empty($this->selected)) {
             return;
         }
 
-        $this->sortBy = $key;
-        $this->sortDirection = 'asc';
+        $action = collect($this->bulkActions())
+            ->firstWhere('key', $key);
+
+        if (!$action || !method_exists($this, $action['action'])) {
+            return;
+        }
+
+        $this->{$action['action']}($this->selected);
+
+        $this->refreshTable();
     }
 
-    public function clearFilters()
+    public function emptyStateHtml(): string
     {
-        $this->filters = [];
-        $this->search = '';
-        $this->resetPage();
+        $state = $this->emptyState();
+
+        return match (true) {
+            $state instanceof EmptyState => $state->render(),
+            $state instanceof View => $state->render(),
+            $state instanceof Htmlable => $state->toHtml(),
+            is_string($state) => $state,
+            default => neura_trans('noResultsFound'),
+        };
+    }
+
+    /* -----------------------------------------------------------------
+     | Empty state
+     |----------------------------------------------------------------- */
+
+    public function emptyState(): string|View|Htmlable|EmptyState|null
+    {
+        return null;
     }
 
     public function render(): View
@@ -197,4 +454,3 @@ abstract class Table extends Component
         return view('neura::table.index');
     }
 }
-

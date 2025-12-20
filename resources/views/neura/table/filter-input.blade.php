@@ -15,6 +15,7 @@
                 wire:model.live="{{ $wireModel }}"
                 placeholder="{{ neura_trans('select') }} {{ $column->label }}"
                 clearable
+                size="md"
             >
                 <neura::select.option value="">{{ neura_trans('all') }}</neura::select.option>
                 @foreach($column->filterOptions as $value => $label)
@@ -29,7 +30,7 @@
             type="date"
             wire:model.live="{{ $wireModel }}"
             placeholder="{{ neura_trans('filter') }} {{ $column->label }}"
-            size="sm"
+            size="md"
         />
         @break
 
@@ -38,6 +39,7 @@
             wire:model.live="{{ $wireModel }}"
             placeholder="{{ __('Select') }} {{ $column->label }}"
             clearable
+            size="md"
         >
             <neura::select.option value="">{{ __('All') }}</neura::select.option>
             <neura::select.option value="1">{{ neura_trans('yes') }}</neura::select.option>
@@ -49,6 +51,6 @@
         <neura::input
             wire:model.live.debounce.300ms="{{ $wireModel }}"
             placeholder="{{ neura_trans('filter') }} {{ $column->label }}"
-            size="sm"
+            size="md"
         />
 @endswitch

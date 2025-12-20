@@ -48,7 +48,7 @@ export function transformCss(
       const themeEnd = output.indexOf('@theme');
       if (themeEnd !== -1) {
         const blockEnd = output.indexOf('}', themeEnd) + 1;
-        output = output.slice(0, blockEnd) + `\n@import '../../vendor/neura/neura-kit/resources/css/app.css';\n` + output.slice(blockEnd);
+        output = output.slice(0, blockEnd) + `\n@import '../../vendor/neura-ui/neura-kit/resources/css/app.css';\n` + output.slice(blockEnd);
         modified = true;
       }
     }
@@ -60,7 +60,7 @@ export function transformCss(
       const pos = output.indexOf('\n', lastSource) + 1;
       output =
         output.slice(0, pos) +
-        `@source '../../vendor/neura/neura-kit/resources/views/**/*.blade.php';\n` +
+        `@source '../../vendor/neura-ui/neura-kit/resources/views/**/*.blade.php';\n` +
         output.slice(pos);
       modified = true;
     }

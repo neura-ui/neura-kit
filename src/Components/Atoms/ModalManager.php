@@ -22,12 +22,20 @@ class ModalManager extends Component
     protected static array $reflectionCache = [];
     protected static array $propertyTypesCache = [];
 
+    public function mount(): void
+    {
+
+        $this->resetState();
+    }
     public function resetState(): void
     {
         $this->components = [];
         $this->activeComponent = null;
     }
 
+    /**
+     * @throws Exception
+     */
     public function openModal($component, $arguments = [], $modalAttributes = []): void
     {
         $componentClass = $this->resolveComponentClass($component);
@@ -37,7 +45,7 @@ class ModalManager extends Component
         }
 
         $id = $this->generateComponentId($component, $arguments);
-        
+
         if (isset($this->components[$id])) {
             $this->activeComponent = $id;
             $this->dispatch('activeModalComponentChanged', id: $id, modalAttributes: $this->components[$id]['modalAttributes']);
@@ -85,13 +93,13 @@ class ModalManager extends Component
             fn($part) => str_replace(['-', '_'], '', ucwords($part, '-_')),
             $parts
         ));
-        
+
         $fullClassName = $namespace . '\\' . $className;
-        
+
         if (!class_exists($fullClassName)) {
             throw new Exception("Component class [{$fullClassName}] not found for component [{$component}].");
         }
-        
+
         static::$classCache[$component] = $fullClassName;
         return $fullClassName;
     }
@@ -132,15 +140,15 @@ class ModalManager extends Component
 
     protected function getReflectionClass(string $componentClass): ReflectionClass
     {
-        return static::$reflectionCache[$componentClass] 
+        return static::$reflectionCache[$componentClass]
             ??= new ReflectionClass($componentClass);
     }
-    
+
     protected function generateComponentId(string $component, array $arguments): string
     {
         return md5($component . json_encode($this->normalizeArguments($arguments), JSON_UNESCAPED_SLASHES));
     }
-    
+
     protected function normalizeArguments(array $arguments): array
     {
         return array_map(function ($value) {
@@ -153,17 +161,17 @@ class ModalManager extends Component
             return $value;
         }, $arguments);
     }
-    
+
     public function getPublicPropertyTypes(string $componentClass, ReflectionClass $reflect): Collection
     {
         if (isset(static::$propertyTypesCache[$componentClass])) {
             return static::$propertyTypesCache[$componentClass];
         }
-        
+
         $propertyTypes = collect($reflect->getProperties(\ReflectionProperty::IS_PUBLIC))
             ->mapWithKeys(fn($prop) => ($type = Reflector::getParameterClassName($prop)) ? [$prop->getName() => $type] : [])
             ->filter();
-        
+
         static::$propertyTypesCache[$componentClass] = $propertyTypes;
         return $propertyTypes;
     }
@@ -213,7 +221,7 @@ class ModalManager extends Component
             }
         } else {
             $attrs = $this->components[$this->activeComponent]['modalAttributes'] ?? [];
-            
+
             if ($force || ($attrs['destroyOnClose'] ?? false)) {
                 $this->destroyComponent($this->activeComponent);
             }
@@ -227,7 +235,7 @@ class ModalManager extends Component
         } else {
             $this->dispatch('activeModalComponentChanged', id: $this->activeComponent);
         }
-        
+
         $this->dispatch('closeModal');
     }
 
@@ -236,7 +244,7 @@ class ModalManager extends Component
         if (view()->exists('neura::modal-manager.index')) {
             return view('neura::modal-manager.index');
         }
-        
+
         $viewPath = realpath(__DIR__.'/../../resources/views/neura/modal-manager/index.blade.php');
         if ($viewPath && file_exists($viewPath)) {
             return view()->file($viewPath);

@@ -16,7 +16,7 @@
     $roundedClass = $pill ? 'rounded-full' : PackResolver::rounded($rounded ?? 'md');
 
     $classes = [
-        'inline-flex items-center font-medium whitespace-nowrap gap-x-0.5',
+        'inline-flex items-center font-semibold whitespace-nowrap gap-x-0.5',
         $colorClasses,
         $sizeClasses,
         $roundedClass,

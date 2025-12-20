@@ -1,238 +1,296 @@
 import './types';
+export {}; // top-level ONLY
 
-type LivewireComponent = {
-  call(method: string, ...args: unknown[]): void;
-};
+/* -------------------------------------------------------------------------- */
+/* Environment guard                                                          */
+/* -------------------------------------------------------------------------- */
+const isBrowser =
+    typeof window !== 'undefined' &&
+    typeof document !== 'undefined';
 
-const ModalManagerCache = {
-  element: null as HTMLElement | null,
-  wireId: null as string | null,
-  instance: null as LivewireComponent | null,
+if (!isBrowser) {
+    // SSR / Node: do nothing
+} else {
+    /* ------------------------------------------------------------------------ */
+    /* Types                                                                    */
+    /* ------------------------------------------------------------------------ */
+    type LivewireComponent = {
+        call(method: string, ...args: unknown[]): void;
+        on?(event: string, callback: (...args: any[]) => void): void;
+    };
 
-  invalidate(): void {
-    this.element = null;
-    this.wireId = null;
-    this.instance = null;
-  },
+    type ModalAttrs = Record<string, unknown>;
 
-  get(): LivewireComponent | null {
-    if (this.instance) return this.instance;
+    type ModalActivatePayload =
+        | { id: string; modalAttributes?: ModalAttrs }
+        | { detail?: { id?: string; modalAttributes?: ModalAttrs } }
+        | string;
 
-    if (!this.element) {
-      this.element = document.querySelector('[x-data*="modalManager"]') as HTMLElement;
+    type UiOpenDetail = { component?: string; attrs?: ModalAttrs } | undefined;
+    type UiCloseDetail = { force?: boolean; skipPreviousModals?: number; destroySkipped?: boolean } | undefined;
+
+    /* ------------------------------------------------------------------------ */
+    /* Boot guard                                                                */
+    /* ------------------------------------------------------------------------ */
+    const NK_BOOT = ((window as any).__NK_MODAL_BOOT__ ??= { booted: false });
+
+    /* ------------------------------------------------------------------------ */
+    /* ModalManager cache (fast path)                                            */
+    /* ------------------------------------------------------------------------ */
+    const ModalManagerCache = {
+        element: null as HTMLElement | null,
+        wireId: null as string | null,
+        instance: null as LivewireComponent | null,
+
+        invalidate() {
+            this.element = null;
+            this.wireId = null;
+            this.instance = null;
+        },
+
+        get(): LivewireComponent | null {
+            if (this.instance) return this.instance;
+
+            // Find the modal manager root once
+            const el =
+                this.element ??
+                (this.element = document.querySelector<HTMLElement>('[x-data*="modalManager"]'));
+
+            if (!el) return null;
+
+            const wireId = this.wireId ?? (this.wireId = el.getAttribute('wire:id'));
+            if (!wireId) return null;
+
+            const lw = (window as any).Livewire;
+            if (!lw?.find) return null;
+
+            this.instance = lw.find(wireId) as LivewireComponent | null;
+            return this.instance;
+        },
+    };
+
+    /* ------------------------------------------------------------------------ */
+    /* Global UI events (instant open/close, no network)                         */
+    /* ------------------------------------------------------------------------ */
+    const UI_OPEN_EVENT = 'nk-modal-ui-open';
+    const UI_CLOSE_EVENT = 'nk-modal-ui-close';
+
+    /* ------------------------------------------------------------------------ */
+    /* Global API (stable surface)                                               */
+    /* ------------------------------------------------------------------------ */
+    if (!(window as any).NeuraKitModal) {
+        (window as any).NeuraKitModal = {
+            /**
+             * Optimized behavior:
+             * 1) Open UI immediately (no round-trip)
+             * 2) Sync Livewire state (loads component/stack)
+             */
+            open(
+                component: string,
+                args: Record<string, unknown> = {},
+                attrs: Record<string, unknown> = {}
+            ) {
+                // Instant UI open with loading state
+                window.dispatchEvent(new CustomEvent<UiOpenDetail>(UI_OPEN_EVENT, { detail: { component, attrs } }));
+
+                // Livewire sync (may take time)
+                ModalManagerCache.get()?.call('openModal', component, args, attrs);
+            },
+
+            /**
+             * Optimized behavior:
+             * 1) Close UI immediately (no round-trip)
+             * 2) Sync Livewire state
+             */
+            close(force = false, skip = 0, destroy = false) {
+                // Instant UI close
+                window.dispatchEvent(
+                    new CustomEvent<UiCloseDetail>(UI_CLOSE_EVENT, {
+                        detail: { force, skipPreviousModals: skip, destroySkipped: destroy },
+                    })
+                );
+
+                // Livewire sync
+                ModalManagerCache.get()?.call('closeModal', force, skip, destroy);
+            },
+        };
     }
 
-    if (!this.element) return null;
+    /* ------------------------------------------------------------------------ */
+    /* Boot-once listeners                                                       */
+    /* ------------------------------------------------------------------------ */
+    if (!NK_BOOT.booted) {
+        NK_BOOT.booted = true;
 
-    if (!this.wireId) {
-      this.wireId = this.element.getAttribute('wire:id');
-    }
+        // Livewire navigation can replace DOM: invalidate cached wire:id/element
+        document.addEventListener('livewire:navigated', () => ModalManagerCache.invalidate(), { passive: true });
 
-    if (!this.wireId) return null;
-
-    this.instance =
-      typeof window.Livewire !== 'undefined' && this.wireId
-        ? window.Livewire.find(this.wireId)
-        : null;
-    return this.instance;
-  },
-};
-
-if (typeof document !== 'undefined') {
-  document.addEventListener('livewire:navigated', () => ModalManagerCache.invalidate());
-}
-
-if (typeof window !== 'undefined') {
-  window.NeuraKitModal = {
-    open(
-      component: string,
-      args: Record<string, unknown> = {},
-      modalAttributes: Record<string, unknown> = {}
-    ): void {
-      const manager = ModalManagerCache.get();
-      if (manager) {
-        manager.call('openModal', component, args, modalAttributes);
-      }
-    },
-
-    close(force = false, skipPreviousModals = 0, destroySkipped = false): void {
-      const manager = ModalManagerCache.get();
-      if (manager) {
-        manager.call('closeModal', force, skipPreviousModals, destroySkipped);
-      }
-    },
-  };
-}
-
-if (typeof document !== 'undefined') {
-  document.addEventListener('alpine:init', () => {
-    window.Alpine.data('modalManager', () =>
-    ({
-      show: false,
-      activeComponent: null as string | null,
-      showActiveComponent: false,
-      _attrs: null as { id: string; attrs: Record<string, unknown> } | null,
-      _cleanupId: 0,
-      _cleanupTimeout: null as ReturnType<typeof setTimeout> | null,
-      _prevFocus: null as HTMLElement | null,
-      _main: null as HTMLElement | null,
-      $refs: {} as Record<string, HTMLElement | null>,
-      $el: null as HTMLElement | null,
-      $wire: undefined as {
-        on: (event: string, handler: (payload?: unknown) => void) => void;
-        components?: Record<string, { modalAttributes?: Record<string, unknown> }>;
-      } | undefined,
-      $watch: function (property: string, callback: (value: unknown) => void): void {
-        // Implemented by Alpine
-      },
-      $nextTick: function (callback: () => void): void {
-        // Implemented by Alpine
-      },
-
-    init(): void {
-      this._main = document.querySelector('[data-slot="main"], main, [data-slot="layout"]') as HTMLElement;
-
-      this.$watch('show', (value: unknown) => {
-        const showValue = value as boolean;
-        if (showValue) {
-          this._prevFocus = document.activeElement as HTMLElement;
-          document.body.style.overflow = 'hidden';
-          this._main?.setAttribute('inert', '');
-        } else {
-          document.body.style.overflow = '';
-          this._main?.removeAttribute('inert');
-          if (this._prevFocus?.focus) {
-            this.$nextTick(() => {
-              this._prevFocus?.focus();
-              this._prevFocus = null;
-            });
-          }
-        }
-      });
-
-      const handleActive = (payload?: unknown): void => {
-        const e = payload as Event | CustomEvent | { id?: string; modalAttributes?: Record<string, unknown> } | string;
-        const id = (e as CustomEvent)?.detail ? ((e as CustomEvent).detail as { id?: string })?.id ?? (e as CustomEvent).detail : (e as { id?: string })?.id ?? (e as string);
-        const attrs = (e as CustomEvent)?.detail ? ((e as CustomEvent).detail as { modalAttributes?: Record<string, unknown> })?.modalAttributes : (e as { modalAttributes?: Record<string, unknown> })?.modalAttributes ?? null;
-
-        if (this._cleanupTimeout) {
-          clearTimeout(this._cleanupTimeout);
-          this._cleanupTimeout = null;
-        }
-
-        this.activeComponent = id as string;
-        this._attrs = attrs ? { id: id as string, attrs } : null;
-        this.showActiveComponent = true;
-
-        if (this.show) {
-          this.$nextTick(() => this.focusModal());
-        } else {
-          this.$nextTick(() => {
-            if (this.activeComponent === id) {
-              this.showActiveComponent = true;
-            }
-          });
-        }
-      };
-
-      const handleOpen = (): void => {
-        if (this._cleanupTimeout) {
-          clearTimeout(this._cleanupTimeout);
-          this._cleanupTimeout = null;
-        }
-        this.setShow(true);
-        if (this.showActiveComponent) {
-          this.$nextTick(() => this.focusModal());
-        }
-      };
-
-      const handleClose = (): void => this.setShow(false);
-
-      if (this.$wire?.on) {
-        this.$wire.on('activeModalComponentChanged', handleActive);
-        this.$wire.on('openModal', handleOpen);
-        this.$wire.on('closeModal', handleClose);
-      } else {
-        window.addEventListener('activeModalComponentChanged', handleActive);
-        window.addEventListener('openModal', handleOpen);
-        window.addEventListener('closeModal', handleClose);
-      }
-    },
-
-    focusModal(): void {
-      const id = this.activeComponent;
-      if (!id) return;
-
-      const container =
-        this.$refs[id] ||
-        (this.$el?.querySelector(`[data-modal-id="${id}"]`) as HTMLElement | null);
-      if (!container) return;
-
-      const focusable = container.querySelector(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      ) as HTMLElement;
-
-      (focusable || container).focus();
-    },
-
-    getAttrs(): Record<string, unknown> | null {
-      if (!this.activeComponent) return null;
-      if (this._attrs?.id === this.activeComponent) return this._attrs.attrs;
-
-      const comp = this.$wire?.components?.[this.activeComponent];
-      if (!comp) return null;
-
-      this._attrs = {
-        id: this.activeComponent,
-        attrs: comp.modalAttributes || {},
-      };
-      return this._attrs.attrs || {};
-    },
-
-    setShow(value: boolean): void {
-      const cleanupId = ++this._cleanupId;
-      this.show = value;
-
-      if (!value) {
-        this.showActiveComponent = false;
-        if (this._cleanupTimeout) {
-          clearTimeout(this._cleanupTimeout);
-        }
-        this._cleanupTimeout = setTimeout(() => {
-          if (this._cleanupId === cleanupId && !this.show) {
-            this.activeComponent = null;
-            this._attrs = null;
-          }
-          this._cleanupTimeout = null;
-        }, 200);
-      } else {
-        if (this._cleanupTimeout) {
-          clearTimeout(this._cleanupTimeout);
-          this._cleanupTimeout = null;
-        }
-      }
-    },
-
-    closeModalOnClickAway(): void {
-      if (this.activeComponent && this.getAttrs()?.closeOnClickAway) {
-        window.NeuraKitModal?.close(false, 0, false);
-      }
-    },
-
-    closeModalOnEscape(): void {
-      if (!this.activeComponent) return;
-
-      const attrs = this.getAttrs();
-      if (attrs?.closeOnEscape) {
-        window.NeuraKitModal?.close(
-          (attrs.closeOnEscapeIsForceful as boolean) || false,
-          0,
-          false
+        // If you dispatch "modal-close" from anywhere, keep it supported
+        window.addEventListener(
+            'modal-close',
+            (e: Event) => {
+                const d = (e as CustomEvent)?.detail ?? {};
+                (window as any).NeuraKitModal?.close(
+                    Boolean(d.force),
+                    Number(d.skipPreviousModals ?? 0),
+                    Boolean(d.destroySkipped)
+                );
+            },
+            { passive: true }
         );
-      }
-    },
-    } as any)
-  );
-  });
-}
 
+        /* ---------------------------------------------------------------------- */
+        /* Alpine modal manager                                                     */
+        /* ---------------------------------------------------------------------- */
+        document.addEventListener('alpine:init', () => {
+            (window as any).Alpine.data('modalManager', () => ({
+                show: false,
+                activeComponent: null as string | null,
+                showActiveComponent: false,
+                isLoading: false, // NEW: loading state
+
+                _attrs: null as { id: string; attrs: ModalAttrs } | null,
+                _cleanupId: 0,
+                _cleanupTimeout: null as number | null,
+                _loadingTimeout: null as number | null,
+                _prevFocus: null as HTMLElement | null,
+                _main: document.querySelector<HTMLElement>('[data-slot="main"], main, [data-slot="layout"]'),
+
+                // Keep this aligned to your CSS transition duration (ms)
+                _teardownDelayMs: 200,
+                _loadingDelayMs: 150, // Show spinner after 150ms if still loading
+
+                init() {
+                    // Toggle inert + scroll lock + focus restore
+                    this.$watch('show', (open: boolean) => {
+                        if (open) {
+                            this._prevFocus = document.activeElement as HTMLElement;
+                            document.body.style.overflow = 'hidden';
+                            this._main?.setAttribute('inert', '');
+                        } else {
+                            document.body.style.overflow = '';
+                            this._main?.removeAttribute('inert');
+
+                            // Clear loading state
+                            clearTimeout(this._loadingTimeout!);
+                            this.isLoading = false;
+
+                            // Restore focus on next frame (avoids race with DOM patch)
+                            const prev = this._prevFocus;
+                            this._prevFocus = null;
+                            requestAnimationFrame(() => prev?.focus?.());
+                        }
+                    });
+
+                    const activate = (payload: ModalActivatePayload) => {
+                        const id =
+                            (payload as any)?.detail?.id ??
+                            (payload as any)?.id ??
+                            (typeof payload === 'string' ? payload : null);
+
+                        if (!id) return;
+
+                        const attrs =
+                            (payload as any)?.detail?.modalAttributes ??
+                            (payload as any)?.modalAttributes ??
+                            null;
+
+                        clearTimeout(this._cleanupTimeout!);
+                        clearTimeout(this._loadingTimeout!);
+
+                        this.activeComponent = id;
+                        this._attrs = attrs ? { id, attrs } : null;
+                        this.showActiveComponent = true;
+                        this.isLoading = false; // Component loaded!
+
+                        // Focus after Livewire/Alpine rendered
+                        this.$nextTick(() => {
+                            requestAnimationFrame(() => this.focusModal());
+                        });
+                    };
+
+                    const uiOpen = (_e?: CustomEvent<UiOpenDetail>) => {
+                        clearTimeout(this._cleanupTimeout!);
+                        clearTimeout(this._loadingTimeout!);
+
+                        this.show = true;
+
+                        // Only show loading spinner if component takes time to load
+                        this._loadingTimeout = window.setTimeout(() => {
+                            if (this.show && !this.showActiveComponent) {
+                                this.isLoading = true;
+                            }
+                        }, this._loadingDelayMs);
+                    };
+
+                    const uiClose = (_e?: CustomEvent<UiCloseDetail>) => {
+                        this.setShow(false);
+                    };
+
+                    // Instant UI open/close (no network)
+                    window.addEventListener(UI_OPEN_EVENT, uiOpen as any, { passive: true });
+                    window.addEventListener(UI_CLOSE_EVENT, uiClose as any, { passive: true });
+
+                    // Livewire-driven events (sync + stack)
+                    this.$wire?.on('activeModalComponentChanged', activate);
+                    this.$wire?.on('openModal', uiOpen);
+                    this.$wire?.on('closeModal', uiClose);
+                },
+
+                setShow(value: boolean) {
+                    const id = ++this._cleanupId;
+                    this.show = value;
+
+                    if (!value) {
+                        this.showActiveComponent = false;
+                        this.isLoading = false;
+                        clearTimeout(this._loadingTimeout!);
+
+                        // Delay teardown to allow exit transitions
+                        clearTimeout(this._cleanupTimeout!);
+                        this._cleanupTimeout = window.setTimeout(() => {
+                            if (this._cleanupId === id) {
+                                this.activeComponent = null;
+                                this._attrs = null;
+                            }
+                        }, this._teardownDelayMs);
+                    }
+                },
+
+                focusModal() {
+                    const id = this.activeComponent;
+                    if (!id) return;
+
+                    const root =
+                        (this.$refs?.[id] as HTMLElement | undefined) ??
+                        (this.$el as HTMLElement | null)?.querySelector<HTMLElement>(`[data-modal-id="${id}"]`);
+
+                    if (!root) return;
+
+                    const focusable = root.querySelector<HTMLElement>(
+                        'button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])'
+                    );
+
+                    focusable?.focus();
+                },
+
+                getAttrs(): ModalAttrs | null {
+                    return this._attrs?.attrs ?? null;
+                },
+
+                closeModalOnClickAway() {
+                    if (this.getAttrs()?.closeOnClickAway) {
+                        (window as any).NeuraKitModal?.close();
+                    }
+                },
+
+                closeModalOnEscape() {
+                    const a: any = this.getAttrs();
+                    if (a?.closeOnEscape) {
+                        (window as any).NeuraKitModal?.close(Boolean(a.closeOnEscapeIsForceful));
+                    }
+                },
+            }));
+        });
+    }
+}

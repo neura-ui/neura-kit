@@ -1,133 +1,117 @@
-
 @aware([
     'variant' => 'default'
 ])
-
 @props([
     'name' => null,
     'label' => null,
     'description' => null,
     'value' => null,
-    'checked' => false,
-    'indeterminate' => false,
+    'mode' => 'value',
     'disabled' => false,
-    'invalid' => false,
+    'indeterminate' => false,
     'size' => 'md',
     'variant' => 'default',
-    'indicator' => true,
 ])
-
 <div
     data-slot="checkbox-wrapper"
     x-data="{
-        _checked: @js($checked),
         value: @js($value),
+        _checked: false,
         _indeterminate: @js($indeterminate),
-
-        toggle() {
-            if (this._indeterminate) {
-                this._indeterminate = false;
-            }
-            this._checked = !this._checked;
-            this.syncHiddenInput();
-            this.dispatchChangeEvent();
+        get groupState() {
+            let el = this.$el.closest('[data-slot=checkbox-group]');
+            if (!el) return undefined;
+            return Alpine.$data(el)?.state;
         },
-
         init() {
             this.$nextTick(() => {
+                // Initial state setup
                 if (this.hasGroupState()) {
-                    this._checked = this.state.includes(this.value);
+                    this._checked = this.groupState.includes(this.value);
                 } else {
                     const modelValue = this.$root._x_model?.get();
-                    if (modelValue !== undefined && modelValue !== null) {
-                        this._checked = modelValue;
+                    if (this.value !== null) {
+                        this._checked = modelValue === this.value;
+                    } else {
+                        this._checked = Boolean(modelValue);
                     }
                 }
             });
 
-            this.$watch('_checked', (isChecked) => {
+            // Watch for changes in group state
+            this.$watch('groupState', (newState) => {
+                if (Array.isArray(newState)) {
+                    this._checked = newState.includes(this.value);
+                }
+            });
+
+            // Watch for internal checkbox changes
+            this.$watch('_checked', (checked) => {
                 if (this.hasGroupState()) {
-                    this.syncWithGroupState(isChecked);
-                } else {
-                    this.syncWithModelBindings(isChecked);
+                    let state = this.groupState;
+
+                    if (checked) {
+                        // Add if not present
+                        if (!state.includes(this.value)) {
+                            state.push(this.value);
+                        }
+                    } else {
+                        // Remove by creating new array (avoids Livewire __rm__ issue)
+                        const newState = state.filter(v => v !== this.value);
+
+                        // Replace the entire array reference
+                        let parent = this.$el.closest('[data-slot=checkbox-group]');
+                        if (parent && parent._x_dataStack) {
+                            parent._x_dataStack[0].state = newState;
+                        }
+                    }
+                    return;
+                }
+
+                let newValue = this.value !== null
+                    ? (checked ? this.value : null)
+                    : checked;
+                this.$root?._x_model?.set(newValue);
+                const wireModel = this.findWireModelAttribute();
+                if (this.$wire && wireModel) {
+                    const path = this.$root.getAttribute(wireModel);
+                    this.$wire.set(path, newValue, wireModel.includes('.live'));
                 }
             });
         },
-
+        toggle() {
+            this._indeterminate = false;
+            this._checked = !this._checked;
+        },
         hasGroupState() {
-            return ![undefined, null].includes(this.state);
+            return Array.isArray(this.groupState);
         },
-
-        syncWithGroupState(isChecked) {
-            if (isChecked && !this.state.includes(this.value)) {
-                this.state.push(this.value);
-            } else if (!isChecked && this.state.includes(this.value)) {
-                this.state = this.state.filter((item) => item !== this.value);
-            }
-        },
-
-        syncWithModelBindings(isChecked) {
-            this.$root?._x_model?.set(isChecked);
-
-            const wireModelAttribute = this.findWireModelAttribute();
-            if (this.$wire && wireModelAttribute) {
-                const propertyPath = this.$root.getAttribute(wireModelAttribute);
-                const isLiveUpdate = wireModelAttribute.includes('.live');
-                this.$wire.set(propertyPath, isChecked, isLiveUpdate);
-            }
-        },
-
         findWireModelAttribute() {
-            return this.$root
-                .getAttributeNames()
-                .find(attributeName => attributeName.startsWith('wire:model'));
-        },
-
-        syncHiddenInput() {
-            this.$refs.hiddenInput && (this.$refs.hiddenInput.checked = this._checked);
-        },
-
-        dispatchChangeEvent() {
-            this.$refs.hiddenInput?.dispatchEvent(
-                new Event('change', { bubbles: true })
-            );
-        },
-
-        setIndeterminate(isIndeterminate) {
-            this._indeterminate = isIndeterminate;
-            if (isIndeterminate) {
-                this._checked = false;
-            }
+            return this.$root.getAttributeNames().find(name => name.startsWith('wire:model'));
         }
     }"
+    @click="toggle"
     {{ $attributes }}
 >
-
     <input
-        x-ref="hiddenInput"
         type="checkbox"
+        tabindex="-1"
+        hidden
         @if($name) name="{{ $name }}" @endif
         @if($value !== null) value="{{ $value }}" @endif
-        @if($checked) checked @endif
-        @if($disabled) disabled @endif
-        hidden
-        tabindex="-1"
         {{ $attributes->whereStartsWith(['wire:model', 'x-model']) }}
     />
-
     @switch($variant)
         @case('pills')
             <neura::checkbox.variant.pill>
                 {{ $slot }}
             </neura::checkbox.variant.pill>
             @break
-
         @case('cards')
             <neura::checkbox.variant.card>
                 {{ $slot }}
             </neura::checkbox.variant.card>
             @break
-
         @default
             <neura::checkbox.variant.default>
                 {{ $slot }}

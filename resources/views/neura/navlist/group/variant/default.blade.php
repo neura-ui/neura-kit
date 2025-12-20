@@ -7,7 +7,7 @@
 
 <div
     class="
-        [:has([data-collapsed]_&)_&]:hidden flex justify-between items-center
+        in-[:has([data-collapsed]_&)]:hidden flex justify-between items-center
     "
 >
     <div @class([
@@ -50,9 +50,9 @@
     @endif
 
     class="
-        [:has([data-collapsed]_&)_&]:items-center
+        in-[:has([data-collapsed]_&)]:items-center
         flex flex-col gap-y-1 ml-2 rtl:mr-2
-        [:has([data-collapsed]_&)_&]:m-0
+        in-[:has([data-collapsed]_&)]:m-0
     "
 >
     {{ $slot }}

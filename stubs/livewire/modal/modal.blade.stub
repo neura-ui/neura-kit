@@ -1,6 +1,6 @@
 <div>
-    <neura::modal.header>
-        <neura::heading level="h3" size="md">
+    <neura::modal.header managed>
+        <neura::heading level="h5" size="sm">
             [title]
         </neura::heading>
     </neura::modal.header>

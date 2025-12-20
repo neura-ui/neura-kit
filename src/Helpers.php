@@ -1,16 +1,17 @@
 <?php
 
+use Neura\Kit\Services\License\LicenseService;
 use Neura\Kit\Support\PackResolver;
 
 if (!function_exists('neura_trans')) {
     function neura_trans($key, $default = null) {
         $locale = app()->getLocale();
         $translationsPath = resource_path("lang/{$locale}.json");
-        
+
         if (!file_exists($translationsPath)) {
             $translationsPath = resource_path("lang/en.json");
         }
-        
+
         if (!file_exists($translationsPath)) {
             $packagePath = __DIR__ . "/../resources/lang/{$locale}.json";
             if (file_exists($packagePath)) {
@@ -19,11 +20,11 @@ if (!function_exists('neura_trans')) {
                 $translationsPath = __DIR__ . "/../resources/lang/en.json";
             }
         }
-        
-        $translations = file_exists($translationsPath) 
-            ? json_decode(file_get_contents($translationsPath), true) 
+
+        $translations = file_exists($translationsPath)
+            ? json_decode(file_get_contents($translationsPath), true)
             : [];
-        
+
         return $translations[$key] ?? $default ?? $key;
     }
 }
@@ -97,5 +98,21 @@ if (!function_exists('neura_alert_color')) {
 if (!function_exists('neura_config')) {
     function neura_config(string $component, string $property): mixed {
         return PackResolver::componentDefault($component, $property);
+    }
+}
+
+if (!function_exists('neura_license')) {
+    function neura_license(): LicenseService {
+        return app(LicenseService::class);
+    }
+}
+
+if (!function_exists('neura_is_activated')) {
+    function neura_is_activated(): bool {
+        try {
+            return neura_license()->isActivated();
+        } catch (\Exception $e) {
+            return false;
+        }
     }
 }

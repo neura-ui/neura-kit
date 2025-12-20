@@ -1,37 +1,31 @@
 @props([
     'collapsable' => false,
     'variant' => 'default',
-    'label' => false
+    'label' => null,
+    'icon' => null,
 ])
 
-@php
-
-$classes = [
-    'flex flex-col gap-y-1'
-];
-@endphp
-
 <div
-    {{ $attributes->class($classes) }}
+    {{ $attributes->class('flex flex-col gap-y-1') }}
     data-slot="navlist-group"
-    x-data="{
-        expanded: true,
-        expand(){
-            this.expanded = !this.expanded;
-        }
-    }"
+    x-data="{ expanded: true, expand() { this.expanded = !this.expanded } }"
 >
     @switch($variant)
         @case('compact')
             <neura::navlist.group.variant.compact
-                :$collapsable
+                :collapsable="$collapsable"
+                :label="$label"
+                :icon="$icon"
             >
                 {{ $slot }}
             </neura::navlist.group.variant.compact>
             @break
+
         @default
             <neura::navlist.group.variant.default
-                :$collapsable
+                :collapsable="$collapsable"
+                :label="$label"
+                :icon="$icon"
             >
                 {{ $slot }}
             </neura::navlist.group.variant.default>

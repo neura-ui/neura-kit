@@ -80,7 +80,6 @@ declare global {
   interface Window {
     Alpine: {
       data(name: string, fn: (...args: unknown[]) => unknown): void;
-      $refs: Record<string, HTMLElement | null>;
       $watch: (property: string, callback: (value: unknown) => void) => void;
       $nextTick: (callback: () => void) => void;
     };
@@ -137,7 +136,7 @@ if (typeof document !== 'undefined') {
 
       async init(): Promise<void> {
         const Chart = await loadChart();
-        const canvas = window.Alpine.$refs.chartCanvas as HTMLCanvasElement | null;
+        const canvas = (this as any).$refs.chartCanvas as HTMLCanvasElement | null;
         if (!canvas) return;
 
         chartInstance = new Chart(canvas.getContext('2d') as CanvasRenderingContext2D, {

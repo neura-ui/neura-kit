@@ -23,11 +23,18 @@ class MakeModalCommand extends Command
     public function handle(): int
     {
         $name = $this->argument('name');
-        
+
         $className = $this->qualifyClass($name);
         $classPath = $this->getPath($className);
-        
-        $viewName = Str::kebab($name);
+
+        $segments = collect(explode('/', str_replace('\\', '/', $name)));
+
+        $viewFile = Str::kebab($segments->pop());
+        $viewPathSegments = $segments->map(fn ($s) => Str::kebab($s));
+
+        $viewName = $viewPathSegments
+            ->push($viewFile)
+            ->implode('/');
         $viewDir = config('livewire.view_path') ?: resource_path('views/livewire');
         $viewPath = $viewDir . '/' . $viewName . '.blade.php';
 
@@ -84,17 +91,17 @@ class MakeModalCommand extends Command
     {
         $namespace = Str::beforeLast($name, '\\');
         $class = Str::afterLast($name, '\\');
-        
+
         $viewDir = config('livewire.view_path') ?: resource_path('views/livewire');
         $relativePath = Str::after($viewDir, resource_path('views'));
         $relativePath = ltrim($relativePath, '/\\');
-        
+
         $viewPrefix = str_replace(['/', '\\'], '.', $relativePath);
         if ($viewPrefix && !str_ends_with($viewPrefix, '.')) {
             $viewPrefix .= '.';
         }
-        
-        $view = $viewPrefix . $viewName;
+
+        $view = $viewPrefix . str_replace(['/', '\\'], '.', $viewName);
 
         return $this->resolveStub('Modal.stub', [
             'namespace' => $namespace,
@@ -116,7 +123,7 @@ class MakeModalCommand extends Command
     {
         // 1. Look for published stub in project root
         $customPath = base_path("stubs/neura-kit/livewire/modal/{$stub}");
-        
+
         // 2. Look for package stub
         $packagePath = __DIR__ . "/../../stubs/livewire/modal/{$stub}";
 

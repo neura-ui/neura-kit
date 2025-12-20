@@ -5,53 +5,72 @@
     'icon' => null,
 ])
 
-<div
-    class="
-        [:has([data-collapsed]_&)_&]:hidden flex justify-between items-center
-    "
->
+{{-- Group header --}}
+<div class="in-[:has([data-collapsed]_&)]:hidden">
     <div
         @if($collapsable)
             x-on:click="expand()"
         @endif
-
         class="
-            w-full rounded-box
-            hover:bg-primary-50 dark:hover:bg-primary-950/50
-            hover:!text-primary-600 dark:hover:!text-primary-400
-            hover:[&_[data-slot=icon]]:!text-primary-600 dark:hover:[&_[data-slot=icon]]:!text-primary-400
-            flex items-center [:not(:has([data-collapsed]_&))_&]:pl-3
+            group
+            flex items-center justify-between
+            w-full
+            px-3 py-2
+            rounded-lg
+            cursor-pointer
+            text-sm font-medium
+            text-neutral-600 dark:text-neutral-300
+            hover:bg-neutral-100 dark:hover:bg-white/5
+            transition
         "
     >
+        <div class="flex items-center gap-2">
+            @if($icon)
+                <neura::icon
+                    name="{{ $icon }}"
+                    class="size-4 text-neutral-400"
+                />
+            @endif
+
+            <neura::heading
+                level="h6"
+                size="xs"
+                class="font-medium text-inherit"
+            >
+                {{ $label }}
+            </neura::heading>
+        </div>
+
+        {{-- Chevron --}}
         <neura::icon
             x-show="expanded"
             name="chevron-down"
-            class="size-4"
+            class="size-4 text-neutral-400"
         />
-
         <neura::icon
             x-show="!expanded"
-            name="chevron-up"
+            name="chevron-right"
             style="display:none;"
-            class="size-4"
+            class="size-4 text-neutral-400"
         />
-        <h4 class="pl-3 py-1">{{ $label }}</h4>
     </div>
-
 </div>
 
+{{-- Group items --}}
 <div
     @if ($collapsable)
         x-show="expanded"
         x-collapse
     @endif
-
     class="
-        [:has([data-collapsed]_&)_&]:m-0 ml-[--spacing(4.7)] rtl:mr-[--spacing(4.7)]
-        [:has([data-collapsed]_&)_&]:items-center flex flex-col gap-y-1
-        [:has([data-collapsed]_&)_&]:pl-0 pl-2
-        dark:border-white/15 border-neutral-800/15
-        border-l [:has([data-collapsed]_&)_&]:border-0
+        mt-1 ml-3 pl-3
+        relative
+        flex flex-col gap-y-1
+        border-l border-neutral-200 dark:border-white/10
+
+        in-[:has([data-collapsed]_&)]:border-0
+        in-[:has([data-collapsed]_&)]:pl-0
+        in-[:has([data-collapsed]_&)]:ml-0
     "
 >
     {{ $slot }}

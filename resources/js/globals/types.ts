@@ -51,20 +51,18 @@ interface ToastAPI {
 /* -------------------------------------------------------------------------- */
 
 interface ModalBuilder {
-  with(args: KeyValue): ModalBuilder;
-  attrs(attrs: KeyValue): ModalBuilder;
-  maxWidth(width: string): ModalBuilder;
-  open(args?: KeyValue): void;
-  close(force?: boolean): void;
+    with(key: string, value: unknown): ModalBuilder;
+    withMany(args: KeyValue): ModalBuilder;
+    attrs(attrs: KeyValue): ModalBuilder;
+    attr(key: string, value: unknown): ModalBuilder;
+    maxWidth(width: string): ModalBuilder;
+    open(args?: KeyValue): void;
+    close(force?: boolean): void;
 }
 
 interface ModalAPI {
-  open(
-    component: string,
-    args?: KeyValue,
-    modalAttributes?: KeyValue
-  ): void;
-  close(force?: boolean, skipPreviousModals?: number, destroySkipped?: boolean): void;
+    open(component: string, args?: KeyValue, modalAttributes?: KeyValue): void;
+    close(force?: boolean, skipPreviousModals?: number, destroySkipped?: boolean): void;
 }
 
 /* -------------------------------------------------------------------------- */

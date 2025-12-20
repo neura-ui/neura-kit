@@ -1,18 +1,24 @@
-
 @props([
     'href' => null,
     'as' => null,
 ])
 
 @php
-    $type = match(true) {
+    $type = match (true) {
+        $as === 'form' => 'form',
         $as === 'div' && !$href => 'div',
         $as === 'a' || $href => 'a',
-        default => 'button'
+        default => 'button',
     };
 @endphp
 
 @switch($type)
+    @case('form')
+        <form {{ $attributes }}>
+            {{ $slot }}
+        </form>
+        @break
+
     @case('div')
         <div {{ $attributes }}>
             {{ $slot }}
@@ -26,7 +32,7 @@
         @break
 
     @default
-        <button {{ $attributes->merge(['type' => $type]) }}>
+        <button {{ $attributes->merge(['type' => 'button']) }}>
             {{ $slot }}
         </button>
 @endswitch

@@ -125,7 +125,7 @@ abstract class ModalComponent extends Component implements Contract
             if (!is_string($event)) continue;
 
             $dispatch = $this->dispatch($event, ...$params);
-            
+
             if (!is_numeric($component)) {
                 $dispatch->to($component);
             }

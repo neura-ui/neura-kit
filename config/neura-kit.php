@@ -69,4 +69,16 @@ return [
 
     'toggle' => Config::toggle(),
 
+    /*
+    |--------------------------------------------------------------------------
+    | License API Configuration
+    |--------------------------------------------------------------------------
+    |
+    | This option controls the licensing API endpoint for Neura Kit.
+    | The license key should be set via NEURA_KIT_LICENSE_KEY environment variable.
+    |
+    */
+
+    'license_api_url' => env('NEURA_KIT_LICENSE_API_URL', 'https://api.neuraui.dev'),
+
 ];

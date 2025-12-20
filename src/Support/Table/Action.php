@@ -108,9 +108,14 @@ class Action
         return view('neura::table.action', $data);
     }
 
-    public function __toString(): string
+    public function render(): string
     {
         return $this->toView()->render();
+    }
+
+    public function __toString(): string
+    {
+        return $this->render();
     }
 }
 

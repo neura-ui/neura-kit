@@ -1,6 +1,7 @@
 @props([
     'name' => null,
     'open' => false,
+    'managed' => false,
     'size' => 'md',
     'closeable' => true,
     'persistent' => false,

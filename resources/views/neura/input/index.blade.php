@@ -20,6 +20,7 @@
 ])
 
 @php
+    use Illuminate\View\ComponentSlot;
     use Neura\Kit\Support\PackResolver;
 
     $invalid ??= $name && $errors->has($name);
@@ -43,7 +44,7 @@
     ];
 
     $iconCount = count(array_filter([$clearable, $copyable, $revealable, $rightIcon]));
-    
+
     $inputAttributes = $attributes->except(['class']);
 @endphp
 
@@ -51,10 +52,10 @@
 
     @if (filled($prefix) || filled($prefixIcon))
         <neura::input.extra-slot data-slot="input-prefix">
-            @if ($prefix instanceof \Illuminate\View\ComponentSlot)
+            @if ($prefix instanceof ComponentSlot)
                 {{ $prefix }}
             @elseif ($prefixIcon)
-                <neura::icon name="{{ $prefixIcon }}" />
+                <neura::icon name="{{ $prefixIcon }}"/>
             @endif
         </neura::input.extra-slot>
     @endif
@@ -116,7 +117,7 @@
             />
         @endif
 
-@php
+        @php
             $inputColors = PackResolver::inputColor('base');
         @endphp
         <input
@@ -141,9 +142,15 @@
             @if($invalid) invalid @endif
         />
         <div class="flex items-center justify-center h-full mr-1" data-slot="input-actions">
-            @if ($copyable)   <neura::input.options.copyable />   @endif
-            @if ($clearable)  <neura::input.options.clearable />  @endif
-            @if ($revealable) <neura::input.options.revealable /> @endif
+            @if ($copyable)
+                <neura::input.options.copyable/>
+            @endif
+            @if ($clearable)
+                <neura::input.options.clearable/>
+            @endif
+            @if ($revealable)
+                <neura::input.options.revealable/>
+            @endif
 
             @if ($rightIcon)
                 <neura::icon
@@ -157,10 +164,10 @@
 
     @if (filled($suffix) || filled($suffixIcon))
         <neura::input.extra-slot data-slot="input-suffix">
-            @if ($suffix instanceof \Illuminate\View\ComponentSlot)
+            @if ($suffix instanceof ComponentSlot)
                 {{ $suffix }}
             @elseif ($suffixIcon)
-                <neura::icon name="{{ $suffixIcon }}" />
+                <neura::icon name="{{ $suffixIcon }}"/>
             @endif
         </neura::input.extra-slot>
     @endif

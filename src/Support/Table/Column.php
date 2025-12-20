@@ -30,7 +30,7 @@ class Column
 
     public ?int $maxWidth = null;
 
-    public bool $resizable = true;
+    public bool $resizable = false;
 
     public ?Closure $format = null;
 
@@ -189,7 +189,7 @@ class Column
     public static function componentColumn($key, $label = null, $component = null)
     {
         $column = static::make($key, $label);
-        
+
         if ($component) {
             $column->component($component);
         } else {

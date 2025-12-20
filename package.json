@@ -12,7 +12,8 @@
   "main": "./resources/js/index.ts",
   "sideEffects": [
     "./resources/js/globals/**/*.ts",
-    "./resources/js/app.ts"
+    "./resources/js/app.ts",
+    "./resources/js/components/index.ts"
   ],
   "peerDependencies": {
     "vite": "^5.0.0"

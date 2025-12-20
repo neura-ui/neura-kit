@@ -14,84 +14,92 @@
     'triggerClass' => null,
 ])
 
+@php
+    $wireModel = null;
+    foreach ($attributes->getAttributes() as $key => $value) {
+        if (str_starts_with($key, 'wire:model')) {
+            $wireModel = $value;
+            break;
+        }
+    }
+@endphp
+
 <div
     x-data="{
         search: '',
         open: false,
         isTyping: false,
-
-        // Manages visual highlighting of options (not real browser focus)
-        // Real focus stays on input for accessibility, this just controls which option appears highlighted
         activeIndex: null,
-
-        // Store all available options and currently visible/filtered options
-        options:[],        // All options from DOM
-        filteredOptions:[], // Subset based on search query
-
+        options:[],
+        filteredOptions:[],
+        optionsVersion: 0,
         isMultiple: @js($multiple),
         isDisabled: @js($disabled),
         isSearchable: @js($searchable),
-        searchPlaceholder: @js($searchPlaceholder ?? neura_trans('search')),
+        searchPlaceholder: @js($searchPlaceholder ?? ucfirst(neura_trans('search'))),
+        placeholder: @js($placeholder ?? ucfirst(neura_trans('select'))),
+        wireProperty: @js($wireModel),
 
-        // Selected value(s) - array for multiple, single value for single select
-        state: @js($multiple) ? [] : null,
-        placeholder: @js($placeholder ?? neura_trans('select')),
+        get state() {
+            // Always get fresh value from Livewire
+            if (this.wireProperty && this.$wire) {
+                const value = this.$wire.get(this.wireProperty);
+
+                if (this.isMultiple) {
+                    return Array.isArray(value) ? value : (value ? [value] : []);
+                }
+
+                return value ?? null;
+            }
+
+            return this.isMultiple ? [] : null;
+        },
+
+        set state(value) {
+            if (this.wireProperty && this.$wire) {
+                this.$wire.set(this.wireProperty, value);
+            }
+        },
 
         init() {
+            // Initial options build
+            this.rebuildOptions();
+
+            // Watch for DOM changes (when Livewire updates the options list)
             this.$nextTick(() => {
-                const wireModelAttr = this.$root?.getAttributeNames().find((n) => n.startsWith('wire:model'));
+                const optionsContainer = this.$el;
 
-                // Build options array from DOM elements on component initialization
-                this.filteredOptions = this.options = Array
-                    .from(this.$el.querySelectorAll('[data-slot=option]:not([hidden])'))
-                    .map((option) => ({
-                        value: option.dataset.value,
-                        label: option.dataset.label,
-                        element: option
-                    }));
+                const observer = new MutationObserver((mutations) => {
+                    // Check if options were added/removed
+                    const hasOptionChanges = mutations.some(mutation => {
+                        const addedOptions = Array.from(mutation.addedNodes).some(node =>
+                            node.nodeType === 1 && node.hasAttribute('data-slot') && node.getAttribute('data-slot') === 'option'
+                        );
+                        const removedOptions = Array.from(mutation.removedNodes).some(node =>
+                            node.nodeType === 1 && node.hasAttribute('data-slot') && node.getAttribute('data-slot') === 'option'
+                        );
+                        return addedOptions || removedOptions;
+                    });
 
-                // Initialize state from wire:model or x-model binding
-                if (this.$wire && wireModelAttr) {
-                    const prop = this.$root.getAttribute(wireModelAttr);
-                    const wireValue = this.$wire.get?.(prop);
-
-                    if (this.isMultiple) {
-                        this.state = Array.isArray(wireValue)
-                            ? wireValue
-                            : (wireValue ? [wireValue] : []);
-                    } else {
-                        this.state = wireValue ?? null;
+                    if (hasOptionChanges) {
+                        // Small delay to ensure DOM is ready
+                        setTimeout(() => {
+                            this.rebuildOptions();
+                        }, 10);
                     }
-                } else {
-                    this.state = this.$root?._x_model?.get();
+                });
 
-                    if (this.state === undefined || this.state === null) {
-                        this.state = this.isMultiple ? [] : null;
-                    }
-                }
+                observer.observe(optionsContainer, {
+                    childList: true,
+                    subtree: true
+                });
             });
 
-            // Two-way data binding: sync internal state back to Alpine/Livewire
-            this.$watch('state', (value) => {
-                // Sync with Alpine.js x-model
-                this.$root?._x_model?.set(value);
-
-                // Sync with Livewire wire:model (if present)
-                let wireModel = this?.$root.getAttributeNames().find(n => n.startsWith('wire:model'))
-
-                if(this.$wire && wireModel){
-                    let prop = this.$root.getAttribute(wireModel)
-                    this.$wire.set(prop, value, wireModel?.includes('.live'));
-                }
-            });
-
-            // Filter options based on search input
+            // Filter options based on search
             this.$watch('search', (val) => {
                 if (val.trim() === '') {
-                    // Empty search → show all options
                     this.filteredOptions = this.options;
                 } else {
-                    // Filter by search query - search in both value and label
                     const searchTerm = val.toLowerCase().trim();
                     this.filteredOptions = this.options.filter(option => {
                         const valueMatch = option.value?.toLowerCase().includes(searchTerm) ?? false;
@@ -99,46 +107,63 @@
                         return valueMatch || labelMatch;
                     });
                 }
-            })
+            });
         },
 
-        // Check if given option is currently selected
-        isSelected(option) {
-            return this.isMultiple ? this.state?.includes(option) : this.state === option;
+        rebuildOptions() {
+            const newOptions = Array
+                .from(this.$el.querySelectorAll('[data-slot=option]:not([hidden])'))
+                .map((option) => ({
+                    value: option.dataset.value,
+                    label: option.dataset.label,
+                    element: option
+                }));
+
+            // Always update and increment version to trigger reactivity
+            this.options = newOptions;
+            this.filteredOptions = newOptions;
+            this.optionsVersion++; // Force reactivity update
         },
 
-        select(option) {
+        isSelected(value) {
+            const currentState = this.state;
+
+            if (this.isMultiple) {
+                // For multiple select, check if the array includes this value
+                return Array.isArray(currentState) && currentState.includes(value);
+            }
+
+            // For single select, do a direct comparison
+            // Handle both string and number comparisons
+            return currentState == value; // Using == for type coercion
+        },
+
+
+        select(value) {
             this.isTyping = false;
             this.search = '';
 
             if (!this.isMultiple) {
-                // Single select: set value and close
                 this.open = false;
-                this.state = option;
+                this.state = value; // Store the value directly
                 return;
             }
 
-            // Multiple select: toggle option in/out of array
-            if(!Array.isArray(this.state)){
-                console.error('Multiple select requires an array value. Please bind an array property using x-model or wire:model.');
-            }
-
-            const itemIndex = this.state.findIndex(item => item === option);
+            const currentState = Array.isArray(this.state) ? [...this.state] : [];
+            const itemIndex = currentState.findIndex(item => item == value); // Use == for comparison
 
             if (itemIndex === -1) {
-                this.state.push(option);    // Add to selection
+                this.state = [...currentState, value];
             } else {
-                this.state.splice(itemIndex, 1);  // Remove from selection
+                this.state = currentState.filter((_, index) => index !== itemIndex);
             }
         },
 
-        // Reset component to initial state
         clear() {
             this.state = this.isMultiple ? [] : null;
             this.open = false;
         },
 
-        // Determine if option should be visible (for search filtering)
         isItemShown(value) {
             if (!this.isSearchable || !this.isTyping || !this.search.trim()) return true;
             const option = this.options.find(opt => opt.value === value);
@@ -149,14 +174,12 @@
             return valueStr.includes(searchTerm) || labelStr.includes(searchTerm);
         },
 
-        // Clear search input
         clearSearch() {
             this.search = '';
             this.isTyping = false;
             this.$refs.searchControl?.focus();
         },
 
-        // Close dropdown and reset all temporary states
         close() {
             this.open = false;
             this.search = '';
@@ -164,23 +187,17 @@
             this.activeIndex = null;
         },
 
-        // Toggle dropdown open/closed state
         toggle() {
             if (this.isDisabled) return;
-
             this.open = !this.open;
-
-            // Auto-highlight first option when opening searchable select with no selection
             if((this.open && !this.hasSelection) && this.isSearchable){
                 this.activeIndex = 0
             };
         },
 
-        // Keyboard navigation handler - manages visual highlighting (not real focus)
-        // Real browser focus stays on input for screen readers, this just moves the visual highlight
         handleKeydown(event) {
-            // Navigate down through options (wraps to beginning)
             if (event.key === 'ArrowDown') {
+                event.preventDefault();
                 if (this.activeIndex === null || this.activeIndex >= this.filteredOptions.length - 1) {
                     this.activeIndex = 0;
                 } else {
@@ -188,8 +205,8 @@
                 }
             }
 
-            // Navigate up through options (wraps to end)
             if (event.key === 'ArrowUp') {
+                event.preventDefault();
                 if (this.activeIndex === null || this.activeIndex <= 0) {
                     this.activeIndex = this.filteredOptions.length - 1;
                 } else {
@@ -197,76 +214,76 @@
                 }
             }
 
-            // Select currently highlighted option
             if (event.key === 'Enter' && this.activeIndex !== null) {
+                event.preventDefault();
                 let option = this.filteredOptions[this.activeIndex];
                 this.select(option.value);
             }
 
-            // Jump to first option
             if (event.key === 'Home') {
+                event.preventDefault();
                 this.activeIndex = 0;
                 return;
             }
 
-            // Jump to last option
             if (event.key === 'End') {
+                event.preventDefault();
                 this.activeIndex = this.filteredOptions.length - 1;
                 return;
             }
         },
 
-        // Convert option value to its index in the filtered results array
         getFilteredIndex(value) {
             return this.filteredOptions.findIndex(option => option.value === value);
         },
 
-        // Mouse hover handler - sync visual highlight with mouse position is like converting hover state to our *virtual* focus
         handleMouseEnter(value) {
             this.activeIndex = this.getFilteredIndex(value);
         },
 
         handleMouseLeave(el){
-            // Only blur if searchable (input has focus)
             if(this.isSearchable){
                 el.blur();
             }
-            // Uncomment to clear highlight when mouse leaves (preference: keep activeIndex for better keyboard nav)
-            // this.activeIndex = null;
         },
 
-        // Check if option should appear visually highlighted
         isFocused(value) {
             return this.activeIndex !== null && this.getFilteredIndex(value) === this.activeIndex;
         },
 
-        // Check if search returned any results
         get hasFilteredResults() {
             return this.filteredOptions.length > 0;
         },
 
-        // Generate display text for the trigger button
         get label() {
-            if (!this.hasSelection) return this.placeholder;
+            const _ = this.optionsVersion;
+            const currentState = this.state;
+
+            if (!this.hasSelection) {
+                return this.placeholder;
+            }
 
             if (!this.isMultiple) {
-                // Single select: show the selected option's label
-                const option = this.options.find(opt => opt.value === this.state);
-                return option?.label ?? this.placeholder;
+                // Find the option that matches the current state VALUE
+                const option = this.options.find(opt => opt.value == currentState);
+                return option?.label ?? currentState ?? this.placeholder;
             }
 
-            // Multiple select: show individual label or count
-            if (this.state.length === 1) {
-                const option = this.options.find(opt => opt.value === this.state[0]);
-                return option?.label ?? this.state[0];
+            if (Array.isArray(currentState) && currentState.length === 1) {
+                const option = this.options.find(opt => opt.value == currentState[0]);
+                return option?.label ?? currentState[0];
             }
 
-            return ` ${this.state.length} ${window.t('itemsSelected')}`;
+            return currentState && currentState.length > 0
+                ? `${currentState.length} ${window.t('itemsSelected')}`
+                : this.placeholder;
         },
 
-        // Check if any option is currently selected
         get hasSelection() {
-            return this.isMultiple ? this.state?.length > 0 : this.state !== null;
+            const currentState = this.state;
+            return this.isMultiple
+                ? (Array.isArray(currentState) && currentState.length > 0)
+                : (currentState !== null && currentState !== '' && currentState !== undefined);
         },
 
         contains(str, substring){
@@ -274,7 +291,6 @@
             return str.toLowerCase().trim().includes(substring.toLowerCase().trim());
         },
 
-        // Get search icon visibility
         get hasSearchValue() {
             return this.search && this.search.trim().length > 0;
         }
@@ -290,7 +306,7 @@
         <input
             type="hidden"
             name="{{ $name }}"
-            x-bind:value="isMultiple ? state.join(',') : state"
+            x-bind:value="isMultiple ? (Array.isArray(state) ? state.join(',') : '') : (state ?? '')"
         />
     @endif
 

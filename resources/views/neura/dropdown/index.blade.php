@@ -1,19 +1,28 @@
 @props([
     'position' => 'bottom-center',
     'teleport' => 'body',
-    'portal' => false
+    'portal' => false,
 ])
 
 @php
     $menuClasses = $menu->attributes->get('class', '');
     $menuAttributes = $menu->attributes->except('class');
 
+    $disabled = $attributes->has('disabled') && !in_array($attributes->get('disabled'), [false, 0, '0', 'false', ''], true);
+
     $classes = [
-        'isolate z-50',
+        'isolate',
+        'z-50',
         'grid',
-        'z-10 [:where(&)]:max-w-96 [:where(&)]:min-w-40 text-start',
-        'bg-white dark:bg-neutral-900 border border-black/10 dark:border-white/10',
-        'rounded-(--dropdown-radius) p-(--dropdown-padding) [--dropdown-radius:var(--radius-box)] [--dropdown-padding:--spacing(.75)]',
+        '[:where(&)]:max-w-96',
+        '[:where(&)]:min-w-40',
+        'text-start',
+        'bg-white dark:bg-neutral-900',
+        'border border-black/10 dark:border-white/10',
+        'rounded-(--dropdown-radius)',
+        'p-(--dropdown-padding)',
+        '[--dropdown-radius:var(--radius-box)]',
+        '[--dropdown-padding:--spacing(.75)]',
         $menuClasses,
     ];
 @endphp
@@ -22,88 +31,104 @@
     <div
         x-data="{
             open: false,
+            disabled: false,
+
+            init() {
+                this.$watch('disabled', (isDisabled) => {
+                    if (isDisabled && this.open) {
+                        this.close();
+                    }
+                });
+            },
+
             toggle() {
-                if (this.open) {
-                    return this.close();
-                }
-                this.$refs.button.focus();
-                this.open = true;
+                if (this.disabled) return;
+                this.open = !this.open;
             },
-            isOpen() {
-                return this.open;
-            },
+
             close(focusAfter) {
                 if (!this.open) return;
+
                 this.open = false;
                 focusAfter?.focus();
             },
+
+            isOpen() {
+                return this.open;
+            },
+
             handleFocusInOut(event) {
+                if (this.disabled) return;
+
                 const panel = this.$refs.panel;
                 const button = this.$refs.button;
                 const target = event.target;
 
                 if (panel.contains(target) || button.contains(target)) return;
 
-                const lastFocusedElement = document.activeElement;
-                if (this.shouldCloseDropdown(button, panel, lastFocusedElement)) {
+                const lastFocused = document.activeElement;
+
+                if (
+                    lastFocused &&
+                    !button.contains(lastFocused) &&
+                    !panel.contains(lastFocused)
+                ) {
                     this.close(button);
                 }
-            },
-            shouldCloseDropdown(button, panel, lastFocusedElement) {
-                return (!button.contains(lastFocusedElement) && !panel.contains(lastFocusedElement)) &&
-                    (lastFocusedElement && (button.compareDocumentPosition(lastFocusedElement) & Node.DOCUMENT_POSITION_FOLLOWING));
             }
         }"
+        x-effect="
+            disabled = @js($disabled);
+            if (disabled && open) close();
+        "
         x-on:keydown.escape.prevent.stop="close($refs.button)"
         x-on:focusin.window="handleFocusInOut($event)"
-        x-id="['dropdown-button']"
+        x-id="['dropdown-panel']"
         class="relative"
     >
+        {{-- BUTTON --}}
         <div
             x-ref="button"
-            {{ $button->attributes->class('flex items-center px-2 py-1 rounded-field') }}
-            x-on:keydown.tab.prevent.stop="$focus.focus($focus.within($refs.panel).getFirst())"
-            x-on:keydown.down.prevent.stop="$focus.focus($focus.within($refs.panel).getFirst())"
-            x-on:keydown.space.stop.prevent="toggle()"
-            x-on:keydown.enter.stop.prevent="toggle()"
-            x-on:click="toggle()"
-            x-bind:aria-expanded="open"
-            x-bind:aria-controls="$id('dropdown-button')"
+            x-bind:aria-disabled="disabled.toString()"
+            x-bind:tabindex="disabled ? -1 : 0"
+            x-on:click.prevent="toggle()"
+            x-on:keydown.enter.prevent="toggle()"
+            x-on:keydown.space.prevent="toggle()"
+            {{ $button->attributes->class('flex items-center rounded-field') }}
         >
             {{ $button }}
         </div>
 
         @if($portal)
             <template x-teleport="{{ $teleport }}">
-        @endif
+                @endif
 
-        <div
-            x-show="open"
-            x-ref="panel"
-            x-anchor.{{ $position }}.offset.6="$refs.button"
-            x-on:keydown.down.prevent.stop="$focus.next()"
-            x-on:keydown.up.prevent.stop="$focus.prev()"
-            x-on:keydown.home.prevent.stop="$focus.first()"
-            x-on:keydown.page-up.prevent.stop="$focus.first()"
-            x-on:keydown.end.prevent.stop="$focus.last()"
-            x-on:keydown.page-down.prevent.stop="$focus.last()"
-            x-transition:enter="transition ease-out duration-200"
-            x-transition:enter-start="opacity-0 scale-95"
-            x-transition:enter-end="opacity-100 scale-100"
-            x-transition:leave="transition ease-in duration-75"
-            x-transition:leave-start="opacity-100 scale-100"
-            x-transition:leave-end="opacity-0 scale-95"
-            x-on:click.away="close($refs.button)"
-            x-bind:id="$id('dropdown-button')"
-            style="display: none; backdrop-filter: blur(64px); -webkit-backdrop-filter: blur(64px); z-index: 9999"
-            {{ $menuAttributes->class(Arr::toCssClasses($classes)) }}
-        >
-            <div class="space-y-0.5">
-                {{ $menu }}
-            </div>
-        </div>
+                {{-- PANEL --}}
+                <div
+                    x-show="open"
+                    x-ref="panel"
+                    x-anchor.{{ $position }}.offset.6="$refs.button"
+                    x-on:keydown.down.prevent.stop="$focus.next()"
+                    x-on:keydown.up.prevent.stop="$focus.prev()"
+                    x-on:keydown.home.prevent.stop="$focus.first()"
+                    x-on:keydown.end.prevent.stop="$focus.last()"
+                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 scale-95"
+                    x-transition:enter-end="opacity-100 scale-100"
+                    x-transition:leave="transition ease-in duration-75"
+                    x-transition:leave-start="opacity-100 scale-100"
+                    x-transition:leave-end="opacity-0 scale-95"
+                    x-on:click.away="close($refs.button)"
+                    x-bind:id="$id('dropdown-panel')"
+                    style="display: none; backdrop-filter: blur(64px); -webkit-backdrop-filter: blur(64px); z-index: 9999"
+                    {{ $menuAttributes->class(Arr::toCssClasses($classes)) }}
+                >
+                    <div {{ $menu->attributes->class('') }}>
+                        {{ $menu }}
+                    </div>
+                </div>
 
-        @if($portal)
+                @if($portal)
             </template>
         @endif
     </div>

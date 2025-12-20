@@ -1,8 +1,16 @@
 @aware(['label', 'size'])
 
 @php
-    $classes=[
-        'font-medium [:where(&)]:text-neutral-900 font-semibold [:where(&)]:dark:text-white select-none',
+    $classes = [
+        // typography & color (match form label)
+        'text-sm font-base select-none',
+        '[:where(&)]:text-neutral-900 [:where(&)]:dark:text-white',
+        '[:where(&)]:text-start',
+
+        // behavior
+        'whitespace-nowrap',
+
+        // optional size override (kept for API compatibility)
         match ($size) {
             'xs' => 'text-xs',
             'sm' => 'text-sm',
