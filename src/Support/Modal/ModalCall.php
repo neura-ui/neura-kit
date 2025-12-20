@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Neura\Kit\Support\Modal;
 
+use Illuminate\Contracts\Routing\UrlRoutable;
 use InvalidArgumentException;
 use Livewire\Component;
 
@@ -78,20 +79,48 @@ final class ModalCall
             $this->withMany($overrideArgs);
         }
 
-        $js = sprintf(
-            'NeuraKitModal.open(%s, %s, %s)',
-            json_encode($this->modal),
-            json_encode($this->args ?: (object) []),
-            json_encode($this->attrs ?: (object) [])
-        );
-
         if ($dispatch) {
+            // Normalize arguments for JSON serialization (convert models to IDs)
+            $normalizedArgs = $this->normalizeArgsForJs($this->args);
+            
+            // Call openModal directly via JavaScript
+            $js = sprintf(
+                'NeuraKitModal.open(%s, %s, %s)',
+                json_encode($this->modal),
+                json_encode($normalizedArgs),
+                json_encode($this->attrs)
+            );
+            
             $this->caller->js($js);
         }
 
-        return $js;
+        return sprintf(
+            'NeuraKitModal.open(%s, %s, %s)',
+            json_encode($this->modal),
+            json_encode($this->normalizeArgsForJs($this->args)),
+            json_encode($this->attrs)
+        );
     }
 
+    /**
+     * Normalize arguments for JSON serialization.
+     * Converts Eloquent models and other objects to their route keys/IDs.
+     */
+    private function normalizeArgsForJs(array $args): array
+    {
+        return array_map(function ($value) {
+            if ($value instanceof UrlRoutable) {
+                return $value->getRouteKey();
+            }
+            if (is_object($value) && method_exists($value, 'getRouteKey')) {
+                return $value->getRouteKey();
+            }
+            if (is_object($value) && method_exists($value, 'toArray')) {
+                return $value->toArray();
+            }
+            return $value;
+        }, $args);
+    }
 
     public function close(bool $force = false, bool $dispatch = true): string
     {

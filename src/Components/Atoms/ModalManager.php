@@ -9,7 +9,6 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Reflector;
 use Illuminate\View\View;
 use Livewire\Component;
-use Livewire\Attributes\On;
 use ReflectionClass;
 use Neura\Kit\Support\Modal\Contracts\ModalComponent as ModalComponentContract;
 
@@ -22,11 +21,6 @@ class ModalManager extends Component
     protected static array $reflectionCache = [];
     protected static array $propertyTypesCache = [];
 
-    public function mount(): void
-    {
-
-        $this->resetState();
-    }
     public function resetState(): void
     {
         $this->components = [];
@@ -38,6 +32,10 @@ class ModalManager extends Component
      */
     public function openModal($component, $arguments = [], $modalAttributes = []): void
     {
+        // Ensure arguments is an array
+        $arguments = is_array($arguments) ? $arguments : [];
+        $modalAttributes = is_array($modalAttributes) ? $modalAttributes : [];
+        
         $componentClass = $this->resolveComponentClass($component);
 
         if (!is_subclass_of($componentClass, ModalComponentContract::class)) {
@@ -55,7 +53,12 @@ class ModalManager extends Component
 
         $reflect = $this->getReflectionClass($componentClass);
         $resolvedArgs = $this->resolveComponentProps($arguments, $componentClass, $reflect);
-        $mergedArgs = array_merge($arguments, $resolvedArgs->all());
+        // Merge resolved arguments (only for typed properties that were resolved) with original arguments
+        // This ensures non-typed properties and already-correct types are preserved
+        $mergedArgs = $arguments;
+        foreach ($resolvedArgs as $key => $resolvedValue) {
+            $mergedArgs[$key] = $resolvedValue;
+        }
 
         $this->components[$id] = [
             'name' => $component,
@@ -113,28 +116,44 @@ class ModalManager extends Component
 
     protected function resolveParameter($attributes, $parameterName, $parameterClassName)
     {
-        $value = $attributes[$parameterName];
+        $value = $attributes[$parameterName] ?? null;
 
-        if ($value instanceof $parameterClassName || $value instanceof UrlRoutable) {
+        // Si la valeur est déjà du bon type, on la retourne telle quelle
+        if ($value instanceof $parameterClassName) {
             return $value;
         }
 
-        if (enum_exists($parameterClassName)) {
-            $enum = $parameterClassName::tryFrom($value);
-            if ($enum !== null) return $enum;
+        // Si c'est déjà un UrlRoutable et que c'est ce qu'on attend, on le retourne
+        if ($value instanceof UrlRoutable && is_subclass_of($parameterClassName, UrlRoutable::class)) {
+            return $value;
         }
 
+        // Gestion des enums
+        if (enum_exists($parameterClassName)) {
+            if ($value === null) {
+                return null;
+            }
+            $enum = $parameterClassName::tryFrom($value);
+            return $enum ?? $value;
+        }
+
+        // Gestion des modèles Eloquent (UrlRoutable)
         if (is_subclass_of($parameterClassName, UrlRoutable::class)) {
-        $instance = app()->make($parameterClassName);
+            if ($value === null) {
+                return null;
+            }
+            
+            $instance = app()->make($parameterClassName);
             $model = $instance->resolveRouteBinding($value);
 
             if (!$model) {
                 throw (new ModelNotFoundException())->setModel(get_class($instance), [$value]);
+            }
+
+            return $model;
         }
 
-        return $model;
-    }
-
+        // Pour les autres types, on retourne la valeur telle quelle
         return $value;
     }
 
@@ -183,16 +202,11 @@ class ModalManager extends Component
 
     public function getListeners(): array
     {
-        return ['destroyComponent'];
+        return [
+            'destroyComponent',
+        ];
     }
 
-    #[On('openModal')]
-    public function handleOpenModal(array $data = []): void
-    {
-        if ($component = $data['component'] ?? null) {
-            $this->openModal($component, $data['arguments'] ?? [], $data['modalAttributes'] ?? []);
-        }
-    }
 
     public function closeModal($force = false, $skipPreviousModals = 0, $destroySkipped = false): void
     {
@@ -210,7 +224,7 @@ class ModalManager extends Component
                 $startIndex = max(0, $currentIndex - $skipPreviousModals);
                 $toRemove = array_slice($keys, $startIndex, $skipPreviousModals + 1);
 
-                    if ($destroySkipped || $force) {
+                if ($destroySkipped || $force) {
                     foreach ($toRemove as $id) {
                         $this->destroyComponent($id);
                     }

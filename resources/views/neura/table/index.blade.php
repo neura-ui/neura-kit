@@ -17,16 +17,21 @@
 <div class="space-y-3">
     {{-- Toolbar --}}
     <div class="flex flex-wrap items-center justify-between gap-3 px-4 py-2">
-        <div class="flex-1 max-w-xs">
-            @if ($this->hasSearchableColumns())
-                <neura::input
-                    wire:model.live.debounce.300ms="search"
-                    placeholder="{{ neura_trans('search') }}"
-                    leftIcon="magnifying-glass"
-                    clearable
-                    size="sm"
-                />
-            @endif
+        <div class="flex-1 max-w-xs flex gap-2 items-center">
+            <div class="max-w-sm">
+                @if ($this->hasSearchableColumns())
+                    <neura::input
+                        wire:model.live.debounce.300ms="search"
+                        placeholder="{{ neura_trans('search') }}"
+                        leftIcon="magnifying-glass"
+                        clearable
+                        size="sm"
+                    />
+                @endif
+            </div>
+            <div wire:loading>
+                <neura::icon.loading />
+            </div>
         </div>
 
         <div class="flex items-center gap-1">
@@ -77,7 +82,7 @@
                                     mode="boolean"
                                     wire:model.live="visibleColumns.{{ $column->key }}"
                                     size="sm"
-                                    label="{{ $column->label }}" />
+                                    label="{{ $column->label }}"/>
                             </neura::dropdown.item>
                         @endforeach
                     </x-slot:menu>
@@ -90,14 +95,16 @@
         </div>
     </div>
 
-    {{-- Selection Banner --}}
     @if ($this->hasBulkActions() && !empty($selected))
-        <div class="mx-4 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 px-4 py-3">
+        <div
+            class="mx-4 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 px-4 py-3">
             <div class="flex items-center justify-between gap-3">
                 <div class="flex items-center gap-3">
                     <div class="flex items-center gap-2 text-sm text-blue-900 dark:text-blue-100">
+                        <neura::icon name="check-circle"/>
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                         <span class="font-medium">
                             {{ $this->selectedCount }} {{ $this->selectedCount === 1 ? 'ligne sélectionnée' : 'lignes sélectionnées' }}
@@ -105,10 +112,8 @@
                     </div>
 
                     @if (!$selectAll && $this->selectedCount < $this->totalRows && $selectPage)
-                        <button
-                            wire:click="selectAllRows"
-                            class="text-sm text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100 font-medium underline"
-                        >
+                        <button wire:click="selectAllRows"
+                                class="text-sm text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100 font-medium underline">
                             Sélectionner toutes les {{ $this->totalRows }} lignes
                         </button>
                     @endif
@@ -122,8 +127,7 @@
 
                 <button
                     wire:click="deselectAllRows"
-                    class="text-sm text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100 font-medium"
-                >
+                    class="text-sm text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100 font-medium">
                     Tout désélectionner
                 </button>
             </div>
@@ -170,6 +174,10 @@
                                     :value="$row->{$column->key} ?? data_get($row, $column->key)"
                                     :row="$row"
                                     :column="$column"
+                                    :format="$column->format"
+                                    :formatUsing="$column->formatUsing"
+                                    :html="$column->html"
+                                    :extraAttributes="$column->extraAttributes"
                                 />
                             </td>
                         @endforeach

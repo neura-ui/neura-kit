@@ -25,7 +25,6 @@
         },
         init() {
             this.$nextTick(() => {
-                // Initial state setup
                 if (this.hasGroupState()) {
                     this._checked = this.groupState.includes(this.value);
                 } else {
@@ -38,14 +37,12 @@
                 }
             });
 
-            // Watch for changes in group state
             this.$watch('groupState', (newState) => {
                 if (Array.isArray(newState)) {
                     this._checked = newState.includes(this.value);
                 }
             });
 
-            // Watch for internal checkbox changes
             this.$watch('_checked', (checked) => {
                 if (this.hasGroupState()) {
                     let state = this.groupState;
@@ -56,10 +53,8 @@
                             state.push(this.value);
                         }
                     } else {
-                        // Remove by creating new array (avoids Livewire __rm__ issue)
                         const newState = state.filter(v => v !== this.value);
 
-                        // Replace the entire array reference
                         let parent = this.$el.closest('[data-slot=checkbox-group]');
                         if (parent && parent._x_dataStack) {
                             parent._x_dataStack[0].state = newState;

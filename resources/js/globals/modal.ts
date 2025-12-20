@@ -81,9 +81,12 @@ if (!isBrowser) {
     if (!(window as any).NeuraKitModal) {
         (window as any).NeuraKitModal = {
             /**
-             * Optimized behavior:
-             * 1) Open UI immediately (no round-trip)
-             * 2) Sync Livewire state (loads component/stack)
+             * Open modal - primarily used for JS-initiated opens.
+             * For PHP-initiated opens via ModalCall, the dispatch happens server-side.
+             * 
+             * This method:
+             * 1) Opens UI immediately (no round-trip)
+             * 2) Syncs Livewire state via call (for JS-only usage)
              */
             open(
                 component: string,
@@ -93,12 +96,19 @@ if (!isBrowser) {
                 // Instant UI open with loading state
                 window.dispatchEvent(new CustomEvent<UiOpenDetail>(UI_OPEN_EVENT, { detail: { component, attrs } }));
 
-                // Livewire sync (may take time)
+                // Livewire sync
                 ModalManagerCache.get()?.call('openModal', component, args, attrs);
             },
 
             /**
-             * Optimized behavior:
+             * Open UI only (no Livewire call) - used when PHP handles the dispatch.
+             */
+            openUi(component: string, attrs: Record<string, unknown> = {}) {
+                window.dispatchEvent(new CustomEvent<UiOpenDetail>(UI_OPEN_EVENT, { detail: { component, attrs } }));
+            },
+
+            /**
+             * Close modal:
              * 1) Close UI immediately (no round-trip)
              * 2) Sync Livewire state
              */

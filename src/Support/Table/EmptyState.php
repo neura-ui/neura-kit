@@ -18,6 +18,8 @@ class EmptyState
     public ?string $actionLabel = null;
 
     public ?string $actionUrl = null;
+    
+    public ?string $actionWireClick = null;
 
     public ?string $view = null;
 
@@ -49,10 +51,23 @@ class EmptyState
         return $this;
     }
 
+    /**
+     * Set the action with a JavaScript expression for x-on:click
+     */
     public function action(string $label, $action): static
     {
         $this->actionLabel = $label;
         $this->actionUrl = $action;
+        return $this;
+    }
+    
+    /**
+     * Set the action with a Livewire method name (cleaner syntax)
+     */
+    public function wireClick(string $label, string $method): static
+    {
+        $this->actionLabel = $label;
+        $this->actionWireClick = $method;
         return $this;
     }
 
@@ -89,7 +104,11 @@ class EmptyState
                 <p class="text-neutral-500 dark:text-neutral-400 mb-4">
                     {{ $message ?? $description ?? "No results found." }}
                 </p>
-                @if($actionLabel)
+                @if($actionLabel && $actionWireClick)
+                    <neura::button wire:click="{{ $actionWireClick }}">
+                        {{ $actionLabel }}
+                    </neura::button>
+                @elseif($actionLabel && $actionUrl)
                     <neura::button x-on:click="{{ $actionUrl }}">
                         {{ $actionLabel }}
                     </neura::button>
@@ -101,6 +120,7 @@ class EmptyState
             'description' => $this->description,
             'actionLabel' => $this->actionLabel,
             'actionUrl' => $this->actionUrl,
+            'actionWireClick' => $this->actionWireClick,
         ]);
 
         return new HtmlString($html);
