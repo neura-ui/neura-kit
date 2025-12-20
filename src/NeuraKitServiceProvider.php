@@ -44,72 +44,28 @@ class NeuraKitServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configurePublishing();
+        $this->registerHelpers();
+        $this->bootComponentPath();
+        $this->bootTagCompiler();
+        $this->configureComponents();
 
         if (!$this->isLicenseActivated()) {
             return;
         }
 
-        $this->registerHelpers();
         $this->registerRoutes();
-        $this->bootComponentPath();
-        $this->bootTagCompiler();
-        $this->configureComponents();
     }
 
     protected function registerRoutes(): void
     {
-         /** @var CachesRoutes $app */
-         $app = $this->app;
+        /** @var CachesRoutes $app */
+        $app = $this->app;
         if ($app->routesAreCached()) {
             return;
         }
 
-        Route::get('/neura-kit/lang/{locale}.json', function ($locale) {
-            $locale = $this->sanitizeLocale($locale);
-            $translations = $this->loadTranslations($locale);
-
-            if (empty($translations)) {
-                return response()->json([], 404);
-            }
-
-            return response()->json($translations, 200, [
-                'Content-Type' => 'application/json; charset=utf-8',
-                'Cache-Control' => 'public, max-age=3600',
-            ]);
-        })->name('neura-kit.translations');
-    }
-
-    protected function sanitizeLocale(string $locale): string
-    {
-        return preg_replace('/[^a-z0-9_-]/i', '', $locale);
-    }
-
-    protected function loadTranslations(string $locale): array
-    {
-        $paths = $this->getTranslationPaths($locale);
-
-        foreach ($paths as $path) {
-            if (file_exists($path)) {
-                $contents = file_get_contents($path);
-                $translations = json_decode($contents, true);
-
-                if (json_last_error() === JSON_ERROR_NONE && is_array($translations)) {
-                    return $translations;
-                }
-            }
-        }
-
-        return [];
-    }
-
-    protected function getTranslationPaths(string $locale): array
-    {
-        return [
-            resource_path("lang/{$locale}.json"),
-            resource_path("lang/en.json"),
-            __DIR__ . "/../resources/lang/{$locale}.json",
-            __DIR__ . "/../resources/lang/en.json",
-        ];
+        Route::get('/neura-kit/lang/{locale}.json', Http\Controllers\TranslationsController::class)
+            ->name('neura-kit.translations');
     }
 
     protected function bootComponentPath(): void
@@ -183,6 +139,14 @@ class NeuraKitServiceProvider extends ServiceProvider
 
     protected function configureComponents(): void
     {
+        if (class_exists(Livewire::class)) {
+            Livewire::component('neura-kit.modal-manager', Components\Atoms\ModalManager::class);
+        }
+
+        Blade::directive('neuraKit', function () {
+            return "<?php echo view('neura-kit::components.neura-kit-managers')->render(); ?>";
+        });
+        
         if (!$this->isLicenseActivated()) {
             Blade::directive('neuraKit', function () {
                 return '';
@@ -190,13 +154,6 @@ class NeuraKitServiceProvider extends ServiceProvider
             return;
         }
 
-        Blade::directive('neuraKit', function () {
-            return "<?php echo view('neura-kit::components.neura-kit-managers')->render(); ?>";
-        });
-
-        if (class_exists(Livewire::class)) {
-            Livewire::component('neura-kit.modal-manager', Components\Atoms\ModalManager::class);
-        }
     }
 
     protected function registerHelpers(): void
