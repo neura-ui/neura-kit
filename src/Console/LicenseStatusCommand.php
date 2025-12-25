@@ -10,7 +10,7 @@ use Neura\Kit\Services\License\LicenseService;
 class LicenseStatusCommand extends Command
 {
     protected $signature = 'neura-kit:license-status';
-    
+
     protected $description = 'Check Neura Kit license status';
 
     public function handle(LicenseService $licenseService): int
@@ -37,11 +37,11 @@ class LicenseStatusCommand extends Command
         $this->line('');
 
         $this->line('Plan: ' . ($license['plan'] ?? 'Unknown'));
-        
+
         if (isset($license['expires_at'])) {
             $expiresAt = \Carbon\Carbon::parse($license['expires_at']);
             $isExpired = $expiresAt->isPast();
-            
+
             if ($isExpired) {
                 $this->warn('⚠️  Updates expired: ' . $license['expires_at']);
                 $this->line('');
@@ -59,7 +59,7 @@ class LicenseStatusCommand extends Command
         $environment = $license['environment'] ?? 'local';
         $assignedProjects = $license['assigned_projects'] ?? [];
         $currentProject = $license['project_identifier'] ?? null;
-        
+
         if ($environment === 'production') {
             $count = count($assignedProjects);
             $this->line('Assigned projects: ' . $count);

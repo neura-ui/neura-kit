@@ -18,7 +18,6 @@
 @endphp
 
 <div class="space-y-3">
-    {{-- Toolbar --}}
     <div class="flex flex-wrap items-center justify-between gap-3 px-4 py-2">
         <div class="flex-1 max-w-xs flex gap-2 items-center">
             <div class="max-w-sm">
@@ -47,14 +46,22 @@
                             icon="squares-plus"
                             :disabled="empty($selected)"
                         >
-                            Bulk actions
+                            {{ neura_trans('bulkActions') }}
                         </neura::button>
                     </x-slot:button>
 
                     <x-slot:menu>
-                        @foreach ($this->bulkActions() as $action)
+                        @foreach ($this->getNormalizedBulkActions() as $action)
+                            @php
+                                $itemVariant = match($action['variant'] ?? 'soft') {
+                                    'danger', 'danger-soft', 'danger-ghost' => 'danger',
+                                    default => 'soft',
+                                };
+                            @endphp
                             <neura::dropdown.item
                                 wire:click="runBulkAction('{{ $action['key'] }}')"
+                                variant="{{ $itemVariant }}"
+                                icon="{{ $action['icon'] ?? '' }}"
                             >
                                 {{ $action['label'] }}
                             </neura::dropdown.item>
@@ -70,7 +77,7 @@
                             size="sm"
                             icon="view-columns"
                         >
-                            Columns
+                            {{ neura_trans('columns') }}
                         </neura::button>
                     </x-slot:button>
 
@@ -99,24 +106,18 @@
     </div>
 
     @if ($this->hasBulkActions() && !empty($selected))
-        <div
-            class="mx-4 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 px-4 py-3">
+        <div class="mx-4 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 px-4 py-3">
             <div class="flex items-center justify-between gap-3">
                 <div class="flex items-center gap-3">
                     <div class="flex items-center gap-2 text-sm text-blue-900 dark:text-blue-100">
                         <neura::icon name="check-circle"/>
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
                         <span class="font-medium">
                             {{ $this->selectedCount }} {{ $this->selectedCount === 1 ? neura_trans('rowSelected') : neura_trans('rowsSelected') }}
                         </span>
                     </div>
 
                     @if (!$selectAll && $this->selectedCount < $this->totalRows && $selectPage)
-                        <button wire:click="selectAllRows"
-                                class="text-sm text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100 font-medium underline">
+                        <button wire:click="selectAllRows" class="text-sm text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100 font-medium underline">
                             {{ neura_trans('selectAllRows', ['count' => $this->totalRows]) }}
                         </button>
                     @endif
@@ -128,8 +129,7 @@
                     @endif
                 </div>
 
-                <button
-                    wire:click="deselectAllRows"
+                <button wire:click="deselectAllRows"
                     class="text-sm text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100 font-medium">
                     {{ neura_trans('deselectAll') }}
                 </button>
@@ -137,18 +137,14 @@
         </div>
     @endif
 
-    {{-- Table --}}
     <div class="{{ Arr::toCssClasses($containerClasses) }}">
         <div class="overflow-x-auto">
-            <table class="w-full table-fixed text-sm">
+            <table class="w-full table-auto text-sm">
                 <thead>
                 <tr>
-                    @if ($this->hasBulkActions())
+                    @if ($this->hasBulkActions() && $rows->total() > 0)
                         <th class="w-10 px-4">
-                            <neura::checkbox
-                                wire:model.live="selectPage"
-                                size="sm"
-                            />
+                            <neura::checkbox wire:model.live="selectPage" size="sm"/>
                         </th>
                     @endif
 
@@ -157,15 +153,13 @@
                             $isSortable = $column->sortable ?? false;
                             $isResizable = $column->resizable ?? false;
                             $isCurrentSort = $sortBy === $column->key;
-                            $width = $columnWidths[$column->key] ?? $column->width ?? null;
+                            $width = $columnWidths[$column->key] ?? $column->width ?? ($isResizable ? 150 : null);
                         @endphp
-                        <th
-                            @if($width) style="width: {{ $width }}px; min-width: {{ $column->minWidth ?? 50 }}px; max-width: {{ $column->maxWidth ?? 'none' }};" @endif
-                            class="h-11 px-4 text-left text-xs font-medium text-neutral-500 relative group {{ $isSortable ? 'cursor-pointer select-none hover:bg-neutral-50 dark:hover:bg-neutral-900' : '' }}"
+                        <th @if($width) style="width: {{ $width }}px !important; min-width: {{ $width }}px !important; max-width: none !important;" @endif
+                            class="h-11 px-4 text-left text-xs font-medium text-neutral-500 whitespace-nowrap relative group {{ $isSortable ? 'cursor-pointer select-none hover:bg-neutral-50 dark:hover:bg-neutral-900' : '' }}"
                             @if($isSortable)
                                 wire:click="sort('{{ $column->key }}')"
-                            @endif
-                        >
+                            @endif>
                             <div class="flex items-center gap-1.5">
                                 <span>{{ $column->label }}</span>
                                 @if($isSortable)
@@ -181,31 +175,48 @@
                                 @endif
                             </div>
                             @if($isResizable && !$loop->last)
+                                @php
+                                    $bulkActionsOffset = $this->hasBulkActions() ? 1 : 0;
+                                @endphp
                                 <div
                                     class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-primary-500 active:bg-primary-600"
-                                    x-data="{ startX: 0, startWidth: 0, resizing: false }"
+                                    x-data="{ resizing: false }"
                                     x-on:mousedown.stop.prevent="
+                                        if (resizing) return;
                                         resizing = true;
-                                        startX = $event.clientX;
-                                        startWidth = $el.parentElement.offsetWidth;
+
+                                        const th = $el.parentElement;
+                                        const startX = $event.clientX;
+                                        const startWidth = th.offsetWidth;
+                                        const minW = {{ $column->minWidth ?? 50 }};
+                                        const bulkOffset = {{ $bulkActionsOffset }};
+
                                         document.body.style.cursor = 'col-resize';
                                         document.body.style.userSelect = 'none';
 
                                         const onMouseMove = (e) => {
-                                            if (!resizing) return;
                                             const diff = e.clientX - startX;
-                                            const newWidth = Math.max({{ $column->minWidth ?? 50 }}, Math.min({{ $column->maxWidth ?? 500 }}, startWidth + diff));
-                                            $el.parentElement.style.width = newWidth + 'px';
+                                            const newWidth = Math.max(minW, startWidth + diff);
+                                            th.style.width = newWidth + 'px';
+                                            th.style.minWidth = newWidth + 'px';
+                                            th.style.maxWidth = 'none';
+
+                                            const colIndex = Array.from(th.parentElement.children).indexOf(th);
+                                            const tds = document.querySelectorAll('tbody tr td:nth-child(' + (colIndex + 1 + bulkOffset) + ')');
+                                            tds.forEach(td => {
+                                                td.style.width = newWidth + 'px';
+                                                td.style.minWidth = newWidth + 'px';
+                                                td.style.maxWidth = 'none';
+                                            });
                                         };
 
                                         const onMouseUp = () => {
                                             resizing = false;
                                             document.body.style.cursor = '';
                                             document.body.style.userSelect = '';
-                                            const newWidth = $el.parentElement.offsetWidth;
-                                            $wire.set('columnWidths.{{ $column->key }}', newWidth);
                                             document.removeEventListener('mousemove', onMouseMove);
                                             document.removeEventListener('mouseup', onMouseUp);
+                                            $wire.resizeColumn('{{ $column->key }}', Math.round(th.offsetWidth));
                                         };
 
                                         document.addEventListener('mousemove', onMouseMove);
@@ -220,7 +231,6 @@
                 <tbody>
                 @forelse ($rows as $row)
                     <tr>
-
                         @if ($this->hasBulkActions())
                             <td class="px-4">
                                 <neura::checkbox.group wire:model.live="selected">
@@ -230,12 +240,10 @@
                         @endif
                         @foreach ($columns as $column)
                             @php
-                                $width = $columnWidths[$column->key] ?? $column->width ?? null;
+                                $tdWidth = $columnWidths[$column->key] ?? $column->width ?? ($column->resizable ?? false ? 150 : null);
                             @endphp
-                            <td
-                                class="px-4 py-2.5 truncate"
-                                @if($width) style="width: {{ $width }}px; max-width: {{ $width }}px;" @endif
-                            >
+                            <td class="px-4 py-2.5 whitespace-nowrap"
+                                @if($tdWidth) style="width: {{ $tdWidth }}px !important; min-width: {{ $tdWidth }}px !important; max-width: none !important;" @endif>
                                 <x-dynamic-component
                                     :component="$column->component"
                                     :value="$row->{$column->key} ?? data_get($row, $column->key)"
@@ -263,7 +271,6 @@
         </div>
     </div>
 
-    {{-- Pagination --}}
     <div class="pt-3">
         {{ $rows->links('neura::table.pagination') }}
     </div>

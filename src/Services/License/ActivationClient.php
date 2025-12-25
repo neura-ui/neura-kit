@@ -4,18 +4,22 @@ declare(strict_types=1);
 
 namespace Neura\Kit\Services\License;
 
+use Exception;
 use Illuminate\Support\Facades\Http;
 use Neura\Kit\Exceptions\LicenseException;
 
 final class ActivationClient
 {
+    /**
+     * @throws LicenseException
+     */
     public function activate(string $licenseKey, array $payload): array
     {
         $url = $this->getApiUrl('/activate');
 
         try {
             $response = Http::timeout(30)->post($url, $payload);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             throw LicenseException::activationFailed(
                 'Could not connect to license server. ' . $e->getMessage()
             );

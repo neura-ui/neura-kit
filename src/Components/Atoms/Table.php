@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Neura\Kit\Support\Table\Action;
 use Neura\Kit\Support\Table\EmptyState;
 
 abstract class Table extends Component
@@ -91,7 +92,6 @@ abstract class Table extends Component
     public function updatedSelectPage($value): void
     {
         if ($value) {
-            // Select all on current page
             $this->selected = $this->currentPageRowIds();
         } else {
             // Deselect all
@@ -105,16 +105,14 @@ abstract class Table extends Component
             );
         }
 
-        // Force array re-index to avoid Livewire __rm__ markers
         $this->selected = array_values($this->selected);
     }
 
     public function updatedSelected($value): void
     {
-        // Ensure it's an array and re-indexed
         $this->selected = array_values(
             collect(is_array($value) ? $value : [])
-                ->filter(fn($v) => $v !== '__rm__') // Filter out Livewire removal markers
+                ->filter(fn($v) => $v !== '__rm__')
                 ->map(fn($id) => (string)$id)
                 ->unique()
                 ->all()
@@ -122,11 +120,9 @@ abstract class Table extends Component
 
         $pageIds = $this->currentPageRowIds();
 
-        // selectPage should be checked only when ALL current page rows are selected
         $this->selectPage = !empty($pageIds)
             && count(array_diff($pageIds, $this->selected)) === 0;
 
-        // Check if all rows are selected (not just current page)
         if ($this->selectAll && count($this->selected) < $this->totalRows) {
             $this->selectAll = false;
         }
@@ -152,6 +148,37 @@ abstract class Table extends Component
     public function bulkActions(): array
     {
         return [];
+    }
+
+    public function getNormalizedBulkActions(): array
+    {
+        return $this->normalizeActions($this->bulkActions());
+    }
+
+    public function getNormalizedActions(): array
+    {
+        return $this->normalizeActions($this->actions());
+    }
+
+    protected function normalizeActions(array $actions): array
+    {
+        return collect($actions)
+            ->map(fn($action) => $action instanceof Action ? $action->toArray() : $action)
+            ->filter(function ($action) {
+                $visible = $action['visible'] ?? true;
+
+                if (is_callable($visible)) {
+                    try {
+                        return $visible();
+                    } catch (\Exception $e) {
+                        return true;
+                    }
+                }
+
+                return (bool) $visible;
+            })
+            ->values()
+            ->toArray();
     }
 
     public function mount(): void
@@ -243,6 +270,12 @@ abstract class Table extends Component
             : 'asc';
 
         $this->sortBy = $key;
+    }
+
+    public function resizeColumn(string $key, int $width): void
+    {
+        $this->columnWidths[$key] = max(50, $width);
+        $this->skipRender();
     }
 
     protected function sortableKeys(): array
@@ -415,14 +448,20 @@ abstract class Table extends Component
             return;
         }
 
-        $action = collect($this->bulkActions())
+        $action = collect($this->getNormalizedBulkActions())
             ->firstWhere('key', $key);
-
         if (!$action || !method_exists($this, $action['action'])) {
             return;
         }
 
-        $this->{$action['action']}($this->selected);
+        $params = $action['params'] ?? null;
+
+        if ($params !== null) {
+            $resolvedParams = is_callable($params) ? $params($this->selected) : $params;
+            $this->{$action['action']}($this->selected, ...(array) $resolvedParams);
+        } else {
+            $this->{$action['action']}($this->selected);
+        }
 
         $this->refreshTable();
     }

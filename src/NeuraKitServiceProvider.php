@@ -60,8 +60,8 @@ class NeuraKitServiceProvider extends ServiceProvider
 
     protected function registerRoutes(): void
     {
-        /** @var CachesRoutes $app */
-        $app = $this->app;
+         /** @var CachesRoutes $app */
+         $app = $this->app;
         if ($app->routesAreCached()) {
             return;
         }

@@ -126,6 +126,8 @@
         default => 'static',
     };
 
+    $childFullWidth = $direction === 'vertical' ? '[&>*:not([class*="w-"])]:w-full' : null;
+
     $classes = array_filter([
         $displayClasses,
         $positionClasses,
@@ -137,7 +139,7 @@
         $roundedClasses,
         $alignClasses,
         $justifyClasses,
-        '[&>*:not([class*="w-"])]:w-full',
+        $childFullWidth,
     ]);
 @endphp
 

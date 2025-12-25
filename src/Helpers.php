@@ -18,7 +18,7 @@ if (!function_exists('neura_trans')) {
         if (is_array($replace)) {
             foreach ($replace as $search => $value) {
                 $translation = str_replace('{' . $search . '}', $value, $translation);
-            }
+        }
         } elseif (is_string($replace) && $default === null) {
             return $translationsCache[$locale][$key] ?? $replace ?? $key;
         }

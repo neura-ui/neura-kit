@@ -99,7 +99,19 @@ interface NeuraKitAPI {
   modal(name?: string): ModalBuilder;
   dialog(title?: string): DialogBuilder;
 }
+/* -------------------------------------------------------------------------- */
+/*  Clipboard                                                                 */
+/* -------------------------------------------------------------------------- */
 
+interface ClipboardAPI {
+    copy(text: string): Promise<boolean>;
+}
+
+declare global {
+    interface Window {
+        ClipboardService?: ClipboardAPI;
+    }
+}
 /* -------------------------------------------------------------------------- */
 /*  Command Spotlight                                                          */
 /* -------------------------------------------------------------------------- */

@@ -5,17 +5,18 @@ declare(strict_types=1);
 namespace Neura\Kit\Console;
 
 use Illuminate\Console\Command;
+use Neura\Kit\Exceptions\LicenseException;
 use Neura\Kit\Services\License\LicenseService;
 
 class ActivateCommand extends Command
 {
-    protected $signature = 'neura-kit:activate';
-    
+    protected $signature = 'neura:activate';
+
     protected $description = 'Activate Neura Kit license';
 
     public function handle(LicenseService $licenseService): int
     {
-        $licenseKey = env('NEURA_KIT_LICENSE_KEY');
+        $licenseKey = getenv('NEURA_KIT_LICENSE_KEY');
 
         if (empty($licenseKey)) {
             $this->error('NEURA_KIT_LICENSE_KEY environment variable is not set.');
@@ -34,7 +35,7 @@ class ActivateCommand extends Command
             $this->info('✅ License activated successfully!');
             $this->line('');
             $this->line('Plan: ' . ($license['plan'] ?? 'Unknown'));
-            
+
             if (isset($license['expires_at'])) {
                 $this->line('Updates expire: ' . $license['expires_at']);
             }
@@ -44,7 +45,7 @@ class ActivateCommand extends Command
             }
 
             return self::SUCCESS;
-        } catch (\Neura\Kit\Exceptions\LicenseException $e) {
+        } catch (LicenseException $e) {
             $this->error('❌ Activation failed: ' . $e->getMessage());
             return self::FAILURE;
         } catch (\Exception $e) {

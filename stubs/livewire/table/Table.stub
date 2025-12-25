@@ -9,17 +9,17 @@ use Illuminate\Database\Query\Builder as QueryBuilder;
 
 class [class] extends BaseTable
 {
-    public $perPage = 10;
+    public int $perPage = 10;
 
     public function query(): Builder|QueryBuilder
     {
         // TODO: Return your query builder
         // Example with Eloquent:
         // return \App\Models\User::query();
-        
+
         // Example with Query Builder:
         // return \Illuminate\Support\Facades\DB::table('users');
-        
+
         throw new \Exception('Please implement the query() method');
     }
 
@@ -29,12 +29,12 @@ class [class] extends BaseTable
             Column::text('id', 'ID')
                 ->sortable()
                 ->width(80),
-            
+
             Column::text('name', 'Name')
                 ->sortable()
                 ->searchable()
                 ->width(200),
-            
+
             // Add more columns as needed
         ];
     }

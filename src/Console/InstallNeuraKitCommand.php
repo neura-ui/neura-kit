@@ -8,7 +8,7 @@ use Neura\Kit\Services\License\LicenseService;
 class InstallNeuraKitCommand extends Command
 {
     protected $signature = 'neura-kit:install';
-    
+
     protected $description = 'Install Neura Kit assets automatically in Vite configuration';
 
     public function handle(LicenseService $licenseService): int
@@ -19,33 +19,33 @@ class InstallNeuraKitCommand extends Command
         }
 
         $viteConfigPath = base_path('vite.config.js');
-        
+
         if (!file_exists($viteConfigPath)) {
             $this->error('vite.config.js not found!');
             return self::FAILURE;
         }
 
         $viteConfig = file_get_contents($viteConfigPath);
-        
+
         if (str_contains($viteConfig, 'neuraKit()')) {
             $this->info('Neura Kit is already configured in vite.config.js');
             return self::SUCCESS;
         }
 
         $pluginPath = realpath(__DIR__.'/../../resources/js/index.ts');
-        
+
         if (!$pluginPath || !file_exists($pluginPath)) {
             $this->error('Vite plugin not found!');
             return self::FAILURE;
         }
 
         $vendorPath = base_path('vendor/neura-ui/neura-kit/resources/js/index.ts');
-        
+
         if (!file_exists($vendorPath)) {
             $this->error('Neura Kit package not found in vendor directory!');
             return self::FAILURE;
         }
-        
+
         $pluginImport = "import neuraKit from './vendor/neura-ui/neura-kit/resources/js/index.ts';";
 
         $viteConfig = $this->ensureImport($viteConfig, $pluginImport);
@@ -69,22 +69,22 @@ class InstallNeuraKitCommand extends Command
         }
 
         file_put_contents($viteConfigPath, $viteConfig);
-        
+
         $this->info('✅ Neura Kit has been automatically configured in vite.config.js');
-        
+
         $this->configureTailwindSource();
-        
+
         $this->info('The assets will be automatically injected without modifying app.css and app.js');
         $this->line('');
         $this->info('💡 Next step: Run "php artisan neura-kit:install-deps" to install JavaScript dependencies');
-        
+
         return self::SUCCESS;
     }
 
     private function configureTailwindSource(): void
     {
         $cssPath = resource_path('css/app.css');
-        
+
         if (!file_exists($cssPath)) {
             $this->warn('⚠️  resources/css/app.css not found. Please add manually:');
             $this->line("@source '../../vendor/neura-ui/neura-kit/**/*.{js,ts,vue,blade.php,php}';");
@@ -110,9 +110,9 @@ class InstallNeuraKitCommand extends Command
         }
 
         array_splice($lines, $insertIndex, 0, [$sourceDirective]);
-        
+
         file_put_contents($cssPath, implode("\n", $lines));
-        
+
         $this->info('✅ Tailwind source directive added to app.css');
     }
 

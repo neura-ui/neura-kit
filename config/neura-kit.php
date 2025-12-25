@@ -81,4 +81,33 @@ return [
 
     'license_api_url' => env('NEURA_KIT_LICENSE_API_URL', 'https://api.neuraui.dev'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | License Domains
+    |--------------------------------------------------------------------------
+    |
+    | Additional domains to register with your license. These will be sent
+    | during activation. Use this to register multiple domains for your project.
+    |
+    | Can be set via NEURA_KIT_DOMAINS environment variable as comma-separated:
+    | NEURA_KIT_DOMAINS="myapp.com,www.myapp.com,api.myapp.com"
+    |
+    */
+
+    'license_domains' => env('NEURA_KIT_DOMAINS', []),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Environment Detection
+    |--------------------------------------------------------------------------
+    |
+    | Override automatic environment detection. By default, the environment
+    | is detected from APP_ENV and domain patterns.
+    |
+    | Possible values: 'auto', 'local', 'staging', 'production'
+    |
+    */
+
+    'license_environment' => env('NEURA_KIT_ENVIRONMENT', 'auto'),
+
 ];

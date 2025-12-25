@@ -8,5 +8,6 @@ import './globals/context-menu';
 import './globals/chart';
 import './globals/lottie';
 import './globals/editor';
+import './globals/clipboard';
 import './components';
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Neura\Kit\Services\License;
 
+use Exception;
 use Neura\Kit\Contracts\LicenseVerifier;
 use Neura\Kit\Exceptions\LicenseException;
 
@@ -11,6 +12,8 @@ final class LicenseService
 {
     private ?bool $isActivatedCache = null;
     private ?array $verifiedLicenseCache = null;
+    private ?EnvironmentDetector $environmentDetector = null;
+    private ?DomainDetector $domainDetector = null;
 
     public function __construct(
         private LicenseCache $cache,
@@ -66,6 +69,9 @@ final class LicenseService
         return $license;
     }
 
+    /**
+     * @throws LicenseException
+     */
     public function activate(string $licenseKey): array
     {
         $payload = $this->buildActivationPayload($licenseKey);
@@ -103,7 +109,7 @@ final class LicenseService
     public function isExpired(): bool
     {
         $license = $this->cache->get();
-        return $license ? $this->validator->isExpired($license) : false;
+        return $license && $this->validator->isExpired($license);
     }
 
     public function getExpirationMessage(): ?string
@@ -143,6 +149,51 @@ final class LicenseService
         return $license['assigned_projects'] ?? [];
     }
 
+    public function getDomains(): array
+    {
+        $license = $this->getLicense();
+        return $license['domains'] ?? [];
+    }
+
+    public function getPrimaryDomainFromLicense(): ?string
+    {
+        $license = $this->getLicense();
+        return $license['primary_domain'] ?? null;
+    }
+
+    public function isDomainAllowed(string $domain): bool
+    {
+        $domains = $this->getDomains();
+        $domain = strtolower(trim($domain));
+
+        if (empty($domains)) {
+            return true;
+        }
+
+        foreach ($domains as $allowedDomain) {
+            $allowedDomain = strtolower(trim($allowedDomain));
+
+            if ($domain === $allowedDomain) {
+                return true;
+            }
+
+            if (str_starts_with($allowedDomain, '*.')) {
+                $pattern = substr($allowedDomain, 2);
+                if (str_ends_with($domain, $pattern)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public function isLifetime(): bool
+    {
+        $license = $this->getLicense();
+        return $license['is_lifetime'] ?? false;
+    }
+
     public function clearCache(): void
     {
         $this->cache->forget();
@@ -150,66 +201,83 @@ final class LicenseService
         $this->isActivatedCache = null;
     }
 
+    public function getDomainInfo(): array
+    {
+        return $this->getDomainDetector()->getDomainInfo();
+    }
+
+    public function getDetectedEnvironment(): string
+    {
+        return $this->getEnvironmentDetector()->detect();
+    }
+
+    public function isProduction(): bool
+    {
+        return $this->getEnvironmentDetector()->isProduction();
+    }
+
+    public function isLocalEnvironment(): bool
+    {
+        return $this->getEnvironmentDetector()->isLocal();
+    }
+
     private function buildActivationPayload(string $licenseKey): array
     {
         $environment = $this->getEnvironment();
         $projectIdentifier = $this->getProjectIdentifier();
+        $domainDetector = $this->getDomainDetector();
 
-        $payload = [
+        return [
             'license_key' => $licenseKey,
             'project_identifier' => $projectIdentifier,
             'environment' => $environment,
+            'primary_domain' => $domainDetector->getPrimaryDomain(),
+            'domains' => $domainDetector->getAllDomains(),
             'system_metadata' => $this->getSystemMetadata(),
             'package' => [
                 'name' => 'neura-ui/neura-kit',
                 'version' => $this->getPackageVersion(),
             ],
         ];
-
-        if ($environment === 'production') {
-            $payload['primary_domain'] = $this->getPrimaryDomain();
-        }
-
-        return $payload;
     }
 
     private function getProjectIdentifier(): string
     {
+        $appKey = config('app.key', '');
+        if (!empty($appKey)) {
+            return hash('sha256', $appKey . base_path());
+        }
         return hash('sha256', base_path());
     }
 
     private function getEnvironment(): string
     {
-        $env = config('app.env', 'local');
-
-        if (in_array($env, ['local', 'staging', 'production'], true)) {
-            return $env;
-        }
-
-        return 'local';
+        return $this->getEnvironmentDetector()->detect();
     }
 
     private function getPrimaryDomain(): string
     {
-        $url = config('app.url', '');
-
-        if (empty($url)) {
-            return request()->getHost() ?? 'unknown';
-        }
-
-        $parsed = parse_url($url);
-        return $parsed['host'] ?? 'unknown';
+        return $this->getDomainDetector()->getPrimaryDomain();
     }
 
     private function getSystemMetadata(): array
     {
-        return [
-            'ip' => request()->ip() ?? 'unknown',
-            'user_agent' => request()->userAgent() ?? 'unknown',
+        $metadata = [
             'php_version' => PHP_VERSION,
             'laravel_version' => app()->version(),
             'os' => PHP_OS,
+            'server_software' => $_SERVER['SERVER_SOFTWARE'] ?? 'unknown',
         ];
+
+        try {
+            $metadata['ip'] = request()->ip() ?? 'unknown';
+            $metadata['user_agent'] = request()->userAgent() ?? 'unknown';
+        } catch (Exception $e) {
+            $metadata['ip'] = 'unknown';
+            $metadata['user_agent'] = 'unknown';
+        }
+
+        return $metadata;
     }
 
     private function getPackageVersion(): string
@@ -222,6 +290,22 @@ final class LicenseService
 
         $composer = json_decode(file_get_contents($composerPath), true);
         return $composer['version'] ?? 'dev-master';
+    }
+
+    private function getEnvironmentDetector(): EnvironmentDetector
+    {
+        if ($this->environmentDetector === null) {
+            $this->environmentDetector = new EnvironmentDetector();
+        }
+        return $this->environmentDetector;
+    }
+
+    private function getDomainDetector(): DomainDetector
+    {
+        if ($this->domainDetector === null) {
+            $this->domainDetector = new DomainDetector($this->getEnvironmentDetector());
+        }
+        return $this->domainDetector;
     }
 }
 

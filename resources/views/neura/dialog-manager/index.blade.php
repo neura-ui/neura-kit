@@ -1,6 +1,7 @@
 <div
     x-data="{
         dialogs: [],
+        loading: {},
 
         typeConfig: {
             info: {
@@ -35,8 +36,11 @@
                 cancelText: options.cancelText || window.t('cancel'),
                 showCancel: options.showCancel !== false,
                 confirmVariant: options.confirmVariant || (options.type === 'danger' ? 'danger' : 'primary'),
+                wireId: options.wireId || null,
                 onConfirm: options.onConfirm || null,
+                onConfirmParams: options.onConfirmParams || [],
                 onCancel: options.onCancel || null,
+                onCancelParams: options.onCancelParams || [],
                 inputValue: options.inputValue || '',
                 inputPlaceholder: options.inputPlaceholder || '',
                 showInput: options.showInput || false,
@@ -44,36 +48,64 @@
             };
 
             this.dialogs.push(dialog);
+            this.loading[dialog.id] = false;
             document.body.style.overflow = 'hidden';
 
             return dialog.id;
         },
 
-        confirm(id) {
+        async confirm(id) {
             const dialog = this.dialogs.find(d => d.id === id);
-            if (dialog) {
-                if (dialog.onConfirm) {
-                    dialog.onConfirm(dialog.showInput ? dialog.inputValue : true);
+            if (!dialog) return;
+
+            // Set loading state
+            this.loading[id] = true;
+
+            try {
+                if (dialog.onConfirm && dialog.wireId) {
+                    const $wire = window.Livewire?.find(dialog.wireId);
+                    if ($wire) {
+                        const params = dialog.showInput 
+                            ? [dialog.inputValue, ...dialog.onConfirmParams]
+                            : dialog.onConfirmParams;
+                        
+                        await $wire.call(dialog.onConfirm, ...params);
+                    }
                 }
+
                 window.dispatchEvent(new CustomEvent('dialog-confirmed', {
                     detail: { id, value: dialog.showInput ? dialog.inputValue : true }
                 }));
+            } catch (e) {
+                console.error('Error executing dialog onConfirm callback:', e);
+            } finally {
+                this.loading[id] = false;
                 this.close(id);
             }
         },
 
-        cancel(id) {
+        async cancel(id) {
             const dialog = this.dialogs.find(d => d.id === id);
-            if (dialog) {
-                if (dialog.onCancel) {
-                    dialog.onCancel();
+            if (!dialog) return;
+
+            try {
+                if (dialog.onCancel && dialog.wireId) {
+                    const $wire = window.Livewire?.find(dialog.wireId);
+                    if ($wire) {
+                        await $wire.call(dialog.onCancel, ...dialog.onCancelParams);
+                    }
                 }
+
                 window.dispatchEvent(new CustomEvent('dialog-cancelled', { detail: { id } }));
+            } catch (e) {
+                console.error('Error executing dialog onCancel callback:', e);
+            } finally {
                 this.close(id);
             }
         },
 
         close(id) {
+            delete this.loading[id];
             this.dialogs = this.dialogs.filter(d => d.id !== id);
             if (this.dialogs.length === 0) {
                 document.body.style.overflow = '';
@@ -125,69 +157,104 @@
                     x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                     x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                 >
-                <div class="p-6">
-                    <div class="flex items-start gap-4">
-                        <div
-                            class="shrink-0 size-10 rounded-full flex items-center justify-center"
-                            :class="getConfig(dialog.type).iconBg"
-                        >
-                            <template x-if="dialog.type === 'info'">
-                                <neura::icon name="information-circle" class="size-5 text-blue-500 dark:text-blue-400" />
-                            </template>
-                            <template x-if="dialog.type === 'success'">
-                                <neura::icon name="check-circle" class="size-5 text-green-500 dark:text-green-400" />
-                            </template>
-                            <template x-if="dialog.type === 'warning'">
-                                <neura::icon name="exclamation-triangle" class="size-5 text-amber-500 dark:text-amber-400" />
-                            </template>
-                            <template x-if="dialog.type === 'danger'">
-                                <neura::icon name="exclamation-circle" class="size-5 text-red-500 dark:text-red-400" />
-                            </template>
-                        </div>
+                    <div class="p-6">
+                        <div class="flex items-start gap-4">
+                            <div
+                                class="shrink-0 size-10 rounded-full flex items-center justify-center"
+                                :class="getConfig(dialog.type).iconBg"
+                            >
+                                <template x-if="dialog.type === 'info'">
+                                    <neura::icon name="information-circle" class="size-5 text-blue-500 dark:text-blue-400" />
+                                </template>
+                                <template x-if="dialog.type === 'success'">
+                                    <neura::icon name="check-circle" class="size-5 text-green-500 dark:text-green-400" />
+                                </template>
+                                <template x-if="dialog.type === 'warning'">
+                                    <neura::icon name="exclamation-triangle" class="size-5 text-amber-500 dark:text-amber-400" />
+                                </template>
+                                <template x-if="dialog.type === 'danger'">
+                                    <neura::icon name="exclamation-circle" class="size-5 text-red-500 dark:text-red-400" />
+                                </template>
+                            </div>
 
-                        <div class="flex-1 min-w-0">
-                            <h3
-                                class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2"
-                                x-text="dialog.title"
-                            ></h3>
-                            <p
-                                class="text-sm text-neutral-600 dark:text-neutral-400 mb-6"
-                                x-show="dialog.message"
-                                x-text="dialog.message"
-                            ></p>
+                            <div class="flex-1 min-w-0">
+                                <h3
+                                    class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2"
+                                    x-text="dialog.title"
+                                ></h3>
+                                <p
+                                    class="text-sm text-neutral-600 dark:text-neutral-400 mb-6"
+                                    x-show="dialog.message"
+                                    x-text="dialog.message"
+                                ></p>
 
-                            <div x-show="dialog.showInput" class="mb-6">
-                                <input
-                                    type="text"
-                                    x-model="dialog.inputValue"
-                                    :placeholder="dialog.inputPlaceholder"
-                                    class="w-full px-3 py-2 text-sm bg-white dark:bg-neutral-950 border border-neutral-300 dark:border-neutral-700 rounded-lg text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-neutral-100 focus:border-transparent"
-                                    x-on:keydown.enter="confirm(dialog.id)"
-                                />
+                                <div x-show="dialog.showInput" class="mb-6">
+                                    <input
+                                        type="text"
+                                        x-model="dialog.inputValue"
+                                        :placeholder="dialog.inputPlaceholder"
+                                        class="w-full px-3 py-2 text-sm bg-white dark:bg-neutral-950 border border-neutral-300 dark:border-neutral-700 rounded-lg text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-neutral-100 focus:border-transparent"
+                                        x-on:keydown.enter="confirm(dialog.id)"
+                                        :disabled="loading[dialog.id]"
+                                    />
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="flex items-center justify-end gap-3">
-                    <button
-                        x-show="dialog.showCancel"
-                        x-on:click="cancel(dialog.id)"
-                        type="button"
-                        class="px-4 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-neutral-100 focus:ring-offset-2 dark:focus:ring-offset-neutral-900 transition-colors"
-                        x-text="dialog.cancelText"
-                    ></button>
+                        <div class="flex items-center justify-end gap-3">
+                            <template x-if="dialog.showCancel">
+                                <neura::button
+                                    variant="soft"
+                                    size="sm"
+                                    x-on:click="cancel(dialog.id)"
+                                    x-bind:disabled="loading[dialog.id]"
+                                >
+                                    <span x-text="dialog.cancelText"></span>
+                                </neura::button>
+                            </template>
 
-                    <button
-                        x-on:click="confirm(dialog.id)"
-                        type="button"
-                        class="px-4 py-2 text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-neutral-900 transition-colors"
-                        :class="{
-                            'bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 hover:bg-neutral-800 dark:hover:bg-neutral-200 focus:ring-neutral-900 dark:focus:ring-neutral-100': dialog.confirmVariant === 'primary',
-                            'bg-red-600 dark:bg-red-700 text-white hover:bg-red-700 dark:hover:bg-red-600 focus:ring-red-600': dialog.confirmVariant === 'danger',
-                            'bg-green-600 dark:bg-green-700 text-white hover:bg-green-700 dark:hover:bg-green-600 focus:ring-green-600': dialog.confirmVariant === 'success',
-                        }"
-                        x-text="dialog.confirmText"
-                    ></button>
+                            <template x-if="dialog.confirmVariant === 'primary'">
+                                <neura::button
+                                    variant="primary"
+                                    size="sm"
+                                    x-on:click="confirm(dialog.id)"
+                                    x-bind:disabled="loading[dialog.id]"
+                                >
+                                    <span x-show="loading[dialog.id]" class="absolute inset-0 flex items-center justify-center">
+                                        <neura::icon.loading variant="mini" class="size-4" />
+                                    </span>
+                                    <span x-bind:class="loading[dialog.id] ? 'opacity-0' : ''" x-text="dialog.confirmText"></span>
+                                </neura::button>
+                            </template>
+
+                            <template x-if="dialog.confirmVariant === 'danger'">
+                                <neura::button
+                                    variant="danger"
+                                    size="sm"
+                                    x-on:click="confirm(dialog.id)"
+                                    x-bind:disabled="loading[dialog.id]"
+                                >
+                                    <span x-show="loading[dialog.id]" class="absolute inset-0 flex items-center justify-center">
+                                        <neura::icon.loading variant="mini" class="size-4" />
+                                    </span>
+                                    <span x-bind:class="loading[dialog.id] ? 'opacity-0' : ''" x-text="dialog.confirmText"></span>
+                                </neura::button>
+                            </template>
+
+                            <template x-if="dialog.confirmVariant === 'success'">
+                                <neura::button
+                                    variant="success"
+                                    size="sm"
+                                    x-on:click="confirm(dialog.id)"
+                                    x-bind:disabled="loading[dialog.id]"
+                                >
+                                    <span x-show="loading[dialog.id]" class="absolute inset-0 flex items-center justify-center">
+                                        <neura::icon.loading variant="mini" class="size-4" />
+                                    </span>
+                                    <span x-bind:class="loading[dialog.id] ? 'opacity-0' : ''" x-text="dialog.confirmText"></span>
+                                </neura::button>
+                            </template>
+                        </div>
                     </div>
                 </div>
             </div>

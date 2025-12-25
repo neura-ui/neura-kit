@@ -18,7 +18,7 @@ class EmptyState
     public ?string $actionLabel = null;
 
     public ?string $actionUrl = null;
-    
+
     public ?string $actionWireClick = null;
 
     public ?string $view = null;
@@ -60,7 +60,7 @@ class EmptyState
         $this->actionUrl = $action;
         return $this;
     }
-    
+
     /**
      * Set the action with a Livewire method name (cleaner syntax)
      */
@@ -109,7 +109,7 @@ class EmptyState
                         {{ $actionLabel }}
                     </neura::button>
                 @elseif($actionLabel && $actionUrl)
-                    <neura::button x-on:click="{{ $actionUrl }}">
+                    <neura::button href="{{ $actionUrl }}">
                         {{ $actionLabel }}
                     </neura::button>
                 @endif

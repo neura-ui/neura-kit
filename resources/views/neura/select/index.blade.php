@@ -65,6 +65,17 @@
             // Initial options build
             this.rebuildOptions();
 
+            // Listen for Livewire updates and rebuild options immediately
+            if (typeof Livewire !== 'undefined' && Livewire.hook) {
+                Livewire.hook('commit', ({ component, commit, respond }) => {
+                    if (component.el === this.$root || component.el.contains(this.$el)) {
+                        this.$nextTick(() => {
+                            this.rebuildOptions();
+                        });
+                    }
+                });
+            }
+
             // Watch for DOM changes (when Livewire updates the options list)
             this.$nextTick(() => {
                 const optionsContainer = this.$el;
@@ -72,20 +83,20 @@
                 const observer = new MutationObserver((mutations) => {
                     // Check if options were added/removed
                     const hasOptionChanges = mutations.some(mutation => {
-                        const addedOptions = Array.from(mutation.addedNodes).some(node =>
+                        const addedNodes = Array.from(mutation.addedNodes).some(node =>
                             node.nodeType === 1 && node.hasAttribute('data-slot') && node.getAttribute('data-slot') === 'option'
                         );
-                        const removedOptions = Array.from(mutation.removedNodes).some(node =>
+                        const removedNodes = Array.from(mutation.removedNodes).some(node =>
                             node.nodeType === 1 && node.hasAttribute('data-slot') && node.getAttribute('data-slot') === 'option'
                         );
-                        return addedOptions || removedOptions;
+                        return addedNodes || removedNodes;
                     });
 
                     if (hasOptionChanges) {
-                        // Small delay to ensure DOM is ready
-                        setTimeout(() => {
+                        // Rebuild immediately when options change
+                        this.$nextTick(() => {
                             this.rebuildOptions();
-                        }, 10);
+                        });
                     }
                 });
 

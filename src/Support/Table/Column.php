@@ -51,28 +51,28 @@ class Column
         return new static($key, $label ?? $key);
     }
 
-    public function component($component)
+    public function component($component): static
     {
         $this->component = $component;
 
         return $this;
     }
 
-    public function sortable($sortable = true)
+    public function sortable($sortable = true): static
     {
         $this->sortable = $sortable;
 
         return $this;
     }
 
-    public function searchable($searchable = true)
+    public function searchable($searchable = true): static
     {
         $this->searchable = $searchable;
 
         return $this;
     }
 
-    public function filterable($filterable = true, $type = null, $options = null, $query = null)
+    public function filterable($filterable = true, $type = null, $options = null, $query = null): static
     {
         if (is_string($filterable)) {
             $this->filterable = true;
@@ -94,7 +94,7 @@ class Column
         return $this;
     }
 
-    public function width($width, $minWidth = null, $maxWidth = null)
+    public function width($width, $minWidth = null, $maxWidth = null): static
     {
         $this->width = $width;
         $this->minWidth = $minWidth;
@@ -103,21 +103,21 @@ class Column
         return $this;
     }
 
-    public function resizable($resizable = true)
+    public function resizable($resizable = true): static
     {
         $this->resizable = $resizable;
 
         return $this;
     }
 
-    public function format(Closure $callback)
+    public function format(Closure $callback): static
     {
         $this->format = $callback;
 
         return $this;
     }
 
-    public function html($html)
+    public function html($html): static
     {
         $this->html = $html;
         $this->component = 'neura::table.columns.html';
@@ -125,7 +125,7 @@ class Column
         return $this;
     }
 
-    public function formatUsing($format)
+    public function formatUsing($format): static
     {
         $this->formatUsing = $format;
 
@@ -328,7 +328,7 @@ class Column
         return $column;
     }
 
-    public function extraAttributes(array $attributes)
+    public function extraAttributes(array $attributes): static
     {
         $this->extraAttributes = array_merge($this->extraAttributes, $attributes);
 

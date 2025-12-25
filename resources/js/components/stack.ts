@@ -169,6 +169,8 @@ export class StackHelper {
       position = null,
     } = props;
 
+    const childFullWidth = direction === 'vertical' ? '[&>*:not([class*="w-"])]:w-full' : null;
+
     const classes: (string | null)[] = [
       this.getDisplayClass(display),
       this.getPositionClass(position),
@@ -180,7 +182,7 @@ export class StackHelper {
       this.getRoundedClass(rounded),
       this.getAlignClass(align, display),
       this.getJustifyClass(justify, display),
-      '[&>*:not([class*="w-"])]:w-full',
+      childFullWidth,
     ];
 
     return classes.filter((cls): cls is string => cls !== null);

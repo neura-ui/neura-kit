@@ -161,58 +161,14 @@ final class DialogCall
             return;
         }
 
-        $confirm = $this->buildConfirmCallback();
-        $cancel  = $this->buildCancelCallback();
-
         $this->caller->js(sprintf(
             "\$dispatch('dialog', %s)",
             json_encode(array_merge(
                 $this->data,
                 [
-                    'onConfirm' => $confirm,
-                    'onCancel'  => $cancel,
+                    'wireId' => $this->caller->getId(),
                 ]
             ), JSON_THROW_ON_ERROR)
         ));
-    }
-
-    /* -------------------------------------------------------------
-     | Internals
-     |------------------------------------------------------------- */
-
-    private function buildConfirmCallback(): string|null
-    {
-        if (!$this->data['onConfirm']) {
-            return null;
-        }
-
-        $params = array_map('json_encode', $this->data['onConfirmParams']);
-
-        if ($this->data['showInput']) {
-            return sprintf(
-                '(value) => $wire.%s(value%s)',
-                $this->data['onConfirm'],
-                $params ? ',' . implode(',', $params) : ''
-            );
-        }
-
-        return sprintf(
-            '() => $wire.%s(%s)',
-            $this->data['onConfirm'],
-            implode(',', $params)
-        );
-    }
-
-    private function buildCancelCallback(): string|null
-    {
-        if (!$this->data['onCancel']) {
-            return null;
-        }
-
-        return sprintf(
-            '() => $wire.%s(%s)',
-            $this->data['onCancel'],
-            implode(',', array_map('json_encode', $this->data['onCancelParams']))
-        );
     }
 }

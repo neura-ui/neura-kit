@@ -8,10 +8,10 @@ use Neura\Kit\Services\License\LicenseService;
 class InstallDependenciesCommand extends Command
 {
     protected $signature = 'neura-kit:install-deps {--check : Only check dependencies without installing}';
-    
+
     protected $description = 'Install missing JavaScript dependencies for Neura Kit';
 
-    protected $dependencies = [
+    protected array $dependencies = [
         'chart.js' => '^4.0.0',
         'lottie-web' => '^5.0.0',
         '@tiptap/core' => '^2.0.0',
@@ -32,14 +32,14 @@ class InstallDependenciesCommand extends Command
         }
 
         $packageJsonPath = base_path('package.json');
-        
+
         if (!file_exists($packageJsonPath)) {
             $this->error('package.json not found! Please run npm init first.');
             return self::FAILURE;
         }
 
         $packageJson = json_decode(file_get_contents($packageJsonPath), true);
-        
+
         if (!$packageJson) {
             $this->error('Invalid package.json file!');
             return self::FAILURE;
@@ -87,7 +87,7 @@ class InstallDependenciesCommand extends Command
         }
 
         $this->line('');
-        
+
         if (!$this->confirm('Install missing dependencies?', true)) {
             return self::SUCCESS;
         }
@@ -124,11 +124,11 @@ class InstallDependenciesCommand extends Command
         if (file_exists(base_path('yarn.lock'))) {
             return 'yarn';
         }
-        
+
         if (file_exists(base_path('pnpm-lock.yaml'))) {
             return 'pnpm';
         }
-        
+
         return 'npm';
     }
 

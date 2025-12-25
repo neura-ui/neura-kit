@@ -4,8 +4,10 @@
     'column' => null,
     'extraAttributes' => [],
 ])
-
 @php
+    if ($column?->format instanceof Closure) {
+        $value = ($column->format)($value, $row, $column);
+    }
     $status = $value;
     $statusEnum = $extraAttributes['enum'] ?? null;
     $colorMap = $extraAttributes['colors'] ?? [];
@@ -44,7 +46,7 @@
         @class([
             'inline-flex items-center gap-1.5',
             'rounded-lg px-2 py-1',
-            'text-sm font-medium leading-4',
+            'text-sm font-base leading-4',
             'whitespace-nowrap select-none',
             $colorClasses,
         ])
