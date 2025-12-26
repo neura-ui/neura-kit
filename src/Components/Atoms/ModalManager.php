@@ -35,7 +35,7 @@ class ModalManager extends Component
         // Ensure arguments is an array
         $arguments = is_array($arguments) ? $arguments : [];
         $modalAttributes = is_array($modalAttributes) ? $modalAttributes : [];
-        
+
         $componentClass = $this->resolveComponentClass($component);
 
         if (!is_subclass_of($componentClass, ModalComponentContract::class)) {
@@ -53,8 +53,6 @@ class ModalManager extends Component
 
         $reflect = $this->getReflectionClass($componentClass);
         $resolvedArgs = $this->resolveComponentProps($arguments, $componentClass, $reflect);
-        // Merge resolved arguments (only for typed properties that were resolved) with original arguments
-        // This ensures non-typed properties and already-correct types are preserved
         $mergedArgs = $arguments;
         foreach ($resolvedArgs as $key => $resolvedValue) {
             $mergedArgs[$key] = $resolvedValue;
@@ -142,7 +140,7 @@ class ModalManager extends Component
             if ($value === null) {
                 return null;
             }
-            
+
             $instance = app()->make($parameterClassName);
             $model = $instance->resolveRouteBinding($value);
 

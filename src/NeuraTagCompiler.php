@@ -6,12 +6,12 @@ use Illuminate\View\Compilers\ComponentTagCompiler;
 
 class NeuraTagCompiler extends ComponentTagCompiler
 {
-    public function componentString(string $component, array $attributes)
+    public function componentString(string $component, array $attributes): string
     {
         return parent::componentString($component, $attributes);
     }
 
-    protected function compileOpeningTags(string $value)
+    protected function compileOpeningTags(string $value): array|string|null
     {
         $pattern = "/
             <
@@ -67,7 +67,7 @@ class NeuraTagCompiler extends ComponentTagCompiler
         }, $value);
     }
 
-    protected function compileSelfClosingTags(string $value)
+    protected function compileSelfClosingTags(string $value): array|string|null
     {
         $pattern = "/
             <
@@ -131,9 +131,9 @@ class NeuraTagCompiler extends ComponentTagCompiler
         }, $value);
     }
 
-    protected function compileClosingTags(string $value)
+    protected function compileClosingTags(string $value): array|string|null
     {
-        return preg_replace("/<\/\s*neura[\:][\:][\w\-\.]*\s*>/", ' @endComponentClass##END-COMPONENT-CLASS##', $value);
+        return preg_replace("/<\/\s*neura[:][:][\w\-.]*\s*>/", ' @endComponentClass##END-COMPONENT-CLASS##', $value);
     }
 }
 

@@ -1,4 +1,5 @@
 @props([
+    'align' => 'center',
     'direction' => 'vertical',
     'gap' => 'md',
     'align' => 'center',
@@ -6,7 +7,6 @@
     'padding' => null,
     'margin' => null,
     'rounded' => null,
-
     'display' => 'flex',
     'position' => null,
 ])
@@ -24,6 +24,7 @@
         'inline-flex' => 'inline-flex',
         'block' => 'block',
         'grid' => 'grid',
+        'contents' => 'contents',
         default => 'flex',
     };
 
@@ -42,7 +43,6 @@
                 'none' => 'gap-0',
                 'xs' => 'gap-1',
                 'sm' => 'gap-2',
-                'md' => 'gap-4',
                 'lg' => 'gap-6',
                 'xl' => 'gap-8',
                 default => 'gap-4',
@@ -126,12 +126,14 @@
         default => 'static',
     };
 
-    $childFullWidth = $direction === 'vertical' ? '[&>*:not([class*="w-"])]:w-full' : null;
+    $childFullWidth = ($direction === 'vertical' && $display !== 'contents')
+        ? '[&>*:not([class*="w-"])]:w-full'
+        : null;
 
     $classes = array_filter([
         $displayClasses,
         $positionClasses,
-        'w-full',
+        $display !== 'contents' ? 'w-full' : null,
         $directionClasses,
         $gapClasses,
         $paddingClasses,

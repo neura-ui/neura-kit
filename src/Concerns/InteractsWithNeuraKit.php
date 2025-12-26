@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Neura\Kit\Concerns;
 
+use Neura\Kit\Support\Clipboard\ClipboardCall;
 use Neura\Kit\Support\Dialog\DialogCall;
 use Neura\Kit\Support\Modal\ModalCall;
 use Neura\Kit\Support\Modal\ModalComponent;
@@ -24,6 +25,11 @@ trait InteractsWithNeuraKit
     public function dialog(?string $title): DialogCall
     {
         return new DialogCall($this, $title);
+    }
+
+    public function clipboard(?string $text = null): ClipboardCall
+    {
+        return new ClipboardCall($this, $text);
     }
 
 }

@@ -6,11 +6,16 @@
                 const input = $el.closest('[data-slot=input-actions]').parentElement.querySelector('input[data-control-id=input]');
                 if (!input?.value) return;
 
-                await navigator.clipboard.writeText(input.value);
+                await window.Clipboard.copy(input.value);
+
+                // Dispatch event Livewire (optionnel - pour analytics)
+                $dispatch('clipboard:copied', { value: input.value });
+
                 this.copied = true;
                 setTimeout(() => this.copied = false, 2000);
             } catch (error) {
                 console.warn('Failed to copy to clipboard:', error);
+                $dispatch('clipboard:error', { error: error.message });
             }
         }
     }"
