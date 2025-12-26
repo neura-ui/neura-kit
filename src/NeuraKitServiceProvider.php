@@ -2,6 +2,7 @@
 
 namespace Neura\Kit;
 
+use Exception;
 use Illuminate\Contracts\Foundation\CachesRoutes;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Route;
@@ -148,7 +149,7 @@ class NeuraKitServiceProvider extends ServiceProvider
         Blade::directive('neuraKit', function () {
             return "<?php echo view('neura-kit::components.neura-kit-managers')->render(); ?>";
         });
-        
+
         if (!$this->isLicenseActivated()) {
             Blade::directive('neuraKit', function () {
                 return '';
@@ -173,7 +174,7 @@ class NeuraKitServiceProvider extends ServiceProvider
 
         try {
             $this->licenseActivatedCache = $this->app->make(LicenseService::class)->isActivated();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->licenseActivatedCache = false;
         }
 

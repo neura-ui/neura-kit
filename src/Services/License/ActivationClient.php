@@ -53,9 +53,6 @@ final class ActivationClient
 
         if (!empty($endpoint)) {
             $endpoint = ltrim($endpoint, '/');
-            if (!str_starts_with($endpoint, 'api/')) {
-                $endpoint = 'api/' . $endpoint;
-            }
             return $baseUrl . '/' . $endpoint;
         }
 

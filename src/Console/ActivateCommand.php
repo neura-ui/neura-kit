@@ -10,7 +10,7 @@ use Neura\Kit\Services\License\LicenseService;
 
 class ActivateCommand extends Command
 {
-    protected $signature = 'neura:activate';
+    protected $signature = 'neura-kit:activate';
 
     protected $description = 'Activate Neura Kit license';
 

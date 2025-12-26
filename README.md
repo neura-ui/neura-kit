@@ -21,7 +21,7 @@ composer require neura/neura-kit
 Add the plugin to your `vite.config.js`:
 
 ```js
-import neuraKit from './vendor/neura/neura-kit/resources/js/index.ts';
+import neuraKit from './vendor/neura-ui/neura-kit/resources/js/index.ts';
 
 export default defineConfig({
     plugins: [
