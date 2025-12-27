@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Neura\Kit\Services\License;
 
+use Carbon\Carbon;
 use Neura\Kit\Contracts\LicenseVerifier;
 use Neura\Kit\Support\Canonicalizer;
 
@@ -23,7 +24,7 @@ final class LicenseValidator implements LicenseVerifier
 
         $canonical = Canonicalizer::canonicalize($licenseCopy);
         $data = json_encode($canonical, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        $secret = env('NEURA_KIT_LICENSE_KEY');
+        $secret = config('neura-kit.signing_secret');
 
         if (!$secret) {
             return false;
@@ -41,7 +42,7 @@ final class LicenseValidator implements LicenseVerifier
         }
 
         try {
-            $expiresAt = \Carbon\Carbon::parse($license['expires_at']);
+            $expiresAt = Carbon::parse($license['expires_at']);
             return $expiresAt->isPast();
         } catch (\Exception $e) {
             return false;

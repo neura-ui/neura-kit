@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Neura\Kit\Support\Dialog;
 
+use JsonException;
 use Livewire\Component;
 
 final class DialogCall
@@ -155,6 +156,9 @@ final class DialogCall
      | Dispatch
      |------------------------------------------------------------- */
 
+    /**
+     * @throws JsonException
+     */
     public function show(): void
     {
         if ($this->data['title'] === '') {

@@ -65,7 +65,7 @@
 <div {{ $attributes->class($headerClasses) }} data-slot="header">
     <div class="{{ $containerClasses }}">
         @if (isset($slot->brand) || isset($brand))
-            <div data-slot="header-brand" class="flex items-center shrink-0 gap-2">
+            <div data-slot="header-brand" {{ $brand->attributes->merge(['class' => "flex items-center shrink-0 gap-2"]) }}>
                 {{ isset($slot->brand) ? $slot->brand : $brand }}
             </div>
         @endif
@@ -75,7 +75,7 @@
         </div>
 
         @if (isset($slot->actions) || isset($actions))
-            <div data-slot="header-actions" class="flex items-center gap-2 shrink-0">
+            <div data-slot="header-actions" {{ $actions->attributes->merge(['class' => "flex items-center gap-2 shrink-0"]) }}>
                 {{ isset($slot->actions) ? $slot->actions : $actions }}
             </div>
         @endif

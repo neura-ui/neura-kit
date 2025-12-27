@@ -1,10 +1,11 @@
+@php use Livewire\Livewire; @endphp
 <script>
-    (function() {
+    (function () {
         if (!document.head) return;
-        
+
         const locale = @js(app()->getLocale());
         const fallbackLocale = @js(config('app.fallback_locale', 'en'));
-        
+
         function ensureMetaTag(name, content) {
             let meta = document.querySelector(`meta[name="${name}"]`);
             if (!meta) {
@@ -14,15 +15,15 @@
             }
             meta.setAttribute('content', content);
         }
-        
+
         ensureMetaTag('app-locale', locale);
         ensureMetaTag('app-fallback-locale', fallbackLocale);
     })();
 </script>
 
-@if(class_exists(\Livewire\Livewire::class))
+@if(class_exists(Livewire::class))
     @livewire('neura-kit.modal-manager')
 @endif
 
-<neura::dialog-manager />
-<neura::toast />
+<neura::dialog-manager/>
+<neura::toast/>

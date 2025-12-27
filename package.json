@@ -1,22 +1,23 @@
 {
-  "name": "neura-kit",
-  "version": "0.1.0",
-  "type": "module",
-  "files": ["resources"],
-  "exports": {
-    ".": {
-      "import": "./resources/js/index.ts"
+    "name": "neura-kit",
+    "version": "0.1.0",
+    "type": "module",
+    "files": [
+        "resources"
+    ],
+    "exports": {
+        ".": {
+            "import": "./resources/js/index.ts"
+        },
+        "./resources/js/*": "./resources/js/*"
     },
-    "./resources/js/*": "./resources/js/*"
-  },
-  "main": "./resources/js/index.ts",
-  "sideEffects": [
-    "./resources/js/globals/**/*.ts",
-    "./resources/js/app.ts",
-    "./resources/js/components/index.ts"
-  ],
-  "peerDependencies": {
-    "vite": "^5.0.0"
-  }
+    "main": "./resources/js/index.ts",
+    "sideEffects": [
+        "./resources/js/globals/**/*.ts",
+        "./resources/js/app.ts",
+        "./resources/js/components/index.ts"
+    ],
+    "peerDependencies": {
+        "vite": "^5.0.0"
+    }
 }
-  
