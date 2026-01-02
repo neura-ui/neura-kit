@@ -10,4 +10,3 @@ enum Variant: string
     case SOFT = 'soft';
     case GHOST = 'ghost';
 }
-

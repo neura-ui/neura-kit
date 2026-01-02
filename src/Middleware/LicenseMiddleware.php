@@ -17,11 +17,10 @@ class LicenseMiddleware
 
     public function handle(Request $request, Closure $next): Response
     {
-        if (!$this->licenseService->isActivated()) {
+        if (! $this->licenseService->isActivated()) {
             return $next($request);
         }
 
         return $next($request);
     }
 }
-

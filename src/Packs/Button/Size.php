@@ -52,4 +52,3 @@ class Size extends BasePack
         ];
     }
 }
-

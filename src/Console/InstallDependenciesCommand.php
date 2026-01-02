@@ -26,22 +26,25 @@ class InstallDependenciesCommand extends Command
 
     public function handle(LicenseService $licenseService): int
     {
-        if (!$licenseService->isActivated()) {
+        if (! $licenseService->isActivated()) {
             $this->error('Neura Kit is not activated. Please run: php artisan neura-kit:activate');
+
             return self::FAILURE;
         }
 
         $packageJsonPath = base_path('package.json');
 
-        if (!file_exists($packageJsonPath)) {
+        if (! file_exists($packageJsonPath)) {
             $this->error('package.json not found! Please run npm init first.');
+
             return self::FAILURE;
         }
 
         $packageJson = json_decode(file_get_contents($packageJsonPath), true);
 
-        if (!$packageJson) {
+        if (! $packageJson) {
             $this->error('Invalid package.json file!');
+
             return self::FAILURE;
         }
 
@@ -53,7 +56,7 @@ class InstallDependenciesCommand extends Command
         $needsUpdate = [];
 
         foreach ($this->dependencies as $package => $version) {
-            if (!isset($allDeps[$package])) {
+            if (! isset($allDeps[$package])) {
                 $missing[$package] = $version;
             } elseif ($this->requiresUpdate($allDeps[$package], $version)) {
                 $needsUpdate[$package] = $version;
@@ -62,17 +65,18 @@ class InstallDependenciesCommand extends Command
 
         if (empty($missing) && empty($needsUpdate)) {
             $this->info('✅ All Neura Kit dependencies are installed and up to date!');
+
             return self::SUCCESS;
         }
 
-        if (!empty($missing)) {
+        if (! empty($missing)) {
             $this->warn('Missing dependencies:');
             foreach ($missing as $package => $version) {
                 $this->line("  - {$package}@{$version}");
             }
         }
 
-        if (!empty($needsUpdate)) {
+        if (! empty($needsUpdate)) {
             $this->warn('Dependencies that need updating:');
             foreach ($needsUpdate as $package => $version) {
                 $current = $allDeps[$package];
@@ -83,12 +87,13 @@ class InstallDependenciesCommand extends Command
         if ($this->option('check')) {
             $this->line('');
             $this->info('Run without --check to install missing dependencies.');
+
             return self::SUCCESS;
         }
 
         $this->line('');
 
-        if (!$this->confirm('Install missing dependencies?', true)) {
+        if (! $this->confirm('Install missing dependencies?', true)) {
             return self::SUCCESS;
         }
 
@@ -112,10 +117,12 @@ class InstallDependenciesCommand extends Command
         if ($exitCode === 0) {
             $this->line('');
             $this->info('✅ All dependencies installed successfully!');
+
             return self::SUCCESS;
         }
 
         $this->error('Failed to install dependencies. Please install manually.');
+
         return self::FAILURE;
     }
 
@@ -163,4 +170,3 @@ class InstallDependenciesCommand extends Command
         return $cleaned !== '' ? $cleaned : null;
     }
 }
-

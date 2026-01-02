@@ -9,7 +9,9 @@ use Livewire\Component;
 final class ToastCall
 {
     private string $content = '';
+
     private string $type = 'info';
+
     private int $duration = 4000;
 
     public function __construct(
@@ -28,12 +30,14 @@ final class ToastCall
     public function content(string $content): self
     {
         $this->content = $content;
+
         return $this;
     }
 
     public function duration(int $milliseconds): self
     {
         $this->duration = $milliseconds;
+
         return $this;
     }
 

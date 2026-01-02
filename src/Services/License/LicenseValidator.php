@@ -14,7 +14,7 @@ final class LicenseValidator implements LicenseVerifier
 
     public function verify(array $license): bool
     {
-        if (!isset($license['signature'])) {
+        if (! isset($license['signature'])) {
             return false;
         }
 
@@ -26,7 +26,7 @@ final class LicenseValidator implements LicenseVerifier
         $data = json_encode($canonical, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         $secret = config('neura-kit.signing_secret');
 
-        if (!$secret) {
+        if (! $secret) {
             return false;
         }
 
@@ -37,16 +37,16 @@ final class LicenseValidator implements LicenseVerifier
 
     public function isExpired(array $license): bool
     {
-        if (!isset($license['expires_at']) || !$license['expires_at']) {
+        if (! isset($license['expires_at']) || ! $license['expires_at']) {
             return false;
         }
 
         try {
             $expiresAt = Carbon::parse($license['expires_at']);
+
             return $expiresAt->isPast();
         } catch (\Exception $e) {
             return false;
         }
     }
 }
-

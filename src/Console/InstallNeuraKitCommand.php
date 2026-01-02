@@ -13,15 +13,17 @@ class InstallNeuraKitCommand extends Command
 
     public function handle(LicenseService $licenseService): int
     {
-        if (!$licenseService->isActivated()) {
+        if (! $licenseService->isActivated()) {
             $this->error('Neura Kit is not activated. Please run: php artisan neura-kit:activate');
+
             return self::FAILURE;
         }
 
         $viteConfigPath = base_path('vite.config.js');
 
-        if (!file_exists($viteConfigPath)) {
+        if (! file_exists($viteConfigPath)) {
             $this->error('vite.config.js not found!');
+
             return self::FAILURE;
         }
 
@@ -29,20 +31,23 @@ class InstallNeuraKitCommand extends Command
 
         if (str_contains($viteConfig, 'neuraKit()')) {
             $this->info('Neura Kit is already configured in vite.config.js');
+
             return self::SUCCESS;
         }
 
         $pluginPath = realpath(__DIR__.'/../../resources/js/index.ts');
 
-        if (!$pluginPath || !file_exists($pluginPath)) {
+        if (! $pluginPath || ! file_exists($pluginPath)) {
             $this->error('Vite plugin not found!');
+
             return self::FAILURE;
         }
 
         $vendorPath = base_path('vendor/neura-ui/neura-kit/resources/js/index.ts');
 
-        if (!file_exists($vendorPath)) {
+        if (! file_exists($vendorPath)) {
             $this->error('Neura Kit package not found in vendor directory!');
+
             return self::FAILURE;
         }
 
@@ -54,7 +59,8 @@ class InstallNeuraKitCommand extends Command
             $this->error('Could not automatically configure vite.config.js. Please add manually:');
             $this->line('');
             $this->line("1. Add import: {$pluginImport}");
-            $this->line("2. Add plugin: neuraKit()");
+            $this->line('2. Add plugin: neuraKit()');
+
             return self::FAILURE;
         }
 
@@ -64,7 +70,8 @@ class InstallNeuraKitCommand extends Command
             $this->error('Could not automatically configure vite.config.js. Please add manually:');
             $this->line('');
             $this->line("1. Add import: {$pluginImport}");
-            $this->line("2. Add plugin: neuraKit()");
+            $this->line('2. Add plugin: neuraKit()');
+
             return self::FAILURE;
         }
 
@@ -85,9 +92,10 @@ class InstallNeuraKitCommand extends Command
     {
         $cssPath = resource_path('css/app.css');
 
-        if (!file_exists($cssPath)) {
+        if (! file_exists($cssPath)) {
             $this->warn('⚠️  resources/css/app.css not found. Please add manually:');
             $this->line("@source '../../vendor/neura-ui/neura-kit/**/*.{js,ts,vue,blade.php,php}';");
+
             return;
         }
 
@@ -96,6 +104,7 @@ class InstallNeuraKitCommand extends Command
 
         if (str_contains($cssContent, 'vendor/neura-ui/neura-kit')) {
             $this->info('✅ Tailwind source directive already configured in app.css');
+
             return;
         }
 
@@ -151,4 +160,3 @@ class InstallNeuraKitCommand extends Command
         return $count > 0 ? $updated : null;
     }
 }
-

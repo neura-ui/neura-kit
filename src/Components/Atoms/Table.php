@@ -19,18 +19,25 @@ abstract class Table extends Component
     use WithPagination;
 
     public int $perPage = 10;
+
     public string $sortBy = '';
 
     /* -----------------------------------------------------------------
      | Table state
      |----------------------------------------------------------------- */
     public string $sortDirection = 'asc';
+
     public string $search = '';
+
     public array $filters = [];
+
     public array $visibleColumns = [];
+
     public array $columnWidths = [];
+
     /** @var array<int,string> */
     public array $selected = [];
+
     public bool $selectPage;
 
     /* -----------------------------------------------------------------
@@ -38,6 +45,7 @@ abstract class Table extends Component
      |----------------------------------------------------------------- */
     /** @var array<int,object> */
     protected array $cachedColumns = [];
+
     protected ?LengthAwarePaginator $cachedData = null;
 
     public bool $selectAll = false;
@@ -68,7 +76,7 @@ abstract class Table extends Component
             )
         )
             ->pluck($this->getRowKey())
-            ->map(fn($id) => (string)$id)
+            ->map(fn ($id) => (string) $id)
             ->values()
             ->all();
     }
@@ -100,7 +108,7 @@ abstract class Table extends Component
             $this->selected = array_values(
                 array_filter(
                     $this->selected,
-                    fn($id) => !in_array($id, $pageIds, true)
+                    fn ($id) => ! in_array($id, $pageIds, true)
                 )
             );
         }
@@ -112,15 +120,15 @@ abstract class Table extends Component
     {
         $this->selected = array_values(
             collect(is_array($value) ? $value : [])
-                ->filter(fn($v) => $v !== '__rm__')
-                ->map(fn($id) => (string)$id)
+                ->filter(fn ($v) => $v !== '__rm__')
+                ->map(fn ($id) => (string) $id)
                 ->unique()
                 ->all()
         );
 
         $pageIds = $this->currentPageRowIds();
 
-        $this->selectPage = !empty($pageIds)
+        $this->selectPage = ! empty($pageIds)
             && count(array_diff($pageIds, $this->selected)) === 0;
 
         if ($this->selectAll && count($this->selected) < $this->totalRows) {
@@ -138,7 +146,7 @@ abstract class Table extends Component
 
     public function hasBulkActions(): bool
     {
-        return !empty($this->bulkActions());
+        return ! empty($this->bulkActions());
     }
 
     /* -----------------------------------------------------------------
@@ -163,7 +171,7 @@ abstract class Table extends Component
     protected function normalizeActions(array $actions): array
     {
         return collect($actions)
-            ->map(fn($action) => $action instanceof Action ? $action->toArray() : $action)
+            ->map(fn ($action) => $action instanceof Action ? $action->toArray() : $action)
             ->filter(function ($action) {
                 $visible = $action['visible'] ?? true;
 
@@ -189,14 +197,14 @@ abstract class Table extends Component
     protected function initializeColumns(): void
     {
         foreach ($this->getColumns() as $column) {
-            if (!isset($column->key)) {
+            if (! isset($column->key)) {
                 continue;
             }
 
             $this->visibleColumns[$column->key] ??= true;
 
-            if (!empty($column->width)) {
-                $this->columnWidths[$column->key] ??= (int)$column->width;
+            if (! empty($column->width)) {
+                $this->columnWidths[$column->key] ??= (int) $column->width;
             }
         }
     }
@@ -243,7 +251,7 @@ abstract class Table extends Component
 
         return array_values(array_filter(
             $this->getColumns(),
-            fn($col) => $this->visibleColumns[$col->key] ?? true
+            fn ($col) => $this->visibleColumns[$col->key] ?? true
         ));
     }
 
@@ -258,7 +266,7 @@ abstract class Table extends Component
 
     public function sort(string $key): void
     {
-        if (!in_array($key, $this->sortableKeys(), true)) {
+        if (! in_array($key, $this->sortableKeys(), true)) {
             return;
         }
 
@@ -281,8 +289,8 @@ abstract class Table extends Component
     protected function sortableKeys(): array
     {
         return array_map(
-            fn($c) => $c->key,
-            array_filter($this->getColumns(), fn($c) => $c->sortable ?? false)
+            fn ($c) => $c->key,
+            array_filter($this->getColumns(), fn ($c) => $c->sortable ?? false)
         );
     }
 
@@ -311,20 +319,20 @@ abstract class Table extends Component
 
     public function hasSearchableColumns(): bool
     {
-        return !empty($this->searchableKeys());
+        return ! empty($this->searchableKeys());
     }
 
     protected function searchableKeys(): array
     {
         return array_map(
-            fn($c) => $c->key,
-            array_filter($this->getColumns(), fn($c) => $c->searchable ?? false)
+            fn ($c) => $c->key,
+            array_filter($this->getColumns(), fn ($c) => $c->searchable ?? false)
         );
     }
 
     public function hasFilterableColumns(): bool
     {
-        return !empty($this->getFilterableColumns());
+        return ! empty($this->getFilterableColumns());
     }
 
     /* -----------------------------------------------------------------
@@ -335,7 +343,7 @@ abstract class Table extends Component
     {
         return array_values(array_filter(
             $this->getColumns(),
-            fn($col) => $col->filterable ?? false
+            fn ($col) => $col->filterable ?? false
         ));
     }
 
@@ -353,7 +361,7 @@ abstract class Table extends Component
         return $this->data()
             ->getCollection()
             ->pluck($this->getRowKey())
-            ->map(fn($id) => (string)$id)
+            ->map(fn ($id) => (string) $id)
             ->values()
             ->all();
     }
@@ -371,7 +379,7 @@ abstract class Table extends Component
 
     protected function applySorting($query)
     {
-        if (!in_array($this->sortBy, $this->sortableKeys(), true)) {
+        if (! in_array($this->sortBy, $this->sortableKeys(), true)) {
             return $query;
         }
 
@@ -395,19 +403,20 @@ abstract class Table extends Component
             }
 
             $column = $columns->get($key);
-            if (!$column || !($column->filterable ?? false)) {
+            if (! $column || ! ($column->filterable ?? false)) {
                 continue;
             }
 
-            if (!empty($column->filterQuery) && is_callable($column->filterQuery)) {
+            if (! empty($column->filterQuery) && is_callable($column->filterQuery)) {
                 ($column->filterQuery)($query, $value, $key);
+
                 continue;
             }
 
             $wrapped = $query->getGrammar()->wrap($key);
 
             is_string($value)
-                ? $query->whereRaw("LOWER($wrapped) LIKE ?", ['%' . Str::lower($value) . '%'])
+                ? $query->whereRaw("LOWER($wrapped) LIKE ?", ['%'.Str::lower($value).'%'])
                 : $query->where($key, $value);
         }
 
@@ -416,7 +425,7 @@ abstract class Table extends Component
 
     protected function applySearch($query)
     {
-        if (!filled($this->search)) {
+        if (! filled($this->search)) {
             return $query;
         }
 
@@ -450,7 +459,7 @@ abstract class Table extends Component
 
         $action = collect($this->getNormalizedBulkActions())
             ->firstWhere('key', $key);
-        if (!$action || !method_exists($this, $action['action'])) {
+        if (! $action || ! method_exists($this, $action['action'])) {
             return;
         }
 

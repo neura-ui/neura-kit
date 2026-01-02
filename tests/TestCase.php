@@ -2,8 +2,8 @@
 
 namespace Neura\Kit\Tests;
 
-use Orchestra\Testbench\TestCase as OrchestraTestCase;
 use Neura\Kit\NeuraKitServiceProvider;
+use Orchestra\Testbench\TestCase as OrchestraTestCase;
 
 abstract class TestCase extends OrchestraTestCase
 {
@@ -31,7 +31,7 @@ abstract class TestCase extends OrchestraTestCase
             resource_path('views'),
         ]);
 
-        view()->share('errors', new \Illuminate\Support\ViewErrorBag());
+        view()->share('errors', new \Illuminate\Support\ViewErrorBag);
     }
 
     protected function setUp(): void
@@ -47,4 +47,3 @@ abstract class TestCase extends OrchestraTestCase
         }
     }
 }
-

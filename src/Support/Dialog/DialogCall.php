@@ -43,12 +43,14 @@ final class DialogCall
     public function title(string $title): self
     {
         $this->data['title'] = $title;
+
         return $this;
     }
 
     public function message(string $message): self
     {
         $this->data['message'] = $message;
+
         return $this;
     }
 
@@ -60,6 +62,7 @@ final class DialogCall
     {
         $this->data['type'] = 'info';
         $this->data['confirmVariant'] = 'primary';
+
         return $this;
     }
 
@@ -67,6 +70,7 @@ final class DialogCall
     {
         $this->data['type'] = 'success';
         $this->data['confirmVariant'] = 'success';
+
         return $this;
     }
 
@@ -74,6 +78,7 @@ final class DialogCall
     {
         $this->data['type'] = 'warning';
         $this->data['confirmVariant'] = 'primary';
+
         return $this;
     }
 
@@ -81,6 +86,7 @@ final class DialogCall
     {
         $this->data['type'] = 'danger';
         $this->data['confirmVariant'] = 'danger';
+
         return $this;
     }
 
@@ -91,24 +97,28 @@ final class DialogCall
     public function confirmText(string $text): self
     {
         $this->data['confirmText'] = $text;
+
         return $this;
     }
 
     public function cancelText(string $text): self
     {
         $this->data['cancelText'] = $text;
+
         return $this;
     }
 
     public function hideCancel(): self
     {
         $this->data['showCancel'] = false;
+
         return $this;
     }
 
     public function size(string $size): self
     {
         $this->data['size'] = $size;
+
         return $this;
     }
 
@@ -119,18 +129,21 @@ final class DialogCall
     public function showInput(): self
     {
         $this->data['showInput'] = true;
+
         return $this;
     }
 
     public function inputPlaceholder(string $placeholder): self
     {
         $this->data['inputPlaceholder'] = $placeholder;
+
         return $this;
     }
 
     public function inputValue(string $value): self
     {
         $this->data['inputValue'] = $value;
+
         return $this;
     }
 
@@ -142,6 +155,7 @@ final class DialogCall
     {
         $this->data['onConfirm'] = $method;
         $this->data['onConfirmParams'] = $params;
+
         return $this;
     }
 
@@ -149,6 +163,7 @@ final class DialogCall
     {
         $this->data['onCancel'] = $method;
         $this->data['onCancelParams'] = $params;
+
         return $this;
     }
 

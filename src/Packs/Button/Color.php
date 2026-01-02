@@ -630,8 +630,8 @@ class Color extends BasePack
                     'base' => 'bg-transparent text-rose-600 [&_svg]:text-rose-600 dark:text-rose-400 dark:[&_svg]:text-rose-400',
                     'hover' => 'hover:bg-rose-50 dark:hover:bg-rose-950/20',
                 ],
-                ],
-            ];
+            ],
+        ];
     }
 
     public static function all(): array

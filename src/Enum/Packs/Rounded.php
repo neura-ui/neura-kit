@@ -13,4 +13,3 @@ enum Rounded: string
     case XL3 = '3xl';
     case FULL = 'full';
 }
-

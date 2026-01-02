@@ -49,10 +49,9 @@ class TranslationsController extends Controller
     {
         return [
             resource_path("lang/{$locale}.json"),
-            resource_path("lang/en.json"),
-            __DIR__ . "/../../../resources/lang/{$locale}.json",
-            __DIR__ . "/../../../resources/lang/en.json",
+            resource_path('lang/en.json'),
+            __DIR__."/../../../resources/lang/{$locale}.json",
+            __DIR__.'/../../../resources/lang/en.json',
         ];
     }
 }
-

@@ -10,4 +10,3 @@ interface LicenseVerifier
 
     public function isExpired(array $license): bool;
 }
-

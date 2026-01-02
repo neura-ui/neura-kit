@@ -23,6 +23,7 @@ class ActivateCommand extends Command
             $this->line('');
             $this->line('Please set the license key in your .env file:');
             $this->line('NEURA_KIT_LICENSE_KEY=your-license-key-here');
+
             return self::FAILURE;
         }
 
@@ -34,24 +35,25 @@ class ActivateCommand extends Command
 
             $this->info('✅ License activated successfully!');
             $this->line('');
-            $this->line('Plan: ' . ($license['plan'] ?? 'Unknown'));
+            $this->line('Plan: '.($license['plan'] ?? 'Unknown'));
 
             if (isset($license['expires_at'])) {
-                $this->line('Updates expire: ' . $license['expires_at']);
+                $this->line('Updates expire: '.$license['expires_at']);
             }
 
             if (isset($license['project_limit'])) {
-                $this->line('Project limit: ' . $license['project_limit']);
+                $this->line('Project limit: '.$license['project_limit']);
             }
 
             return self::SUCCESS;
         } catch (LicenseException $e) {
-            $this->error('❌ Activation failed: ' . $e->getMessage());
+            $this->error('❌ Activation failed: '.$e->getMessage());
+
             return self::FAILURE;
         } catch (\Exception $e) {
-            $this->error('❌ Unexpected error: ' . $e->getMessage());
+            $this->error('❌ Unexpected error: '.$e->getMessage());
+
             return self::FAILURE;
         }
     }
 }
-

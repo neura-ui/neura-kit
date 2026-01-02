@@ -3,8 +3,8 @@
 namespace Neura\Kit\Console;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Str;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Str;
 
 class MakeModalCommand extends Command
 {
@@ -36,15 +36,17 @@ class MakeModalCommand extends Command
             ->push($viewFile)
             ->implode('/');
         $viewDir = config('livewire.view_path') ?: resource_path('views/livewire');
-        $viewPath = $viewDir . '/' . $viewName . '.blade.php';
+        $viewPath = $viewDir.'/'.$viewName.'.blade.php';
 
         if ($this->files->exists($classPath)) {
             $this->error('Component class already exists!');
+
             return self::FAILURE;
         }
 
         if ($this->files->exists($viewPath)) {
             $this->error('Component view already exists!');
+
             return self::FAILURE;
         }
 
@@ -70,14 +72,14 @@ class MakeModalCommand extends Command
             return $name;
         }
 
-        return $rootNamespace . '\\' . str_replace('/', '\\', $name);
+        return $rootNamespace.'\\'.str_replace('/', '\\', $name);
     }
 
     protected function getPath(string $name): string
     {
         $name = Str::replaceFirst($this->laravel->getNamespace(), '', $name);
 
-        return $this->laravel['path'] . '/' . str_replace('\\', '/', $name) . '.php';
+        return $this->laravel['path'].'/'.str_replace('\\', '/', $name).'.php';
     }
 
     protected function makeDirectory(string $path): void
@@ -97,11 +99,11 @@ class MakeModalCommand extends Command
         $relativePath = ltrim($relativePath, '/\\');
 
         $viewPrefix = str_replace(['/', '\\'], '.', $relativePath);
-        if ($viewPrefix && !str_ends_with($viewPrefix, '.')) {
+        if ($viewPrefix && ! str_ends_with($viewPrefix, '.')) {
             $viewPrefix .= '.';
         }
 
-        $view = $viewPrefix . str_replace(['/', '\\'], '.', $viewName);
+        $view = $viewPrefix.str_replace(['/', '\\'], '.', $viewName);
 
         return $this->resolveStub('Modal.stub', [
             'namespace' => $namespace,
@@ -125,7 +127,7 @@ class MakeModalCommand extends Command
         $customPath = base_path("stubs/neura-kit/livewire/modal/{$stub}");
 
         // 2. Look for package stub
-        $packagePath = __DIR__ . "/../../stubs/livewire/modal/{$stub}";
+        $packagePath = __DIR__."/../../stubs/livewire/modal/{$stub}";
 
         $path = file_exists($customPath) ? $customPath : $packagePath;
 

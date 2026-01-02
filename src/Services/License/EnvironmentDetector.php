@@ -52,18 +52,17 @@ final class EnvironmentDetector
     public function detect(): string
     {
         $forcedEnv = config('neura-kit.license_environment', 'auto');
-        if ($forcedEnv !== 'auto' && in_array($forcedEnv, ['local', 'staging', 'production'], true)) {
+        if (in_array($forcedEnv, ['local', 'staging', 'production'], true)) {
             return $forcedEnv;
         }
 
-        // 2. Priorité à la config Laravel (APP_ENV)
         $configEnv = $this->getConfigEnvironment();
         if ($configEnv !== null) {
             return $configEnv;
         }
 
-        // 3. Détection basée sur le domaine
         $domain = $this->getCurrentDomain();
+
         return $this->detectFromDomain($domain);
     }
 
@@ -145,7 +144,7 @@ final class EnvironmentDetector
     private function getCurrentDomain(): string
     {
         $appUrl = config('app.url', '');
-        if (!empty($appUrl)) {
+        if (! empty($appUrl)) {
             $parsed = parse_url($appUrl);
             if (isset($parsed['host'])) {
                 return $parsed['host'];
@@ -176,7 +175,7 @@ final class EnvironmentDetector
     {
         $ip = preg_replace('/:\d+$/', '', $ip);
 
-        if (!filter_var($ip, FILTER_VALIDATE_IP)) {
+        if (! filter_var($ip, FILTER_VALIDATE_IP)) {
             return false;
         }
 
@@ -187,4 +186,3 @@ final class EnvironmentDetector
         ) === false;
     }
 }
-

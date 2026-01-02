@@ -3,8 +3,8 @@
 namespace Neura\Kit\Console;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Str;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Str;
 
 class MakeTableCommand extends Command
 {
@@ -23,12 +23,13 @@ class MakeTableCommand extends Command
     public function handle(): int
     {
         $name = $this->argument('name');
-        
+
         $className = $this->qualifyClass($name);
         $classPath = $this->getPath($className);
 
         if ($this->files->exists($classPath)) {
             $this->error('Component class already exists!');
+
             return self::FAILURE;
         }
 
@@ -38,7 +39,7 @@ class MakeTableCommand extends Command
 
         $this->info('Table component created successfully.');
         $this->line("Class: {$classPath}");
-        $this->line("Note: The table view is automatically handled by the base Table component.");
+        $this->line('Note: The table view is automatically handled by the base Table component.');
 
         return self::SUCCESS;
     }
@@ -52,14 +53,14 @@ class MakeTableCommand extends Command
             return $name;
         }
 
-        return $rootNamespace . '\\' . str_replace('/', '\\', $name);
+        return $rootNamespace.'\\'.str_replace('/', '\\', $name);
     }
 
     protected function getPath(string $name): string
     {
         $name = Str::replaceFirst($this->laravel->getNamespace(), '', $name);
 
-        return $this->laravel['path'] . '/' . str_replace('\\', '/', $name) . '.php';
+        return $this->laravel['path'].'/'.str_replace('\\', '/', $name).'.php';
     }
 
     protected function makeDirectory(string $path): void
@@ -84,9 +85,9 @@ class MakeTableCommand extends Command
     {
         // 1. Look for published stub in project root
         $customPath = base_path("stubs/neura-kit/livewire/table/{$stub}");
-        
+
         // 2. Look for package stub
-        $packagePath = __DIR__ . "/../../stubs/livewire/table/{$stub}";
+        $packagePath = __DIR__."/../../stubs/livewire/table/{$stub}";
 
         $path = file_exists($customPath) ? $customPath : $packagePath;
 
@@ -104,4 +105,3 @@ class MakeTableCommand extends Command
         return $content;
     }
 }
-

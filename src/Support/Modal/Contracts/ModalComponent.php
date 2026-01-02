@@ -22,4 +22,3 @@ interface ModalComponent
 
     public static function destroyOnClose(): bool;
 }
-

@@ -7,7 +7,6 @@ use Neura\Kit\Enum\Packs\Rounded;
 use Neura\Kit\Enum\Packs\Shadow;
 use Neura\Kit\Enum\Packs\Size;
 use Neura\Kit\Enum\Packs\Variant;
-use Neura\Kit\Packs;
 
 class NeuraKitConfig
 {
@@ -114,7 +113,7 @@ class NeuraKitConfig
                 'close_modal_on_escape_is_forceful' => true,
                 'dispatch_close_event' => true,
                 'destroy_on_close' => true,
-            ]
+            ],
         ], $options);
     }
 
@@ -193,4 +192,3 @@ class NeuraKitConfig
         return $default;
     }
 }
-

@@ -5,20 +5,22 @@ declare(strict_types=1);
 namespace Neura\Kit\Services\License;
 
 use Exception;
-use Neura\Kit\Contracts\LicenseVerifier;
 use Neura\Kit\Exceptions\LicenseException;
 
 final class LicenseService
 {
     private ?bool $isActivatedCache = null;
+
     private ?array $verifiedLicenseCache = null;
+
     private ?EnvironmentDetector $environmentDetector = null;
+
     private ?DomainDetector $domainDetector = null;
 
     public function __construct(
-        private LicenseCache $cache,
-        private LicenseValidator $validator,
-        private ActivationClient $activationClient
+        private readonly LicenseCache $cache,
+        private readonly LicenseValidator $validator,
+        private readonly ActivationClient $activationClient
     ) {}
 
     public function isActivated(): bool
@@ -29,23 +31,27 @@ final class LicenseService
 
         $license = $this->cache->get();
 
-        if (!$license) {
+        if (! $license) {
             $this->isActivatedCache = false;
+
             return false;
         }
 
-        if (!$this->validator->verify($license)) {
+        if (! $this->validator->verify($license)) {
             $this->isActivatedCache = false;
+
             return false;
         }
 
         if ($this->validator->isExpired($license)) {
             $this->isActivatedCache = false;
+
             return false;
         }
 
         $this->verifiedLicenseCache = $license;
         $this->isActivatedCache = true;
+
         return true;
     }
 
@@ -61,11 +67,12 @@ final class LicenseService
 
         $license = $this->cache->get();
 
-        if (!$license || !$this->validator->verify($license)) {
+        if (! $license || ! $this->validator->verify($license)) {
             return null;
         }
 
         $this->verifiedLicenseCache = $license;
+
         return $license;
     }
 
@@ -91,37 +98,41 @@ final class LicenseService
     public function getPlan(): ?string
     {
         $license = $this->getLicense();
+
         return $license['plan'] ?? null;
     }
 
     public function getFeatureFlags(): array
     {
         $license = $this->getLicense();
+
         return $license['features'] ?? [];
     }
 
     public function hasFeature(string $feature): bool
     {
         $features = $this->getFeatureFlags();
+
         return in_array($feature, $features, true);
     }
 
     public function isExpired(): bool
     {
         $license = $this->cache->get();
+
         return $license && $this->validator->isExpired($license);
     }
 
     public function getExpirationMessage(): ?string
     {
-        if (!$this->isExpired()) {
+        if (! $this->isExpired()) {
             return null;
         }
 
         $license = $this->cache->get();
         $expiresAt = $license['expires_at'] ?? null;
 
-        if (!$expiresAt) {
+        if (! $expiresAt) {
             return 'Your Neura Kit license has expired. Please renew to continue receiving updates.';
         }
 
@@ -134,30 +145,35 @@ final class LicenseService
     public function getExpirationDate(): ?string
     {
         $license = $this->getLicense();
+
         return $license['expires_at'] ?? null;
     }
 
     public function getProjectLimit(): ?int
     {
         $license = $this->getLicense();
+
         return $license['project_limit'] ?? null;
     }
 
     public function getAssignedProjects(): array
     {
         $license = $this->getLicense();
+
         return $license['assigned_projects'] ?? [];
     }
 
     public function getDomains(): array
     {
         $license = $this->getLicense();
+
         return $license['domains'] ?? [];
     }
 
     public function getPrimaryDomainFromLicense(): ?string
     {
         $license = $this->getLicense();
+
         return $license['primary_domain'] ?? null;
     }
 
@@ -191,6 +207,7 @@ final class LicenseService
     public function isLifetime(): bool
     {
         $license = $this->getLicense();
+
         return $license['is_lifetime'] ?? false;
     }
 
@@ -244,9 +261,10 @@ final class LicenseService
     private function getProjectIdentifier(): string
     {
         $appKey = config('app.key', '');
-        if (!empty($appKey)) {
-            return hash('sha256', $appKey . base_path());
+        if (! empty($appKey)) {
+            return hash('sha256', $appKey.base_path());
         }
+
         return hash('sha256', base_path());
     }
 
@@ -282,21 +300,23 @@ final class LicenseService
 
     private function getPackageVersion(): string
     {
-        $composerPath = __DIR__ . '/../../../composer.json';
+        $composerPath = __DIR__.'/../../../composer.json';
 
-        if (!file_exists($composerPath)) {
+        if (! file_exists($composerPath)) {
             return 'unknown';
         }
 
         $composer = json_decode(file_get_contents($composerPath), true);
+
         return $composer['version'] ?? 'dev-master';
     }
 
     private function getEnvironmentDetector(): EnvironmentDetector
     {
         if ($this->environmentDetector === null) {
-            $this->environmentDetector = new EnvironmentDetector();
+            $this->environmentDetector = new EnvironmentDetector;
         }
+
         return $this->environmentDetector;
     }
 
@@ -305,7 +325,7 @@ final class LicenseService
         if ($this->domainDetector === null) {
             $this->domainDetector = new DomainDetector($this->getEnvironmentDetector());
         }
+
         return $this->domainDetector;
     }
 }
-

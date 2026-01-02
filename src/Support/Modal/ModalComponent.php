@@ -11,7 +11,9 @@ use Neura\Kit\Support\Modal\Contracts\ModalComponent as Contract;
 abstract class ModalComponent extends Component implements Contract
 {
     public bool $forceClose = false;
+
     public int $skipModals = 0;
+
     public bool $destroySkipped = false;
 
     protected static array $maxWidths = [
@@ -37,6 +39,7 @@ abstract class ModalComponent extends Component implements Contract
     public function destroySkippedModals(): self
     {
         $this->destroySkipped = true;
+
         return $this;
     }
 
@@ -44,6 +47,7 @@ abstract class ModalComponent extends Component implements Contract
     {
         $this->skipModals = $count;
         $this->destroySkipped = $destroy;
+
         return $this;
     }
 
@@ -55,6 +59,7 @@ abstract class ModalComponent extends Component implements Contract
     public function forceClose(): self
     {
         $this->forceClose = true;
+
         return $this;
     }
 
@@ -78,7 +83,7 @@ abstract class ModalComponent extends Component implements Contract
     {
         $width = static::modalMaxWidth();
 
-        if (!isset(static::$maxWidths[$width])) {
+        if (! isset(static::$maxWidths[$width])) {
             throw new InvalidArgumentException(
                 sprintf('Modal max width [%s] is invalid. Valid: [%s].', $width, implode(', ', array_keys(static::$maxWidths)))
             );
@@ -116,17 +121,21 @@ abstract class ModalComponent extends Component implements Contract
     {
         foreach ($events as $component => $event) {
             if (is_array($event)) {
-                if (count($event) < 1) continue;
+                if (count($event) < 1) {
+                    continue;
+                }
                 [$event, $params] = [$event[0], $event[1] ?? []];
-                } else {
+            } else {
                 $params = [];
             }
 
-            if (!is_string($event)) continue;
+            if (! is_string($event)) {
+                continue;
+            }
 
             $dispatch = $this->dispatch($event, ...$params);
 
-            if (!is_numeric($component)) {
+            if (! is_numeric($component)) {
                 $dispatch->to($component);
             }
         }

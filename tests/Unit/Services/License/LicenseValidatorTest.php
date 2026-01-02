@@ -14,8 +14,8 @@ class LicenseValidatorTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->validator = new LicenseValidator();
-        
+        $this->validator = new LicenseValidator;
+
         putenv('NEURA_KIT_LICENSE_KEY=test-secret-key');
     }
 
@@ -90,4 +90,3 @@ class LicenseValidatorTest extends TestCase
         $this->assertFalse($this->validator->isExpired($license));
     }
 }
-

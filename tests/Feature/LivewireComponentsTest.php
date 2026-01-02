@@ -91,4 +91,3 @@ class LivewireComponentsTest extends TestCase
         $this->assertStringContainsString('wire:key', $html);
     }
 }
-

@@ -10,8 +10,8 @@ class Color extends BasePack
     {
         return [
             'base' => [
-                'border'  => 'border-primary-200 dark:border-primary-700',
-                'focus'   => 'focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:focus:border-primary-400 dark:focus:ring-primary-400/20',
+                'border' => 'border-primary-200 dark:border-primary-700',
+                'focus' => 'focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:focus:border-primary-400 dark:focus:ring-primary-400/20',
                 'invalid' => 'border-danger-500 focus:border-danger-500 focus:ring-2 focus:ring-danger-500/20 dark:border-danger-400 dark:focus:border-danger-400 dark:focus:ring-danger-400/20',
             ],
             'checkbox' => [

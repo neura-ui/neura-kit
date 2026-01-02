@@ -12,7 +12,7 @@ class NeuraKitServiceProviderTest extends TestCase
     public function test_service_provider_is_registered()
     {
         $providers = $this->app->getLoadedProviders();
-        
+
         $this->assertArrayHasKey(
             NeuraKitServiceProvider::class,
             $providers
@@ -30,7 +30,7 @@ class NeuraKitServiceProviderTest extends TestCase
     public function test_button_component_can_be_rendered()
     {
         $html = Blade::render('<x-atoms.button>Test Button</x-atoms.button>');
-        
+
         $this->assertStringContainsString('Test Button', $html);
         $this->assertStringContainsString('data-slot="button"', $html);
     }
@@ -38,14 +38,15 @@ class NeuraKitServiceProviderTest extends TestCase
     public function test_button_component_with_variant()
     {
         $html = Blade::render('<x-atoms.button variant="primary">Primary</x-atoms.button>');
-        
+
         $this->assertStringContainsString('Primary', $html);
     }
 
     public function test_icon_component_can_be_rendered()
     {
-        if (!class_exists(\BladeUI\Heroicons\BladeHeroiconsServiceProvider::class)) {
+        if (! class_exists(\BladeUI\Heroicons\BladeHeroiconsServiceProvider::class)) {
             $this->markTestSkipped('Heroicons package is not installed');
+
             return;
         }
 
@@ -54,7 +55,7 @@ class NeuraKitServiceProviderTest extends TestCase
             $this->assertNotEmpty($html);
         } catch (\Exception $e) {
             if (str_contains($e->getMessage(), 'heroicons')) {
-                $this->markTestSkipped('Heroicons components not properly registered: ' . $e->getMessage());
+                $this->markTestSkipped('Heroicons components not properly registered: '.$e->getMessage());
             } else {
                 throw $e;
             }
@@ -64,15 +65,14 @@ class NeuraKitServiceProviderTest extends TestCase
     public function test_input_component_can_be_rendered()
     {
         $html = Blade::render('<x-atoms.input name="test" />');
-        
+
         $this->assertStringContainsString('name="test"', $html);
     }
 
     public function test_nested_components_work()
     {
         $html = Blade::render('<x-atoms.button.abstract>Test</x-atoms.button.abstract>');
-        
+
         $this->assertStringContainsString('Test', $html);
     }
 }
-

@@ -124,7 +124,7 @@ class NeuraTagCompiler extends ComponentTagCompiler
 
                 unset($attributes['slot']);
 
-                return '@slot('.$slot.') ' . $this->componentString('neura::'.$matches[1], $attributes)."\n@endComponentClass##END-COMPONENT-CLASS##" . ' @endslot';
+                return '@slot('.$slot.') '.$this->componentString('neura::'.$matches[1], $attributes)."\n@endComponentClass##END-COMPONENT-CLASS##".' @endslot';
             }
 
             return $this->componentString('neura::'.$matches[1], $attributes)."\n@endComponentClass##END-COMPONENT-CLASS##";
@@ -136,4 +136,3 @@ class NeuraTagCompiler extends ComponentTagCompiler
         return preg_replace("/<\/\s*neura[:][:][\w\-.]*\s*>/", ' @endComponentClass##END-COMPONENT-CLASS##', $value);
     }
 }
-

@@ -1,3 +1,4 @@
+@php use Carbon\Carbon; @endphp
 @props([
     'value',
     'row' => null,
@@ -6,7 +7,7 @@
 ])
 
 @php
-    $date = $value ? \Carbon\Carbon::parse($value) : null;
+    $date = $value ? Carbon::parse($value) : null;
     $format = $formatUsing ?? 'Y-m-d H:i:s';
 
     if ($format === 'human') {

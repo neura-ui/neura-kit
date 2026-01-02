@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace Neura\Kit\Services;
 
+use Throwable;
 use function htmlspecialchars;
 use function json_encode;
-use function view;
 use function sprintf;
+use function view;
 
 final class NeuraKitService
 {
+    /**
+     * @throws Throwable
+     */
     public function renderManagers(): string
     {
         $view = 'neura-kit::components.neura-kit-managers';
@@ -22,7 +26,7 @@ final class NeuraKitService
     {
         $component = $params['component'] ?? null;
 
-        if (!$component) {
+        if (! $component) {
             return '';
         }
 
@@ -42,4 +46,3 @@ final class NeuraKitService
         return htmlspecialchars((string) json_encode($value), ENT_QUOTES, 'UTF-8');
     }
 }
-

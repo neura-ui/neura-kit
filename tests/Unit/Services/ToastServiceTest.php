@@ -14,7 +14,7 @@ class ToastServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new ToastService();
+        $this->service = new ToastService;
     }
 
     #[Test]
@@ -24,7 +24,7 @@ class ToastServiceTest extends TestCase
 
         $this->assertTrue(Session::has('notify'));
         $notification = Session::get('notify');
-        
+
         $this->assertEquals('Hello World', $notification['content']);
         $this->assertEquals('success', $notification['type']);
         $this->assertEquals(4000, $notification['duration']);
@@ -41,9 +41,8 @@ class ToastServiceTest extends TestCase
     public function it_helper_methods_work()
     {
         $this->service->error('Error occurred');
-        
+
         $notification = Session::get('notify');
         $this->assertEquals('error', $notification['type']);
     }
 }
-

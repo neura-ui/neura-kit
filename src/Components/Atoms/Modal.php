@@ -18,12 +18,10 @@ class Modal extends Component
         public bool $closeOnEscape = true,
         public ?string $entangle = null,
         public ?string $maxWidth = null,
-    ) {
-    }
+    ) {}
 
     public function render(): View|Closure|string
     {
         return view('neura::modal.index');
     }
 }
-

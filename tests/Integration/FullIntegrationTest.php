@@ -12,7 +12,7 @@ class FullIntegrationTest extends TestCase
     public function test_blade_components_work()
     {
         $html = Blade::render('<x-atoms.button>Test</x-atoms.button>');
-        
+
         $this->assertStringContainsString('Test', $html);
         $this->assertStringContainsString('button', $html);
     }
@@ -23,7 +23,7 @@ class FullIntegrationTest extends TestCase
             ->searchable()
             ->sortable()
             ->filterable();
-        
+
         $this->assertEquals('name', $column->key);
         $this->assertEquals('Name', $column->label);
         $this->assertTrue($column->searchable);
@@ -52,7 +52,7 @@ class FullIntegrationTest extends TestCase
         Toast::error('Test error');
         Toast::warning('Test warning');
         Toast::info('Test info');
-        
+
         $this->assertTrue(
             method_exists(Toast::class, 'success'),
             'Toast::success should exist'
@@ -62,7 +62,7 @@ class FullIntegrationTest extends TestCase
     public function test_modal_manager_view_renders()
     {
         $html = Blade::render('<x-atoms.modal-manager :components="[]" />');
-        
+
         $this->assertStringContainsString('modalManager', $html);
         $this->assertStringContainsString('x-data="modalManager"', $html);
     }
@@ -70,7 +70,7 @@ class FullIntegrationTest extends TestCase
     public function test_nested_components_work()
     {
         $html = Blade::render('<x-atoms.button.abstract>Nested</x-atoms.button.abstract>');
-        
+
         $this->assertStringContainsString('Nested', $html);
     }
 
@@ -79,7 +79,7 @@ class FullIntegrationTest extends TestCase
         $html = Blade::render(
             '<x-atoms.button variant="primary" size="lg" class="custom">Click</x-atoms.button>'
         );
-        
+
         $this->assertStringContainsString('Click', $html);
         $this->assertStringContainsString('custom', $html);
     }
@@ -87,7 +87,7 @@ class FullIntegrationTest extends TestCase
     public function test_input_component_works()
     {
         $html = Blade::render('<x-atoms.input name="email" type="email" />');
-        
+
         $this->assertStringContainsString('name="email"', $html);
         $this->assertStringContainsString('type="email"', $html);
     }
@@ -95,9 +95,8 @@ class FullIntegrationTest extends TestCase
     public function test_textarea_component_works()
     {
         $html = Blade::render('<x-atoms.textarea name="message" />');
-        
+
         $this->assertNotEmpty($html);
         $this->assertStringContainsString('textarea', $html);
     }
 }
-

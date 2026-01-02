@@ -23,4 +23,3 @@ class Picture extends Component
         return view('neura::picture.index');
     }
 }
-

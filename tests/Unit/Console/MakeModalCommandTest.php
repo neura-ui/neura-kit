@@ -3,10 +3,10 @@
 namespace Tests\Unit\Console;
 
 use Illuminate\Filesystem\Filesystem;
+use Mockery;
 use Neura\Kit\NeuraKitServiceProvider;
 use Orchestra\Testbench\TestCase;
 use PHPUnit\Framework\Attributes\Test;
-use Mockery;
 
 class MakeModalCommandTest extends TestCase
 {
@@ -25,12 +25,12 @@ class MakeModalCommandTest extends TestCase
     public function it_creates_modal_files()
     {
         $files = Mockery::mock(Filesystem::class);
-        
+
         // Checks if files exist (should return false to proceed)
         $files->shouldReceive('exists')
             ->times(2)
             ->andReturn(false);
-            
+
         // Checks if directories exist
         $files->shouldReceive('isDirectory')
             ->andReturn(true);
@@ -38,23 +38,22 @@ class MakeModalCommandTest extends TestCase
         // Expects file creation
         $files->shouldReceive('put')
             ->with(
-                Mockery::on(fn($path) => str_contains($path, 'TestModal.php')),
-                Mockery::on(fn($content) => str_contains($content, 'class TestModal extends ModalComponent'))
+                Mockery::on(fn ($path) => str_contains($path, 'TestModal.php')),
+                Mockery::on(fn ($content) => str_contains($content, 'class TestModal extends ModalComponent'))
             )
             ->once();
 
         $files->shouldReceive('put')
             ->with(
-                Mockery::on(fn($path) => str_contains($path, 'test-modal.blade.php')),
-                Mockery::on(fn($content) => str_contains($content, '<x-atoms.modal.header>'))
+                Mockery::on(fn ($path) => str_contains($path, 'test-modal.blade.php')),
+                Mockery::on(fn ($content) => str_contains($content, '<x-atoms.modal.header>'))
             )
             ->once();
 
         $this->app->instance(Filesystem::class, $files);
 
         $this->artisan('neura-kit:make-modal', ['name' => 'TestModal'])
-             ->assertExitCode(0)
-             ->expectsOutput('Modal component created successfully.');
+            ->assertExitCode(0)
+            ->expectsOutput('Modal component created successfully.');
     }
 }
-

@@ -7,7 +7,6 @@ namespace Neura\Kit\Concerns;
 use Neura\Kit\Support\Clipboard\ClipboardCall;
 use Neura\Kit\Support\Dialog\DialogCall;
 use Neura\Kit\Support\Modal\ModalCall;
-use Neura\Kit\Support\Modal\ModalComponent;
 use Neura\Kit\Support\Toast\ToastCall;
 
 trait InteractsWithNeuraKit
@@ -31,5 +30,4 @@ trait InteractsWithNeuraKit
     {
         return new ClipboardCall($this, $text);
     }
-
 }

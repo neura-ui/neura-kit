@@ -13,7 +13,7 @@ class NeuraKitServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new NeuraKitService();
+        $this->service = new NeuraKitService;
     }
 
     #[Test]
@@ -40,4 +40,3 @@ class NeuraKitServiceTest extends TestCase
         $this->assertStringContainsString('{&quot;size&quot;:&quot;lg&quot;}', $result); // json encoded attributes
     }
 }
-

@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Facade;
 /**
  * @method static string renderManagers()
  * @method static string openModal(array $params = [])
- * 
+ *
  * @see \Neura\Kit\Services\NeuraKitService
  */
 class NeuraKit extends Facade

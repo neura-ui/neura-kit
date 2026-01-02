@@ -14,7 +14,6 @@
         'none' => 'gap-0',
         'xs' => 'gap-1',
         'sm' => 'gap-2',
-        'md' => 'gap-3',
         'lg' => 'gap-4',
         'xl' => 'gap-5',
         default => 'gap-3',
@@ -24,7 +23,6 @@
         'none' => 'p-0',
         'xs' => 'p-2',
         'sm' => 'p-3',
-        'md' => 'p-4',
         'lg' => 'p-6',
         'xl' => 'p-8',
         default => 'p-4',
@@ -100,7 +98,6 @@
         $gapClasses,
     ]);
 @endphp
-
 <div {{ $attributes->class($classes) }} data-slot="box">
     {{ $slot }}
 </div>

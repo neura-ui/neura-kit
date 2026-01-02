@@ -21,4 +21,3 @@ abstract class BasePack
         return array_keys(static::default());
     }
 }
-

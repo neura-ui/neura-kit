@@ -33,5 +33,5 @@ class ToastService
         if ($content) {
             Session::flash('notify', compact('content', 'type', 'duration'));
         }
-            }
-        }
+    }
+}

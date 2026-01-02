@@ -19,4 +19,3 @@ final class Canonicalizer
         return $data;
     }
 }
-

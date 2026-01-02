@@ -79,4 +79,3 @@ class CanonicalizerTest extends TestCase
         $this->assertNull($result['null']);
     }
 }
-

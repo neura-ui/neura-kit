@@ -18,4 +18,3 @@ class Rounded extends BasePack
         ];
     }
 }
-

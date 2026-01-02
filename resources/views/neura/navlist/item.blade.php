@@ -1,39 +1,49 @@
 @aware([
     'collapsible' => true,
     'size' => 'md'
-])
-
-@props([
+])@props([
     'icon' => null,
     'badge' => null,
     'label' => null,
     'href' => '#',
     'active' => null,
-    'size' => null
-])
-
-@php
+    'size' => null,
+    'activePattern' => null,
+])@php
     $size = $size ?? $attributes->get('size') ?? 'md';
 
     $textSize = match ($size) {
         'xs' => 'text-xs',
         'sm' => 'text-sm',
-        'md' => 'text-base',
         'lg' => 'text-lg',
         'xl' => 'text-xl',
         default => 'text-base',
     };
 
     $iconSize = match ($size) {
-        'xs' => 'size-4',
-        'sm' => 'size-4',
-        'md' => 'size-5',
+        'xs','sm' => 'size-4',
         'lg' => 'size-6',
         'xl' => 'size-7',
         default => 'size-5',
     };
 
-    $active = $active ?? (url($href) === url()->current());
+    // Improved active detection
+    if ($active === null) {
+        $currentUrl = url()->current();
+        $linkUrl = url($href);
+
+        $isExactMatch = $currentUrl === $linkUrl;
+
+        // Par défaut : UNIQUEMENT exact match
+        $active = $isExactMatch;
+
+        // activePattern : active TOUTES les sous-routes /* du pattern
+        if ($activePattern) {
+            $patternPath = url($activePattern); // ex: /docs/atoms
+            $isPatternMatch = str_starts_with($currentUrl, rtrim($patternPath, '/'));
+            $active = $active || $isPatternMatch;
+        }
+    }
 
     $classes = [
         'cursor-pointer',
@@ -45,7 +55,6 @@
         'rounded-xl transition-colors duration-150',
         'text-neutral-600 dark:text-neutral-400',
 
-        
         // default hover
         '[&:not([data-active-link])]:hover:bg-primary-50',
         'dark:[&:not([data-active-link])]:hover:bg-primary-950/50',
@@ -67,35 +76,18 @@
         '[:has([data-collapsed]_&)_&]:justify-center',
     ];
 @endphp
-
-<a
-    href="{{ $href }}"
-    data-slot="navlist-item"
-    @if ($active) data-active-link @endif
-    {{ $attributes->class($classes) }}
->
+<a href="{{ $href }}" data-slot="navlist-item" @if ($active) data-active-link @endif{{ $attributes->class($classes) }}>
     @if ($icon)
-        <neura::navlist.has-tooltip
-            :tooltip="$label"
-            :condition="$collapsible"
-        >
-            <neura::icon
-                :name="$icon"
-                :attributes="(new Illuminate\View\ComponentAttributeBag())
-                    ->class('size-5')"
-            />
+        <neura::navlist.has-tooltip :tooltip="$label" :condition="$collapsible">
+            <neura::icon :name="$icon" :attributes="(new Illuminate\View\ComponentAttributeBag())
+                    ->class('size-5')"/>
         </neura::navlist.has-tooltip>
     @endif
-
     <span class="{{ $textSize }} flex-1 in-[:has([data-collapsed]_&)]:hidden">
         {{ $label }}
     </span>
-
     @if ($badge)
-        <neura::badge
-            size="sm"
-            class="ml-auto in-[:has([data-collapsed]_&)]:hidden"
-        >
+        <neura::badge size="sm" class="ml-auto in-[:has([data-collapsed]_&)]:hidden">
             {{ $badge }}
         </neura::badge>
     @endif

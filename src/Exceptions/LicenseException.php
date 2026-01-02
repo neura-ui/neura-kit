@@ -23,12 +23,13 @@ class LicenseException extends Exception
         return new self('License signature validation failed');
     }
 
-    public static function expired(string $expiresAt = null): self
+    public static function expired(?string $expiresAt = null): self
     {
         $message = 'License has expired';
         if ($expiresAt) {
             $message .= " (expired on {$expiresAt})";
         }
+
         return new self($message);
     }
 
@@ -37,4 +38,3 @@ class LicenseException extends Exception
         return new self('License is invalid or corrupted');
     }
 }
-

@@ -110,5 +110,5 @@ return [
 
     'license_environment' => env('NEURA_KIT_ENVIRONMENT', 'auto'),
 
-    'signing_secret' => env('NEURA_KIT_SIGNING_SECRET','5876543b21a9fec92c18c9a42e538efa85aaf485642a3af0d9e495fd395dc5ec'),
+    'signing_secret' => env('NEURA_KIT_SIGNING_SECRET', '5876543b21a9fec92c18c9a42e538efa85aaf485642a3af0d9e495fd395dc5ec'),
 ];

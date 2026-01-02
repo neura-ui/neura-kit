@@ -31,18 +31,21 @@ class Action
     public function key(string $key): self
     {
         $this->key = $key;
+
         return $this;
     }
 
     public function label(string $label): self
     {
         $this->label = $label;
+
         return $this;
     }
 
     public function icon(?string $icon): self
     {
         $this->icon = $icon;
+
         return $this;
     }
 
@@ -60,6 +63,7 @@ class Action
     public function url(string $url): self
     {
         $this->url = $url;
+
         return $this;
     }
 
@@ -77,36 +81,42 @@ class Action
     public function tooltip(string $tooltip): self
     {
         $this->tooltip = $tooltip;
+
         return $this;
     }
 
     public function variant(string $variant): self
     {
         $this->variant = $variant;
+
         return $this;
     }
 
     public function size(string $size): self
     {
         $this->size = $size;
+
         return $this;
     }
 
     public function params(array|Closure $params): self
     {
         $this->params = $params;
+
         return $this;
     }
 
     public function visible(Closure|bool $condition): self
     {
         $this->visible = $condition;
+
         return $this;
     }
 
     public function queryCondition(Closure $condition): self
     {
         $this->queryCondition = $condition;
+
         return $this;
     }
 
@@ -123,9 +133,9 @@ class Action
 
         $key = $this->getKey();
 
-        return match($key) {
+        return match ($key) {
             'delete_selected', 'delete' => 'bulkDelete',
-            default => 'bulk' . str_replace('_', '', ucwords($key, '_'))
+            default => 'bulk'.str_replace('_', '', ucwords($key, '_'))
         };
     }
 
@@ -145,7 +155,7 @@ class Action
             'params' => $this->params,
             'visible' => $this->visible,
             'queryCondition' => $this->queryCondition,
-        ], fn($value) => $value !== null);
+        ], fn ($value) => $value !== null);
     }
 
     public function toView(): View

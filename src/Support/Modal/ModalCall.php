@@ -11,16 +11,17 @@ use Livewire\Component;
 final class ModalCall
 {
     private array $args = [];
+
     private array $attrs = [];
 
     /**
-     * @param class-string<ModalComponent> $modal
+     * @param  class-string<ModalComponent>  $modal
      */
     public function __construct(
         private readonly Component $caller,
         private readonly string $modal,
     ) {
-        if (!is_subclass_of($modal, ModalComponent::class)) {
+        if (! is_subclass_of($modal, ModalComponent::class)) {
             throw new InvalidArgumentException(sprintf(
                 'Modal [%s] must extend %s.',
                 $modal,
@@ -38,12 +39,14 @@ final class ModalCall
     public function with(string $key, mixed $value): self
     {
         $this->args[$key] = $value;
+
         return $this;
     }
 
     public function withMany(array $args): self
     {
         $this->args = array_merge($this->args, $args);
+
         return $this;
     }
 
@@ -54,18 +57,21 @@ final class ModalCall
     public function attr(string $key, mixed $value): self
     {
         $this->attrs[$key] = $value;
+
         return $this;
     }
 
     public function attrs(array $attrs): self
     {
         $this->attrs = array_merge($this->attrs, $attrs);
+
         return $this;
     }
 
     public function maxWidth(string $width): self
     {
         $this->attrs['maxWidth'] = $width;
+
         return $this;
     }
 
@@ -73,7 +79,7 @@ final class ModalCall
      | Actions
      |------------------------------------------------------------- */
 
-    public function open(?array $overrideArgs = null, bool $dispatch = true): string|null
+    public function open(?array $overrideArgs = null, bool $dispatch = true): ?string
     {
         if ($overrideArgs) {
             $this->withMany($overrideArgs);
@@ -82,7 +88,7 @@ final class ModalCall
         if ($dispatch) {
             // Normalize arguments for JSON serialization (convert models to IDs)
             $normalizedArgs = $this->normalizeArgsForJs($this->args);
-            
+
             // Call openModal directly via JavaScript
             $js = sprintf(
                 'NeuraKitModal.open(%s, %s, %s)',
@@ -90,7 +96,7 @@ final class ModalCall
                 json_encode($normalizedArgs),
                 json_encode($this->attrs)
             );
-            
+
             $this->caller->js($js);
         }
 
@@ -118,6 +124,7 @@ final class ModalCall
             if (is_object($value) && method_exists($value, 'toArray')) {
                 return $value->toArray();
             }
+
             return $value;
         }, $args);
     }

@@ -62,8 +62,21 @@
         },
 
         init() {
-            // Initial options build
-            this.rebuildOptions();
+            // Initial options build with a small delay to ensure DOM is ready
+            this.$nextTick(() => {
+                setTimeout(() => {
+                    this.rebuildOptions();
+                }, 50);
+            });
+
+            // Watch for Livewire wire model value changes
+            if (this.wireProperty && this.$wire) {
+                this.$watch(() => this.$wire.get(this.wireProperty), () => {
+                    this.$nextTick(() => {
+                        this.rebuildOptions();
+                    });
+                });
+            }
 
             // Listen for Livewire updates and rebuild options immediately
             if (typeof Livewire !== 'undefined' && Livewire.hook) {
@@ -141,12 +154,11 @@
 
             if (this.isMultiple) {
                 // For multiple select, check if the array includes this value
-                return Array.isArray(currentState) && currentState.includes(value);
+                return Array.isArray(currentState) && currentState.some(v => String(v) === String(value));
             }
 
-            // For single select, do a direct comparison
-            // Handle both string and number comparisons
-            return currentState == value; // Using == for type coercion
+            // For single select, do a string comparison to handle type coercion properly
+            return String(currentState) === String(value);
         },
 
 
@@ -161,7 +173,7 @@
             }
 
             const currentState = Array.isArray(this.state) ? [...this.state] : [];
-            const itemIndex = currentState.findIndex(item => item == value); // Use == for comparison
+            const itemIndex = currentState.findIndex(item => String(item) === String(value));
 
             if (itemIndex === -1) {
                 this.state = [...currentState, value];
@@ -177,7 +189,7 @@
 
         isItemShown(value) {
             if (!this.isSearchable || !this.isTyping || !this.search.trim()) return true;
-            const option = this.options.find(opt => opt.value === value);
+            const option = this.options.find(opt => String(opt.value) === String(value));
             if (!option) return false;
             const searchTerm = this.search.toLowerCase().trim();
             const valueStr = String(option.value || '').toLowerCase();
@@ -245,7 +257,7 @@
         },
 
         getFilteredIndex(value) {
-            return this.filteredOptions.findIndex(option => option.value === value);
+            return this.filteredOptions.findIndex(option => String(option.value) === String(value));
         },
 
         handleMouseEnter(value) {
@@ -267,6 +279,7 @@
         },
 
         get label() {
+            // Force reactivity by referencing optionsVersion
             const _ = this.optionsVersion;
             const currentState = this.state;
 
@@ -275,13 +288,13 @@
             }
 
             if (!this.isMultiple) {
-                // Find the option that matches the current state VALUE
-                const option = this.options.find(opt => opt.value == currentState);
-                return option?.label ?? currentState ?? this.placeholder;
+                // Convert both to strings for proper comparison
+                const option = this.options.find(opt => String(opt.value) === String(currentState));
+                return option?.label ?? this.placeholder;
             }
 
             if (Array.isArray(currentState) && currentState.length === 1) {
-                const option = this.options.find(opt => opt.value == currentState[0]);
+                const option = this.options.find(opt => String(opt.value) === String(currentState[0]));
                 return option?.label ?? currentState[0];
             }
 

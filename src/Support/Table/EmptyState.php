@@ -27,7 +27,7 @@ class EmptyState
 
     public static function make(): static
     {
-        return new static();
+        return new static;
     }
 
     public function message(string $message): static
@@ -58,6 +58,7 @@ class EmptyState
     {
         $this->actionLabel = $label;
         $this->actionUrl = $action;
+
         return $this;
     }
 
@@ -68,6 +69,7 @@ class EmptyState
     {
         $this->actionLabel = $label;
         $this->actionWireClick = $method;
+
         return $this;
     }
 
@@ -93,6 +95,7 @@ class EmptyState
 
         if ($this->html) {
             $html = Blade::render($this->html);
+
             return new HtmlString($html);
         }
 
@@ -126,4 +129,3 @@ class EmptyState
         return new HtmlString($html);
     }
 }
-

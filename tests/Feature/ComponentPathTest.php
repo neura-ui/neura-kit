@@ -11,7 +11,7 @@ class ComponentPathTest extends TestCase
     protected function tearDown(): void
     {
         $publishedPath = resource_path('views/atoms');
-        
+
         if (File::exists($publishedPath)) {
             File::deleteDirectory($publishedPath);
         }
@@ -22,7 +22,7 @@ class ComponentPathTest extends TestCase
     public function test_components_work_with_package_views()
     {
         $html = Blade::render('<x-atoms.button>Test</x-atoms.button>');
-        
+
         $this->assertStringContainsString('Test', $html);
     }
 
@@ -31,7 +31,7 @@ class ComponentPathTest extends TestCase
         $packagePath = realpath(__DIR__.'/../../resources/views/atoms');
         $publishedPath = resource_path('views/atoms');
 
-        if ($packagePath && !File::exists($publishedPath)) {
+        if ($packagePath && ! File::exists($publishedPath)) {
             File::makeDirectory($publishedPath, 0755, true);
             File::copyDirectory($packagePath, $publishedPath);
         }
@@ -39,14 +39,14 @@ class ComponentPathTest extends TestCase
         $this->refreshApplication();
 
         $html = Blade::render('<x-atoms.button>Published Test</x-atoms.button>');
-        
+
         $this->assertStringContainsString('Published Test', $html);
     }
 
     public function test_component_path_resolution()
     {
         $packageViewsPath = realpath(__DIR__.'/../../resources/views');
-        
+
         $this->assertTrue(
             is_dir($packageViewsPath),
             'Package views directory should exist'
@@ -66,7 +66,7 @@ class ComponentPathTest extends TestCase
     public function test_all_major_components_are_accessible()
     {
         $hasHeroicons = class_exists(\BladeUI\Heroicons\BladeHeroiconsServiceProvider::class);
-        
+
         $components = [
             'button' => ['requiresHeroicons' => false],
             'input' => ['requiresHeroicons' => false],
@@ -78,24 +78,24 @@ class ComponentPathTest extends TestCase
 
         foreach ($components as $component => $config) {
             $requiresHeroicons = $config['requiresHeroicons'];
-            
-            if ($requiresHeroicons && !$hasHeroicons) {
+
+            if ($requiresHeroicons && ! $hasHeroicons) {
                 $this->markTestSkipped("Component {$component} requires heroicons package");
+
                 continue;
             }
 
             try {
-                $data = $component === 'input' ? ['errors' => new \Illuminate\Support\ViewErrorBag()] : [];
+                $data = $component === 'input' ? ['errors' => new \Illuminate\Support\ViewErrorBag] : [];
                 $html = Blade::render("<x-atoms.{$component} />", $data);
                 $this->assertNotEmpty($html, "Component {$component} should render");
             } catch (\Exception $e) {
                 if ($requiresHeroicons && str_contains($e->getMessage(), 'heroicons')) {
-                    $this->markTestSkipped("Component {$component} requires heroicons: " . $e->getMessage());
+                    $this->markTestSkipped("Component {$component} requires heroicons: ".$e->getMessage());
                 } else {
-                    $this->fail("Component {$component} failed to render: " . $e->getMessage());
+                    $this->fail("Component {$component} failed to render: ".$e->getMessage());
                 }
             }
         }
     }
 }
-

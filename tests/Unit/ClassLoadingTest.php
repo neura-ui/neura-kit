@@ -47,8 +47,9 @@ class ClassLoadingTest extends TestCase
 
     public function test_livewire_components_require_livewire()
     {
-        if (!class_exists(\Livewire\Component::class)) {
+        if (! class_exists(\Livewire\Component::class)) {
             $this->markTestSkipped('Livewire is not installed. This is expected if Livewire is optional.');
+
             return;
         }
 
@@ -71,7 +72,7 @@ class ClassLoadingTest extends TestCase
     public function test_column_class_has_static_methods()
     {
         $column = \Neura\Kit\Support\Table\Column::make('test', 'Test');
-        
+
         $this->assertInstanceOf(\Neura\Kit\Support\Table\Column::class, $column);
         $this->assertEquals('test', $column->key);
         $this->assertEquals('Test', $column->label);
@@ -100,4 +101,3 @@ class ClassLoadingTest extends TestCase
         );
     }
 }
-

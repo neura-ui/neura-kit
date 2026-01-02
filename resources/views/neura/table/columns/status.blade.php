@@ -51,7 +51,6 @@
             $colorClasses,
         ])
     >
-        {{-- Optional dot indicator --}}
         <span class="h-1.5 w-1.5 rounded-full bg-current opacity-70"></span>
 
         {{ $label }}

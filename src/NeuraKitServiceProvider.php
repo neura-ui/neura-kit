@@ -52,7 +52,7 @@ class NeuraKitServiceProvider extends ServiceProvider
         $this->bootTagCompiler();
         $this->configureComponents();
 
-        if (!$this->isLicenseActivated()) {
+        if (! $this->isLicenseActivated()) {
             return;
         }
 
@@ -61,8 +61,8 @@ class NeuraKitServiceProvider extends ServiceProvider
 
     protected function registerRoutes(): void
     {
-         /** @var CachesRoutes $app */
-         $app = $this->app;
+        /** @var CachesRoutes $app */
+        $app = $this->app;
         if ($app->routesAreCached()) {
             return;
         }
@@ -81,13 +81,11 @@ class NeuraKitServiceProvider extends ServiceProvider
             $this->loadViewsFrom($packageViews, 'neura-kit');
         }
 
-        // Load app views first (higher priority)
         if (file_exists($appNeura) && is_dir($appNeura)) {
             $this->loadViewsFrom($appNeura, 'neura');
             Blade::anonymousComponentPath($appNeura, 'neura');
         }
 
-        // Then load package views (fallback)
         if ($packageNeura) {
             $this->loadViewsFrom($packageNeura, 'neura');
             Blade::anonymousComponentPath($packageNeura, 'neura');
@@ -105,7 +103,7 @@ class NeuraKitServiceProvider extends ServiceProvider
 
     protected function configurePublishing(): void
     {
-        if (!$this->app->runningInConsole()) {
+        if (! $this->app->runningInConsole()) {
             return;
         }
 
@@ -118,26 +116,26 @@ class NeuraKitServiceProvider extends ServiceProvider
             Console\MakeTableCommand::class,
         ]);
 
-        if (!$this->isLicenseActivated()) {
+        if (! $this->isLicenseActivated()) {
             return;
         }
 
         $this->publishes([
             __DIR__.'/../config/neura-kit.php' => config_path('neura-kit.php'),
-        ], 'neura-kit-config');
+        ], 'neura-config');
 
         $this->publishes([
             __DIR__.'/../resources/views/neura' => resource_path('views/neura'),
-        ], 'neura-kit-views');
+        ], 'neura-views');
 
         $this->publishes([
             __DIR__.'/../resources/js' => resource_path('js/neura-kit'),
             __DIR__.'/../resources/css' => resource_path('css/neura-kit'),
-        ], 'neura-kit-assets');
+        ], 'neura-assets');
 
         $this->publishes([
             __DIR__.'/../resources/lang' => resource_path('lang'),
-        ], 'neura-kit-lang');
+        ], 'neura-lang');
     }
 
     protected function configureComponents(): void
@@ -150,19 +148,19 @@ class NeuraKitServiceProvider extends ServiceProvider
             return "<?php echo view('neura-kit::components.neura-kit-managers')->render(); ?>";
         });
 
-        if (!$this->isLicenseActivated()) {
+        if (! $this->isLicenseActivated()) {
             Blade::directive('neuraKit', function () {
                 return '';
             });
+
             return;
         }
-
     }
 
     protected function registerHelpers(): void
     {
-        if (!function_exists('neura_trans')) {
-            require_once __DIR__ . '/Helpers.php';
+        if (! function_exists('neura_trans')) {
+            require_once __DIR__.'/Helpers.php';
         }
     }
 

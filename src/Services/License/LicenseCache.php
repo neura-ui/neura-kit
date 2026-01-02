@@ -4,15 +4,19 @@ declare(strict_types=1);
 
 namespace Neura\Kit\Services\License;
 
+use Exception;
+use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 
 final class LicenseCache
 {
-    private const LICENSE_CACHE_PATH = 'neura-kit/license.json';
+    private const string LICENSE_CACHE_PATH = 'neura-kit/license.json';
 
     private ?array $cachedLicense = null;
+
     private bool $licenseLoaded = false;
+
     private ?bool $hasDatabaseSupportCache = null;
 
     public function get(): ?array
@@ -43,18 +47,21 @@ final class LicenseCache
         $this->licenseLoaded = false;
     }
 
+    /**
+     * @throws FileNotFoundException
+     */
     private function getFromFile(): ?array
     {
-        $path = storage_path('app/' . self::LICENSE_CACHE_PATH);
+        $path = storage_path('app/'.self::LICENSE_CACHE_PATH);
 
-        if (!File::exists($path)) {
+        if (! File::exists($path)) {
             return null;
         }
 
         $content = File::get($path);
         $license = json_decode($content, true);
 
-        if (json_last_error() !== JSON_ERROR_NONE || !is_array($license)) {
+        if (json_last_error() !== JSON_ERROR_NONE || ! is_array($license)) {
             return null;
         }
 
@@ -64,7 +71,7 @@ final class LicenseCache
     private function getFromDatabase(): ?array
     {
         try {
-            if (!$this->hasDatabaseSupport()) {
+            if (! $this->hasDatabaseSupport()) {
                 return null;
             }
 
@@ -73,7 +80,7 @@ final class LicenseCache
                 ->where('project_identifier', $projectIdentifier)
                 ->first();
 
-            if (!$license) {
+            if (! $license) {
                 return null;
             }
 
@@ -92,7 +99,7 @@ final class LicenseCache
                 'package_info' => json_decode($license->package_info ?? '{}', true),
                 'activated_at' => $license->activated_at,
             ];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return null;
         }
     }
@@ -102,20 +109,20 @@ final class LicenseCache
         try {
             $directory = storage_path('app/neura-kit');
 
-            if (!File::exists($directory)) {
+            if (! File::exists($directory)) {
                 File::makeDirectory($directory, 0755, true);
             }
 
-            $path = storage_path('app/' . self::LICENSE_CACHE_PATH);
+            $path = storage_path('app/'.self::LICENSE_CACHE_PATH);
             File::put($path, json_encode($licenseData, JSON_PRETTY_PRINT));
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
         }
     }
 
     private function saveToDatabase(array $licenseData): void
     {
         try {
-            if (!$this->hasDatabaseSupport()) {
+            if (! $this->hasDatabaseSupport()) {
                 return;
             }
 
@@ -123,7 +130,7 @@ final class LicenseCache
 
             DB::table('neura_kit_licenses')->updateOrInsert(
                 [
-                    'license_key' => $licenseData['license_key'] ?? env('NEURA_KIT_LICENSE_KEY'),
+                    'license_key' => $licenseData['license_key'] ?? getenv('NEURA_KIT_LICENSE_KEY'),
                     'project_identifier' => $projectIdentifier,
                 ],
                 [
@@ -143,13 +150,13 @@ final class LicenseCache
                     'created_at' => DB::raw('COALESCE(created_at, NOW())'),
                 ]
             );
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
         }
     }
 
     private function clearFile(): void
     {
-        $path = storage_path('app/' . self::LICENSE_CACHE_PATH);
+        $path = storage_path('app/'.self::LICENSE_CACHE_PATH);
         if (File::exists($path)) {
             File::delete($path);
         }
@@ -158,7 +165,7 @@ final class LicenseCache
     private function clearDatabase(): void
     {
         try {
-            if (!$this->hasDatabaseSupport()) {
+            if (! $this->hasDatabaseSupport()) {
                 return;
             }
 
@@ -166,7 +173,7 @@ final class LicenseCache
             DB::table('neura_kit_licenses')
                 ->where('project_identifier', $projectIdentifier)
                 ->delete();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
         }
     }
 
@@ -178,7 +185,7 @@ final class LicenseCache
 
         try {
             $this->hasDatabaseSupportCache = DB::getSchemaBuilder()->hasTable('neura_kit_licenses');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->hasDatabaseSupportCache = false;
         }
 
@@ -190,4 +197,3 @@ final class LicenseCache
         return hash('sha256', base_path());
     }
 }
-
