@@ -4,24 +4,18 @@ declare(strict_types=1);
 
 namespace Neura\Kit\Services\License;
 
-/**
- * Détecte automatiquement l'environnement (local, staging, production)
- */
+
+use Exception;
+
 final class EnvironmentDetector
 {
-    /**
-     * Domaines considérés comme locaux
-     */
-    private const LOCAL_DOMAINS = [
+    private const array LOCAL_DOMAINS = [
         'localhost',
         '127.0.0.1',
         '::1',
     ];
 
-    /**
-     * Extensions de domaines locaux
-     */
-    private const LOCAL_EXTENSIONS = [
+    private const array LOCAL_EXTENSIONS = [
         '.test',
         '.local',
         '.localhost',
@@ -31,10 +25,7 @@ final class EnvironmentDetector
         '.wip',
     ];
 
-    /**
-     * Patterns de domaines staging
-     */
-    private const STAGING_PATTERNS = [
+    private const array STAGING_PATTERNS = [
         '/^staging\./i',
         '/^stage\./i',
         '/^preprod\./i',
@@ -153,7 +144,7 @@ final class EnvironmentDetector
 
         try {
             return request()->getHost() ?? 'localhost';
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return 'localhost';
         }
     }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Neura\Kit\Services\License;
 
 use Exception;
+use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Neura\Kit\Exceptions\LicenseException;
 
 final class LicenseService
@@ -23,6 +24,9 @@ final class LicenseService
         private readonly ActivationClient $activationClient
     ) {}
 
+    /**
+     * @throws FileNotFoundException
+     */
     public function isActivated(): bool
     {
         if ($this->isActivatedCache !== null) {
@@ -55,6 +59,9 @@ final class LicenseService
         return true;
     }
 
+    /**
+     * @throws FileNotFoundException
+     */
     public function getLicense(): ?array
     {
         if ($this->verifiedLicenseCache !== null) {
@@ -95,6 +102,9 @@ final class LicenseService
         return $licenseData;
     }
 
+    /**
+     * @throws FileNotFoundException
+     */
     public function getPlan(): ?string
     {
         $license = $this->getLicense();
@@ -102,6 +112,9 @@ final class LicenseService
         return $license['plan'] ?? null;
     }
 
+    /**
+     * @throws FileNotFoundException
+     */
     public function getFeatureFlags(): array
     {
         $license = $this->getLicense();
@@ -116,6 +129,9 @@ final class LicenseService
         return in_array($feature, $features, true);
     }
 
+    /**
+     * @throws FileNotFoundException
+     */
     public function isExpired(): bool
     {
         $license = $this->cache->get();
@@ -123,6 +139,9 @@ final class LicenseService
         return $license && $this->validator->isExpired($license);
     }
 
+    /**
+     * @throws FileNotFoundException
+     */
     public function getExpirationMessage(): ?string
     {
         if (! $this->isExpired()) {
@@ -142,6 +161,9 @@ final class LicenseService
         );
     }
 
+    /**
+     * @throws FileNotFoundException
+     */
     public function getExpirationDate(): ?string
     {
         $license = $this->getLicense();
@@ -149,6 +171,9 @@ final class LicenseService
         return $license['expires_at'] ?? null;
     }
 
+    /**
+     * @throws FileNotFoundException
+     */
     public function getProjectLimit(): ?int
     {
         $license = $this->getLicense();
@@ -156,6 +181,9 @@ final class LicenseService
         return $license['project_limit'] ?? null;
     }
 
+    /**
+     * @throws FileNotFoundException
+     */
     public function getAssignedProjects(): array
     {
         $license = $this->getLicense();
@@ -170,6 +198,9 @@ final class LicenseService
         return $license['domains'] ?? [];
     }
 
+    /**
+     * @throws FileNotFoundException
+     */
     public function getPrimaryDomainFromLicense(): ?string
     {
         $license = $this->getLicense();
@@ -204,6 +235,9 @@ final class LicenseService
         return false;
     }
 
+    /**
+     * @throws FileNotFoundException
+     */
     public function isLifetime(): bool
     {
         $license = $this->getLicense();
@@ -260,12 +294,118 @@ final class LicenseService
 
     private function getProjectIdentifier(): string
     {
-        $appKey = config('app.key', '');
-        if (! empty($appKey)) {
-            return hash('sha256', $appKey.base_path());
+        $customId = config('neura-kit.project_id');
+        if (!empty($customId)) {
+            return hash('sha256', 'custom:'.$customId);
         }
 
-        return hash('sha256', base_path());
+        $gitRemote = $this->getGitRemoteUrl();
+        if ($gitRemote !== null) {
+            return hash('sha256', 'git:'.$gitRemote);
+        }
+
+        $dbIdentifier = $this->getDatabaseIdentifier();
+        if ($dbIdentifier !== null) {
+            return hash('sha256', 'db:'.$dbIdentifier);
+        }
+
+        $composerName = $this->getRootComposerName();
+        if ($composerName !== null) {
+            return hash('sha256', 'composer:'.$composerName);
+        }
+
+        $appKey = config('app.key', '');
+        if (!empty($appKey)) {
+            return hash('sha256', 'app:'.$appKey.':'.base_path());
+        }
+
+        return hash('sha256', 'path:'.base_path());
+    }
+
+    private function getGitRemoteUrl(): ?string
+    {
+        $gitConfigPath = base_path('.git/config');
+
+        if (!file_exists($gitConfigPath)) {
+            return null;
+        }
+
+        try {
+            $gitConfig = file_get_contents($gitConfigPath);
+
+            if (preg_match('/\[remote "origin"].*?url\s*=\s*(.+?)(?:\n|$)/s', $gitConfig, $matches)) {
+                $url = trim($matches[1]);
+
+                $url = preg_replace('/^git@([^:]+):/', 'https://$1/', $url);
+                $url = preg_replace('/\.git$/', '', $url);
+
+                return strtolower($url);
+            }
+        } catch (Exception $e) {
+        }
+
+        return null;
+    }
+
+    private function getDatabaseIdentifier(): ?string
+    {
+        try {
+            $connection = config('database.default');
+            $config = config("database.connections.{$connection}");
+
+            if (!$config) {
+                return null;
+            }
+
+            $parts = [];
+
+            if (!empty($config['driver'])) {
+                $parts[] = $config['driver'];
+            }
+
+            if (!empty($config['host'])) {
+                $parts[] = $config['host'];
+            }
+
+            if (!empty($config['database'])) {
+                $parts[] = $config['database'];
+            }
+
+            if (!empty($config['port']) && $config['port'] != 3306 && $config['port'] != 5432) {
+                $parts[] = $config['port'];
+            }
+
+            if (empty($parts)) {
+                return null;
+            }
+
+            return implode(':', $parts);
+        } catch (Exception $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Get root project composer package name
+     */
+    private function getRootComposerName(): ?string
+    {
+        $composerPath = base_path('composer.json');
+
+        if (!file_exists($composerPath)) {
+            return null;
+        }
+
+        try {
+            $composer = json_decode(file_get_contents($composerPath), true);
+
+            if (!empty($composer['name'])) {
+                return $composer['name'];
+            }
+        } catch (Exception $e) {
+        }
+
+        return null;
     }
 
     private function getEnvironment(): string

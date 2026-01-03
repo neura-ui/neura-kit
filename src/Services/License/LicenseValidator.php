@@ -10,7 +10,7 @@ use Neura\Kit\Support\Canonicalizer;
 
 final class LicenseValidator implements LicenseVerifier
 {
-    private const HMAC_ALGORITHM = 'sha256';
+    private const string HMAC_ALGORITHM = 'sha256';
 
     public function verify(array $license): bool
     {

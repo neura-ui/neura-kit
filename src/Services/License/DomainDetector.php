@@ -12,7 +12,7 @@ use Exception;
 final class DomainDetector
 {
     public function __construct(
-        private EnvironmentDetector $environmentDetector
+        private readonly EnvironmentDetector $environmentDetector
     ) {}
 
     public function getPrimaryDomain(): string

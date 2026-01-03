@@ -19,6 +19,9 @@ final class LicenseCache
 
     private ?bool $hasDatabaseSupportCache = null;
 
+    /**
+     * @throws FileNotFoundException
+     */
     public function get(): ?array
     {
         if ($this->licenseLoaded) {

@@ -10,7 +10,7 @@ use Neura\Kit\Exceptions\LicenseException;
 
 final class ActivationClient
 {
-    private ?string $token = null;
+    private ?string $token;
 
     public function __construct()
     {

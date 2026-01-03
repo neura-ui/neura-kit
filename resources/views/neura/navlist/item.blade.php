@@ -37,10 +37,11 @@
         // Par défaut : UNIQUEMENT exact match
         $active = $isExactMatch;
 
-        // activePattern : active TOUTES les sous-routes /* du pattern
         if ($activePattern) {
             $patternPath = url($activePattern); // ex: /docs/atoms
-            $isPatternMatch = str_starts_with($currentUrl, rtrim($patternPath, '/'));
+            // This will match /customer/license/123 when pattern is customer/license/*
+            $patternBase = rtrim(str_replace('/*', '', $patternPath), '/');
+            $isPatternMatch = str_starts_with($currentUrl, $patternBase . '/') || $currentUrl === $patternBase;
             $active = $active || $isPatternMatch;
         }
     }
