@@ -1,75 +1,91 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Neura\Kit\Services\License;
 
 use Exception;
 use Illuminate\Support\Facades\Http;
-use Neura\Kit\Exceptions\LicenseException;
+use RuntimeException;
 
 final class ActivationClient
 {
-    private ?string $token;
+    public function __construct(
+        private string $serverUrl,
+    ) {
+        $this->serverUrl = rtrim($this->serverUrl, '/');
+    }
 
-    public function __construct()
+    public function activate(string $licenseKey, string $projectIdentifier, string $environment, ?string $domain): array
     {
-        $this->token = $this->resolveAuthToken();
+        $response = Http::timeout(30)
+            ->acceptJson()
+            ->withHeaders($this->getAuthHeaders())
+            ->post("{$this->serverUrl}/activate", [
+                'license_key' => $licenseKey,
+                'project_identifier' => $projectIdentifier,
+                'environment' => $environment,
+                'domain' => $domain,
+            ]);
+
+        return $this->handleResponse($response);
+    }
+
+    public function validate(string $token): array
+    {
+        $response = Http::timeout(15)
+            ->acceptJson()
+            ->withHeaders($this->getAuthHeaders())
+            ->post("{$this->serverUrl}/validate", [
+                'token' => $token,
+            ]);
+
+        return $response->successful() ? $response->json() : [
+            'ok' => false,
+            'error' => $response->json('error', 'TOKEN_INVALID')
+        ];
+    }
+
+    public function refresh(string $token): array
+    {
+        $response = Http::timeout(15)
+            ->acceptJson()
+            ->withHeaders($this->getAuthHeaders())
+            ->post("{$this->serverUrl}/refresh", [
+                'token' => $token,
+            ]);
+
+        return $response->successful() ? $response->json() : [
+            'ok' => false,
+            'error' => $response->json('error', 'REFRESH_FAILED')
+        ];
     }
 
     /**
-     * @throws LicenseException
+     * Auto-détecte le Bearer token depuis auth.json ou env
      */
-    public function activate(string $license, array $payload): array
-    {
-        $url = $this->getApiUrl('/activate');
-
-        try {
-            $response = Http::timeout(30)
-                ->withHeaders($this->buildHeaders())
-                ->post($url, $payload);
-        } catch (Exception $e) {
-            throw LicenseException::activationFailed(
-                'Could not connect to license server. '.$e->getMessage()
-            );
-        }
-
-        if (! $response->successful()) {
-            $status  = $response->status();
-            $message = $response->json('message') ?? 'Unknown error';
-            $code    = $response->json('error_code') ?? 'UNKNOWN';
-
-            throw LicenseException::activationFailed(
-                "HTTP {$status} [{$code}]: {$message}"
-            );
-        }
-
-        $licenseData = $response->json();
-
-        if (! isset($licenseData['valid']) || ! $licenseData['valid']) {
-            throw LicenseException::activationFailed(
-                $licenseData['message'] ?? 'License is not valid'
-            );
-        }
-
-        return $licenseData;
-    }
-
-    private function buildHeaders(): array
+    private function getAuthHeaders(): array
     {
         $headers = [
-            'Accept'       => 'application/json',
+            'Accept' => 'application/json',
             'Content-Type' => 'application/json',
         ];
 
-        if ($this->token) {
-            $headers['Authorization'] = 'Bearer '.$this->token;
+        $token = $this->resolveBearerToken();
+
+        if ($token) {
+            $headers['Authorization'] = "Bearer {$token}";
         }
 
         return $headers;
     }
 
-    private function resolveAuthToken(): ?string
+    public function getBearerToken(): ?string
+    {
+        return $this->resolveBearerToken();
+    }
+    /**
+     * Résout le Bearer token depuis plusieurs sources
+     */
+    private function resolveBearerToken(): ?string
     {
         if ($token = getenv('NEURA_LICENSE_TOKEN')) {
             return $token;
@@ -79,59 +95,36 @@ final class ActivationClient
             return $token;
         }
 
-        if ($token = $this->getTokenFromAuthJson()) {
+        if ($token = $this->getTokenFromAuthJson(base_path('auth.json'))) {
             return $token;
         }
 
-        if ($token = $this->getTokenFromComposerAuth()) {
+        $composerHome = getenv('COMPOSER_HOME') ?: getenv('HOME') . '/.composer';
+        if ($token = $this->getTokenFromAuthJson($composerHome . '/auth.json')) {
             return $token;
+        }
+
+        if ($composerAuth = getenv('COMPOSER_AUTH')) {
+            $data = json_decode($composerAuth, true);
+            if (is_array($data)) {
+                return $this->extractTokenFromAuthData($data);
+            }
         }
 
         return null;
     }
 
-    private function getTokenFromComposerAuth(): ?string
+    private function getTokenFromAuthJson(string $path): ?string
     {
-        $composerAuth = getenv('COMPOSER_AUTH') ?: ($_ENV['COMPOSER_AUTH'] ?? $_SERVER['COMPOSER_AUTH'] ?? null);
-
-        if (empty($composerAuth)) {
+        if (!file_exists($path)) {
             return null;
-        }
-
-        $data = json_decode($composerAuth, true);
-
-        if (! is_array($data) || json_last_error() !== JSON_ERROR_NONE) {
-            return null;
-        }
-
-        return $this->extractTokenFromAuthData($data);
-    }
-
-    private function getTokenFromAuthJson(): ?string
-    {
-        $authJsonPath = base_path('auth.json');
-
-        if (! file_exists($authJsonPath)) {
-            $composerHome = getenv('COMPOSER_HOME') ?: (getenv('HOME') ? getenv('HOME').'/.composer' : null);
-
-            if (! $composerHome) {
-                return null;
-            }
-
-            $globalAuthPath = $composerHome.'/auth.json';
-
-            if (! file_exists($globalAuthPath)) {
-                return null;
-            }
-
-            $authJsonPath = $globalAuthPath;
         }
 
         try {
-            $content = file_get_contents($authJsonPath);
-            $data    = json_decode($content, true);
+            $content = file_get_contents($path);
+            $data = json_decode($content, true);
 
-            if (! is_array($data) || json_last_error() !== JSON_ERROR_NONE) {
+            if (!is_array($data) || json_last_error() !== JSON_ERROR_NONE) {
                 return null;
             }
 
@@ -143,11 +136,7 @@ final class ActivationClient
 
     private function extractTokenFromAuthData(array $data): ?string
     {
-        $domain = $this->extractDomainFromApiUrl();
-
-        if (empty($domain)) {
-            return null;
-        }
+        $domain = parse_url($this->serverUrl, PHP_URL_HOST);
 
         if (isset($data['bearer'][$domain])) {
             return $data['bearer'][$domain];
@@ -160,23 +149,31 @@ final class ActivationClient
         return null;
     }
 
-    private function extractDomainFromApiUrl(): string
+    private function handleResponse($response): array
     {
-        $url    = $this->getApiUrl();
-        $parsed = parse_url($url);
-
-        return $parsed['host'] ?? '';
-    }
-
-    private function getApiUrl(string $endpoint = ''): string
-    {
-        $baseUrl = config('neura-kit.license_api_url', 'https://api.neura.test');
-        $baseUrl = rtrim($baseUrl, '/');
-
-        if ($endpoint !== '') {
-            return $baseUrl.'/'.ltrim($endpoint, '/');
+        if (!$response->successful()) {
+            $status = $response->status();
+            $error = $response->json('error', 'HTTP_' . $status);
+            $message = $response->json('message', 'Unknown error');
+            throw new RuntimeException("Activation failed [{$error}]: {$message} (HTTP {$status})");
         }
 
-        return $baseUrl;
+        $data = $response->json();
+
+        if (!isset($data['ok']) || !$data['ok']) {
+            throw new RuntimeException("Activation failed: ". ($data['message'] ?? 'Invalid response'));
+        }
+
+        return $data;
+    }
+
+    public function getEndpoints(): array
+    {
+        return [
+            'activate' => $this->serverUrl . '/activate',
+            'validate' => $this->serverUrl . '/validate',
+            'refresh' => $this->serverUrl . '/refresh',
+            'bearer_token' => $this->resolveBearerToken() ? '✅ Found' : '❌ Missing',
+        ];
     }
 }

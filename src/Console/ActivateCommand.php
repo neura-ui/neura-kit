@@ -35,7 +35,6 @@ class ActivateCommand extends Command
 
             $this->info('✅ License activated successfully!');
             $this->line('');
-            $this->line('Plan: '.($license['plan'] ?? 'Unknown'));
 
             if (isset($license['expires_at'])) {
                 $this->line('Updates expire: '.$license['expires_at']);
