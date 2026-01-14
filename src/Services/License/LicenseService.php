@@ -44,7 +44,6 @@ final class LicenseService
     }
 
     /**
-     * @throws LicenseException
      */
     public function activate(string $licenseKey): array
     {

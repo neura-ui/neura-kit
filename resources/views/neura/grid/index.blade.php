@@ -2,19 +2,15 @@
     'cols' => '1',
     'gap' => 'md',
     'responsive' => true,
-
-    // NEW
-    'align' => 'stretch',   // start | center | end | stretch
-    'justify' => 'stretch', // start | center | end | stretch
-
-    // OPTIONAL advanced
+    'align' => 'stretch',
+    'justify' => 'stretch',
     'colStart' => null,
     'colEnd' => null,
-
-    // Responsive breakpoints (can be customized)
-    'sm' => null,  // Number of columns at sm breakpoint
-    'md' => null,  // Number of columns at md breakpoint
-    'lg' => null,  // Number of columns at lg breakpoint
+    'sm' => null,
+    'md' => null,
+    'lg' => null,
+    'xl' => null,
+    '2xl' => null,
 ])
 
 @php
@@ -22,98 +18,113 @@
     |--------------------------------------------------------------------------
     | Dynamic Responsive Columns Generator
     |--------------------------------------------------------------------------
-    | Generates responsive grid classes dynamically based on column count
-    | Example: 6 columns -> grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6
     */
     if (!function_exists('generateResponsiveCols')) {
-        function generateResponsiveCols($cols, $responsive, $sm = null, $md = null, $lg = null) {
-        // CSS Grid auto functions - no responsive needed
-        if ($cols === 'auto-fit') {
-            return 'grid-cols-[repeat(auto-fit,minmax(0,1fr))]';
-        }
-        if ($cols === 'auto-fill') {
-            return 'grid-cols-[repeat(auto-fill,minmax(0,1fr))]';
-        }
-        if ($cols === 'auto') {
-            return 'grid-cols-[repeat(auto-fit,minmax(min-content,1fr))]';
-        }
+        function generateResponsiveCols($cols, $responsive, $sm = null, $md = null, $lg = null, $xl = null, $xxl = null) {
+            // CSS Grid auto functions - no responsive needed
+            if ($cols === 'auto-fit') {
+                return 'grid-cols-[repeat(auto-fit,minmax(0,1fr))]';
+            }
+            if ($cols === 'auto-fill') {
+                return 'grid-cols-[repeat(auto-fill,minmax(0,1fr))]';
+            }
+            if ($cols === 'auto') {
+                return 'grid-cols-[repeat(auto-fit,minmax(min-content,1fr))]';
+            }
 
-        // Custom CSS value - no responsive needed
-        if (is_string($cols) && (str_contains($cols, '[') || str_contains($cols, 'repeat') || str_contains($cols, 'minmax'))) {
-            return "grid-cols-[{$cols}]";
-        }
+            // Custom CSS value with brackets, repeat, or minmax
+            if (is_string($cols) && (
+                str_contains($cols, '[') ||
+                str_contains($cols, 'repeat') ||
+                str_contains($cols, 'minmax')
+            )) {
+                return "grid-cols-[{$cols}]";
+            }
 
-        // If not responsive, return simple class
-        if (!$responsive) {
-            $numCols = is_numeric($cols) ? (int)$cols : $cols;
-            return is_numeric($numCols) ? "grid-cols-{$numCols}" : "grid-cols-{$cols}";
-        }
+            // Convert to number
+            $numCols = is_numeric($cols) ? (int)$cols : (int)$cols;
 
-        // Convert cols to number for calculations
-        $numCols = is_numeric($cols) ? (int)$cols : (int)$cols;
-        
-        if ($numCols <= 0) {
-            return 'grid-cols-1';
-        }
+            // Fallback if conversion fails
+            if ($numCols <= 0 || !is_numeric($cols)) {
+                return 'grid-cols-1';
+            }
 
-        // Calculate default breakpoints if not provided
-        // Smart defaults based on column count
-        if ($sm === null) {
-            $sm = $numCols >= 4 ? 2 : ($numCols >= 2 ? 2 : null);
-        }
-        if ($md === null) {
-            $md = $numCols >= 6 ? 3 : ($numCols >= 3 ? 2 : ($numCols >= 2 ? 2 : null));
-        }
-        if ($lg === null) {
-            $lg = $numCols;
-        }
+            // If not responsive, return simple class
+            if (!$responsive) {
+                return $numCols <= 12 ? "grid-cols-{$numCols}" : "grid-cols-[{$numCols}]";
+            }
 
-        // Build responsive classes
-        $classes = ['grid-cols-1']; // Always start with 1 column on mobile
+            // Calculate smart defaults for breakpoints
+            if ($sm === null) {
+                $sm = match(true) {
+                    $numCols >= 4 => 2,
+                    $numCols >= 2 => 2,
+                    default => null,
+                };
+            }
 
-        if ($sm !== null && $sm > 0 && $sm < $numCols) {
-            $classes[] = "sm:grid-cols-{$sm}";
-        }
-        if ($md !== null && $md > 0 && $md < $numCols) {
-            $classes[] = "md:grid-cols-{$md}";
-        }
-        if ($lg !== null && $lg > 0) {
-            $classes[] = "lg:grid-cols-{$lg}";
-        } else {
-            $classes[] = "lg:grid-cols-{$numCols}";
-        }
+            if ($md === null) {
+                $md = match(true) {
+                    $numCols >= 6 => 3,
+                    $numCols >= 3 => 2,
+                    $numCols >= 2 => 2,
+                    default => null,
+                };
+            }
 
-        return implode(' ', $classes);
+            if ($lg === null) {
+                $lg = $numCols;
+            }
+
+            // Build responsive classes array
+            $classes = ['grid-cols-1']; // Mobile-first: always start with 1
+
+            // Only add breakpoint if it's different and valid
+            if ($sm !== null && $sm > 0 && $sm <= 12 && $sm != 1) {
+                $classes[] = "sm:grid-cols-{$sm}";
+            }
+
+            if ($md !== null && $md > 0 && $md <= 12 && $md != $sm) {
+                $classes[] = "md:grid-cols-{$md}";
+            }
+
+            if ($lg !== null && $lg > 0 && $lg <= 12) {
+                $classes[] = "lg:grid-cols-{$lg}";
+            }
+
+            // Add xl and 2xl if provided
+            if ($xl !== null && $xl > 0 && $xl <= 12) {
+                $classes[] = "xl:grid-cols-{$xl}";
+            }
+
+            if ($xxl !== null && $xxl > 0 && $xxl <= 12) {
+                $classes[] = "2xl:grid-cols-{$xxl}";
+            }
+
+            return implode(' ', $classes);
         }
     }
 
     /*
     |--------------------------------------------------------------------------
-    | Columns
+    | Build all classes
     |--------------------------------------------------------------------------
     */
-    $colsClasses = generateResponsiveCols($cols, $responsive, $sm, $md, $lg);
 
-    /*
-    |--------------------------------------------------------------------------
-    | Gap
-    |--------------------------------------------------------------------------
-    */
+    // Columns
+    $colsClasses = generateResponsiveCols($cols, $responsive, $sm, $md, $lg, $xl, $attributes->get('2xl'));
+
+    // Gap
     $gapClasses = match ($gap) {
         'none' => 'gap-0',
         'xs' => 'gap-1',
         'sm' => 'gap-2',
-        'md' => 'gap-4',
         'lg' => 'gap-6',
         'xl' => 'gap-8',
         default => 'gap-4',
     };
 
-    /*
-    |--------------------------------------------------------------------------
-    | Alignment (grid-safe)
-    |--------------------------------------------------------------------------
-    */
+    // Alignment (vertical)
     $alignClasses = match ($align) {
         'start' => 'items-start',
         'center' => 'items-center',
@@ -121,6 +132,7 @@
         default => 'items-stretch',
     };
 
+    // Justify (horizontal)
     $justifyClasses = match ($justify) {
         'start' => 'justify-items-start',
         'center' => 'justify-items-center',
@@ -128,20 +140,17 @@
         default => 'justify-items-stretch',
     };
 
-    /*
-    |--------------------------------------------------------------------------
-    | Optional column positioning
-    |--------------------------------------------------------------------------
-    */
-    $colStartClass = $colStart ? "col-start-{$colStart}" : null;
-    $colEndClass   = $colEnd ? "col-end-{$colEnd}" : null;
+    // Optional column positioning (validate range)
+    $colStartClass = ($colStart && $colStart >= 1 && $colStart <= 13)
+        ? "col-start-{$colStart}"
+        : null;
 
-    /*
-    |--------------------------------------------------------------------------
-    | Final classes
-    |--------------------------------------------------------------------------
-    */
-    $classes = array_filter([
+    $colEndClass = ($colEnd && $colEnd >= 1 && $colEnd <= 13)
+        ? "col-end-{$colEnd}"
+        : null;
+
+    // Assemble base grid classes (without custom user classes)
+    $gridClasses = array_filter([
         'grid',
         $colsClasses,
         $gapClasses,
@@ -150,8 +159,14 @@
         $colStartClass,
         $colEndClass,
     ]);
+
+    /**
+     * Merge with user-provided classes from $attributes
+     * This allows: <x-grid cols="6" class="bg-gray-100 p-4">
+     */
+    $mergedAttributes = $attributes->class($gridClasses);
 @endphp
 
-<div {{ $attributes->class($classes) }} data-slot="grid">
+<div {{ $mergedAttributes }} data-slot="grid">
     {{ $slot }}
 </div>

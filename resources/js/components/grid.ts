@@ -1,29 +1,30 @@
 import type { GridProps, GridCols, GridGap, GridAlign, GridJustify } from './types';
 
 /**
- * Utilitaires pour générer les classes CSS du composant Grid
+ * Utilities for generating CSS classes for the Grid component
  */
 export class GridHelper {
   /**
-   * Génère dynamiquement les classes responsive pour grid-cols
-   * Exemple: 6 colonnes -> grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6
+   * Generate responsive grid-cols classes dynamically
+   * Example: 6 columns -> grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6
    */
   static getColsClass(
     cols: GridCols,
     responsive: boolean,
     sm: number | null = null,
     md: number | null = null,
-    lg: number | null = null
+    lg: number | null = null,
+    xl: number | null = null,
+    xxl: number | null = null
   ): string {
-    // CSS Grid auto functions - no responsive needed
     if (cols === 'auto-fit') {
       return 'grid-cols-[repeat(auto-fit,minmax(0,1fr))]';
     }
-    
+
     if (cols === 'auto-fill') {
       return 'grid-cols-[repeat(auto-fill,minmax(0,1fr))]';
     }
-    
+
     if (cols === 'auto') {
       return 'grid-cols-[repeat(auto-fit,minmax(min-content,1fr))]';
     }
@@ -40,24 +41,24 @@ export class GridHelper {
       }
     }
 
-    // If not responsive, return simple class
-    if (!responsive) {
-      const numCols = typeof cols === 'number' ? cols : parseInt(cols as string, 10);
-      return isNaN(numCols) ? `grid-cols-${cols}` : `grid-cols-${numCols}`;
-    }
-
     // Convert cols to number for calculations
     const numCols = typeof cols === 'number' ? cols : parseInt(cols as string, 10);
-    
+
     if (isNaN(numCols) || numCols <= 0) {
       return 'grid-cols-1';
     }
 
+    // If not responsive, return simple class
+    if (!responsive) {
+      return numCols <= 12 ? `grid-cols-${numCols}` : `grid-cols-[${numCols}]`;
+    }
+
     // Calculate default breakpoints if not provided
-    // Smart defaults based on column count
     let smCols = sm;
     let mdCols = md;
     let lgCols = lg;
+    let xlCols = xl;
+    let xxlCols = xxl;
 
     if (smCols === null) {
       smCols = numCols >= 4 ? 2 : (numCols >= 2 ? 2 : null);
@@ -72,25 +73,38 @@ export class GridHelper {
     // Build responsive classes
     const classes: string[] = ['grid-cols-1']; // Always start with 1 column on mobile
 
-    if (smCols !== null && smCols > 0 && smCols < numCols) {
-      classes.push(`sm:grid-cols-${smCols}`);
+    if (smCols !== null && smCols > 0 && smCols !== 1) {
+      const colClass = smCols <= 12 ? `sm:grid-cols-${smCols}` : `sm:grid-cols-[${smCols}]`;
+      classes.push(colClass);
     }
-    if (mdCols !== null && mdCols > 0 && mdCols < numCols) {
-      classes.push(`md:grid-cols-${mdCols}`);
+
+    if (mdCols !== null && mdCols > 0 && mdCols !== smCols) {
+      const colClass = mdCols <= 12 ? `md:grid-cols-${mdCols}` : `md:grid-cols-[${mdCols}]`;
+      classes.push(colClass);
     }
+
     if (lgCols !== null && lgCols > 0) {
-      classes.push(`lg:grid-cols-${lgCols}`);
-    } else {
-      classes.push(`lg:grid-cols-${numCols}`);
+      const colClass = lgCols <= 12 ? `lg:grid-cols-${lgCols}` : `lg:grid-cols-[${lgCols}]`;
+      classes.push(colClass);
+    }
+
+    if (xlCols !== null && xlCols > 0) {
+      const colClass = xlCols <= 12 ? `xl:grid-cols-${xlCols}` : `xl:grid-cols-[${xlCols}]`;
+      classes.push(colClass);
+    }
+
+    if (xxlCols !== null && xxlCols > 0) {
+      const colClass = xxlCols <= 12 ? `2xl:grid-cols-${xxlCols}` : `2xl:grid-cols-[${xxlCols}]`;
+      classes.push(colClass);
     }
 
     return classes.join(' ');
   }
 
   /**
-   * Génère la classe pour gap
+   * Generate gap class
    */
-  static getGapClass(gap: GridGap): string {
+  static getGapClass(gap: string): string {
     const gapMap: Record<GridGap, string> = {
       none: 'gap-0',
       xs: 'gap-1',
@@ -104,9 +118,9 @@ export class GridHelper {
   }
 
   /**
-   * Génère la classe pour align (items)
+   * Generate align class (items)
    */
-  static getAlignClass(align: GridAlign): string {
+  static getAlignClass(align: string): string {
     const alignMap: Record<GridAlign, string> = {
       start: 'items-start',
       center: 'items-center',
@@ -118,9 +132,9 @@ export class GridHelper {
   }
 
   /**
-   * Génère la classe pour justify (justify-items)
+   * Generate justify class (justify-items)
    */
-  static getJustifyClass(justify: GridJustify): string {
+  static getJustifyClass(justify: string): string {
     const justifyMap: Record<GridJustify, string> = {
       start: 'justify-items-start',
       center: 'justify-items-center',
@@ -132,21 +146,27 @@ export class GridHelper {
   }
 
   /**
-   * Génère la classe pour col-start
+   * Generate col-start class
    */
   static getColStartClass(colStart: number | null): string | null {
-    return colStart ? `col-start-${colStart}` : null;
+    if (colStart && colStart >= 1 && colStart <= 13) {
+      return `col-start-${colStart}`;
+    }
+    return null;
   }
 
   /**
-   * Génère la classe pour col-end
+   * Generate col-end class
    */
   static getColEndClass(colEnd: number | null): string | null {
-    return colEnd ? `col-end-${colEnd}` : null;
+    if (colEnd && colEnd >= 1 && colEnd <= 13) {
+      return `col-end-${colEnd}`;
+    }
+    return null;
   }
 
   /**
-   * Génère toutes les classes CSS pour le composant Grid
+   * Generate all CSS classes for Grid component
    */
   static generateClasses(props: GridProps): string[] {
     const {
@@ -160,11 +180,13 @@ export class GridHelper {
       sm = null,
       md = null,
       lg = null,
+      xl = null,
+      '2xl': xxl = null,
     } = props;
 
     const classes: (string | null)[] = [
       'grid',
-      this.getColsClass(cols, responsive, sm, md, lg),
+      this.getColsClass(cols, responsive, sm, md, lg, xl, xxl),
       this.getGapClass(gap),
       this.getAlignClass(align),
       this.getJustifyClass(justify),
@@ -176,13 +198,12 @@ export class GridHelper {
   }
 
   /**
-   * Applique les classes générées à un élément DOM
-   * Note: Les props doivent être passées explicitement, car les data attributes ne sont plus utilisés
+   * Apply generated classes to a DOM element
    */
   static applyToElement(element: HTMLElement, props: GridProps): void {
     const classes = this.generateClasses(props);
 
-    // Retire les anciennes classes grid-*
+    // Remove old grid-related classes
     const currentClasses = Array.from(element.classList);
     currentClasses.forEach(cls => {
       if (
@@ -197,40 +218,62 @@ export class GridHelper {
       }
     });
 
-    // Ajoute les nouvelles classes
+    // Add new classes
     classes.forEach(cls => element.classList.add(cls));
   }
 
   /**
-   * Valide les props du composant Grid
+   * Parse props from data attributes
+   */
+  static propsFromElement(element: HTMLElement): GridProps {
+    const dataset = element.dataset;
+
+    return {
+      cols: dataset.cols || '1',
+      gap: (dataset.gap as GridGap) || 'md',
+      responsive: dataset.responsive !== 'false',
+      align: (dataset.align as GridAlign) || 'stretch',
+      justify: (dataset.justify as GridJustify) || 'stretch',
+      colStart: dataset.colStart ? parseInt(dataset.colStart, 10) : null,
+      colEnd: dataset.colEnd ? parseInt(dataset.colEnd, 10) : null,
+      sm: dataset.sm ? parseInt(dataset.sm, 10) : null,
+      md: dataset.md ? parseInt(dataset.md, 10) : null,
+      lg: dataset.lg ? parseInt(dataset.lg, 10) : null,
+      xl: dataset.xl ? parseInt(dataset.xl, 10) : null,
+      '2xl': dataset['2xl'] ? parseInt(dataset['2xl'], 10) : null,
+    };
+  }
+
+  /**
+   * Validate Grid component props
    */
   static validateProps(props: GridProps): { valid: boolean; errors: string[] } {
     const errors: string[] = [];
 
     if (props.cols !== undefined) {
       if (typeof props.cols === 'number' && props.cols < 1) {
-        errors.push('cols doit être un nombre positif');
+        errors.push('cols must be a positive number');
       }
     }
 
     if (props.gap !== undefined) {
       const validGaps: GridGap[] = ['none', 'xs', 'sm', 'md', 'lg', 'xl'];
       if (!validGaps.includes(props.gap)) {
-        errors.push(`gap doit être l'un des suivants: ${validGaps.join(', ')}`);
+        errors.push(`gap must be one of: ${validGaps.join(', ')}`);
       }
     }
 
     if (props.align !== undefined) {
       const validAligns: GridAlign[] = ['start', 'center', 'end', 'stretch'];
       if (!validAligns.includes(props.align)) {
-        errors.push(`align doit être l'un des suivants: ${validAligns.join(', ')}`);
+        errors.push(`align must be one of: ${validAligns.join(', ')}`);
       }
     }
 
     if (props.justify !== undefined) {
       const validJustifies: GridJustify[] = ['start', 'center', 'end', 'stretch'];
       if (!validJustifies.includes(props.justify)) {
-        errors.push(`justify doit être l'un des suivants: ${validJustifies.join(', ')}`);
+        errors.push(`justify must be one of: ${validJustifies.join(', ')}`);
       }
     }
 
@@ -242,25 +285,20 @@ export class GridHelper {
 }
 
 /**
- * Initialise les composants Grid sur la page
- * Note: Les classes sont déjà générées par PHP, cette fonction est disponible
- * pour une utilisation programmatique si nécessaire
+ * Initialize Grid components on the page
  */
 export function initGridComponents(): void {
-  // Les composants Grid sont gérés par PHP via les classes générées
-  // Cette fonction est disponible pour une utilisation programmatique si nécessaire
   const gridElements = document.querySelectorAll<HTMLElement>('[data-slot="grid"]');
-  
-  // Les éléments sont déjà stylés par PHP, pas besoin d'action supplémentaire
-  // Sauf si vous voulez ajouter une logique JavaScript personnalisée
-}
 
-// Auto-initialisation si le DOM est déjà chargé
-if (typeof document !== 'undefined') {
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initGridComponents);
-  } else {
-    initGridComponents();
-  }
-}
+  gridElements.forEach(element => {
+    const props = GridHelper.propsFromElement(element);
 
+    // Validate if in development
+    if (import.meta.env?.DEV) {
+      const validation = GridHelper.validateProps(props);
+      if (!validation.valid) {
+        console.warn('Grid validation errors:', validation.errors, element);
+      }
+    }
+  });
+}

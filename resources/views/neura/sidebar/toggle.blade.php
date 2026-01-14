@@ -17,12 +17,6 @@
             name="code-bracket-square"
         />
         <span class="absolute size-12 top-1/2 left-1/2 -translate-1/2 pointer-fine:hidden">
-            <!--
-                Touch target enhancement: Expands clickable area to 48px for thumb-friendly interaction
-                Hidden on precise pointer devices (mouse) - only shows for touch/stylus input
-                WCAG guideline: minimum 44px touch targets for accessibility
-                @see https:
-            -->
         </span>
     </button>
 </neura::navlist.has-tooltip>

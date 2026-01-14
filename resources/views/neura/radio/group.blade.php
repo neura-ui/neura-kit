@@ -20,7 +20,6 @@
         'space-y-2' => $direction === 'vertical' && !str_contains($wrapperClass, 'grid'),
         'flex gap-1 items-stretch' => $direction === 'horizontal',
         'bg-neutral-200 dark:bg-neutral-800 rounded-box w-fit p-1' => $variant === 'segmented',
-        'p-1' => $variant === 'cards',
         $wrapperClass
     ];
 @endphp

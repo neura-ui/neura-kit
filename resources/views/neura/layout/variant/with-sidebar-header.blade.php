@@ -30,7 +30,6 @@
 <div
     {{ $attributes->class($classes) }}
     @if($collapsable)
-
         x-data="{
             collapsedSidebar: $persist(false),
             sidebarOpen: false,
@@ -104,6 +103,7 @@
         class="fixed inset-0 top-(--header-height) bg-black/50 z-30 md:hidden"
     ></div>
 </div>
+
 
 
 

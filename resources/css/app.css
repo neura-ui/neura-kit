@@ -1,34 +1,197 @@
+/**
+ * ============================================================================
+ * Base Layer - Foundation & Resets
+ * ============================================================================
+ */
 @layer base {
-    [x-cloak] { display: none !important; }
+  /* Alpine.js cloak directive */
+  [x-cloak] {
+    display: none !important;
+  }
 
-    * {
-        scrollbar-width: thin;
-        scrollbar-color: rgb(212 212 212) transparent;
-    }
+  /* Custom scrollbar styling with theme support */
+  :root {
+    --scrollbar-track: transparent;
+    --scrollbar-thumb: rgb(212 212 212);
+    --scrollbar-thumb-hover: rgb(163 163 163);
+  }
 
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgb(212 212 212); border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgb(163 163 163); }
+  .dark {
+    --scrollbar-thumb: rgb(64 64 64);
+    --scrollbar-thumb-hover: rgb(82 82 82);
+  }
 
-    .dark * {
-        scrollbar-color: rgb(64 64 64) transparent;
-    }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  }
 
-    .dark ::-webkit-scrollbar-thumb { background: rgb(64 64 64); }
-    .dark ::-webkit-scrollbar-thumb:hover { background: rgb(82 82 82); }
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 3px;
+    transition: background 150ms ease;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+  }
 }
 
+/**
+ * ============================================================================
+ * Utilities Layer - Extended Tailwind Classes
+ * ============================================================================
+ */
 @layer utilities {
-    .z-100 { z-index: 100; }
-    .z-9999 { z-index: 9999; }
+  /* Extended z-index scale */
+  .z-100 {
+    z-index: 100;
+  }
 
-    .max-w-8xl { max-width: 88rem; }    /* 1408px */
-    .max-w-9xl { max-width: 96rem; }    /* 1536px */
-    .max-w-10xl { max-width: 104rem; }  /* 1664px */
-    .max-w-11xl { max-width: 112rem; }  /* 1792px */
-    .max-w-12xl { max-width: 120rem; }  /* 1920px */
-    .max-w-13xl { max-width: 128rem; }  /* 2048px */
-    .max-w-14xl { max-width: 136rem; }  /* 2176px */
-    .max-w-15xl { max-width: 144rem; }  /* 2304px */
+  .z-9999 {
+    z-index: 9999;
+  }
+
+  /* Extended max-width scale for ultra-wide layouts */
+  .max-w-8xl {
+    max-width: 88rem; /* 1408px */
+  }
+
+  .max-w-9xl {
+    max-width: 96rem; /* 1536px */
+  }
+
+  .max-w-10xl {
+    max-width: 104rem; /* 1664px */
+  }
+
+  .max-w-11xl {
+    max-width: 112rem; /* 1792px */
+  }
+
+  .max-w-12xl {
+    max-width: 120rem; /* 1920px */
+  }
+
+  .max-w-13xl {
+    max-width: 128rem; /* 2048px */
+  }
+
+  .max-w-14xl {
+    max-width: 136rem; /* 2176px */
+  }
+
+  .max-w-15xl {
+    max-width: 144rem; /* 2304px */
+  }
+}
+
+/**
+ * ============================================================================
+ * Components Layer - Dynamic Grid System
+ * ============================================================================
+ */
+@layer components {
+  /**
+   * Dynamic Column Component
+   * Uses CSS variables for runtime grid control
+   * See: col-helper.ts for TypeScript implementation
+   */
+  .col-dynamic {
+    /* Column span with fallback cascade */
+    grid-column: var(--col-span, auto);
+    grid-column-start: var(--col-start, auto);
+    grid-column-end: var(--col-end, auto);
+
+    /* Row span with fallback cascade */
+    grid-row: var(--row-span, auto);
+    grid-row-start: var(--row-start, auto);
+    grid-row-end: var(--row-end, auto);
+
+    /* Responsive column spans - mobile-first approach */
+    @media (min-width: 640px) {
+      grid-column: var(--col-span-sm, var(--col-span, auto));
+    }
+
+    @media (min-width: 768px) {
+      grid-column: var(--col-span-md, var(--col-span-sm, var(--col-span, auto)));
+    }
+
+    @media (min-width: 1024px) {
+      grid-column: var(--col-span-lg, var(--col-span-md, var(--col-span-sm, var(--col-span, auto))));
+    }
+
+    @media (min-width: 1280px) {
+      grid-column: var(--col-span-xl, var(--col-span-lg, var(--col-span-md, var(--col-span-sm, var(--col-span, auto)))));
+    }
+
+    @media (min-width: 1536px) {
+      grid-column: var(--col-span-2xl, var(--col-span-xl, var(--col-span-lg, var(--col-span-md, var(--col-span-sm, var(--col-span, auto))))));
+    }
+  }
+
+  /**
+   * Optional: Grid container with auto-flow dense
+   * Add this class to parent grid for better space utilization
+   */
+  .grid-auto-dense {
+    grid-auto-flow: dense;
+  }
+
+  /**
+   * Optional: Subgrid support for nested grids
+   */
+  .subgrid-cols {
+    grid-template-columns: subgrid;
+  }
+
+  .subgrid-rows {
+    grid-template-rows: subgrid;
+  }
+}
+
+/**
+ * ============================================================================
+ * Performance Optimizations
+ * ============================================================================
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/**
+ * ============================================================================
+ * Print Styles
+ * ============================================================================
+ */
+@media print {
+  .col-dynamic {
+    /* Flatten grid for printing */
+    grid-column: auto;
+    page-break-inside: avoid;
+  }
+
+  /* Hide scrollbars in print */
+  * {
+    scrollbar-width: none;
+  }
+
+  ::-webkit-scrollbar {
+    display: none;
+  }
 }

@@ -57,3 +57,4 @@ trait WithPacks
         return $colors[$key][$variant] ?? null;
     }
 }
+

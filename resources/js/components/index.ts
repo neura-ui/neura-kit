@@ -1,6 +1,6 @@
 /**
  * Composants Col et Grid pour Neura Kit
- * 
+ *
  * Ces composants TypeScript permettent une gestion dynamique et typée
  * des props depuis PHP via les data attributes.
  */
@@ -42,7 +42,13 @@ export type {
 } from './types';
 
 // Composant Col
-export { ColHelper, initColComponents } from './col';
+export {
+  ColHelper,
+  initColComponents,
+  startColObserver,
+  stopColObserver,
+  resetColComponents
+} from './col';
 
 // Composant Grid
 export { GridHelper, initGridComponents } from './grid';
@@ -54,14 +60,11 @@ export { StackHelper, initStackComponents } from './stack';
 export { BoxHelper, initBoxComponents } from './box';
 
 // Import pour utilisation locale
-import { initColComponents } from './col';
+import { initColComponents, startColObserver } from './col';
 import { initGridComponents } from './grid';
 import { initStackComponents } from './stack';
 import { initBoxComponents } from './box';
 
-/**
- * Initialise tous les composants Col, Grid, Stack et Box sur la page
- */
 export function initComponents(): void {
   initColComponents();
   initGridComponents();
@@ -69,12 +72,32 @@ export function initComponents(): void {
   initBoxComponents();
 }
 
-// Auto-initialisation
-if (typeof document !== 'undefined') {
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initComponents);
-  } else {
-    initComponents();
-  }
+function init(): void {
+  initComponents();
+
+  startColObserver();
 }
 
+if (typeof window !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  document.addEventListener('livewire:navigated', () => {
+    initComponents();
+  });
+
+  document.addEventListener('livewire:load', () => {
+    initComponents();
+  });
+
+  document.addEventListener('livewire:update', () => {
+    initComponents();
+  });
+
+  document.addEventListener('livewire:morph', () => {
+    initComponents();
+  });
+}

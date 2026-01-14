@@ -64,6 +64,9 @@
 
 <div {{ $attributes->class($headerClasses) }} data-slot="header">
     <div class="{{ $containerClasses }}">
+        <div class="md:hidden -ml-2">
+            <neura::sidebar.toggle />
+        </div>
         @if (isset($slot->brand) || isset($brand))
             <div data-slot="header-brand" {{ $brand->attributes->merge(['class' => "flex items-center shrink-0 gap-2"]) }}>
                 {{ isset($slot->brand) ? $slot->brand : $brand }}

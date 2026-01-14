@@ -4,81 +4,180 @@ declare(strict_types=1);
 
 namespace Neura\Kit\Console;
 
+use Carbon\Carbon;
+use Exception;
 use Illuminate\Console\Command;
 use Neura\Kit\Services\License\LicenseService;
 
 class LicenseStatusCommand extends Command
 {
-    protected $signature = 'neura-kit:license-status';
+    protected $signature = 'neura-kit:license:status {--refresh : Refresh the license token}';
 
     protected $description = 'Check Neura Kit license status';
 
     public function handle(LicenseService $licenseService): int
     {
-        $this->info('Neura Kit License Status');
-        $this->line('');
+        $this->displayHeader();
 
-        if (! $licenseService->isActivated()) {
-            $this->error('❌ License is not activated');
-            $this->line('');
-            $this->line('To activate your license, run:');
-            $this->line('php artisan neura-kit:activate');
+        if ($this->option('refresh')) {
+            return $this->handleRefresh($licenseService);
+        }
+
+        if (!$licenseService->isActivated()) {
+            return $this->displayNotActivated();
+        }
+
+        return $this->displayLicenseInfo($licenseService);
+    }
+
+    private function displayHeader(): void
+    {
+        $this->newLine();
+        $this->info('╔════════════════════════════════════════╗');
+        $this->info('║    Neura Kit License Status            ║');
+        $this->info('╔════════════════════════════════════════╗');
+        $this->newLine();
+    }
+
+    private function handleRefresh(LicenseService $licenseService): int
+    {
+        $this->line('Refreshing license token...');
+
+        try {
+            if ($licenseService->refresh()) {
+                $this->info('✅ License token refreshed successfully');
+                $this->newLine();
+                return $this->displayLicenseInfo($licenseService);
+            }
+
+            $this->error('❌ Failed to refresh license token');
+            $this->newLine();
+            $this->warn('Your license may have expired or been revoked.');
+            $this->line('Please contact support or reactivate your license.');
+
+            return self::FAILURE;
+        } catch (Exception $e) {
+            $this->error('❌ Error refreshing license: ' . $e->getMessage());
+            return self::FAILURE;
+        }
+    }
+
+    private function displayNotActivated(): int
+    {
+        $this->error('❌ License is not activated');
+        $this->newLine();
+        $this->line('To activate your license, run:');
+        $this->comment('  php artisan neura-kit:activate YOUR_LICENSE_KEY');
+        $this->newLine();
+
+        return self::FAILURE;
+    }
+
+    private function displayLicenseInfo(LicenseService $licenseService): int
+    {
+        try {
+            $this->info('✅ License is activated');
+            $this->newLine();
+
+            // Display basic token information
+            $this->displayTokenInfo($licenseService);
+
+            // Display expiration status
+            $expirationStatus = $this->displayExpirationInfo($licenseService);
+
+            // Display environment and domain
+            $this->displayEnvironmentInfo($licenseService);
+
+            $this->newLine();
+
+            // Return appropriate status code based on expiration
+            return $expirationStatus ? self::SUCCESS : self::FAILURE;
+
+        } catch (Exception $e) {
+            $this->error('❌ Error reading license data: ' . $e->getMessage());
+            $this->newLine();
+            $this->line('Try clearing the cache:');
+            $this->comment('  php artisan cache:clear');
 
             return self::FAILURE;
         }
+    }
 
-        $license = $licenseService->getLicense();
+    private function displayTokenInfo(LicenseService $licenseService): void
+    {
+        $licenseId = $licenseService->getLicenseId();
+        $projectId = $licenseService->getProjectId();
 
-        if (! $license) {
-            $this->error('❌ License data is invalid');
-
-            return self::FAILURE;
+        if ($licenseId) {
+            $this->line("License ID: <fg=cyan>{$licenseId}</>");
         }
 
-        $this->info('✅ License is activated');
-        $this->line('');
+        if ($projectId) {
+            $this->line("Project ID: <fg=cyan>{$projectId}</>");
+        }
+    }
 
-        $this->line('Plan: '.($license['plan'] ?? 'Unknown'));
+    private function displayExpirationInfo(LicenseService $licenseService): bool
+    {
+        $expiresAt = $licenseService->getExpiresAt();
 
-        if (isset($license['expires_at'])) {
-            $expiresAt = \Carbon\Carbon::parse($license['expires_at']);
-            $isExpired = $expiresAt->isPast();
-
-            if ($isExpired) {
-                $this->warn('⚠️  Updates expired: '.$license['expires_at']);
-                $this->line('');
-                $this->line('Your license has expired. Existing projects will continue to work,');
-                $this->line('but new installs and updates are blocked. Please renew your license.');
-            } else {
-                $this->info('Updates expire: '.$license['expires_at']);
-            }
+        if ($expiresAt === null) {
+            $this->warn('⚠️  Expiration date not available');
+            return false;
         }
 
-        if (isset($license['project_limit'])) {
-            $this->line('Project limit: '.($license['project_limit'] ?? 'Unlimited'));
+        $now = Carbon::now();
+        $isExpired = $expiresAt->isPast();
+
+        if ($isExpired) {
+            $this->error("❌ License expired: {$expiresAt->toDateTimeString()}");
+            $this->line("   Expired {$expiresAt->diffForHumans()}");
+            $this->newLine();
+            $this->warn('⚠️  Your license has expired.');
+            $this->line('   Existing installations will continue to work,');
+            $this->line('   but new installs and updates are blocked.');
+            $this->newLine();
+            $this->line('To renew, run:');
+            $this->comment('  php artisan neura-kit:activate YOUR_NEW_LICENSE_KEY');
+
+            return false;
         }
 
-        $environment = $license['environment'] ?? 'local';
-        $assignedProjects = $license['assigned_projects'] ?? [];
-        $currentProject = $license['project_identifier'] ?? null;
+        // Show different warnings based on how close to expiration
+        $daysUntilExpiration = $now->diffInDays($expiresAt);
 
-        if ($environment === 'production') {
-            $count = count($assignedProjects);
-            $this->line('Assigned projects: '.$count);
-            if ($currentProject && ! in_array($currentProject, $assignedProjects)) {
-                $this->warn('⚠️  Current project is not in assigned projects list');
-            }
+        if ($daysUntilExpiration <= 7) {
+            $this->warn("⚠️  License expires soon: {$expiresAt->toDateTimeString()}");
+            $this->line("   Expires {$expiresAt->diffForHumans()}");
+        } elseif ($daysUntilExpiration <= 30) {
+            $this->line("License expires: <fg=yellow>{$expiresAt->toDateTimeString()}</>");
+            $this->line("   ({$expiresAt->diffForHumans()})");
         } else {
-            $this->line('Environment: '.$environment.' (does not consume project slots)');
-            if ($currentProject) {
-                $this->line('Current project: '.substr($currentProject, 0, 16).'...');
-            }
+            $this->line("License expires: <fg=green>{$expiresAt->toDateTimeString()}</>");
+            $this->line("   ({$expiresAt->diffForHumans()})");
         }
 
-        if (isset($license['features']) && is_array($license['features'])) {
-            $this->line('Features: '.implode(', ', $license['features']));
+        return true;
+    }
+
+    private function displayEnvironmentInfo(LicenseService $licenseService): void
+    {
+        $this->newLine();
+
+        $environment = $licenseService->getEnvironment();
+        $domain = $licenseService->getPrimaryDomain();
+
+        $this->line("Environment: <fg=cyan>{$environment}</>");
+
+        if ($domain && $domain !== 'unknown') {
+            $this->line("Primary Domain: <fg=cyan>{$domain}</>");
         }
 
-        return self::SUCCESS;
+        // Show cache refresh hint
+        if ($licenseService->isExpired()) {
+            $this->newLine();
+            $this->line('To refresh your license status, run:');
+            $this->comment('  php artisan neura-kit:license:status --refresh');
+        }
     }
 }

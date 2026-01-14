@@ -13,7 +13,7 @@
 
     $classes = [
         'bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-900',
-        '[:where(&)]:p-6 [:where(&)]:rounded-lg shadow-sm',
+        '[:where(&)]:px-4 [:where(&)]:py-2 [:where(&)]:rounded-lg shadow-sm',
         $variantClasses
     ];
 
