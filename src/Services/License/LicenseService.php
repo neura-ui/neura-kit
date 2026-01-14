@@ -319,7 +319,7 @@ final class LicenseService
      */
     public function getStatus(): array
     {
-        $data = $this->getTokenData();
+        $this->getTokenData();
 
         return [
             'is_activated' => $this->isActivated(),
