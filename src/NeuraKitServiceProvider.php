@@ -56,6 +56,7 @@ class NeuraKitServiceProvider extends ServiceProvider
 
         $this->app->alias(LicenseService::class, 'neura.license');
 
+        // Register compiler as singleton to ensure it's only created once
         $this->app->singleton('neura.compiler', function ($app) {
             return new NeuraTagCompiler(
                 $app['blade.compiler']->getClassComponentAliases(),
@@ -65,7 +66,8 @@ class NeuraKitServiceProvider extends ServiceProvider
         });
     }
 
-    public function boot(): void {
+    public function boot(): void
+    {
         if ($this->isFirstPartyPlatform()) {
             $this->bootFullFeatures();
             return;
@@ -81,7 +83,8 @@ class NeuraKitServiceProvider extends ServiceProvider
         $this->bootFullFeatures();
     }
 
-    protected function isFirstPartyPlatform(): bool {
+    protected function isFirstPartyPlatform(): bool
+    {
         $basePackagePath = base_path('neura-kit');
         $vendorPackagePath = base_path('vendor/neura-ui/neura-kit');
 
@@ -92,16 +95,23 @@ class NeuraKitServiceProvider extends ServiceProvider
         return false;
     }
 
-    protected function bootFullFeatures(): void {
+    protected function bootFullFeatures(): void
+    {
         $this->configurePublishing();
         $this->registerHelpers();
         $this->bootComponentPath();
         $this->bootTagCompiler();
         $this->configureComponents();
         $this->registerRoutes();
+
+        // Clear view cache in development when license status changes
+        if ($this->app->environment('local') && config('app.debug')) {
+            $this->clearViewCacheIfNeeded();
+        }
     }
 
-    protected function configurePublishing(): void {
+    protected function configurePublishing(): void
+    {
         if (!$this->app->runningInConsole()) {
             return;
         }
@@ -132,13 +142,15 @@ class NeuraKitServiceProvider extends ServiceProvider
         ], 'neura-lang');
     }
 
-    protected function registerHelpers(): void {
+    protected function registerHelpers(): void
+    {
         if (!function_exists('neura_trans')) {
             require_once __DIR__.'/Helpers.php';
         }
     }
 
-    protected function bootComponentPath(): void {
+    protected function bootComponentPath(): void
+    {
         $packageViews = realpath(__DIR__.'/../resources/views');
         $packageNeura = realpath(__DIR__.'/../resources/views/neura');
         $appNeura = resource_path('views/neura');
@@ -158,15 +170,24 @@ class NeuraKitServiceProvider extends ServiceProvider
         }
     }
 
-    protected function bootTagCompiler(): void {
+    protected function bootTagCompiler(): void
+    {
+        // Get the compiler instance
         $compiler = $this->app->make('neura.compiler');
 
+        // Register the precompiler with higher priority
         app('blade.compiler')->precompiler(function ($string) use ($compiler) {
+            // Only process if string contains neura tags
+            if (stripos($string, '<neura::') === false) {
+                return $string;
+            }
+
             return $compiler->compile($string);
         });
     }
 
-    protected function configureComponents(): void {
+    protected function configureComponents(): void
+    {
         if (class_exists(Livewire::class)) {
             Livewire::component('neura-kit.modal-manager', Components\Atoms\ModalManager::class);
         }
@@ -176,7 +197,8 @@ class NeuraKitServiceProvider extends ServiceProvider
         });
     }
 
-    protected function registerRoutes(): void {
+    protected function registerRoutes(): void
+    {
         /** @var CachesRoutes $app */
         $app = $this->app;
         if ($app->routesAreCached()) {
@@ -187,7 +209,8 @@ class NeuraKitServiceProvider extends ServiceProvider
             ->name('neura-kit.translations');
     }
 
-    protected function registerActivateCommand(): void {
+    protected function registerActivateCommand(): void
+    {
         if (!$this->app->runningInConsole()) {
             return;
         }
@@ -197,23 +220,67 @@ class NeuraKitServiceProvider extends ServiceProvider
         ]);
     }
 
-    protected function isLicenseActivated(): bool {
+    protected function isLicenseActivated(): bool
+    {
         if ($this->licenseActivatedCache !== null) {
             return $this->licenseActivatedCache;
         }
 
         try {
-            $this->licenseActivatedCache = $this->app->make(LicenseService::class)->isActivated();
-        } catch (Exception $e) {
-            $this->licenseActivatedCache = false;
-        }
+            $licenseService = $this->app->make(LicenseService::class);
 
-        return $this->licenseActivatedCache;
+            // Use the new shouldWork() method that handles license vs token logic
+            $this->licenseActivatedCache = $licenseService->shouldWork();
+
+            if (!$this->licenseActivatedCache) {
+                if ($licenseService->isLicenseExpired()) {
+                    \Log::error('Neura Kit license has expired');
+                } elseif (!$licenseService->isActivated()) {
+                    \Log::warning('Neura Kit is not activated');
+                }
+            }
+
+            return $this->licenseActivatedCache;
+
+        } catch (Exception $e) {
+            \Log::error('License check failed: ' . $e->getMessage());
+            $this->licenseActivatedCache = false;
+            return false;
+        }
     }
 
-    protected function configureUnlicensedState(): void {
+    protected function configureUnlicensedState(): void
+    {
         Blade::directive('neuraKit', function () {
             return '';
         });
+
+        if ($this->app->environment('local') && config('app.debug')) {
+            \Log::warning('Neura Kit is running in unlicensed state. Run: php artisan neura-kit:activate');
+        }
+    }
+
+    protected function clearViewCacheIfNeeded(): void
+    {
+        $cacheKey = 'neura-kit.last-license-state';
+        $currentState = $this->licenseActivatedCache ? 'active' : 'inactive';
+        $lastState = cache($cacheKey);
+
+        if ($lastState !== $currentState) {
+            try {
+                $viewPath = storage_path('framework/views');
+                if (is_dir($viewPath)) {
+                    $files = glob($viewPath . '/*');
+                    foreach ($files as $file) {
+                        if (is_file($file)) {
+                            @unlink($file);
+                        }
+                    }
+                }
+
+                cache([$cacheKey => $currentState], now()->addDay());
+            } catch (Exception $e) {
+            }
+        }
     }
 }

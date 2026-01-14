@@ -119,23 +119,32 @@ class LicenseStatusCommand extends Command
 
     private function displayExpirationInfo(LicenseService $licenseService): bool
     {
-        $expiresAt = $licenseService->getExpiresAt();
+        // Show TOKEN expiration
+        $tokenExpiresAt = $licenseService->getExpiresAt();
 
-        if ($expiresAt === null) {
-            $this->warn('⚠️  Expiration date not available');
-            return false;
+        if ($tokenExpiresAt !== null) {
+            $this->line("Token expires: <fg=cyan>{$tokenExpiresAt->toDateTimeString()}</>");
+            $this->line("   ({$tokenExpiresAt->diffForHumans()})");
+        }
+
+        // Show LICENSE expiration (more important!)
+        $licenseExpiresAt = $licenseService->getLicenseExpiresAt();
+
+        if ($licenseExpiresAt === null) {
+            $this->info('License: <fg=green>Perpetual (no expiration)</>'  );
+            return true;
         }
 
         $now = Carbon::now();
-        $isExpired = $expiresAt->isPast();
+        $isExpired = $licenseExpiresAt->isPast();
 
         if ($isExpired) {
-            $this->error("❌ License expired: {$expiresAt->toDateTimeString()}");
-            $this->line("   Expired {$expiresAt->diffForHumans()}");
+            $this->error("❌ License expired: {$licenseExpiresAt->toDateTimeString()}");
+            $this->line("   Expired {$licenseExpiresAt->diffForHumans()}");
             $this->newLine();
             $this->warn('⚠️  Your license has expired.');
-            $this->line('   Existing installations will continue to work,');
-            $this->line('   but new installs and updates are blocked.');
+            $this->line('   The library will stop working.');
+            $this->line('   Please renew your license to continue using Neura Kit.');
             $this->newLine();
             $this->line('To renew, run:');
             $this->comment('  php artisan neura-kit:activate YOUR_NEW_LICENSE_KEY');
@@ -144,17 +153,24 @@ class LicenseStatusCommand extends Command
         }
 
         // Show different warnings based on how close to expiration
-        $daysUntilExpiration = $now->diffInDays($expiresAt);
+        $daysUntilExpiration = $now->diffInDays($licenseExpiresAt);
 
         if ($daysUntilExpiration <= 7) {
-            $this->warn("⚠️  License expires soon: {$expiresAt->toDateTimeString()}");
-            $this->line("   Expires {$expiresAt->diffForHumans()}");
+            $this->warn("⚠️  License expires soon: {$licenseExpiresAt->toDateTimeString()}");
+            $this->line("   Expires {$licenseExpiresAt->diffForHumans()}");
         } elseif ($daysUntilExpiration <= 30) {
-            $this->line("License expires: <fg=yellow>{$expiresAt->toDateTimeString()}</>");
-            $this->line("   ({$expiresAt->diffForHumans()})");
+            $this->line("License expires: <fg=yellow>{$licenseExpiresAt->toDateTimeString()}</>");
+            $this->line("   ({$licenseExpiresAt->diffForHumans()})");
         } else {
-            $this->line("License expires: <fg=green>{$expiresAt->toDateTimeString()}</>");
-            $this->line("   ({$expiresAt->diffForHumans()})");
+            $this->line("License expires: <fg=green>{$licenseExpiresAt->toDateTimeString()}</>");
+            $this->line("   ({$licenseExpiresAt->diffForHumans()})");
+        }
+
+        // Show plan and features
+        $plan = $licenseService->getPlan();
+        if ($plan) {
+            $this->newLine();
+            $this->line("Plan: <fg=cyan>{$plan}</>");
         }
 
         return true;
