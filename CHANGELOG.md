@@ -11,23 +11,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **Editor.js Synchronization**: Fixed "There is no block at index" error by clearing editor before rendering new content
-- **Image Upload Reliability**: Improved client-side validation and error handling
-  - Added file size validation (10MB max) before upload
-  - Added file type validation (JPEG, JPG, PNG, GIF, WebP)
-  - Better error messages for failed uploads
-  - Improved response structure validation
-- **Upload Logging**: Added comprehensive logging in `EditorImageController`
-  - Log upload attempts with file details
-  - Log successful uploads with URL and path
-  - Log validation failures
-  - Log runtime errors with stack traces
+- **Image Upload Reliability**: Major improvements to handle intermittent failures
+  - **Retry Logic**: Automatic retry with exponential backoff (3 attempts: 1s, 2s, 4s delays)
+  - **Timeout Handling**: 60-second timeout with AbortController to prevent hanging requests
+  - **Network Error Detection**: Better detection and messaging for network failures
+  - **Client-side Validation**: File size (10MB max) and type validation before upload
+  - **Server-side Retry**: File storage retry logic with exponential backoff
+  - **PHP Limits Check**: Validates against PHP upload_max_filesize and post_max_size
+  - **File Validation**: Checks file validity and permissions before storage
+  - **Better Error Messages**: More descriptive error messages for different failure types
+- **Upload Logging**: Comprehensive logging in `EditorImageController` and `ImageStorageService`
+  - Log upload attempts with detailed file info (size, type, name, validity)
+  - Log successful uploads with URL, path, dimensions, and duration
+  - Log validation failures with error details
+  - Log runtime errors with stack traces (in debug mode)
+  - Track upload duration for performance monitoring
 - **HTTP Headers**: Added `Accept: application/json` header to ensure JSON responses
 - **Editor Initialization**: Added `onReady` callback for better initialization tracking
 
 ### Changed
 - Editor.js now clears content before rendering to prevent block index conflicts
-- Image uploader now validates files before sending to server
-- Error handling improved with more descriptive messages
+- Image uploader validates files before sending to server
+- Error handling improved with more descriptive messages and proper error classification
+- Upload process now includes automatic retries for transient failures
+- File storage includes directory creation and permission checks
 
 ## [1.0.5] - 2026-01-22
 

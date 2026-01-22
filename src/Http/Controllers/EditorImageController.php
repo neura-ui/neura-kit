@@ -27,21 +27,52 @@ class EditorImageController extends Controller
      */
     public function uploadImage(Request $request): JsonResponse
     {
+        $startTime = microtime(true);
+        
         try {
-            // Log the upload attempt
-            $this->logger->info('Image upload attempt', [
+            // Log the upload attempt with detailed info
+            $fileInfo = [
                 'has_file' => $request->hasFile('image'),
-                'file_size' => $request->hasFile('image') ? $request->file('image')->getSize() : null,
-                'mime_type' => $request->hasFile('image') ? $request->file('image')->getMimeType() : null,
-            ]);
+                'content_length' => $request->header('Content-Length'),
+                'content_type' => $request->header('Content-Type'),
+            ];
+            
+            if ($request->hasFile('image')) {
+                $file = $request->file('image');
+                $fileInfo['file_size'] = $file->getSize();
+                $fileInfo['mime_type'] = $file->getMimeType();
+                $fileInfo['original_name'] = $file->getClientOriginalName();
+                $fileInfo['extension'] = $file->getClientOriginalExtension();
+                $fileInfo['is_valid'] = $file->isValid();
+                if (!$file->isValid()) {
+                    $fileInfo['error'] = $file->getErrorMessage();
+                }
+            }
+            
+            $this->logger->info('Image upload attempt', $fileInfo);
+
+            // Check PHP upload limits
+            $maxUploadSize = min(
+                (int) ini_get('upload_max_filesize') ?: 0,
+                (int) ini_get('post_max_size') ?: 0
+            );
+            
+            if ($request->hasFile('image') && $request->file('image')->getSize() > $maxUploadSize * 1024 * 1024) {
+                throw new \RuntimeException("File size exceeds PHP limit ({$maxUploadSize}MB)");
+            }
 
             $validated = $this->validateImageRequest($request);
             $result = $this->imageStorage->store($validated['image']);
 
+            $duration = round((microtime(true) - $startTime) * 1000, 2);
+            
             // Log successful upload
             $this->logger->info('Image uploaded successfully', [
                 'url' => $result['url'],
                 'path' => $result['path'],
+                'width' => $result['width'],
+                'height' => $result['height'],
+                'duration_ms' => $duration,
             ]);
 
             return response()->json([
@@ -58,8 +89,10 @@ class EditorImageController extends Controller
             ]);
 
         } catch (ValidationException $e) {
+            $duration = round((microtime(true) - $startTime) * 1000, 2);
             $this->logger->warning('Image upload validation failed', [
                 'errors' => $e->validator->errors()->toArray(),
+                'duration_ms' => $duration,
             ]);
 
             return response()->json([
@@ -68,9 +101,11 @@ class EditorImageController extends Controller
             ], 422);
 
         } catch (\RuntimeException $e) {
+            $duration = round((microtime(true) - $startTime) * 1000, 2);
             $this->logger->error('Image upload failed', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                'duration_ms' => $duration,
+                'trace' => config('app.debug') ? $e->getTraceAsString() : null,
             ]);
 
             return response()->json([
@@ -79,15 +114,17 @@ class EditorImageController extends Controller
             ], 500);
 
         } catch (\Exception $e) {
+            $duration = round((microtime(true) - $startTime) * 1000, 2);
             $this->logger->error('Unexpected error during image upload', [
                 'exception' => get_class($e),
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                'duration_ms' => $duration,
+                'trace' => config('app.debug') ? $e->getTraceAsString() : null,
             ]);
 
             return response()->json([
                 'success' => 0,
-                'message' => 'An unexpected error occurred',
+                'message' => config('app.debug') ? $e->getMessage() : 'An unexpected error occurred',
             ], 500);
         }
     }

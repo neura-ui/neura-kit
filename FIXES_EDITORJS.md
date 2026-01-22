@@ -156,6 +156,120 @@ FILESYSTEM_DISK=public  # ou s3, etc.
 php artisan storage:link
 ```
 
+## Améliorations v1.0.6 (Suite)
+
+### 4. 🔄 Système de retry automatique
+
+**Problème** : Les uploads échouent parfois à cause de problèmes réseau temporaires
+
+**Solution** : Implémentation d'un système de retry avec exponential backoff
+
+```typescript
+// Retry logic avec 3 tentatives
+const maxRetries = 3;
+for (let attempt = 0; attempt < maxRetries; attempt++) {
+  try {
+    if (attempt > 0) {
+      // Exponential backoff: 1s, 2s, 4s
+      const delay = Math.pow(2, attempt - 1) * 1000;
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+    return await performUpload(...);
+  } catch (error) {
+    // Ne pas retry sur les erreurs de validation
+    if (isValidationError(error)) throw error;
+    // Ne pas retry sur les erreurs 4xx (client)
+    if (isClientError(error)) throw error;
+    // Retry uniquement sur les erreurs réseau/serveur
+  }
+}
+```
+
+### 5. ⏱️ Gestion des timeouts
+
+**Problème** : Les uploads peuvent rester bloqués indéfiniment
+
+**Solution** : Timeout de 60 secondes avec AbortController
+
+```typescript
+const controller = new AbortController();
+const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+const response = await fetch(url, {
+  signal: controller.signal,
+  // ...
+});
+
+clearTimeout(timeoutId);
+```
+
+### 6. 🛡️ Validation côté serveur améliorée
+
+**Problème** : Les fichiers peuvent être invalides ou les permissions manquantes
+
+**Solution** : Validation complète avant stockage
+
+```php
+// Vérification de validité du fichier
+if (!$file->isValid()) {
+    throw new \RuntimeException('Invalid file: ' . $file->getErrorMessage());
+}
+
+// Vérification des limites PHP
+if ($file->getSize() > $maxUploadSize) {
+    throw new \RuntimeException("File size exceeds PHP limit");
+}
+
+// Création du répertoire si nécessaire
+if (!$storage->exists($path)) {
+    if (!$storage->makeDirectory($path)) {
+        throw new \RuntimeException("Failed to create directory");
+    }
+}
+```
+
+### 7. 🔁 Retry côté serveur
+
+**Problème** : Les erreurs de stockage temporaires (permissions, I/O) causent des échecs
+
+**Solution** : Retry avec exponential backoff côté serveur
+
+```php
+$maxAttempts = 2;
+for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+    try {
+        $storedPath = $storage->putFileAs($path, $file, $filename);
+        if ($storedPath && $storage->exists($storedPath)) {
+            break; // Succès
+        }
+    } catch (\Exception $e) {
+        if ($attempt === $maxAttempts) throw $e;
+        usleep(500000 * $attempt); // 0.5s, 1s
+    }
+}
+```
+
+### 8. 📊 Logging détaillé
+
+**Problème** : Difficile de diagnostiquer les problèmes d'upload
+
+**Solution** : Logging complet avec métriques
+
+```php
+// Avant upload
+$this->logger->info('Image upload attempt', [
+    'file_size' => $file->getSize(),
+    'mime_type' => $file->getMimeType(),
+    'is_valid' => $file->isValid(),
+]);
+
+// Après upload
+$this->logger->info('Image uploaded successfully', [
+    'url' => $result['url'],
+    'duration_ms' => $duration,
+]);
+```
+
 ## Prochaines étapes (v1.0.7)
 
 1. Ajouter un système de retry automatique pour les uploads échoués

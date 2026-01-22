@@ -109,6 +109,92 @@ if (typeof window !== 'undefined') {
       let editor: EditorJSInstance | null = null;
       let initializing = false;
 
+      // Helper function to perform the actual upload with timeout
+      const performUpload = async (
+        file: File,
+        url: string,
+        field: string,
+        headers: Record<string, string>
+      ): Promise<{ success: number; file: { url: string; width?: number; height?: number } }> => {
+        const formData = new FormData();
+        formData.append(field, file);
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        if (!csrfToken) {
+          console.warn('CSRF token not found');
+        }
+
+        // Create AbortController for timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
+
+        try {
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'X-CSRF-TOKEN': csrfToken || '',
+              'Accept': 'application/json',
+              ...headers,
+            },
+            body: formData,
+            signal: controller.signal,
+          });
+
+          clearTimeout(timeoutId);
+
+          if (!response.ok) {
+            let errorMessage = `Upload failed with status ${response.status}`;
+            try {
+              const errorData = await response.json();
+              errorMessage = errorData.message || errorData.error || errorMessage;
+            } catch {
+              // If response is not JSON, try text
+              try {
+                const text = await response.text();
+                if (text) errorMessage = text.substring(0, 200);
+              } catch {
+                // Ignore
+              }
+            }
+            throw new Error(errorMessage);
+          }
+
+          const result = await response.json();
+
+          if (!result.success) {
+            throw new Error(result.message || 'Upload failed');
+          }
+
+          // Extract URL from different possible response structures
+          const imageUrl = result.file?.url || result.url || result.data?.url;
+          if (!imageUrl) {
+            throw new Error('No image URL in response');
+          }
+
+          return {
+            success: 1,
+            file: {
+              url: imageUrl,
+              width: result.file?.width || result.width || result.data?.width,
+              height: result.file?.height || result.height || result.data?.height,
+            },
+          };
+        } catch (error) {
+          clearTimeout(timeoutId);
+          
+          if (error instanceof Error) {
+            if (error.name === 'AbortError') {
+              throw new Error('Upload timeout: The request took too long to complete');
+            }
+            if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+              throw new Error('Network error: Please check your internet connection');
+            }
+          }
+          
+          throw error;
+        }
+      };
+
       return {
         // ---- reactive state (Livewire entangle can bind to this) ----
         state: cfg.state,
@@ -230,68 +316,59 @@ if (typeof window !== 'undefined') {
                 config: {
                   uploader: {
                     async uploadByFile(file: File) {
-                      try {
-                        // Validate file size (10MB max)
-                        const maxSize = 10 * 1024 * 1024;
-                        if (file.size > maxSize) {
-                          throw new Error('File size exceeds 10MB limit');
-                        }
-
-                        // Validate file type
-                        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-                        if (!validTypes.includes(file.type)) {
-                          throw new Error('Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed');
-                        }
-
-                        const formData = new FormData();
-                        formData.append(uploadField, file);
-
-                        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-                        if (!csrfToken) {
-                          console.warn('CSRF token not found');
-                        }
-
-                        const response = await fetch(uploadUrl, {
-                          method: 'POST',
-                          headers: {
-                            'X-CSRF-TOKEN': csrfToken || '',
-                            'Accept': 'application/json',
-                            ...uploadHeaders,
-                          },
-                          body: formData,
-                        });
-
-                        if (!response.ok) {
-                          const error = await response.json().catch(() => ({ 
-                            message: `Upload failed with status ${response.status}` 
-                          }));
-                          throw new Error(error.message || 'Upload failed');
-                        }
-
-                        const result = await response.json();
-
-                        if (!result.success) {
-                          throw new Error(result.message || 'Upload failed');
-                        }
-
-                        // Extract URL from different possible response structures
-                        const imageUrl = result.file?.url || result.url || result.data?.url;
-                        if (!imageUrl) {
-                          throw new Error('No image URL in response');
-                        }
-
-                        return {
-                          success: 1,
-                          file: {
-                            url: imageUrl,
-                            width: result.file?.width || result.width || result.data?.width,
-                            height: result.file?.height || result.height || result.data?.height,
-                          },
-                        };
-                      } catch (error) {
-                        console.error('Image upload error:', error);
-                        throw error;
+                      // Validate file size (10MB max)
+                      const maxSize = 10 * 1024 * 1024;
+                      if (file.size > maxSize) {
+                        throw new Error('File size exceeds 10MB limit');
                       }
+
+                      // Validate file type
+                      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                      if (!validTypes.includes(file.type)) {
+                        throw new Error('Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed');
+                      }
+
+                      // Retry logic with exponential backoff
+                      const maxRetries = 3;
+                      let lastError: Error | null = null;
+
+                      for (let attempt = 0; attempt < maxRetries; attempt++) {
+                        try {
+                          if (attempt > 0) {
+                            // Exponential backoff: 1s, 2s, 4s
+                            const delay = Math.pow(2, attempt - 1) * 1000;
+                            console.log(`Retrying upload (attempt ${attempt + 1}/${maxRetries}) after ${delay}ms...`);
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                          }
+
+                          const result = await performUpload(file, uploadUrl, uploadField, uploadHeaders);
+                          return result;
+                        } catch (error) {
+                          lastError = error as Error;
+                          console.warn(`Upload attempt ${attempt + 1} failed:`, error);
+
+                          // Don't retry on validation errors
+                          if (error instanceof Error && (
+                            error.message.includes('exceeds') ||
+                            error.message.includes('Invalid file type') ||
+                            error.message.includes('No image URL')
+                          )) {
+                            throw error;
+                          }
+
+                          // Don't retry on 4xx errors (client errors)
+                          if (error instanceof Error && error.message.includes('status 4')) {
+                            throw error;
+                          }
+
+                          // Continue to next retry for network/server errors
+                          if (attempt === maxRetries - 1) {
+                            throw new Error(`Upload failed after ${maxRetries} attempts: ${lastError?.message || 'Unknown error'}`);
+                          }
+                        }
+                      }
+
+                      throw lastError || new Error('Upload failed');
                     },
                   },
                 },

@@ -89,18 +89,81 @@ class ImageStorageService
      */
     protected function storeFile(UploadedFile $file, string $disk, string $path, string $filename): string
     {
-        $storedPath = Storage::disk($disk)->putFileAs($path, $file, $filename);
+        try {
+            // Check if file is valid
+            if (!$file->isValid()) {
+                $this->logger->error('Invalid uploaded file', [
+                    'error' => $file->getErrorMessage(),
+                    'filename' => $filename,
+                ]);
+                throw new \RuntimeException('Invalid file: ' . $file->getErrorMessage());
+            }
 
-        if (!$storedPath) {
-            $this->logger->error('Failed to store file', [
+            // Check disk permissions
+            $storage = Storage::disk($disk);
+            if (!$storage->exists($path)) {
+                if (!$storage->makeDirectory($path)) {
+                    $this->logger->error('Failed to create directory', [
+                        'disk' => $disk,
+                        'path' => $path,
+                    ]);
+                    throw new \RuntimeException("Failed to create directory: {$path}");
+                }
+            }
+
+            // Store the file with retry logic
+            $storedPath = null;
+            $maxAttempts = 2;
+            
+            for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+                try {
+                    $storedPath = $storage->putFileAs($path, $file, $filename);
+                    
+                    if ($storedPath) {
+                        // Verify file was actually stored
+                        if (!$storage->exists($storedPath)) {
+                            throw new \RuntimeException('File was not found after storage');
+                        }
+                        break;
+                    }
+                } catch (\Exception $e) {
+                    if ($attempt === $maxAttempts) {
+                        $this->logger->error('Failed to store file after retries', [
+                            'disk' => $disk,
+                            'path' => $path,
+                            'filename' => $filename,
+                            'attempt' => $attempt,
+                            'error' => $e->getMessage(),
+                        ]);
+                        throw new \RuntimeException('Failed to store image file: ' . $e->getMessage(), 0, $e);
+                    }
+                    // Wait before retry (exponential backoff)
+                    usleep(500000 * $attempt); // 0.5s, 1s
+                }
+            }
+
+            if (!$storedPath) {
+                $this->logger->error('Failed to store file', [
+                    'disk' => $disk,
+                    'path' => $path,
+                    'filename' => $filename,
+                ]);
+                throw new \RuntimeException('Failed to store image file');
+            }
+
+            return $storedPath;
+        } catch (\RuntimeException $e) {
+            throw $e;
+        } catch (\Exception $e) {
+            $this->logger->error('Unexpected error storing file', [
                 'disk' => $disk,
                 'path' => $path,
                 'filename' => $filename,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
-            throw new \RuntimeException('Failed to store image file');
+            throw new \RuntimeException('Failed to store image file: ' . $e->getMessage(), 0, $e);
         }
-
-        return $storedPath;
     }
 
     /**
