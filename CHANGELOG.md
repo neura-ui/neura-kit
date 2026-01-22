@@ -7,29 +7,86 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.0.5] - 2026-01-22
+
+### Added
+- **Editor Multi-Variant System**: Modular architecture to support multiple editor types
+  - `variants/` structure with Tiptap and Editor.js support
+  - `EditorImageController`: Handles image uploads and URL metadata for Editor.js
+  - `ImageStorageService`: Service for image storage (S3, local, public) with URL generation and dimensions
+  - `UrlMetadataService`: Service to extract metadata (title, description, image) from URLs
+  - Integrated routes: `/neura-kit/editor/upload-image` and `/neura-kit/editor/fetch-url`
+  - Configuration: `neura-kit.editor.default_variant`, `image_disk`, `image_path`, `max_image_size`
+  - Comprehensive tests: 50 tests with 178 assertions for controllers and services
+- **Editor.js Variant**: Block-styled editor with structured JSON output
+  - Full tool support: Header, List, Quote, Code, Image, InlineCode, Link, Marker, Delimiter, Table
+  - Integrated image upload with preview and dimensions
+  - Automatic metadata fetching for links
+  - Custom CSS styles with dark mode support
+  - Dynamic imports to avoid SSR issues
+- **Tiptap Variant**: WYSIWYG editor with HTML output
+  - Custom toolbar with all formatting tools
+  - Support for headings, lists, blockquotes, alignment, links, images
+  - HTML and JSON modes
+- Editor.js dependencies added to `InstallDependenciesCommand.php`
+- Complete editor documentation with examples of both variants
+
+### Changed
+- **Editor Component**: Complete refactoring to support variants
+  - `variant` prop to choose between 'tiptap' (default) and 'editorjs'
+  - JSON mode enforced for Editor.js
+  - Modular architecture with separate views per variant
+- **ChunkController**: Renamed from `ChunkUploadController` for simplification
+  - Business logic delegated to services
+  - Better error handling with appropriate HTTP codes (413 for oversized files)
+- **Services Architecture**: Clear separation of responsibilities
+  - `Editor/ImageStorageService`: Image storage and management
+  - `Editor/UrlMetadataService`: Web metadata extraction
+  - `Upload/ChunkAssemblerService`: Chunk assembly
+  - `Upload/FileNameSanitizerService`: Filename sanitization
+- Tests refactored to use controllers instead of Laravel Actions
+- `ToastServiceTest` and `LicenseValidatorTest` fixed and all tests passing
+
+### Removed
+- Obsolete files: `button.blade.php` and `toolbar.blade.php` at `editor/` root
+- Old controllers renamed for consistency
+
+### Fixed
+- TypeScript errors in `editorjs.ts`: Replaced `EditorJS` (namespace) with `EditorJSInstance` (type)
+- Editor.js toolbox now visible with appropriate CSS styles
+- Signing secret configuration in license tests
+- `add()` method replaced with `flash()` in ToastService
+- All unit and feature tests passing (50 tests, 178 assertions)
+
+### Security
+- Strict MIME type validation for images (jpeg, png, gif, webp, svg)
+- Configurable maximum size for image uploads
+- URL sanitization for metadata fetching
+- Storage disk existence verification before upload
+
 ## [1.0.4] - 2026-01-21
 
 ### Added
-- **Chunk Upload System**: Système d'upload par chunks intégré et sécurisé
-  - `ChunkUploadController`: Contrôleur avec validation, sanitization et assembly automatique
-  - `ChunkedTemporaryFile`: Helper pour convertir les uploads par chunks en `TemporaryUploadedFile` Livewire
-  - Routes intégrées: `/neura-kit/upload/chunks` et `/neura-kit/upload/file/{uuid}`
-  - Configuration: `neura-kit.upload.max_size` et `neura-kit.upload.chunk_size`
-  - Tests complets: 23 tests avec 84 assertions (100% de couverture des fonctionnalités critiques)
+- **Chunk Upload System**: Integrated and secure chunk upload system
+  - `ChunkUploadController`: Controller with validation, sanitization and automatic assembly
+  - `ChunkedTemporaryFile`: Helper to convert chunk uploads to Livewire `TemporaryUploadedFile`
+  - Integrated routes: `/neura-kit/upload/chunks` and `/neura-kit/upload/file/{uuid}`
+  - Configuration: `neura-kit.upload.max_size` and `neura-kit.upload.chunk_size`
+  - Comprehensive tests: 23 tests with 84 assertions (100% coverage of critical features)
 - Enhanced Alert component with 13 color variants (blue, green, yellow, orange, red, purple, pink, teal, neutral)
 - New Color Variants section in Alert documentation with visual examples
 - Advanced Color Usage examples in Alert documentation
 - Comprehensive Color & Type Reference table in Alert documentation
 - New `merge` utility for Tailwind class merging
-- Color Picker documentation entièrement réécrite (palette Tailwind, saisie token/hex/rgb, exemples Livewire/Alpine, normalisation hex)
+- Color Picker documentation completely rewritten (Tailwind palette, token/hex/rgb input, Livewire/Alpine examples, hex normalization)
 
 ### Changed
-- **Dropzone**: Intégration automatique avec le système de chunk upload
-  - Upload automatique par défaut si pas de `wire:model`
-  - CSRF token automatique dans les headers
-  - Événements `upload:success` et `upload:error` avec métadonnées complètes
-  - Documentation complète avec exemples Livewire, événements, et configuration backend
-- **TestCase**: Configuration améliorée pour les tests (clé d'encryption, chargement automatique des routes)
+- **Dropzone**: Automatic integration with chunk upload system
+  - Automatic upload by default if no `wire:model`
+  - Automatic CSRF token in headers
+  - `upload:success` and `upload:error` events with complete metadata
+  - Complete documentation with Livewire examples, events, and backend configuration
+- **TestCase**: Improved test configuration (encryption key, automatic route loading)
 - Alert component now supports both `type` (legacy) and `color` props for better flexibility
 - Improved Alert documentation with expanded property descriptions
 - Updated autocomplete component to use attribute merging instead of class binding
@@ -71,13 +128,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved error and invalid state handling for all form components
 - Fixed parse errors and TypeErrors in avatar component after refactor
 - Ensured all badge and avatar logic uses correct argument types and defaults
-- Color Picker refacto : logique extraite en TypeScript global, UI alignée sur Input/Popup, placeholder dynamique, normalisation systématique en hex (token/hex/rgb), support `wire:model`/`x-model`
+- Color Picker refactor: logic extracted to global TypeScript, UI aligned with Input/Popup, dynamic placeholder, systematic hex normalization (token/hex/rgb), `wire:model`/`x-model` support
 
 ### Security
-- Protection contre directory traversal dans les noms de fichiers
-- Sanitization automatique des noms de fichiers (caractères spéciaux, longueur max 255)
-- Validation stricte de la taille des fichiers
-- Stockage sécurisé dans le dossier temporaire Livewire
+- Protection against directory traversal in filenames
+- Automatic filename sanitization (special characters, max length 255)
+- Strict file size validation
+- Secure storage in Livewire temporary folder
 
 ## [1.0.0] - 2024-12-19
 

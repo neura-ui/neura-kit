@@ -14,15 +14,11 @@ class LicenseValidatorTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        
+        // Configure the signing secret via config
+        config(['neura-kit.signing_secret' => 'test-secret-key']);
+        
         $this->validator = new LicenseValidator;
-
-        putenv('NEURA_KIT_LICENSE_KEY=test-secret-key');
-    }
-
-    protected function tearDown(): void
-    {
-        putenv('NEURA_KIT_LICENSE_KEY');
-        parent::tearDown();
     }
 
     public function test_verifies_valid_signature(): void

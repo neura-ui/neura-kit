@@ -4,6 +4,7 @@
             type="button"
             x-on:click.prevent="undo()"
             class="p-2 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors focus:outline-none text-neutral-500 dark:text-neutral-400"
+            :disabled="!canUndo()"
         >
             <neura::icon name="arrow-uturn-left" class="size-4" />
             <span class="sr-only">Undo</span>
@@ -12,13 +13,14 @@
             type="button"
             x-on:click.prevent="redo()"
             class="p-2 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors focus:outline-none text-neutral-500 dark:text-neutral-400"
+            :disabled="!canRedo()"
         >
             <neura::icon name="arrow-uturn-right" class="size-4" />
             <span class="sr-only">Redo</span>
         </button>
     </div>
 
-    <div class="w-px h-5 bg-neutral-200 dark:bg-neutral-700 mx-1"></div>
+    <div class="w-px h-5 bg-neutral-200 dark:border-neutral-700 mx-1"></div>
 
     <button
         type="button"
@@ -66,7 +68,7 @@
         <span class="sr-only">Code</span>
     </button>
 
-    <div class="w-px h-5 bg-neutral-200 dark:bg-neutral-700 mx-1"></div>
+    <div class="w-px h-5 bg-neutral-200 dark:border-neutral-700 mx-1"></div>
 
     <button
         type="button"
@@ -96,7 +98,7 @@
         <span class="sr-only">Heading 3</span>
     </button>
 
-    <div class="w-px h-5 bg-neutral-200 dark:bg-neutral-700 mx-1"></div>
+    <div class="w-px h-5 bg-neutral-200 dark:border-neutral-700 mx-1"></div>
 
     <button
         type="button"
@@ -117,7 +119,7 @@
         <span class="sr-only">Ordered List</span>
     </button>
 
-    <div class="w-px h-5 bg-neutral-200 dark:bg-neutral-700 mx-1"></div>
+    <div class="w-px h-5 bg-neutral-200 dark:border-neutral-700 mx-1"></div>
 
     <button
         type="button"
@@ -137,7 +139,7 @@
         <span class="sr-only">Horizontal Rule</span>
     </button>
 
-    <div class="w-px h-5 bg-neutral-200 dark:bg-neutral-700 mx-1"></div>
+    <div class="w-px h-5 bg-neutral-200 dark:border-neutral-700 mx-1"></div>
 
     <button
         type="button"
@@ -167,7 +169,7 @@
         <span class="sr-only">Align Right</span>
     </button>
 
-    <div class="w-px h-5 bg-neutral-200 dark:bg-neutral-700 mx-1"></div>
+    <div class="w-px h-5 bg-neutral-200 dark:border-neutral-700 mx-1"></div>
 
     <button
         type="button"

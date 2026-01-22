@@ -20,7 +20,7 @@ class ToastServiceTest extends TestCase
     #[Test]
     public function it_flashes_toast_to_session_when_not_in_livewire()
     {
-        $this->service->add('Hello World', 'success');
+        $this->service->success('Hello World');
 
         $this->assertTrue(Session::has('notify'));
         $notification = Session::get('notify');
@@ -33,7 +33,7 @@ class ToastServiceTest extends TestCase
     #[Test]
     public function it_does_nothing_if_content_is_empty()
     {
-        $this->service->add('');
+        $this->service->flash('');
         $this->assertFalse(Session::has('notify'));
     }
 

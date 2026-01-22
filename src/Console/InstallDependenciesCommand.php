@@ -12,8 +12,13 @@ class InstallDependenciesCommand extends Command
     protected $description = 'Install missing JavaScript dependencies for Neura Kit';
 
     protected array $dependencies = [
+        // Chart.js
         'chart.js' => '^4.0.0',
+        
+        // Lottie
         'lottie-web' => '^5.0.0',
+        
+        // Tiptap Editor (variant 1)
         '@tiptap/core' => '^2.0.0',
         '@tiptap/starter-kit' => '^2.0.0',
         '@tiptap/extension-link' => '^2.0.0',
@@ -22,6 +27,21 @@ class InstallDependenciesCommand extends Command
         '@tiptap/extension-text-align' => '^2.0.0',
         '@tiptap/extension-underline' => '^2.0.0',
         '@tiptap/extension-highlight' => '^2.0.0',
+        
+        // Editor.js (variant 2) - Core
+        '@editorjs/editorjs' => '^2.28.0',
+        '@editorjs/header' => '^2.7.0',
+        '@editorjs/list' => '^1.8.0',
+        '@editorjs/quote' => '^2.6.0',
+        '@editorjs/code' => '^2.8.0',
+        '@editorjs/image' => '^2.9.0',
+        '@editorjs/inline-code' => '^1.4.0',
+        
+        // Editor.js - Optional but recommended tools
+        '@editorjs/link' => '^2.5.0',
+        '@editorjs/marker' => '^1.3.0',
+        '@editorjs/delimiter' => '^1.3.0',
+        '@editorjs/table' => '^2.2.0',
     ];
 
     public function handle(LicenseService $licenseService): int

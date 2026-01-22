@@ -63,11 +63,19 @@ abstract class TestCase extends OrchestraTestCase
             ->name('neura-kit.translations');
 
         \Illuminate\Support\Facades\Route::middleware(['web'])->prefix('neura-kit')->group(function () {
-            \Illuminate\Support\Facades\Route::post('/upload/chunks', [\Neura\Kit\Http\Controllers\ChunkUploadController::class, 'upload'])
+            // Chunk upload routes
+            \Illuminate\Support\Facades\Route::post('/upload/chunks', [\Neura\Kit\Http\Controllers\ChunkController::class, 'upload'])
                 ->name('neura-kit.upload.chunks');
 
-            \Illuminate\Support\Facades\Route::get('/upload/file/{uuid}', [\Neura\Kit\Http\Controllers\ChunkUploadController::class, 'getFile'])
+            \Illuminate\Support\Facades\Route::get('/upload/file/{uuid}', [\Neura\Kit\Http\Controllers\ChunkController::class, 'getFile'])
                 ->name('neura-kit.upload.file');
+
+            // Editor routes
+            \Illuminate\Support\Facades\Route::post('/editor/upload-image', [\Neura\Kit\Http\Controllers\EditorImageController::class, 'uploadImage'])
+                ->name('neura-kit.editor.upload-image');
+
+            \Illuminate\Support\Facades\Route::post('/editor/fetch-url', [\Neura\Kit\Http\Controllers\EditorImageController::class, 'fetchUrl'])
+                ->name('neura-kit.editor.fetch-url');
         });
     }
 }

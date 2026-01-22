@@ -124,4 +124,20 @@ return [
     */
 
     'license_environment' => env('NEURA_KIT_ENVIRONMENT', 'auto'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Editor Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for rich text editors (Tiptap, Editor.js)
+    |
+    */
+
+    'editor' => [
+        'default_variant' => env('NEURA_KIT_EDITOR_VARIANT', 'tiptap'), // 'tiptap' or 'editorjs'
+        'max_image_size' => env('NEURA_KIT_EDITOR_MAX_IMAGE_SIZE', 10240), // KB (10MB default)
+        'image_disk' => env('NEURA_KIT_EDITOR_IMAGE_DISK', 'public'), // 'public', 'local', 's3', etc.
+        'image_path' => env('NEURA_KIT_EDITOR_IMAGE_PATH', 'editor/images'),
+    ],
 ];

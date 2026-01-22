@@ -208,13 +208,18 @@ class NeuraKitServiceProvider extends ServiceProvider
         Route::get('/neura-kit/lang/{locale}.json', Http\Controllers\TranslationsController::class)
             ->name('neura-kit.translations');
         
-        // Chunk upload routes (secured with middleware)
         Route::middleware(['web'])->prefix('neura-kit')->group(function () {
-            Route::post('/upload/chunks', [Http\Controllers\ChunkUploadController::class, 'upload'])
+            Route::post('/upload/chunks', [Http\Controllers\ChunkController::class, 'upload'])
                 ->name('neura-kit.upload.chunks');
             
-            Route::get('/upload/file/{uuid}', [Http\Controllers\ChunkUploadController::class, 'getFile'])
+            Route::get('/upload/file/{uuid}', [Http\Controllers\ChunkController::class, 'getFile'])
                 ->name('neura-kit.upload.file');
+            
+            Route::post('/editor/upload-image', [Http\Controllers\EditorImageController::class, 'uploadImage'])
+                ->name('neura-kit.editor.upload-image');
+            
+            Route::post('/editor/fetch-url', [Http\Controllers\EditorImageController::class, 'fetchUrl'])
+                ->name('neura-kit.editor.fetch-url');
         });
     }
 

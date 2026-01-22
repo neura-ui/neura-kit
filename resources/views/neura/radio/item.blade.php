@@ -44,7 +44,7 @@
     ];
 
     $containerClasses = [
-        'relative isolate transition-all duration-200 flex items-center',
+        'relative isolate transition-all duration-200 flex items-center w-full',
         'group border rounded-box bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 p-4 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 has-[:checked]:border-primary-500/50 has-[:checked]:bg-primary-50/30 dark:has-[:checked]:bg-primary-500/5 dark:has-[:checked]:border-primary-500/50' => $isCards,
         'opacity-50 cursor-not-allowed pointer-events-none' => $disabled,
     ];
