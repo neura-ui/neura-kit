@@ -245,6 +245,8 @@ declare global {
         NeuraKitToast?: ToastAPI;
         NeuraKitModal?: ModalAPI;
         NeuraKitTranslations?: TranslationsAPI;
+        neuraColorPicker?: (...args: any[]) => any;
+        neuraDropzone?: (...args: any[]) => any;
 
         t?: (key: string, params?: StringMap) => string;
 

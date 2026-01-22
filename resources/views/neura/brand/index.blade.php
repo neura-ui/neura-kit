@@ -6,7 +6,6 @@
     'name' => '',
     'alt' => '',
     'target' => '_self',
-    'logoClass' => '',
     'align' => 'left', // left | center | right
 ])
 
@@ -18,17 +17,20 @@
     'name' => '',
     'alt' => '',
     'target' => '_self',
-    'logoClass' => '',
     'align' => 'left',
 ])
 
 @php
+    use Illuminate\Support\Arr;
+
     /**
-     * Normalize logo rendering
+     * Normalize logo rendering with merged attributes
      */
-    $renderLogo = function ($logo, $alt, $logoClass) {
+    $renderLogo = function ($logo, $alt, $logoAttributes) {
         if (is_string($logo)) {
-            return '<img src="' . e($logo) . '" alt="' . e($alt) . ' Logo" class="h-8 w-auto ' . e($logoClass) . '">';
+            $logoClass = Arr::toCssClasses(['h-8 w-auto', $logoAttributes]);
+
+            return '<img src="' . e($logo) . '" alt="' . e($alt) . ' Logo" class="' . $logoClass . '">';
         }
 
         return $logo?->isNotEmpty() ? $logo : null;
@@ -39,40 +41,36 @@
 
     $alignClass = match ($align) {
         'center' => 'justify-center',
-        'right'  => 'justify-end',
-        default  => 'justify-start',
+        'right' => 'justify-end',
+        default => 'justify-start',
     };
 @endphp
 
-<a
-    href="{{ $href }}"
-    target="{{ $target }}"
+<a href="{{ $href }}" target="{{ $target }}"
     {{ $attributes->merge([
-        'class' => "
-            group
-            flex items-center gap-x-3
-            transition-opacity hover:opacity-80
-            text-black dark:text-white
-            {$alignClass}
-
-            in-[:has([data-collapsed]_&)]:justify-center
-        ",
-    ]) }}
->
+        'class' => Arr::toCssClasses([
+            'group',
+            'flex items-center gap-x-3',
+            'transition-opacity hover:opacity-80',
+            'text-black dark:text-white',
+            $alignClass,
+            'in-[:has([data-collapsed]_&)]:justify-center',
+        ]),
+    ]) }}>
     {{-- Logo --}}
     @if ($hasAnyLogo)
         <div class="shrink-0">
             {{-- Light --}}
             @if ($logoLight || $logo)
                 <div class="dark:hidden">
-                    {!! $renderLogo($logoLight ?? $logo, $alt, $logoClass) !!}
+                    {!! $renderLogo($logoLight ?? $logo, $alt, $attributes->get('class', '')) !!}
                 </div>
             @endif
 
             {{-- Dark --}}
             @if ($logoDark || $logo)
                 <div class="hidden dark:block">
-                    {!! $renderLogo($logoDark ?? $logo, $alt, $logoClass) !!}
+                    {!! $renderLogo($logoDark ?? $logo, $alt, $attributes->get('class', '')) !!}
                 </div>
             @endif
         </div>
@@ -80,15 +78,12 @@
 
     {{-- Brand name --}}
     @if ($name)
-        <div
-            data-slot="brand-name"
-            class="
-                font-semibold text-lg whitespace-nowrap
-                transition-opacity
-
-                in-[:has([data-collapsed]_&)]:hidden
-            "
-        >
+        <div data-slot="brand-name"
+            class="{{ Arr::toCssClasses([
+                'font-semibold text-lg whitespace-nowrap',
+                'transition-opacity',
+                'in-[:has([data-collapsed]_&)]:hidden',
+            ]) }}">
             {{ $name }}
         </div>
     @endif

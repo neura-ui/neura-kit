@@ -98,6 +98,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Chunk Upload Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for chunk-based file uploads
+    |
+    */
+
+    'upload' => [
+        'max_size' => env('NEURA_KIT_UPLOAD_MAX_SIZE', 100), // MB
+        'chunk_size' => env('NEURA_KIT_UPLOAD_CHUNK_SIZE', 1), // MB
+        'disk' => env('LIVEWIRE_DISK', 'local'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Environment Detection
     |--------------------------------------------------------------------------
     |

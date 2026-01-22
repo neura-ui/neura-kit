@@ -34,6 +34,51 @@ class Color extends BasePack
                 'icon' => 'text-danger-500',
                 'iconName' => 'exclamation-circle',
             ],
+            'blue' => [
+                'container' => 'bg-blue-50 dark:bg-blue-950/50 border-blue-200 dark:border-blue-800',
+                'icon' => 'text-blue-500',
+                'iconName' => 'information-circle',
+            ],
+            'green' => [
+                'container' => 'bg-green-50 dark:bg-green-950/50 border-green-200 dark:border-green-800',
+                'icon' => 'text-green-500',
+                'iconName' => 'check-circle',
+            ],
+            'yellow' => [
+                'container' => 'bg-yellow-50 dark:bg-yellow-950/50 border-yellow-200 dark:border-yellow-800',
+                'icon' => 'text-yellow-500',
+                'iconName' => 'exclamation-triangle',
+            ],
+            'orange' => [
+                'container' => 'bg-orange-50 dark:bg-orange-950/50 border-orange-200 dark:border-orange-800',
+                'icon' => 'text-orange-500',
+                'iconName' => 'exclamation-triangle',
+            ],
+            'red' => [
+                'container' => 'bg-red-50 dark:bg-red-950/50 border-red-200 dark:border-red-800',
+                'icon' => 'text-red-500',
+                'iconName' => 'exclamation-circle',
+            ],
+            'purple' => [
+                'container' => 'bg-purple-50 dark:bg-purple-950/50 border-purple-200 dark:border-purple-800',
+                'icon' => 'text-purple-500',
+                'iconName' => 'information-circle',
+            ],
+            'pink' => [
+                'container' => 'bg-pink-50 dark:bg-pink-950/50 border-pink-200 dark:border-pink-800',
+                'icon' => 'text-pink-500',
+                'iconName' => 'information-circle',
+            ],
+            'teal' => [
+                'container' => 'bg-teal-50 dark:bg-teal-950/50 border-teal-200 dark:border-teal-800',
+                'icon' => 'text-teal-500',
+                'iconName' => 'check-circle',
+            ],
+            'neutral' => [
+                'container' => 'bg-neutral-50 dark:bg-neutral-950/50 border-neutral-200 dark:border-neutral-800',
+                'icon' => 'text-neutral-500',
+                'iconName' => 'information-circle',
+            ],
         ];
     }
 }

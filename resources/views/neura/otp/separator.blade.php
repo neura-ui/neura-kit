@@ -1,3 +1,1 @@
-<neura::separator
-    class="w-4 !mx-1.5"
-/>
+<neura::separator class="w-4 mx-1.5!" />

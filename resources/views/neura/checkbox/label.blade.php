@@ -22,9 +22,6 @@
     ];
 @endphp
 
-<label
-    @class($classes)
-    data-slot="checkbox-label"
->
+<label @class($classes) data-slot="checkbox-label">
     {{ $label }}
 </label>
