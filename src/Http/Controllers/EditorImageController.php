@@ -28,8 +28,21 @@ class EditorImageController extends Controller
     public function uploadImage(Request $request): JsonResponse
     {
         try {
+            // Log the upload attempt
+            $this->logger->info('Image upload attempt', [
+                'has_file' => $request->hasFile('image'),
+                'file_size' => $request->hasFile('image') ? $request->file('image')->getSize() : null,
+                'mime_type' => $request->hasFile('image') ? $request->file('image')->getMimeType() : null,
+            ]);
+
             $validated = $this->validateImageRequest($request);
             $result = $this->imageStorage->store($validated['image']);
+
+            // Log successful upload
+            $this->logger->info('Image uploaded successfully', [
+                'url' => $result['url'],
+                'path' => $result['path'],
+            ]);
 
             return response()->json([
                 'success' => 1,
@@ -45,6 +58,10 @@ class EditorImageController extends Controller
             ]);
 
         } catch (ValidationException $e) {
+            $this->logger->warning('Image upload validation failed', [
+                'errors' => $e->validator->errors()->toArray(),
+            ]);
+
             return response()->json([
                 'success' => 0,
                 'message' => $e->validator->errors()->first(),

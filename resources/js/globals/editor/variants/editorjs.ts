@@ -230,33 +230,68 @@ if (typeof window !== 'undefined') {
                 config: {
                   uploader: {
                     async uploadByFile(file: File) {
-                      const formData = new FormData();
-                      formData.append(uploadField, file);
+                      try {
+                        // Validate file size (10MB max)
+                        const maxSize = 10 * 1024 * 1024;
+                        if (file.size > maxSize) {
+                          throw new Error('File size exceeds 10MB limit');
+                        }
 
-                      const response = await fetch(uploadUrl, {
-                        method: 'POST',
-                        headers: {
-                          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                          ...uploadHeaders,
-                        },
-                        body: formData,
-                      });
+                        // Validate file type
+                        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                        if (!validTypes.includes(file.type)) {
+                          throw new Error('Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed');
+                        }
 
-                      if (!response.ok) {
-                        const error = await response.json().catch(() => ({ message: 'Upload failed' }));
-                        throw new Error(error.message || 'Upload failed');
+                        const formData = new FormData();
+                        formData.append(uploadField, file);
+
+                        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                        if (!csrfToken) {
+                          console.warn('CSRF token not found');
+                        }
+
+                        const response = await fetch(uploadUrl, {
+                          method: 'POST',
+                          headers: {
+                            'X-CSRF-TOKEN': csrfToken || '',
+                            'Accept': 'application/json',
+                            ...uploadHeaders,
+                          },
+                          body: formData,
+                        });
+
+                        if (!response.ok) {
+                          const error = await response.json().catch(() => ({ 
+                            message: `Upload failed with status ${response.status}` 
+                          }));
+                          throw new Error(error.message || 'Upload failed');
+                        }
+
+                        const result = await response.json();
+
+                        if (!result.success) {
+                          throw new Error(result.message || 'Upload failed');
+                        }
+
+                        // Extract URL from different possible response structures
+                        const imageUrl = result.file?.url || result.url || result.data?.url;
+                        if (!imageUrl) {
+                          throw new Error('No image URL in response');
+                        }
+
+                        return {
+                          success: 1,
+                          file: {
+                            url: imageUrl,
+                            width: result.file?.width || result.width || result.data?.width,
+                            height: result.file?.height || result.height || result.data?.height,
+                          },
+                        };
+                      } catch (error) {
+                        console.error('Image upload error:', error);
+                        throw error;
                       }
-
-                      const result = await response.json();
-
-                      return {
-                        success: result.success ? 1 : 0,
-                        file: {
-                          url: result.url || result.data?.url,
-                          width: result.width || result.data?.width,
-                          height: result.height || result.data?.height,
-                        },
-                      };
                     },
                   },
                 },
@@ -311,6 +346,9 @@ if (typeof window !== 'undefined') {
                   this.isSyncing = false;
                 }
               },
+              onReady: () => {
+                console.log('Editor.js is ready');
+              },
             });
 
             await editor.isReady;
@@ -327,6 +365,8 @@ if (typeof window !== 'undefined') {
 
                 if (current === incoming) return;
 
+                // Use clear + render instead of direct render to avoid block index errors
+                await ed.clear();
                 await ed.render(normalized);
               } catch (error) {
                 console.error('Failed to sync Editor.js content:', error);

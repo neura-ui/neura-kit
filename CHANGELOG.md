@@ -7,6 +7,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.0.6] - 2026-01-23
+
+### Fixed
+- **Editor.js Synchronization**: Fixed "There is no block at index" error by clearing editor before rendering new content
+- **Image Upload Reliability**: Improved client-side validation and error handling
+  - Added file size validation (10MB max) before upload
+  - Added file type validation (JPEG, JPG, PNG, GIF, WebP)
+  - Better error messages for failed uploads
+  - Improved response structure validation
+- **Upload Logging**: Added comprehensive logging in `EditorImageController`
+  - Log upload attempts with file details
+  - Log successful uploads with URL and path
+  - Log validation failures
+  - Log runtime errors with stack traces
+- **HTTP Headers**: Added `Accept: application/json` header to ensure JSON responses
+- **Editor Initialization**: Added `onReady` callback for better initialization tracking
+
+### Changed
+- Editor.js now clears content before rendering to prevent block index conflicts
+- Image uploader now validates files before sending to server
+- Error handling improved with more descriptive messages
+
 ## [1.0.5] - 2026-01-22
 
 ### Added
