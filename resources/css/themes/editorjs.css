@@ -1,0 +1,364 @@
+/* ============================================
+   POPOVER & SEARCH COMPONENTS
+   ============================================ */
+
+.ce-popover__container {
+  @apply bg-white dark:bg-neutral-900 border border-neutral-200! dark:border-neutral-700! rounded-lg shadow-lg;
+}
+
+.cdx-search-field {
+  @apply relative flex items-center gap-2 my-2 mx-1 bg-white dark:bg-neutral-950 rounded-lg px-3 py-2;
+  @apply border border-neutral-200 dark:border-neutral-700 shadow-sm transition-all duration-200 ease-out;
+  @apply focus-within:border-neutral-300 dark:focus-within:border-neutral-600;
+  @apply focus-within:ring-1 focus-within:ring-neutral-200 dark:focus-within:ring-neutral-700;
+}
+
+.cdx-search-field__icon {
+  @apply flex items-center justify-center shrink-0;
+}
+
+.cdx-search-field__icon svg {
+  @apply w-4 h-4 text-neutral-500 dark:text-neutral-400;
+}
+
+.cdx-search-field__input {
+  @apply flex-1 bg-transparent border-none outline-none text-sm;
+  @apply text-neutral-900 dark:text-neutral-100;
+  @apply placeholder:text-neutral-400 dark:placeholder:text-neutral-500;
+  @apply disabled:text-neutral-500 disabled:cursor-not-allowed;
+}
+
+.ce-popover__nothing-found-message {
+  @apply text-sm text-neutral-500 dark:text-neutral-400 text-center py-4;
+}
+
+.ce-popover__items {
+  @apply flex flex-col gap-0.5 max-h-80 overflow-y-auto;
+}
+
+/* ============================================
+   POPOVER ITEMS
+   ============================================ */
+
+.ce-popover-item {
+  @apply flex items-center gap-3 px-2.5 py-1.5 rounded-md cursor-pointer transition-all duration-200 ease-out;
+  @apply text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100! dark:hover:bg-neutral-800/50!;
+}
+
+.ce-popover-item__icon {
+  @apply flex items-center justify-center size-6 rounded shrink-0 transition-all duration-200 ease-out;
+  @apply bg-neutral-50 dark:bg-neutral-800/60;
+}
+
+.ce-popover-item__icon svg {
+  @apply w-3 h-3 text-neutral-500 dark:text-neutral-400 transition-all duration-200 ease-out;
+}
+
+.ce-popover-item__title {
+  @apply text-sm font-normal transition-all duration-200 ease-out;
+}
+
+/* Hover states */
+.ce-popover-item:hover .ce-popover-item__icon {
+  @apply bg-neutral-200 dark:bg-neutral-700/60 scale-105;
+}
+
+.ce-popover-item:hover .ce-popover-item__icon svg {
+  @apply text-neutral-700 dark:text-neutral-300;
+}
+
+.ce-popover-item:hover .ce-popover-item__title {
+  @apply text-neutral-900 dark:text-neutral-100;
+}
+
+/* Active state */
+.ce-popover-item--active {
+  @apply bg-neutral-100 dark:bg-neutral-800/70 text-neutral-900 dark:text-neutral-100;
+}
+
+.ce-popover-item--active .ce-popover-item__icon {
+  @apply bg-neutral-200 dark:bg-neutral-700;
+}
+
+.ce-popover-item--active .ce-popover-item__icon svg {
+  @apply text-neutral-700 dark:text-neutral-300;
+}
+
+.ce-popover-item--active .ce-popover-item__title {
+  @apply text-neutral-900 dark:text-neutral-100 font-medium;
+}
+
+/* Confirmation/Danger state */
+.ce-popover-item--confirmation {
+  @apply bg-red-50/50 dark:bg-red-950/20 text-red-600 dark:text-red-400 transition-all duration-200 ease-out;
+}
+
+.ce-popover-item--confirmation .ce-popover-item__title {
+  @apply text-red-600 dark:text-red-400 font-medium;
+}
+
+.ce-popover-item--confirmation .ce-popover-item__icon {
+  @apply bg-red-100/60 dark:bg-red-900/30 transition-all duration-200 ease-out;
+}
+
+.ce-popover-item--confirmation .ce-popover-item__icon svg {
+  @apply text-red-600 dark:text-red-400;
+}
+
+.ce-popover-item--confirmation:hover {
+  @apply bg-red-100/70 dark:bg-red-950/30;
+}
+
+.ce-popover-item--confirmation:hover .ce-popover-item__icon {
+  @apply bg-red-200/70 dark:bg-red-900/40 scale-105;
+}
+
+.ce-popover-item--confirmation:hover .ce-popover-item__icon svg,
+.ce-popover-item--confirmation:hover .ce-popover-item__title {
+  @apply text-red-700 dark:text-red-300;
+}
+
+/* Separator */
+.ce-popover-item-separator {
+  @apply h-px my-1.5 mx-2 border-none;
+}
+
+.ce-popover-item-separator__line {
+  @apply h-px w-full bg-neutral-100 dark:bg-neutral-800;
+}
+
+/* ============================================
+   TOOLBAR
+   ============================================ */
+
+.ce-toolbar__plus svg,
+.ce-toolbar__settings-btn svg {
+  @apply text-neutral-600 dark:text-neutral-400 transition-all duration-200 ease-out;
+}
+
+.ce-toolbar__plus:hover,
+.ce-toolbar__settings-btn:hover {
+  @apply bg-neutral-100 dark:bg-neutral-800/50 transition-all duration-200 ease-out;
+}
+
+.ce-toolbar__plus:hover svg,
+.ce-toolbar__settings-btn:hover svg {
+  @apply text-neutral-900 dark:text-neutral-100;
+}
+
+/* ============================================
+   TOOLTIPS
+   ============================================ */
+
+.ct::before,
+.ct::after {
+  background-color: rgb(23 23 23) !important;
+}
+
+.dark .ct::before,
+.dark .ct::after {
+  background-color: rgb(245 245 245) !important;
+}
+
+.ct__content {
+  color: rgb(245 245 245) !important;
+}
+
+.dark .ct__content {
+  color: rgb(23 23 23) !important;
+}
+
+/* ============================================
+   EDITOR CONTENT - TYPOGRAPHY
+   ============================================ */
+
+/* Headings */
+.codex-editor h1,
+.ce-block h1 {
+  @apply text-4xl font-bold text-neutral-900 dark:text-neutral-100 mt-8 mb-4 leading-tight;
+}
+
+.codex-editor h2,
+.ce-block h2 {
+  @apply text-3xl font-bold text-neutral-900 dark:text-neutral-100 mt-6 mb-3 leading-tight;
+}
+
+.codex-editor h3,
+.ce-block h3 {
+  @apply text-2xl font-semibold text-neutral-900 dark:text-neutral-100 mt-5 mb-3 leading-snug;
+}
+
+.codex-editor h4,
+.ce-block h4 {
+  @apply text-xl font-semibold text-neutral-900 dark:text-neutral-100 mt-4 mb-2 leading-snug;
+}
+
+.codex-editor h5,
+.ce-block h5 {
+  @apply text-lg font-semibold text-neutral-800 dark:text-neutral-200 mt-3 mb-2 leading-normal;
+}
+
+.codex-editor h6,
+.ce-block h6 {
+  @apply text-base font-semibold text-neutral-800 dark:text-neutral-200 mt-3 mb-2 leading-normal;
+}
+
+/* Text elements */
+.codex-editor p,
+.ce-block p {
+  @apply text-base text-neutral-700 dark:text-neutral-300 leading-relaxed mb-4;
+}
+
+.codex-editor a,
+.ce-block a {
+  @apply text-primary-600 dark:text-primary-400 underline decoration-1 underline-offset-2;
+  @apply hover:text-primary-700 dark:hover:text-primary-300 transition-colors duration-150;
+}
+
+.codex-editor strong,
+.codex-editor b,
+.ce-block strong,
+.ce-block b {
+  @apply font-bold text-neutral-900 dark:text-neutral-100;
+}
+
+.codex-editor em,
+.codex-editor i,
+.ce-block em,
+.ce-block i {
+  @apply italic;
+}
+
+.codex-editor mark,
+.ce-block mark {
+  @apply bg-warning-200 dark:bg-warning-900/50 text-neutral-900 dark:text-neutral-100 px-1 rounded;
+}
+
+.codex-editor del,
+.codex-editor s,
+.ce-block del,
+.ce-block s {
+  @apply line-through text-neutral-500;
+}
+
+.codex-editor u,
+.ce-block u {
+  @apply underline underline-offset-2;
+}
+
+.codex-editor small,
+.ce-block small {
+  @apply text-sm text-neutral-600 dark:text-neutral-400;
+}
+
+.codex-editor sub,
+.ce-block sub {
+  @apply text-xs align-sub;
+}
+
+.codex-editor sup,
+.ce-block sup {
+  @apply text-xs align-super;
+}
+
+/* ============================================
+   CODE BLOCKS
+   ============================================ */
+
+.codex-editor code,
+.ce-block code {
+  @apply px-1.5 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800;
+  @apply text-sm text-primary-700 dark:text-primary-300 font-mono;
+  @apply border border-neutral-200 dark:border-neutral-700;
+}
+
+.codex-editor pre,
+.ce-block pre {
+  @apply p-4 rounded-lg mb-4 bg-neutral-900 dark:bg-neutral-950;
+  @apply border border-neutral-700 dark:border-neutral-800 overflow-x-auto;
+}
+
+.codex-editor pre code,
+.ce-block pre code {
+  @apply p-0 bg-transparent border-none text-sm text-neutral-100 dark:text-neutral-200 font-mono leading-relaxed;
+}
+
+/* ============================================
+   BLOCKQUOTE & LISTS
+   ============================================ */
+
+.codex-editor blockquote,
+.ce-block blockquote {
+  @apply pl-4 py-2 my-4 italic;
+  @apply border-l-4 border-primary-500 dark:border-primary-400;
+  @apply bg-primary-50 dark:bg-primary-950/20 text-neutral-700 dark:text-neutral-300;
+}
+
+.codex-editor ul,
+.ce-block ul {
+  @apply list-disc list-inside mb-4 text-neutral-700 dark:text-neutral-300 space-y-2;
+}
+
+.codex-editor ol,
+.ce-block ol {
+  @apply list-decimal list-inside mb-4 text-neutral-700 dark:text-neutral-300 space-y-2;
+}
+
+.codex-editor li,
+.ce-block li {
+  @apply leading-relaxed;
+}
+
+.codex-editor ul ul,
+.codex-editor ol ul,
+.codex-editor ul ol,
+.codex-editor ol ol,
+.ce-block ul ul,
+.ce-block ol ul,
+.ce-block ul ol,
+.ce-block ol ol {
+  @apply ml-6 mt-2 mb-0;
+}
+
+/* ============================================
+   MEDIA & TABLES
+   ============================================ */
+
+.codex-editor hr,
+.ce-block hr {
+  @apply my-8 border-0 h-px;
+  @apply bg-gradient-to-r from-transparent via-neutral-300 dark:via-neutral-700 to-transparent;
+}
+
+.codex-editor img,
+.ce-block img {
+  @apply max-w-full h-auto rounded-lg border border-neutral-200 dark:border-neutral-700 shadow-sm;
+}
+
+.codex-editor table,
+.ce-block table {
+  @apply w-full mb-4 border-collapse border border-neutral-300 dark:border-neutral-700 rounded-lg overflow-hidden;
+}
+
+.codex-editor th,
+.ce-block th {
+  @apply px-4 py-2 text-left bg-neutral-100 dark:bg-neutral-800;
+  @apply text-neutral-900 dark:text-neutral-100 font-semibold text-sm;
+  @apply border-b border-neutral-300 dark:border-neutral-700;
+}
+
+.codex-editor td,
+.ce-block td {
+  @apply px-4 py-2 text-neutral-700 dark:text-neutral-300 text-sm;
+  @apply border-b border-neutral-200 dark:border-neutral-700;
+}
+
+.codex-editor tr:last-child td,
+.ce-block tr:last-child td {
+  @apply border-b-0;
+}
+
+.codex-editor tr:hover,
+.ce-block tr:hover {
+  @apply bg-neutral-50 dark:bg-neutral-800/50;
+}

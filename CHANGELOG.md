@@ -9,7 +9,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.6] - 2026-01-23
 
+### Changed
+- **Enhanced Popover Styling**: Improved ce-popover with modern Notion-style design
+  - Rounded corners with backdrop blur effect
+  - Better padding and spacing for items
+  - Smooth hover effects with proper transitions
+  - Active state highlighting with blue accent
+  - Icon and label alignment improvements
+  - Support for search input, dividers, and headers
+  - Secondary labels for keyboard shortcuts
+  - Enhanced dark mode with proper opacity
+  - Removed all unwanted bullets/dots from UI elements
+
+### Added
+- **EditorJS Notion-style Theme**: Complete redesign of EditorJS with Notion-inspired styling
+  - Clean, modern typography with improved readability
+  - Notion-style headers with proper hierarchy (H1-H4)
+  - Elegant paragraph spacing and line height
+  - Beautiful quote blocks with gradient backgrounds
+  - Refined code blocks with syntax highlighting support
+  - Inline code with distinctive red accent styling
+  - Smooth hover effects and transitions
+  - Enhanced image blocks with rounded corners and shadows
+  - Notion-style link previews and markers
+  - Clean table styling with proper borders
+  - Floating toolbar with modern icons
+  - Selection toolbar with dark theme
+  - Improved drag handles and block selection
+  - Responsive typography for mobile devices
+- **Dark Mode Support**: Full dark mode support for EditorJS
+  - Automatic theme switching based on system preference
+  - Dark mode optimized colors for all components
+  - Proper contrast ratios for accessibility
+  - Smooth transitions between light and dark modes
+  - Custom scrollbar styling for both themes
+  - Dark mode support for all toolbars and popovers
+- **Enhanced Editor Container**: Improved editor wrapper styling
+  - Rounded corners with subtle shadows
+  - Focus ring with blue accent color
+  - Hover effects for better interactivity
+  - Increased padding for better content breathing room
+  - Smooth transitions for all interactive states
+
 ### Fixed
+- **Inline Toolbar Dot Issue**: Fixed unwanted dot/bullet appearing in ce-inline-toolbar by default
+  - Removed all `::before` and `::after` pseudo-elements causing dots
+  - Added explicit `list-style: none` to all editor UI elements
+  - Preserved list styles for actual content lists (cdx-list)
+  - Improved inline tool button styling with proper padding and alignment
 - **Editor.js Synchronization**: Fixed "There is no block at index" error by clearing editor before rendering new content
 - **Image Upload Reliability**: Major improvements to handle intermittent failures
   - **Retry Logic**: Automatic retry with exponential backoff (3 attempts: 1s, 2s, 4s delays)

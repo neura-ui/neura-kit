@@ -108,6 +108,7 @@ if (typeof window !== 'undefined') {
 
       let editor: EditorJSInstance | null = null;
       let initializing = false;
+      let currentUploadController: AbortController | null = null;
 
       // Helper function to perform the actual upload with timeout
       const performUpload = async (
@@ -116,31 +117,46 @@ if (typeof window !== 'undefined') {
         field: string,
         headers: Record<string, string>
       ): Promise<{ success: number; file: { url: string; width?: number; height?: number } }> => {
+        // Cancel any previous upload in progress
+        if (currentUploadController) {
+          currentUploadController.abort();
+          currentUploadController = null;
+        }
+
+        // Create fresh FormData for each upload
         const formData = new FormData();
         formData.append(field, file);
 
+        // Get fresh CSRF token for each upload
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-        if (!csrfToken) {
-          console.warn('CSRF token not found');
-        }
 
-        // Create AbortController for timeout
+        // Create new AbortController for this upload
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
+        currentUploadController = controller;
+        const timeoutId = setTimeout(() => {
+          controller.abort();
+          currentUploadController = null;
+        }, 60000); // 60s timeout
 
         try {
-          const response = await fetch(url, {
+          // Add cache-busting parameter to URL to avoid cached responses
+          const uploadUrlWithCache = url + (url.includes('?') ? '&' : '?') + '_t=' + Date.now();
+
+          const response = await fetch(uploadUrlWithCache, {
             method: 'POST',
             headers: {
               'X-CSRF-TOKEN': csrfToken || '',
               'Accept': 'application/json',
+              // Don't set Content-Type, let browser set it with boundary for FormData
               ...headers,
             },
             body: formData,
             signal: controller.signal,
+            cache: 'no-store', // Prevent caching
           });
 
           clearTimeout(timeoutId);
+          currentUploadController = null;
 
           if (!response.ok) {
             let errorMessage = `Upload failed with status ${response.status}`;
@@ -158,6 +174,7 @@ if (typeof window !== 'undefined') {
             }
             throw new Error(errorMessage);
           }
+
 
           const result = await response.json();
 
@@ -181,10 +198,15 @@ if (typeof window !== 'undefined') {
           };
         } catch (error) {
           clearTimeout(timeoutId);
+          currentUploadController = null;
           
           if (error instanceof Error) {
             if (error.name === 'AbortError') {
-              throw new Error('Upload timeout: The request took too long to complete');
+              // Check if it was aborted by us (timeout) or by user (cancellation)
+              if (controller.signal.aborted) {
+                throw new Error('Upload timeout: The request took too long to complete');
+              }
+              throw new Error('Upload was cancelled');
             }
             if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
               throw new Error('Network error: Please check your internet connection');
@@ -314,61 +336,111 @@ if (typeof window !== 'undefined') {
               image: {
                 class: Image,
                 config: {
+                  // Enable caption field
+                  captionPlaceholder: 'Enter image caption',
+                  // Button text
+                  buttonContent: 'Select an Image',
                   uploader: {
                     async uploadByFile(file: File) {
-                      // Validate file size (10MB max)
-                      const maxSize = 10 * 1024 * 1024;
-                      if (file.size > maxSize) {
-                        throw new Error('File size exceeds 10MB limit');
-                      }
+                      // Set upload flag to prevent sync conflicts
+                      isUploading = true;
 
-                      // Validate file type
-                      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-                      if (!validTypes.includes(file.type)) {
-                        throw new Error('Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed');
-                      }
+                      try {
+                        // Cancel any previous upload
+                        if (currentUploadController) {
+                          currentUploadController.abort();
+                          currentUploadController = null;
+                        }
 
-                      // Retry logic with exponential backoff
-                      const maxRetries = 3;
-                      let lastError: Error | null = null;
+                        // Validate file size (10MB max)
+                        const maxSize = 10 * 1024 * 1024;
+                        if (file.size > maxSize) {
+                          throw new Error('File size exceeds 10MB limit');
+                        }
 
-                      for (let attempt = 0; attempt < maxRetries; attempt++) {
-                        try {
-                          if (attempt > 0) {
-                            // Exponential backoff: 1s, 2s, 4s
-                            const delay = Math.pow(2, attempt - 1) * 1000;
-                            console.log(`Retrying upload (attempt ${attempt + 1}/${maxRetries}) after ${delay}ms...`);
-                            await new Promise(resolve => setTimeout(resolve, delay));
-                          }
+                        // Validate file type
+                        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                        if (!validTypes.includes(file.type)) {
+                          throw new Error('Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed');
+                        }
 
-                          const result = await performUpload(file, uploadUrl, uploadField, uploadHeaders);
-                          return result;
-                        } catch (error) {
-                          lastError = error as Error;
-                          console.warn(`Upload attempt ${attempt + 1} failed:`, error);
+                        // Validate file is not empty
+                        if (file.size === 0) {
+                          throw new Error('File is empty');
+                        }
 
-                          // Don't retry on validation errors
-                          if (error instanceof Error && (
-                            error.message.includes('exceeds') ||
-                            error.message.includes('Invalid file type') ||
-                            error.message.includes('No image URL')
-                          )) {
-                            throw error;
-                          }
+                        // Retry logic with exponential backoff
+                        const maxRetries = 3;
+                        let lastError: Error | null = null;
 
-                          // Don't retry on 4xx errors (client errors)
-                          if (error instanceof Error && error.message.includes('status 4')) {
-                            throw error;
-                          }
+                        for (let attempt = 0; attempt < maxRetries; attempt++) {
+                          try {
+                            if (attempt > 0) {
+                              // Exponential backoff: 1s, 2s, 4s
+                              const delay = Math.pow(2, attempt - 1) * 1000;
+                              await new Promise(resolve => setTimeout(resolve, delay));
+                            }
 
-                          // Continue to next retry for network/server errors
-                          if (attempt === maxRetries - 1) {
-                            throw new Error(`Upload failed after ${maxRetries} attempts: ${lastError?.message || 'Unknown error'}`);
+                            const result = await performUpload(file, uploadUrl, uploadField, uploadHeaders);
+                            
+                            // Clear upload controller after success
+                            currentUploadController = null;
+                            
+                            // Return in Editor.js expected format immediately
+                            const uploadResult = {
+                              success: 1,
+                              file: {
+                                url: result.file.url,
+                                width: result.file.width,
+                                height: result.file.height,
+                              },
+                            };
+                            
+                            // Wait a bit before allowing sync again to let Editor.js insert the block
+                            // Use requestAnimationFrame to ensure Editor.js has time to process
+                            requestAnimationFrame(() => {
+                              setTimeout(() => {
+                                isUploading = false;
+                              }, 1000); // Give Editor.js 1 second to insert the block
+                            });
+                            
+                            return uploadResult;
+                          } catch (error) {
+                            lastError = error as Error;
+
+                            // Don't retry on validation errors
+                            if (error instanceof Error && (
+                              error.message.includes('exceeds') ||
+                              error.message.includes('Invalid file type') ||
+                              error.message.includes('No image URL') ||
+                              error.message.includes('empty') ||
+                              error.message.includes('cancelled')
+                            )) {
+                              currentUploadController = null;
+                              throw error;
+                            }
+
+                            // Don't retry on 4xx errors (client errors)
+                            if (error instanceof Error && error.message.includes('status 4')) {
+                              currentUploadController = null;
+                              throw error;
+                            }
+
+                            // Continue to next retry for network/server errors
+                            if (attempt === maxRetries - 1) {
+                              currentUploadController = null;
+                              throw new Error(`Upload failed after ${maxRetries} attempts: ${lastError?.message || 'Unknown error'}`);
+                            }
                           }
                         }
-                      }
 
-                      throw lastError || new Error('Upload failed');
+                        currentUploadController = null;
+                        isUploading = false;
+                        throw lastError || new Error('Upload failed');
+                      } catch (error) {
+                        isUploading = false;
+                        throw error;
+                      }
                     },
                   },
                 },
@@ -405,6 +477,9 @@ if (typeof window !== 'undefined') {
               };
             }
 
+            // Track if upload is in progress to prevent sync conflicts
+            let isUploading = false;
+
             editor = new EditorJSClass({
               holder: host,
               readOnly: !editable,
@@ -412,6 +487,11 @@ if (typeof window !== 'undefined') {
               data: initialData,
               tools,
               onChange: async () => {
+                // Skip sync if upload is in progress
+                if (isUploading) {
+                  return;
+                }
+
                 this.updatedAt = Date.now();
                 this.isSyncing = true;
 
@@ -419,12 +499,11 @@ if (typeof window !== 'undefined') {
                   const value = await this.serialize(editor!);
                   this._pushState?.(value);
                 } catch (error) {
-                  console.error('Failed to save Editor.js content:', error);
                   this.isSyncing = false;
                 }
               },
               onReady: () => {
-                console.log('Editor.js is ready');
+                // Editor is ready
               },
             });
 
@@ -433,11 +512,27 @@ if (typeof window !== 'undefined') {
             // Sync incoming changes (Livewire -> editor)
             (this as unknown as AlpineThis).$watch('state', async (next: unknown) => {
               const ed = this.editorInstance();
-              if (!ed || this.isSyncing) return;
+              if (!ed || this.isSyncing || isUploading) {
+                return;
+              }
 
               try {
-                const current = JSON.stringify(await ed.save());
+                // Get current editor state
+                let currentData;
+                try {
+                  currentData = await ed.save();
+                } catch (error) {
+                  return;
+                }
+
+                const current = JSON.stringify(currentData);
                 const normalized = this.normalize(next);
+                
+                // Validate normalized data before using it
+                if (!this.isValidOutputData(normalized)) {
+                  return;
+                }
+                
                 const incoming = JSON.stringify(normalized);
 
                 if (current === incoming) return;
@@ -446,14 +541,19 @@ if (typeof window !== 'undefined') {
                 await ed.clear();
                 await ed.render(normalized);
               } catch (error) {
-                console.error('Failed to sync Editor.js content:', error);
+                // Try to recover by reinitializing with empty data
+                try {
+                  await ed.clear();
+                  await ed.render(this.getEmptyData());
+                } catch (recoveryError) {
+                  // Ignore recovery errors
+                }
               }
             });
 
             // Livewire Navigate support
             window.addEventListener('livewire:navigating', () => this.destroy());
           } catch (error) {
-            console.error('Failed to initialize Editor.js:', error);
             this.initialized = false;
           } finally {
             initializing = false;
@@ -461,11 +561,17 @@ if (typeof window !== 'undefined') {
         },
 
         async destroy() {
+          // Cancel any ongoing upload
+          if (currentUploadController) {
+            currentUploadController.abort();
+            currentUploadController = null;
+          }
+
           if (editor) {
             try {
               await editor.destroy();
             } catch (error) {
-              console.warn('Error destroying Editor.js:', error);
+              // Ignore destruction errors
             }
           }
           editor = null;

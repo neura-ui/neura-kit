@@ -18,7 +18,9 @@
 ])
 
 @php
-    use Illuminate\View\ComponentAttributeBag;use Neura\Kit\Packs\Button\IconSize;use Neura\Kit\Support\PackResolver;
+    use Illuminate\View\ComponentAttributeBag;
+    use Neura\Kit\Packs\Button\IconSize;
+    use Neura\Kit\Support\PackResolver;
 
     $size = $size ?? neura_config('button', 'size') ?? 'sm';
     $rounded = $rounded ?? neura_config('button', 'rounded') ?? 'lg';
