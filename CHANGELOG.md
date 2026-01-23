@@ -7,6 +7,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.0.8] - 2026-01-23
+
+### Added
+- **Empty State Component**: New component for displaying helpful messages when there's no content
+  - Supports icon, image, or custom illustration
+  - Configurable title and description
+  - Multiple size variants: sm, md, lg
+  - Multiple style variants: default, bordered, card, ghost
+  - Action buttons slot for primary CTAs
+  - Footer slot for additional information
+  - Compact mode option for full-width display
+  - Dark mode support with proper contrast
+  - Responsive design for all screen sizes
+
 ## [1.0.7] - 2026-01-23
 
 ### Fixed
