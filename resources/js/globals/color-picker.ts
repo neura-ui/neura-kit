@@ -217,13 +217,9 @@ export function neuraColorPicker({
             this.applyToken(color.token);
             this.ensureHexValue();
             this.syncHidden();
-            this.open = false;
             this.query = '';
-            const nextTick = (this as any).$nextTick as AlpineContext['$nextTick'] | undefined;
-            const displayInput = (this as any).$refs?.displayInput as HTMLInputElement | null | undefined;
-            if (nextTick && displayInput) {
-                nextTick(() => displayInput.focus());
-            }
+            // Close menu
+            this.open = false;
         },
     };
 }

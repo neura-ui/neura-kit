@@ -162,6 +162,7 @@
                     x-model="display"
                     x-on:input="applyInput($event.target.value)"
                     x-on:focus="if (!isDisabled) open = true"
+                    x-on:click="if (!isDisabled) open = true"
                     x-on:keydown.escape="open = false"
                     @class([
                         'z-10',
@@ -184,11 +185,18 @@
                         :title="hex || ''"
                         :class="{ 'opacity-50': !hex }"
                     ></div>
-                    <neura::icon 
-                        name="swatch" 
-                        class="text-neutral-500! dark:text-neutral-400! size-[1.15rem]! shrink-0" 
-                        data-slot="input-option" 
-                    />
+                    <button
+                        type="button"
+                        @click.stop="if (!isDisabled) open = !open"
+                        class="text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200 transition-colors"
+                        :disabled="$disabled"
+                    >
+                        <neura::icon 
+                            name="swatch" 
+                            class="text-neutral-500! dark:text-neutral-400! size-[1.15rem]! shrink-0" 
+                            data-slot="input-option" 
+                        />
+                    </button>
                 </div>
             </div>
         </div>
@@ -209,6 +217,7 @@
             x-transition:leave="transition ease-in duration-75"
             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
             x-transition:leave-end="opacity-0 -translate-y-1 scale-95"
+            @click.stop=""
             style="display:none;"
         >
             <div class="mb-2 pb-2 border-b border-neutral-200 dark:border-neutral-800">
@@ -246,7 +255,7 @@
                     <button
                         type="button"
                         class="group flex flex-col items-center gap-1 rounded-md p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600"
-                        x-on:click="choose(color)"
+                        x-on:click.stop="choose(color)"
                         :title="color.token + ' ' + color.hex"
                     >
                         <div class="size-7 rounded-md border border-neutral-300 dark:border-neutral-700 shadow-sm"

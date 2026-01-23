@@ -7,6 +7,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.0.7] - 2026-01-23
+
+### Fixed
+- **Context Menu**: Complete refactoring with Singleton Manager pattern
+  - Fixed issue where multiple context menus could be open simultaneously
+  - Menus now properly close when clicking outside
+  - Menus close when right-clicking to open another context menu
+  - Added proper event listener cleanup to prevent memory leaks
+  - Fixed timing issues with teleported menu elements
+
+- **Color Picker**: Improved menu behavior
+  - Menu now properly closes after selecting a color
+  - Menu can be reopened by clicking on input or swatch icon
+  - Added click handler on input for better UX
+  - Swatch icon now toggles menu open/close
+  - Fixed click propagation issues
+
+### Changed
+- **Context Menu Architecture**: Refactored to use ContextMenuManager singleton
+  - Centralized management of all context menu instances
+  - Public `isClickInsideAnyMenu()` method for proper encapsulation
+  - Global mousedown and contextmenu handlers for reliable close behavior
+
 ## [1.0.6] - 2026-01-23
 
 ### Changed
