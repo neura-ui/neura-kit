@@ -7,6 +7,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.0.16] - 2026-01-24
+
+### Fixed
+- **Modal Manager**: Fixed `maxWidth` handling to support both predefined sizes and custom values
+  - Predefined sizes (xs, sm, md, lg, xl, 2xl, etc.) now use optimized Tailwind classes
+  - Custom values (e.g., "600px", "80%", "50rem") use inline styles
+  - Support for `maxWidthClass` override with custom Tailwind classes
+
+### Added
+- **Phone Input**: National prefix handling for phone validation
+  - Automatically removes leading "0" for France and similar countries
+  - Added `nationalPrefix` field to Country interface
+  - Updated validation logic to handle national prefixes correctly
+
 ## [1.0.15] - 2026-01-24
 
 ### Added
