@@ -8,6 +8,7 @@ interface Country {
     example?: string;
     minLength?: number;
     maxLength?: number;
+    nationalPrefix?: string; // Prefix to remove (e.g., '0' for France)
 }
 
 interface PhoneInputConfig {
@@ -33,7 +34,7 @@ const COUNTRIES: Country[] = [
     
     // Europe
     { code: 'GB', name: 'United Kingdom', dialCode: '44', flag: '🇬🇧', pattern: /^[1-9]\d{9,10}$/, format: '#### ######', example: '7911 123456', minLength: 10, maxLength: 11 },
-    { code: 'FR', name: 'France', dialCode: '33', flag: '🇫🇷', pattern: /^[1-9]\d{8}$/, format: '# ## ## ## ##', example: '6 12 34 56 78', minLength: 9, maxLength: 9 },
+    { code: 'FR', name: 'France', dialCode: '33', flag: '🇫🇷', pattern: /^[1-9]\d{8}$/, format: '# ## ## ## ##', example: '6 12 34 56 78', minLength: 9, maxLength: 10, nationalPrefix: '0' },
     { code: 'DE', name: 'Germany', dialCode: '49', flag: '🇩🇪', pattern: /^[1-9]\d{6,14}$/, format: '### ########', example: '151 12345678', minLength: 7, maxLength: 15 },
     { code: 'IT', name: 'Italy', dialCode: '39', flag: '🇮🇹', pattern: /^[0-9]\d{5,11}$/, format: '### ### ####', example: '312 345 6789', minLength: 6, maxLength: 12 },
     { code: 'ES', name: 'Spain', dialCode: '34', flag: '🇪🇸', pattern: /^[6-9]\d{8}$/, format: '### ### ###', example: '612 345 678', minLength: 9, maxLength: 9 },
@@ -297,6 +298,14 @@ function neuraPhoneInput(config: PhoneInputConfig) {
             // Allow only digits and formatting characters
             value = value.replace(/[^\d\s\-().]/g, '');
             
+            // Remove national prefix if present (e.g., leading 0 for France)
+            if (this.selectedCountry?.nationalPrefix) {
+                const digits = value.replace(/\D/g, '');
+                if (digits.startsWith(this.selectedCountry.nationalPrefix)) {
+                    value = digits.substring(this.selectedCountry.nationalPrefix.length);
+                }
+            }
+            
             this.nationalNumber = value;
             
             if (this.autoFormat) {
@@ -357,12 +366,17 @@ function neuraPhoneInput(config: PhoneInputConfig) {
                 return false;
             }
             
-            const digits = this.nationalNumber.replace(/\D/g, '');
+            let digits = this.nationalNumber.replace(/\D/g, '');
             
             if (!digits) {
                 this.isValid = false;
                 this.validationMessage = '';
                 return false;
+            }
+            
+            // Remove national prefix for validation if present
+            if (this.selectedCountry.nationalPrefix && digits.startsWith(this.selectedCountry.nationalPrefix)) {
+                digits = digits.substring(this.selectedCountry.nationalPrefix.length);
             }
             
             const { pattern, minLength, maxLength, name } = this.selectedCountry;
