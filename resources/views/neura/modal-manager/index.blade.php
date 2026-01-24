@@ -24,30 +24,20 @@
     class="fixed inset-0 z-[9999] overflow-y-auto"
     @modal-close.window="setShow(false)"
     @keydown.escape.window="show && closeModalOnEscape()"
-    x-transition:enter="ease-out duration-300"
-    x-transition:enter-start="opacity-0"
-    x-transition:enter-end="opacity-100"
-    x-transition:leave="ease-in duration-200"
-    x-transition:leave-start="opacity-100"
-    x-transition:leave-end="opacity-0"
 >
-    {{-- Backdrop --}}
     <div
         class="fixed inset-0 bg-black/50 dark:bg-black/70"
         @click="closeModalOnClickAway()"
         aria-hidden="true"
     ></div>
 
-    {{-- Modal wrapper --}}
     <div class="flex min-h-full items-center justify-center p-4">
-        {{-- Loading spinner --}}
         <div x-show="isLoading" class="relative flex w-fit justify-center">
             <div class="bg-white dark:bg-neutral-900 rounded-lg shadow-xl p-8">
                 <neura::icon.loading data-slot="loading-indicator" class="text-neutral-600 dark:text-neutral-400"/>
             </div>
         </div>
 
-        {{-- Actual modal content --}}
         <div x-show="show && showActiveComponent && !isLoading"
              x-transition
              @click="closeModalOnClickAway()"
@@ -70,14 +60,14 @@
                     wire:key="{{ $id }}"
                     x-ref="{{ $id }}"
                     data-modal-id="{{ $id }}"
-                    x-show="activeComponent === '{{ $id }}'"
+                    x-show="activeComponent === '{{ $id }}' && !isTransitioning"
                     x-on:click.stop
-                    x-transition:enter="ease-out duration-300"
-                    x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                    x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
-                    x-transition:leave="ease-in duration-200"
-                    x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-                    x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 scale-95"
+                    x-transition:enter-end="opacity-100 scale-100"
+                    x-transition:leave="transition ease-in duration-150"
+                    x-transition:leave-start="opacity-100 scale-100"
+                    x-transition:leave-end="opacity-0 scale-95"
                     class="
                         w-full
                         {{ $widthClass }}

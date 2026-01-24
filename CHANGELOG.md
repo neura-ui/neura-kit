@@ -7,6 +7,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.0.11] - 2026-01-24
+
+### Added
+- **Modal Manager**: Added nested modals support with stack navigation
+  - Modals can now be opened from within other modals
+  - Previous modal is preserved in a stack and restored on close
+  - Added smooth fade transition between modals (fade-out → fade-in)
+  - Focus is properly restored when navigating back to previous modal
+  - Stack is cleared when all modals are closed
+
+### Changed
+- **Modal Manager**: Improved transition animations
+  - Added scale and opacity transitions for modal enter/leave
+  - Modals now fade out completely before the next one fades in
+  - Configurable transition delay (180ms default)
+
 ## [1.0.10] - 2026-01-24
 
 ### Fixed

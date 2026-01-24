@@ -150,25 +150,31 @@ if (!isBrowser) {
         );
 
         /* ---------------------------------------------------------------------- */
-        /* Alpine modal manager                                                     */
+        /* Alpine modal manager with stack support                                  */
         /* ---------------------------------------------------------------------- */
         document.addEventListener('alpine:init', () => {
             (window as any).Alpine.data('modalManager', () => ({
                 show: false,
                 activeComponent: null as string | null,
                 showActiveComponent: false,
-                isLoading: false, // NEW: loading state
+                isLoading: false,
+                isTransitioning: false,
 
+                // Stack to track modal history
+                _modalStack: [] as Array<{ id: string; attrs: ModalAttrs | null }>,
                 _attrs: null as { id: string; attrs: ModalAttrs } | null,
                 _cleanupId: 0,
                 _cleanupTimeout: null as number | null,
                 _loadingTimeout: null as number | null,
+                _transitionTimeout: null as number | null,
                 _prevFocus: null as HTMLElement | null,
+                _focusStack: [] as HTMLElement[],
                 _main: document.querySelector<HTMLElement>('[data-slot="main"], main, [data-slot="layout"]'),
 
                 // Keep this aligned to your CSS transition duration (ms)
                 _teardownDelayMs: 200,
-                _loadingDelayMs: 150, // Show spinner after 150ms if still loading
+                _loadingDelayMs: 150,
+                _transitionDelayMs: 180, // Time to wait for fade-out before showing next modal
 
                 init() {
                     // Toggle inert + scroll lock + focus restore
@@ -185,7 +191,7 @@ if (!isBrowser) {
                             clearTimeout(this._loadingTimeout!);
                             this.isLoading = false;
 
-                            // Restore focus on next frame (avoids race with DOM patch)
+                            // Restore focus on next frame
                             const prev = this._prevFocus;
                             this._prevFocus = null;
                             requestAnimationFrame(() => prev?.focus?.());
@@ -207,16 +213,45 @@ if (!isBrowser) {
 
                         clearTimeout(this._cleanupTimeout!);
                         clearTimeout(this._loadingTimeout!);
+                        clearTimeout(this._transitionTimeout!);
 
-                        this.activeComponent = id;
-                        this._attrs = attrs ? { id, attrs } : null;
-                        this.showActiveComponent = true;
-                        this.isLoading = false; // Component loaded!
+                        // If there's already an active modal, animate transition
+                        if (this.activeComponent && this.activeComponent !== id) {
+                            this._modalStack.push({
+                                id: this.activeComponent,
+                                attrs: this._attrs?.attrs ?? null
+                            });
+                            // Save current focus for this modal
+                            this._focusStack.push(document.activeElement as HTMLElement);
 
-                        // Focus after Livewire/Alpine rendered
-                        this.$nextTick(() => {
-                            requestAnimationFrame(() => this.focusModal());
-                        });
+                            // Start transition: hide current modal first
+                            this.isTransitioning = true;
+
+                            // After fade-out, switch to new modal
+                            this._transitionTimeout = window.setTimeout(() => {
+                                this.activeComponent = id;
+                                this._attrs = attrs ? { id, attrs } : null;
+                                this.isTransitioning = false;
+                                this.showActiveComponent = true;
+                                this.isLoading = false;
+
+                                // Focus after transition complete
+                                this.$nextTick(() => {
+                                    requestAnimationFrame(() => this.focusModal());
+                                });
+                            }, this._transitionDelayMs);
+                        } else {
+                            // First modal or same modal - no transition needed
+                            this.activeComponent = id;
+                            this._attrs = attrs ? { id, attrs } : null;
+                            this.showActiveComponent = true;
+                            this.isLoading = false;
+
+                            // Focus after Livewire/Alpine rendered
+                            this.$nextTick(() => {
+                                requestAnimationFrame(() => this.focusModal());
+                            });
+                        }
                     };
 
                     const uiOpen = (_e?: CustomEvent<UiOpenDetail>) => {
@@ -225,7 +260,6 @@ if (!isBrowser) {
 
                         this.show = true;
 
-                        // Only show loading spinner if component takes time to load
                         this._loadingTimeout = window.setTimeout(() => {
                             if (this.show && !this.showActiveComponent) {
                                 this.isLoading = true;
@@ -234,7 +268,35 @@ if (!isBrowser) {
                     };
 
                     const uiClose = (_e?: CustomEvent<UiCloseDetail>) => {
-                        this.setShow(false);
+                        clearTimeout(this._transitionTimeout!);
+
+                        // Check if there are modals in the stack to go back to
+                        if (this._modalStack.length > 0) {
+                            const previousModal = this._modalStack.pop()!;
+                            const previousFocus = this._focusStack.pop();
+                            
+                            // Start transition: hide current modal first
+                            this.isTransitioning = true;
+
+                            // After fade-out, switch to previous modal
+                            this._transitionTimeout = window.setTimeout(() => {
+                                this.activeComponent = previousModal.id;
+                                this._attrs = previousModal.attrs ? { id: previousModal.id, attrs: previousModal.attrs } : null;
+                                this.isTransitioning = false;
+
+                                // Restore focus to previous modal
+                                this.$nextTick(() => {
+                                    if (previousFocus) {
+                                        requestAnimationFrame(() => previousFocus.focus?.());
+                                    } else {
+                                        this.focusModal();
+                                    }
+                                });
+                            }, this._transitionDelayMs);
+                        } else {
+                            // No more modals in stack, close completely
+                            this.setShow(false);
+                        }
                     };
 
                     // Instant UI open/close (no network)
@@ -254,7 +316,13 @@ if (!isBrowser) {
                     if (!value) {
                         this.showActiveComponent = false;
                         this.isLoading = false;
+                        this.isTransitioning = false;
                         clearTimeout(this._loadingTimeout!);
+                        clearTimeout(this._transitionTimeout!);
+
+                        // Clear the stack when completely closing
+                        this._modalStack = [];
+                        this._focusStack = [];
 
                         // Delay teardown to allow exit transitions
                         clearTimeout(this._cleanupTimeout!);
