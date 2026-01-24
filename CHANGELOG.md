@@ -7,6 +7,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.0.14] - 2026-01-24
+
+### Added
+- **Wizard Steps**: Added `size` prop for default variant
+  - Available sizes: `sm`, `md` (default), `lg`
+  - Dynamic sizing for circles, icons, labels, and connector lines
+- **Wizard Steps**: Added `color` prop for customizable step colors
+  - Built-in colors: `neutral` (default), `primary`, `secondary`, `success`, `danger`, `warning`, `info`
+  - Support for all Tailwind colors (red, blue, green, etc.)
+
+### Changed
+- **Wizard Steps**: Improved default variant UI
+  - Cleaner, more modern design inspired by shadcn/ui
+  - Simplified connector lines with proper alignment
+  - Better responsive spacing and typography
+  - Removed excessive shadows and effects for a subtler look
+
 ## [1.0.13] - 2026-01-24
 
 ### Added

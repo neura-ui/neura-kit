@@ -10,6 +10,7 @@ use Neura\Kit\Packs\Button;
 use Neura\Kit\Packs\Input;
 use Neura\Kit\Packs\Rounded;
 use Neura\Kit\Packs\Shadow;
+use Neura\Kit\Packs\Wizard;
 
 class PackResolver
 {
@@ -173,5 +174,13 @@ class PackResolver
         $colors = Alert\Color::default();
 
         return $colors[$type] ?? $colors['info'];
+    }
+
+    public static function wizardColor(?string $color): array
+    {
+        $color = $color ?: 'neutral';
+        $colors = Wizard\Color::all();
+
+        return $colors[$color] ?? $colors['neutral'];
     }
 }
