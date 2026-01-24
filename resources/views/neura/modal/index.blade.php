@@ -12,7 +12,8 @@
 ])
 
 @php
-    $sizeClasses = match($size) {
+    // Map predefined sizes to Tailwind classes
+    $widthMap = [
         'xs' => 'max-w-xs',
         'sm' => 'max-w-sm',
         'md' => 'max-w-md',
@@ -25,10 +26,24 @@
         '6xl' => 'max-w-6xl',
         '7xl' => 'max-w-7xl',
         'full' => 'max-w-full',
-        default => 'max-w-md',
-    };
+    ];
 
-    $maxWidthClass = $maxWidth ? "max-w-[{$maxWidth}]" : $sizeClasses;
+    // Determine max width class and custom style
+    if ($maxWidth) {
+        // Check if it's a predefined size
+        if (isset($widthMap[$maxWidth])) {
+            $maxWidthClass = $widthMap[$maxWidth];
+            $customMaxWidth = null;
+        } else {
+            // Custom value - use inline style
+            $maxWidthClass = '';
+            $customMaxWidth = $maxWidth;
+        }
+    } else {
+        // Use size prop
+        $maxWidthClass = $widthMap[$size] ?? 'max-w-md';
+        $customMaxWidth = null;
+    }
 
     $isOpen = $entangle
         ? $entangle
@@ -93,6 +108,7 @@
     <div class="flex min-h-full items-center justify-center p-4">
         <div
             x-on:click.stop
+            @if($customMaxWidth) style="max-width: {{ $customMaxWidth }};" @endif
             class="relative bg-white dark:bg-neutral-900 rounded-lg shadow-xl w-full {{ $maxWidthClass }} border border-neutral-200 dark:border-neutral-800"
             x-transition:enter="ease-out duration-300"
             x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"

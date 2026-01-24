@@ -7,6 +7,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.0.17] - 2026-01-24
+
+### Fixed
+- **Modal Component**: Replaced responsive maxWidth classes with simple fixed classes
+  - Changed from complex responsive classes (`sm:max-w-md md:max-w-xl`) to simple classes (`max-w-lg`, `max-w-xl`)
+  - Ensures consistent modal widths across all screen sizes
+  - Simplified `ModalComponent::$maxWidths` array for better maintainability
+- **Modal**: Fixed `maxWidth` prop handling for custom values
+  - Predefined sizes (xs, sm, md, lg, xl, 2xl, etc.) now properly use Tailwind classes
+  - Custom values (e.g., "600px", "80%", "50rem") now use inline styles instead of broken dynamic classes
+  - Removed non-functional `max-w-[{$maxWidth}]` pattern that wasn't being compiled by Tailwind
+
 ## [1.0.16] - 2026-01-24
 
 ### Fixed
