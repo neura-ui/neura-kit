@@ -75,7 +75,7 @@
     $ps = $popupSizes[$popupSize] ?? $popupSizes['md'];
 
     $popupContainerClass = Arr::toCssClasses([
-        'absolute z-50 mt-2',
+        'absolute z-[100] mt-2',
         $popupAlign === 'right' ? 'right-0' : 'left-0',
         $ps['padding'],
         $ps['minWidth'],
@@ -188,7 +188,7 @@
                         type="button"
                         @click.stop="if (!isDisabled) open = !open"
                         class="text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200 transition-colors"
-                        :disabled="$disabled"
+                        :disabled="isDisabled"
                     >
                         <neura::icon 
                             name="swatch" 

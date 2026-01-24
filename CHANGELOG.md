@@ -7,6 +7,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.0.10] - 2026-01-24
+
+### Fixed
+- **Color Picker**: Fixed Alpine.js error "$disabled is not defined"
+  - Replaced Blade variable `$disabled` with Alpine variable `isDisabled` in button binding
+  - Increased popup z-index to `z-[100]` for better visibility in modals
+
 ## [1.0.9] - 2026-01-24
 
 ### Fixed
