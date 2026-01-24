@@ -7,6 +7,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.0.19] - 2026-01-24
+
+### Changed
+- **Modal**: Refactored Modal classes for better maintainability
+  - Extracted max-width map to public constant `ModalComponent::MAX_WIDTH_CLASSES`
+  - Added utility methods `getMaxWidthClass()` and `isValidSize()` for reusability
+  - `ModalCall` now uses centralized `ModalComponent::getMaxWidthClass()` instead of duplicating the map
+  - Added DocBlocks for all public methods in `ModalCall`
+  - Extracted `buildOpenJs()` method to eliminate code duplication in `open()`
+  - Added `declare(strict_types=1)` to `Contracts/ModalComponent` interface
+  - Improved type hints and return types across all Modal classes
+
 ## [1.0.18] - 2026-01-24
 
 ### Fixed

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Neura\Kit\Support\Modal\Contracts;
 
 interface ModalComponent

@@ -30,12 +30,16 @@ final class ModalCall
         }
 
         $this->attrs['maxWidth'] ??= $modal::modalMaxWidth();
+        $this->syncMaxWidthClass($this->attrs['maxWidth']);
     }
 
     /* -------------------------------------------------------------
      | Arguments
      |------------------------------------------------------------- */
 
+    /**
+     * Set a single argument for the modal component.
+     */
     public function with(string $key, mixed $value): self
     {
         $this->args[$key] = $value;
@@ -43,6 +47,9 @@ final class ModalCall
         return $this;
     }
 
+    /**
+     * Set multiple arguments for the modal component.
+     */
     public function withMany(array $args): self
     {
         $this->args = array_merge($this->args, $args);
@@ -54,76 +61,100 @@ final class ModalCall
      | Attributes
      |------------------------------------------------------------- */
 
+    /**
+     * Set a single modal attribute.
+     */
     public function attr(string $key, mixed $value): self
     {
         $this->attrs[$key] = $value;
 
+        if ($key === 'maxWidth') {
+            $this->syncMaxWidthClass($value);
+        }
+
         return $this;
     }
 
+    /**
+     * Set multiple modal attributes.
+     */
     public function attrs(array $attrs): self
     {
         $this->attrs = array_merge($this->attrs, $attrs);
 
-        return $this;
-    }
-
-    public function maxWidth(string $width): self
-    {
-        $this->attrs['maxWidth'] = $width;
-        
-        // Map predefined sizes to Tailwind classes
-        $widthMap = [
-            'xs' => 'max-w-xs',
-            'sm' => 'max-w-sm',
-            'md' => 'max-w-md',
-            'lg' => 'max-w-lg',
-            'xl' => 'max-w-xl',
-            '2xl' => 'max-w-2xl',
-            '3xl' => 'max-w-3xl',
-            '4xl' => 'max-w-4xl',
-            '5xl' => 'max-w-5xl',
-            '6xl' => 'max-w-6xl',
-            '7xl' => 'max-w-7xl',
-            'full' => 'max-w-full',
-        ];
-        
-        // Automatically set maxWidthClass for predefined sizes
-        if (isset($widthMap[$width])) {
-            $this->attrs['maxWidthClass'] = $widthMap[$width];
-        } else {
-            // For custom values, remove maxWidthClass (will use inline style)
-            unset($this->attrs['maxWidthClass']);
+        if (isset($attrs['maxWidth']) && ! isset($attrs['maxWidthClass'])) {
+            $this->syncMaxWidthClass($attrs['maxWidth']);
         }
 
         return $this;
+    }
+
+    /**
+     * Set the modal maximum width.
+     */
+    public function maxWidth(string $width): self
+    {
+        $this->attrs['maxWidth'] = $width;
+        $this->syncMaxWidthClass($width);
+
+        return $this;
+    }
+
+    /**
+     * Synchronize maxWidthClass based on the maxWidth value.
+     */
+    private function syncMaxWidthClass(string $width): void
+    {
+        $class = ModalComponent::getMaxWidthClass($width);
+
+        if ($class !== null) {
+            $this->attrs['maxWidthClass'] = $class;
+        } else {
+            unset($this->attrs['maxWidthClass']);
+        }
     }
 
     /* -------------------------------------------------------------
      | Actions
      |------------------------------------------------------------- */
 
-    public function open(?array $overrideArgs = null, bool $dispatch = true): ?string
+    /**
+     * Open the modal.
+     */
+    public function open(?array $overrideArgs = null, bool $dispatch = true): string
     {
-        if ($overrideArgs) {
+        if ($overrideArgs !== null) {
             $this->withMany($overrideArgs);
         }
 
+        $js = $this->buildOpenJs();
+
         if ($dispatch) {
-            // Normalize arguments for JSON serialization (convert models to IDs)
-            $normalizedArgs = $this->normalizeArgsForJs($this->args);
-
-            // Call openModal directly via JavaScript
-            $js = sprintf(
-                'NeuraKitModal.open(%s, %s, %s)',
-                json_encode($this->modal),
-                json_encode($normalizedArgs),
-                json_encode($this->attrs)
-            );
-
             $this->caller->js($js);
         }
 
+        return $js;
+    }
+
+    /**
+     * Close the modal.
+     */
+    public function close(bool $force = false, bool $dispatch = true): string
+    {
+        $js = sprintf('NeuraKitModal.close(%s)', $force ? 'true' : 'false');
+
+        if ($dispatch) {
+            $this->caller->js($js);
+        }
+
+        return $js;
+    }
+
+    /**
+     * Build the JavaScript call to open the modal.
+     */
+    private function buildOpenJs(): string
+    {
         return sprintf(
             'NeuraKitModal.open(%s, %s, %s)',
             json_encode($this->modal),
@@ -138,32 +169,20 @@ final class ModalCall
      */
     private function normalizeArgsForJs(array $args): array
     {
-        return array_map(function ($value) {
+        return array_map(function (mixed $value): mixed {
             if ($value instanceof UrlRoutable) {
                 return $value->getRouteKey();
             }
+
             if (is_object($value) && method_exists($value, 'getRouteKey')) {
                 return $value->getRouteKey();
             }
+
             if (is_object($value) && method_exists($value, 'toArray')) {
                 return $value->toArray();
             }
 
             return $value;
         }, $args);
-    }
-
-    public function close(bool $force = false, bool $dispatch = true): string
-    {
-        $js = sprintf(
-            'NeuraKitModal.close(%s)',
-            $force ? 'true' : 'false'
-        );
-
-        if ($dispatch) {
-            $this->caller->js($js);
-        }
-
-        return $js;
     }
 }

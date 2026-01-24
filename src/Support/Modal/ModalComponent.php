@@ -6,17 +6,14 @@ namespace Neura\Kit\Support\Modal;
 
 use InvalidArgumentException;
 use Livewire\Component;
-use Neura\Kit\Support\Modal\Contracts\ModalComponent as Contract;
+use Neura\Kit\Support\Modal\Contracts\ModalComponent as ModalComponentContract;
 
-abstract class ModalComponent extends Component implements Contract
+abstract class ModalComponent extends Component implements ModalComponentContract
 {
-    public bool $forceClose = false;
-
-    public int $skipModals = 0;
-
-    public bool $destroySkipped = false;
-
-    protected static array $maxWidths = [
+    /**
+     * Map of size keys to Tailwind max-width classes.
+     */
+    public const MAX_WIDTH_CLASSES = [
         'xs' => 'max-w-xs',
         'sm' => 'max-w-sm',
         'md' => 'max-w-md',
@@ -30,6 +27,12 @@ abstract class ModalComponent extends Component implements Contract
         '7xl' => 'max-w-7xl',
         'full' => 'max-w-full',
     ];
+
+    public bool $forceClose = false;
+
+    public int $skipModals = 0;
+
+    public bool $destroySkipped = false;
 
     protected static ?array $defaults = null;
 
@@ -67,7 +70,12 @@ abstract class ModalComponent extends Component implements Contract
 
     public function closeModal(): void
     {
-        $this->dispatch('closeModal', force: $this->forceClose, skipPreviousModals: $this->skipModals, destroySkipped: $this->destroySkipped);
+        $this->dispatch(
+            'closeModal',
+            force: $this->forceClose,
+            skipPreviousModals: $this->skipModals,
+            destroySkipped: $this->destroySkipped
+        );
     }
 
     public function closeModalWithEvents(array $events): void
@@ -85,13 +93,31 @@ abstract class ModalComponent extends Component implements Contract
     {
         $width = static::modalMaxWidth();
 
-        if (! isset(static::$maxWidths[$width])) {
-            throw new InvalidArgumentException(
-                sprintf('Modal max width [%s] is invalid. Valid: [%s].', $width, implode(', ', array_keys(static::$maxWidths)))
-            );
+        if (! isset(self::MAX_WIDTH_CLASSES[$width])) {
+            throw new InvalidArgumentException(sprintf(
+                'Modal max width [%s] is invalid. Valid: [%s].',
+                $width,
+                implode(', ', array_keys(self::MAX_WIDTH_CLASSES))
+            ));
         }
 
-        return static::$maxWidths[$width];
+        return self::MAX_WIDTH_CLASSES[$width];
+    }
+
+    /**
+     * Get the max-width class for a given size key.
+     */
+    public static function getMaxWidthClass(string $size): ?string
+    {
+        return self::MAX_WIDTH_CLASSES[$size] ?? null;
+    }
+
+    /**
+     * Check if a size key is a valid predefined size.
+     */
+    public static function isValidSize(string $size): bool
+    {
+        return isset(self::MAX_WIDTH_CLASSES[$size]);
     }
 
     public static function closeModalOnClickAway(): bool
