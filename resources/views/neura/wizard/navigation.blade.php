@@ -8,6 +8,9 @@
     'showCancel' => false,
     'cancelUrl' => null,
     'cancelLabel' => 'Cancel',
+    'showCompleteButton' => true,
+    'completeLabel' => null,
+    'completeUrl' => null,
 ])
 
 <div
@@ -69,9 +72,30 @@
                     {{ $finishLabel }}
                 </span>
                 <span wire:loading wire:target="complete">
-                    Processing...
+                    {{ __('Processing...')}}
                 </span>
             </neura::button>
+        </template>
+
+        {{-- Complete step (after all steps are done) --}}
+        <template x-if="currentStep > totalSteps && @js($showCompleteButton)">
+            @if($completeUrl)
+                <neura::button
+                    variant="primary"
+                    as="a"
+                    href="{{ $completeUrl }}"
+                >
+                    {{ $completeLabel ?? __('Done') }}
+                </neura::button>
+            @else
+                <neura::button
+                    type="button"
+                    variant="primary"
+                    wire:click="restart"
+                >
+                    {{ $completeLabel ?? __('Start Over') }}
+                </neura::button>
+            @endif
         </template>
     </div>
 </div>

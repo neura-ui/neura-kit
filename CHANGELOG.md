@@ -7,6 +7,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.0.13] - 2026-01-24
+
+### Added
+- **Wizard Navigation**: Added complete step button support
+  - New `showCompleteButton` prop to display a button after all steps are completed
+  - New `completeLabel` prop to customize the button label
+  - New `completeUrl` prop to redirect to a URL when clicked (renders as link)
+  - If no `completeUrl`, button calls `wire:click="restart"` to restart the wizard
+  - Added i18n support with `__()` for default labels
+
 ## [1.0.12] - 2026-01-24
 
 ### Fixed
