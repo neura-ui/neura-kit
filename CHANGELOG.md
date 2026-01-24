@@ -7,6 +7,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.0.15] - 2026-01-24
+
+### Added
+- **Phone Input**: New comprehensive phone number input component
+  - Country selector with 70+ countries and flag emojis
+  - Automatic formatting based on country-specific patterns
+  - Built-in validation with country-specific regex patterns
+  - Preferred countries shown at top of dropdown
+  - Filter countries with `onlyCountries` or `excludeCountries` props
+  - Searchable country dropdown
+  - Full Livewire `wire:model` integration
+  - Sizes: `sm`, `md`, `lg`
+  - JavaScript API for programmatic access (`getFullNumber()`, `isValidNumber()`, etc.)
+
 ## [1.0.14] - 2026-01-24
 
 ### Added
