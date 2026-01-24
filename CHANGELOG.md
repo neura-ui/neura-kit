@@ -7,6 +7,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.0.18] - 2026-01-24
+
+### Fixed
+- **Modal Manager**: Fixed attribute priority logic for `maxWidth` and `maxWidthClass`
+  - `maxWidthClass` now has absolute priority and correctly overrides `maxWidth`
+  - Improved conditional logic to prevent conflicts between the two attributes
+
+### Changed
+- **ModalCall**: Auto-sync `maxWidthClass` when using `maxWidth()` method
+  - When calling `->maxWidth('lg')`, automatically sets `maxWidthClass` to `'max-w-lg'`
+  - For predefined sizes (xs, sm, md, lg, xl, 2xl, etc.), both attributes are synchronized
+  - For custom values (600px, 80%, etc.), `maxWidthClass` is removed to use inline styles
+  - Provides better developer experience with automatic class mapping
+
 ## [1.0.17] - 2026-01-24
 
 ### Fixed

@@ -34,19 +34,22 @@
             @foreach ($components as $id => $component)
                 @php
                     $attrs = $component['modalAttributes'] ?? [];
-                    $maxWidth = $attrs['maxWidth'] ?? 'md';
-
-                    if (isset($widthMap[$maxWidth])) {
-                        $widthClass = $widthMap[$maxWidth];
-                        $customStyle = '';
-                    } else {
-                        $widthClass = '';
-                        $customStyle = "max-width: {$maxWidth};";
-                    }
-
+                    
+                    // Priority 1: maxWidthClass (custom Tailwind class override)
                     if (isset($attrs['maxWidthClass'])) {
                         $widthClass = $attrs['maxWidthClass'];
                         $customStyle = '';
+                    } else {
+                        // Priority 2: maxWidth (predefined or custom value)
+                        $maxWidth = $attrs['maxWidth'] ?? 'md';
+                        
+                        if (isset($widthMap[$maxWidth])) {
+                            $widthClass = $widthMap[$maxWidth];
+                            $customStyle = '';
+                        } else {
+                            $widthClass = '';
+                            $customStyle = "max-width: {$maxWidth};";
+                        }
                     }
                 @endphp
                 <div wire:key="{{ $id }}" x-ref="{{ $id }}" data-modal-id="{{ $id }}"
