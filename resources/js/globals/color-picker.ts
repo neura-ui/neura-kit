@@ -7,6 +7,7 @@ export type NeuraColorPickerOptions = {
     palette?: ColorToken[];
     initialValue?: string | null;
     disabled?: boolean;
+    wireProperty?: string | null;
 };
 
 // Types Alpine pour éviter les erreurs TypeScript
@@ -25,6 +26,7 @@ export function neuraColorPicker({
     palette = [],
     initialValue = null,
     disabled = false,
+    wireProperty = null,
 }: NeuraColorPickerOptions = {}) {
     const safePalette = Array.isArray(palette) ? palette : [];
 
@@ -32,8 +34,10 @@ export function neuraColorPicker({
         // Types Alpine (seront injectés par Alpine.js)
         $refs: {} as AlpineRefs,
         $nextTick: (() => Promise.resolve()) as AlpineContext['$nextTick'],
+        $wire: null as any,
         palette: safePalette,
         isDisabled: disabled,
+        wireProperty: wireProperty,
         open: false,
         query: '',
         token: null as string | null,
@@ -42,11 +46,36 @@ export function neuraColorPicker({
         display: '',
 
         init() {
-            if (initialValue) {
-                this.applyInput(String(initialValue));
+            // Get initial value from wire:model if available
+            let valueToApply = initialValue;
+            
+            if (this.wireProperty && (this as any).$wire) {
+                const wireValue = (this as any).$wire.get(this.wireProperty);
+                if (wireValue) {
+                    valueToApply = wireValue;
+                }
+            } else {
+                // Fallback: check hidden input value
+                const hidden = (this as any).$refs?.hidden as HTMLInputElement | null | undefined;
+                if (hidden?.value) {
+                    valueToApply = hidden.value;
+                }
+            }
+            
+            if (valueToApply) {
+                this.applyInput(String(valueToApply), true); // Skip sync on init
             }
             // S'assurer que la valeur initiale est toujours en hex
             this.ensureHexValue();
+            
+            // Watch for wire:model value changes from Livewire
+            if (this.wireProperty && (this as any).$wire) {
+                (this as any).$watch(() => (this as any).$wire.get(this.wireProperty), (newValue: string | null) => {
+                    if (newValue !== this.hex) {
+                        this.applyInput(newValue, true); // Skip sync to avoid loops
+                    }
+                });
+            }
             
             // Global click handler to close when clicking outside
             const handleClickOutside = (event: MouseEvent) => {
@@ -144,38 +173,38 @@ export function neuraColorPicker({
             return { r, g, b };
         },
 
-        applyToken(token?: string | null) {
+        applyToken(token?: string | null, skipSync = false) {
             const hit = this.findByToken(token);
             if (!hit) return false;
             this.token = hit.token ?? null;
             this.hex = hit.hex;
             this.rgb = this.hexToRgb(hit.hex);
             this.display = hit.token || '';
-            this.syncHidden();
+            if (!skipSync) this.syncHidden();
             return true;
         },
-        applyHex(hex?: string | null) {
+        applyHex(hex?: string | null, skipSync = false) {
             const rgb = this.hexToRgb(hex);
             if (!rgb || !hex) return false;
             this.token = null;
             this.hex = hex;
             this.rgb = rgb;
             this.display = hex.toUpperCase();
-            this.syncHidden();
+            if (!skipSync) this.syncHidden();
             return true;
         },
-        applyRgb(rgb?: { r: number; g: number; b: number } | null) {
+        applyRgb(rgb?: { r: number; g: number; b: number } | null, skipSync = false) {
             if (!rgb) return false;
             const hex = this.rgbToHex(rgb.r, rgb.g, rgb.b);
             this.token = null;
             this.hex = hex;
             this.rgb = rgb;
             this.display = this.rgbToString(rgb);
-            this.syncHidden();
+            if (!skipSync) this.syncHidden();
             return true;
         },
 
-        applyInput(raw?: string | null) {
+        applyInput(raw?: string | null, skipSync = false) {
             if (this.isDisabled) return;
             const str = String(raw ?? '').trim();
             if (!str) {
@@ -183,26 +212,26 @@ export function neuraColorPicker({
                 this.hex = null;
                 this.rgb = null;
                 this.display = '';
-                this.syncHidden();
+                if (!skipSync) this.syncHidden();
                 return;
             }
             // Essayer token d'abord
             const token = this.normalizeToken(str);
-            if (token && this.applyToken(token)) {
+            if (token && this.applyToken(token, skipSync)) {
                 this.ensureHexValue();
-                this.syncHidden();
+                if (!skipSync) this.syncHidden();
                 return;
             }
             // Essayer hex
             const hex = this.parseHex(str);
-            if (hex && this.applyHex(hex)) {
-                this.syncHidden();
+            if (hex && this.applyHex(hex, skipSync)) {
+                if (!skipSync) this.syncHidden();
                 return;
             }
             // Essayer rgb
             const rgb = this.parseRgb(str);
-            if (rgb && this.applyRgb(rgb)) {
-                this.syncHidden();
+            if (rgb && this.applyRgb(rgb, skipSync)) {
+                if (!skipSync) this.syncHidden();
                 return;
             }
             // Valeur invalide : on garde l'affichage mais on vide hex
@@ -210,16 +239,23 @@ export function neuraColorPicker({
             this.token = null;
             this.hex = null;
             this.rgb = null;
-            this.syncHidden();
+            if (!skipSync) this.syncHidden();
         },
 
         syncHidden() {
             // S'assurer qu'on a toujours une valeur hex avant de synchroniser
             this.ensureHexValue();
+            const value = this.hex || '';
+            
+            // Use $wire.set() for Livewire binding
+            if (this.wireProperty && (this as any).$wire) {
+                (this as any).$wire.set(this.wireProperty, value);
+            }
+            
+            // Also update hidden input for form submissions and x-model
             const hidden = (this as any).$refs?.hidden as HTMLInputElement | null | undefined;
             if (hidden) {
-                // Toujours envoyer hex (ou chaîne vide si invalide)
-                hidden.value = this.hex || '';
+                hidden.value = value;
                 hidden.dispatchEvent(new Event('input', { bubbles: true }));
                 hidden.dispatchEvent(new Event('change', { bubbles: true }));
             }

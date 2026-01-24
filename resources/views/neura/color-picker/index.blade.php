@@ -19,6 +19,15 @@
     use Illuminate\Support\Arr;
     use Neura\Kit\Support\PackResolver;
 
+    // Extract wire:model property name
+    $wireModel = null;
+    foreach ($attributes->getAttributes() as $key => $attrValue) {
+        if (str_starts_with($key, 'wire:model')) {
+            $wireModel = $attrValue;
+            break;
+        }
+    }
+
     // Palette Tailwind (subset, mais couvrant l'essentiel)
     $tailwind = [
         // slate
@@ -90,21 +99,21 @@
 @endphp
 
 <div class="w-full {{ $class }}"
-    x-data="neuraColorPicker({ palette: @js($palette), initialValue: @js($value), disabled: @js($disabled) })">
+    x-data="neuraColorPicker({ palette: @js($palette), initialValue: @js($value), disabled: @js($disabled), wireProperty: @js($wireModel) })">
 
     <div class="relative">
         @php
             // Support pour wire:model et x-model
-            $wireModel = $attributes->whereStartsWith('wire:model')->first();
-            $xModel = $attributes->whereStartsWith('x-model')->first();
-            $hasModel = $name || $wireModel || $xModel;
+            $wireModelAttrs = $attributes->whereStartsWith('wire:model');
+            $xModelAttrs = $attributes->whereStartsWith('x-model');
+            $hasModel = $name || $wireModelAttrs->isNotEmpty() || $xModelAttrs->isNotEmpty();
         @endphp
         @if ($hasModel)
             <input 
                 type="hidden" 
                 @if($name) name="{{ $name }}" @endif
-                @if($wireModel) wire:model="{{ $wireModel }}" @endif
-                @if($xModel) x-model="{{ $xModel }}" @endif
+                {{ $wireModelAttrs }}
+                {{ $xModelAttrs }}
                 x-ref="hidden" 
             />
         @endif

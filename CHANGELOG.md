@@ -7,6 +7,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.0.12] - 2026-01-24
+
+### Fixed
+- **Color Picker**: Fixed Livewire `wire:model` binding not working
+  - Added direct integration with `$wire.get()` and `$wire.set()` for proper Livewire synchronization
+  - Initial value from `wire:model` is now correctly displayed
+  - Color changes are synced to Livewire in real-time
+  - Added `$watch` to detect external Livewire value changes
+  - Fixed wire:model attributes not being passed correctly to hidden input
+
 ## [1.0.11] - 2026-01-24
 
 ### Added
