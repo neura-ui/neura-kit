@@ -17,6 +17,7 @@ interface AlpineRefs {
 
 interface AlpineContext {
     $refs: AlpineRefs;
+    $el: HTMLElement;
     $nextTick: (callback?: () => void) => Promise<void>;
 }
 
@@ -46,6 +47,29 @@ export function neuraColorPicker({
             }
             // S'assurer que la valeur initiale est toujours en hex
             this.ensureHexValue();
+            
+            // Global click handler to close when clicking outside
+            const handleClickOutside = (event: MouseEvent) => {
+                if (!this.open) return;
+                
+                const target = event.target as HTMLElement;
+                if (!target) return;
+                
+                const el = (this as any).$el as HTMLElement | undefined;
+                if (!el) return;
+                
+                // Check if click is inside this component
+                if (!el.contains(target)) {
+                    this.open = false;
+                }
+            };
+            
+            document.addEventListener('click', handleClickOutside, true);
+            
+            // Cleanup on destroy
+            (this as any).__cleanup = () => {
+                document.removeEventListener('click', handleClickOutside, true);
+            };
         },
 
         // Force la conversion en hex si on a un token ou rgb mais pas de hex

@@ -66,6 +66,26 @@
     },
 
     init() {
+        // Global click handler to close when clicking outside
+        const handleClickOutside = (event) => {
+            if (!this.open) return;
+            
+            const target = event.target;
+            if (!target) return;
+            
+            // Check if click is inside this component
+            if (!this.$el.contains(target)) {
+                this.close();
+            }
+        };
+        
+        document.addEventListener('click', handleClickOutside, true);
+        
+        // Store cleanup function
+        this.__cleanup = () => {
+            document.removeEventListener('click', handleClickOutside, true);
+        };
+        
         // Initial options build with a small delay to ensure DOM is ready
         this.$nextTick(() => {
             setTimeout(() => {

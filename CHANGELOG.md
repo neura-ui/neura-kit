@@ -7,6 +7,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.0.9] - 2026-01-24
+
+### Fixed
+- **Select Component**: Fixed click-away behavior not closing the dropdown
+  - Added global click handler for reliable close on outside click
+  - Menu now properly closes when clicking anywhere outside the component
+  - Improved cleanup of event listeners to prevent memory leaks
+
+- **Color Picker**: Fixed click-away behavior not closing the popup
+  - Replaced unreliable `@click.away` directive with global click handler
+  - Menu now properly closes when clicking outside the component
+  - Added proper event listener cleanup on component destroy
+
 ## [1.0.8] - 2026-01-23
 
 ### Added

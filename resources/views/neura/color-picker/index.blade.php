@@ -90,8 +90,7 @@
 @endphp
 
 <div class="w-full {{ $class }}"
-    x-data="neuraColorPicker({ palette: @js($palette), initialValue: @js($value), disabled: @js($disabled) })"
-    @click.away="open = false">
+    x-data="neuraColorPicker({ palette: @js($palette), initialValue: @js($value), disabled: @js($disabled) })">
 
     <div class="relative">
         @php
