@@ -7,6 +7,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.0.27] - 2026-01-25
+
+### Changed
+- **Dropzone Component**: Complete UI modernization
+  - Redesigned borders with subtle ring effects on error and drag states
+  - Larger, rounded icon container (14x14) with smooth hover animations
+  - Icon scales up and changes color on drag/error/hover
+  - Dynamic text colors that adapt to component state
+  - "Drop files here" message appears during drag
+  - Modernized file preview cards with status-based styling (success=green, error=red)
+  - Smoother progress bar with rounded corners and better transitions
+  - Error messages now display inline in preview cards
+  - Remove button style adapts to file status
+  - Overall cleaner, more polished modern appearance
+
 ## [1.0.26] - 2026-01-25
 
 ### Fixed
