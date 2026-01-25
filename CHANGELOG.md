@@ -6,6 +6,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.31] - 2026-01-25
+
+### Fixed
+- **ModalManager**: Fixed `closeModal()` not properly going back to previous modal in stack
+  - Modal components are now destroyed by default when closed (`destroyOnClose` defaults to `true`)
+  - Added `closeModal` to ModalManager listeners to receive events from modal components
+  - Fixed logic to correctly activate the previous modal when closing current one
+
+### Added
+- **ModalComponent**: Added `goBack()` method for clearer semantics when navigating modal stack
+  - `$this->goBack()` - Closes current modal and returns to previous one
+  - Forces destruction to ensure clean state transition
+- **JavaScript**: Added `NeuraKitModal.goBack()` method
+  - Can be called from anywhere: `NeuraKitModal.goBack()`
+
+### Usage Example
+```php
+// In your modal component
+class EditUserModal extends ModalComponent
+{
+    public function save()
+    {
+        // Save logic...
+        
+        // Go back to the previous modal
+        $this->goBack();
+    }
+    
+    public function cancel()
+    {
+        // Simply go back without saving
+        $this->goBack();
+    }
+}
+```
+
+```javascript
+// From JavaScript
+NeuraKitModal.goBack();
+```
+
 ## [1.0.30] - 2026-01-25
 
 ### Changed

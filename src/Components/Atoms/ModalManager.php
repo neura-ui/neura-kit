@@ -210,6 +210,7 @@ class ModalManager extends Component
     public function getListeners(): array
     {
         return [
+            'closeModal',
             'destroyComponent',
         ];
     }
@@ -223,41 +224,60 @@ class ModalManager extends Component
         }
 
         $keys = array_keys($this->components);
+        $currentId = $this->activeComponent;
 
         if ($skipPreviousModals > 0) {
-            $currentIndex = array_search($this->activeComponent, $keys);
+            $currentIndex = array_search($currentId, $keys);
 
             if ($currentIndex !== false) {
                 $startIndex = max(0, $currentIndex - $skipPreviousModals);
                 $toRemove = array_slice($keys, $startIndex, $skipPreviousModals + 1);
 
-                if ($destroySkipped || $force) {
-                    foreach ($toRemove as $id) {
-                        $this->destroyComponent($id);
-                    }
+                // Always remove skipped modals when going back
+                foreach ($toRemove as $id) {
+                    $this->destroyComponent($id);
                 }
 
-                $remaining = array_diff($keys, $toRemove);
+                $remaining = array_keys($this->components);
                 $this->activeComponent = $remaining ? end($remaining) : null;
             }
         } else {
-            $attrs = $this->components[$this->activeComponent]['modalAttributes'] ?? [];
+            // Always destroy the current modal when closing
+            // This ensures we go back to the previous modal properly
+            $attrs = $this->components[$currentId]['modalAttributes'] ?? [];
+            $shouldDestroy = $force || ($attrs['destroyOnClose'] ?? true);
 
-            if ($force || ($attrs['destroyOnClose'] ?? false)) {
-                $this->destroyComponent($this->activeComponent);
+            if ($shouldDestroy) {
+                $this->destroyComponent($currentId);
             }
 
+            // Get remaining components AFTER destroying
             $remaining = array_keys($this->components);
-            $this->activeComponent = $remaining ? end($remaining) : null;
+            
+            // Find the previous modal (exclude current if not destroyed)
+            if (!$shouldDestroy) {
+                // If not destroyed, find the modal before the current one
+                $currentIndex = array_search($currentId, $remaining);
+                if ($currentIndex !== false && $currentIndex > 0) {
+                    $this->activeComponent = $remaining[$currentIndex - 1];
+                } else {
+                    // No previous modal, close everything
+                    $this->activeComponent = null;
+                }
+            } else {
+                // If destroyed, just take the last remaining
+                $this->activeComponent = $remaining ? end($remaining) : null;
+            }
         }
 
-        if (empty($this->components)) {
+        if (empty($this->components) || $this->activeComponent === null) {
             $this->resetState();
+            $this->dispatch('closeModal');
         } else {
-            $this->dispatch('activeModalComponentChanged', id: $this->activeComponent);
+            $this->dispatch('activeModalComponentChanged', id: $this->activeComponent, modalAttributes: $this->components[$this->activeComponent]['modalAttributes'] ?? []);
+            // Don't dispatch closeModal when going back to previous modal
+            // The modal stays open, just with a different component
         }
-
-        $this->dispatch('closeModal');
     }
 
     public function render(): View

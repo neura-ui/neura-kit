@@ -10,6 +10,8 @@ interface ModalComponent
 
     public function closeModalWithEvents(array $events): void;
 
+    public function goBack(): void;
+
     public static function modalMaxWidth(): string;
 
     public static function modalMaxWidthClass(): string;

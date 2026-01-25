@@ -123,6 +123,14 @@ if (!isBrowser) {
                 // Livewire sync
                 ModalManagerCache.get()?.call('closeModal', force, skip, destroy);
             },
+
+            /**
+             * Go back to the previous modal in the stack.
+             * Destroys the current modal and shows the previous one.
+             */
+            goBack() {
+                this.close(true, 0, false);
+            },
         };
     }
 

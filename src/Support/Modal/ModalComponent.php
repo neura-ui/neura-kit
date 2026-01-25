@@ -78,6 +78,16 @@ abstract class ModalComponent extends Component implements ModalComponentContrac
         );
     }
 
+    /**
+     * Go back to the previous modal in the stack.
+     * Alias for closeModal() with destroy enabled.
+     */
+    public function goBack(): void
+    {
+        $this->forceClose = true;
+        $this->closeModal();
+    }
+
     public function closeModalWithEvents(array $events): void
     {
         $this->emitModalEvents($events);
@@ -142,7 +152,7 @@ abstract class ModalComponent extends Component implements ModalComponentContrac
 
     public static function destroyOnClose(): bool
     {
-        return (bool) (static::getDefaults()['destroy_on_close'] ?? false);
+        return (bool) (static::getDefaults()['destroy_on_close'] ?? true);
     }
 
     private function emitModalEvents(array $events): void
