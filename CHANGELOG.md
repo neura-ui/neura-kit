@@ -7,6 +7,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.0.22] - 2026-01-25
+
+### Fixed
+- **Select Component**: Fixed bug when adding custom classes
+  - Component props (wire:model, x-model, value, etc.) were being passed to the root div element
+  - Now using `whereDoesntStartWith()` to exclude component props from being rendered as HTML attributes
+  - Custom classes can now be added without conflicts
+  - All component-specific props are properly filtered out
+
 ## [1.0.21] - 2026-01-25
 
 ### Added
