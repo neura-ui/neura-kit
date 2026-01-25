@@ -6,7 +6,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.30] - 2026-01-25
+
+### Changed
+- **Structure**: Improved organization of dropzone-related classes
+  - Moved `DropzoneFiles` from `src/Support/` to `src/Support/Dropzone/`
+  - Updated namespace from `Neura\Kit\Support` to `Neura\Kit\Support\Dropzone`
+  - Better organization following the same pattern as other features (Modal, Table, Toast, etc.)
+  - **Breaking**: Update imports from `use Neura\Kit\Support\DropzoneFiles;` to `use Neura\Kit\Support\Dropzone\DropzoneFiles;`
+
 ## [1.0.29] - 2026-01-25
+
+### Changed
+- **Structure**: Moved `WithDropzone` trait from `src/Traits/` to `src/Concerns/` to follow project conventions
+  - Updated namespace from `Neura\Kit\Traits` to `Neura\Kit\Concerns`
+  - All traits are now consistently located in the `Concerns` folder
+  - **Breaking**: Update imports from `use Neura\Kit\Traits\WithDropzone;` to `use Neura\Kit\Concerns\WithDropzone;`
 
 ### Added
 - **WithDropzone Trait**: New trait for Livewire components to simplify dropzone file handling
@@ -28,7 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Usage Example
 ```php
-use Neura\Kit\Traits\WithDropzone;
+use Neura\Kit\Concerns\WithDropzone;
 
 class DocumentUploader extends Component
 {

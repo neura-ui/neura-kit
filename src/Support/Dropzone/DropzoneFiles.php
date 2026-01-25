@@ -1,9 +1,10 @@
 <?php
 
-namespace Neura\Kit\Support;
+namespace Neura\Kit\Support\Dropzone;
 
 use Illuminate\Support\Collection;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use Neura\Kit\Support\ChunkedTemporaryFile;
 
 /**
  * Collection de fichiers uploadés via le dropzone

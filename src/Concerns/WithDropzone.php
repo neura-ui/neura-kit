@@ -1,9 +1,9 @@
 <?php
 
-namespace Neura\Kit\Traits;
+namespace Neura\Kit\Concerns;
 
 use Neura\Kit\Support\ChunkedTemporaryFile;
-use Neura\Kit\Support\DropzoneFiles;
+use Neura\Kit\Support\Dropzone\DropzoneFiles;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 /**
