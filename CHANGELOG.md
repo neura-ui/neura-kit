@@ -7,6 +7,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.0.20] - 2026-01-25
+
+### Added
+- **Card Component**: Enhanced with multiple variants and styling options
+  - New `variant` prop: `default`, `outline`, `soft`, `elevated`, `flat`, `bordered`, `ghost`
+  - New `color` prop: `primary`, `secondary`, `success`, `danger`, `warning`, `info`
+  - New `padding` prop: `none`, `xs`, `sm`, `normal`, `md`, `lg`, `xl`
+  - New `shadow` prop: `none`, `xs`, `sm`, `md`, `lg`, `xl`, `2xl`, `inner`
+  - New `rounded` prop: `none`, `sm`, `md`, `lg`, `xl`, `2xl`, `3xl`, `full`
+  - Extended `size` prop: Added `3xl`, `4xl`, `5xl`, `6xl`, `7xl` options
+  - Color variants work seamlessly with all style variants
+  - All properties can be combined for custom card designs
+  - Comprehensive documentation with examples for all properties
+
 ## [1.0.19] - 2026-01-24
 
 ### Changed
