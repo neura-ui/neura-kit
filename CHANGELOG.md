@@ -7,6 +7,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.0.26] - 2026-01-25
+
+### Fixed
+- **Dropzone Component**: Error state now fully reactive to Livewire validation
+  - Error styling updates dynamically when validation changes
+  - Added Livewire error watcher (`$wire.errors`)
+  - Dropzone border and background properly display danger colors on validation errors
+  - Works correctly with `wire:model` validation
+
 ## [1.0.25] - 2026-01-25
 
 ### Added
