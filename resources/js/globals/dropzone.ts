@@ -218,6 +218,10 @@ export function neuraDropzone(options: DropzoneOptions = {}) {
         uploadHeaders: config.uploadHeaders,
         fieldName: config.name,
 
+        get hasError() {
+            return this.previews.some(p => p.status === 'error');
+        },
+
         init() {
             // Préparer l'état initial
             this.previews = [];

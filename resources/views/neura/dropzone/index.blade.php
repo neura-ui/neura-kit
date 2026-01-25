@@ -42,10 +42,12 @@
 
     <div x-on:dragover="handleDragOver" x-on:dragleave="handleDragLeave" x-on:drop="handleDrop"
         x-on:click="triggerFileInput"
-        :class="isDragging ? 'border-primary-500 bg-primary-50 dark:border-primary-400 dark:bg-primary-950/50 shadow-sm' :
-            'border-primary-200 dark:border-primary-800'"
-        class="relative border-2 border-dashed rounded-xl p-8 transition-all duration-150 cursor-pointer hover:border-primary-400 dark:hover:border-primary-600 hover:bg-primary-50/50 dark:hover:bg-primary-950/30"
-        :class="{ 'border-danger-500 dark:border-danger-400': @js($invalid) }">
+        class="relative border-2 border-dashed rounded-xl p-8 transition-all duration-150 cursor-pointer"
+        :class="{
+            'border-danger-500 dark:border-danger-400 bg-danger-50/50 dark:bg-danger-950/20': hasError || @js($invalid),
+            'border-primary-500 bg-primary-50 dark:border-primary-400 dark:bg-primary-950/50 shadow-sm': isDragging && !hasError,
+            'border-primary-200 dark:border-primary-800 hover:border-primary-400 dark:hover:border-primary-600 hover:bg-primary-50/50 dark:hover:bg-primary-950/30': !isDragging && !hasError
+        }">
         <input x-ref="fileInput" type="file" :accept="accept" :multiple="multiple"
             x-on:change="handleFileSelect" class="hidden"
             @if ($name) name="{{ $name }}" @endif
