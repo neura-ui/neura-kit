@@ -74,6 +74,22 @@
     "rowsSelected": "rows selected",
     "selectAllRows": "Select all {count} rows",
     "allRowsSelected": "All {count} rows are selected",
-    "deselectAll": "Deselect all"
+    "deselectAll": "Deselect all",
+    "badRequest": "Bad Request",
+    "unauthorized": "Unauthorized",
+    "forbidden": "Forbidden",
+    "notFound": "Not Found",
+    "fileTooLarge": "File too large - File size exceeds the allowed limit",
+    "invalidData": "Invalid Data",
+    "tooManyRequests": "Too Many Requests",
+    "serverError": "Server Error",
+    "badGateway": "Bad Gateway",
+    "serviceUnavailable": "Service Unavailable",
+    "gatewayTimeout": "Gateway Timeout",
+    "httpError": "HTTP Error {code}",
+    "uploadError": "Upload error ({code})",
+    "networkError": "Network error - Unable to connect to server",
+    "uploadCancelled": "Upload cancelled",
+    "uploadFailed": "Upload failed"
 }
 

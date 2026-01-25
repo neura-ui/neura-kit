@@ -6,6 +6,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.27] - 2026-01-25
+
+### Fixed
+- **Dropzone Component**: Fixed validation error state not updating reactively
+  - Changed `invalid` from a static property to a computed getter
+  - Now automatically reacts to Livewire validation state changes
+  - Border color updates immediately when validation runs
+  - Properly detects errors for both single fields and array fields (e.g., `documents.*`, `documents.0`)
+  - No longer requires manual watchers or effects
+
+### Changed
+- **Dropzone Component**: Internationalization improvements
+  - All user-facing text now uses the translation system (`window.t`)
+  - Error messages are translatable (HTTP errors, network errors, upload failures)
+  - Status messages support localization
+  - Fallback to English if translations are not available
+  - Added 14 new translation keys for better i18n support
+
+### Technical
+- Refactored `invalid` property to use getter pattern for reactivity
+- Added `_invalid` private property to store initial validation state
+- Improved error message extraction with translation support
+- Fixed operator precedence issue with `||` and `??` operators
 
 ## [1.0.26] - 2026-01-25
 

@@ -39,7 +39,7 @@ function uid() {
         return crypto.randomUUID();
     }
     
-    // Fallback pour générer un UUID v4 valide
+    // Fallback to generate a valid UUID v4
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
         const r = Math.random() * 16 | 0;
         const v = c === 'x' ? r : (r & 0x3 | 0x8);
@@ -90,24 +90,24 @@ function extractErrorMessage(responseText: string, statusCode: number): string {
 
         // Common HTTP status code messages
         const statusMessages: Record<number, string> = {
-            400: 'Requête invalide',
-            401: 'Non autorisé',
-            403: 'Accès interdit',
-            404: 'Ressource non trouvée',
-            413: 'Fichier trop volumineux - La taille du fichier dépasse la limite autorisée',
-            422: 'Données invalides',
-            429: 'Trop de requêtes',
-            500: 'Erreur serveur',
-            502: 'Passerelle invalide',
-            503: 'Service indisponible',
-            504: 'Délai d\'attente dépassé',
+            400: window.t?.('badRequest') ?? 'Bad Request',
+            401: window.t?.('unauthorized') ?? 'Unauthorized',
+            403: window.t?.('forbidden') ?? 'Forbidden',
+            404: window.t?.('notFound') ?? 'Not Found',
+            413: window.t?.('fileTooLarge') ?? 'File too large - File size exceeds the allowed limit',
+            422: window.t?.('invalidData') ?? 'Invalid Data',
+            429: window.t?.('tooManyRequests') ?? 'Too Many Requests',
+            500: window.t?.('serverError') ?? 'Server Error',
+            502: window.t?.('badGateway') ?? 'Bad Gateway',
+            503: window.t?.('serviceUnavailable') ?? 'Service Unavailable',
+            504: window.t?.('gatewayTimeout') ?? 'Gateway Timeout',
         };
 
         if (statusMessages[statusCode]) {
             return statusMessages[statusCode];
         }
 
-        return `Erreur HTTP ${statusCode}`;
+        return window.t?.('httpError', { code: statusCode.toString() }) ?? `HTTP Error ${statusCode}`;
     }
 
     // If it's plain text and not too long, use it
@@ -116,7 +116,7 @@ function extractErrorMessage(responseText: string, statusCode: number): string {
     }
 
     // Fallback
-    return `Erreur d'upload (${statusCode})`;
+    return window.t?.('uploadError', { code: statusCode.toString() }) ?? `Upload error (${statusCode})`;
 }
 
 async function uploadInChunks(
@@ -153,7 +153,7 @@ async function uploadInChunks(
         formData.append('uuid', fileUuid);
         if (name) formData.append('field', name);
 
-        // Utilise XHR pour avoir une progression réelle (fetch ne donne pas d'upload progress)
+        // Use XHR to get real upload progress (fetch doesn't provide upload progress)
         await new Promise<void>((resolve, reject) => {
             const xhr = new XMLHttpRequest();
             xhr.open('POST', uploadUrl, true);
@@ -175,11 +175,11 @@ async function uploadInChunks(
 
             xhr.onload = () => {
                 if (xhr.status >= 200 && xhr.status < 300) {
-                    // chunk terminé
+                    // chunk complete
                     const overall = ((index + 1) / totalChunks) * 100;
                     onProgress(Math.round(overall));
                     
-                    // Stocker la réponse (le dernier chunk contient les métadonnées)
+                    // Store the response (last chunk contains metadata)
                     try {
                         lastResponse = JSON.parse(xhr.responseText);
                     } catch {
@@ -195,8 +195,8 @@ async function uploadInChunks(
                 reject(new Error(errorMessage));
             };
 
-            xhr.onerror = () => reject(new Error('Erreur réseau - Impossible de se connecter au serveur'));
-            xhr.onabort = () => reject(new Error('Upload annulé'));
+            xhr.onerror = () => reject(new Error(window.t?.('networkError') ?? 'Network error - Unable to connect to server'));
+            xhr.onabort = () => reject(new Error(window.t?.('uploadCancelled') ?? 'Upload cancelled'));
 
             xhr.send(formData);
         });
@@ -212,7 +212,7 @@ export function neuraDropzone(options: DropzoneOptions = {}) {
         files: [] as File[],
         previews: [] as DropzonePreview[],
         isDragging: false,
-        invalid: config.invalid,
+        _invalid: config.invalid, // Store initial value privately
         accept: config.accept,
         maxSize: config.maxSizeBytes,
         multiple: config.multiple,
@@ -221,20 +221,26 @@ export function neuraDropzone(options: DropzoneOptions = {}) {
         uploadHeaders: config.uploadHeaders,
         fieldName: config.name,
 
+        // Make invalid a computed property that reacts to Livewire errors
+        get invalid() {
+            if (this.fieldName && (this as any).$wire?.errors) {
+                const errors = (this as any).$wire.errors;
+                // Check if there are any errors for this field or nested fields
+                return Object.keys(errors).some((key: string) => 
+                    key === this.fieldName || 
+                    key.startsWith(this.fieldName + '.')
+                );
+            }
+            return this._invalid;
+        },
+
         get hasError() {
-            return this.previews.some(p => p.status === 'error');
+            return this.previews.some(p => p.status === 'error') || this.invalid;
         },
 
         init() {
-            // Préparer l'état initial
+            // Initialize state
             this.previews = [];
-            
-            // Watch for Livewire validation errors
-            if (this.fieldName && (this as any).$wire) {
-                (this as any).$watch('$wire.errors.' + this.fieldName, (value: any) => {
-                    this.invalid = value && value.length > 0;
-                });
-            }
         },
 
         triggerFileInput() {
@@ -275,7 +281,7 @@ export function neuraDropzone(options: DropzoneOptions = {}) {
                             window.t?.('fileExceedsMaxSize', {
                                 fileName: file.name,
                                 maxSize: Math.round(this.maxSize / 1024 / 1024).toString(),
-                            }) ?? `Le fichier ${file.name} dépasse la taille max`,
+                            }) ?? `File ${file.name} exceeds maximum size`,
                         duration: 5000,
                     });
                     return false;
@@ -362,10 +368,10 @@ export function neuraDropzone(options: DropzoneOptions = {}) {
                     file, 
                     index,
                     uuid: this.previews[index]?.uuid,
-                    data: response?.data, // Inclut uuid, filename, path, size, mime du backend
+                    data: response?.data, // Includes uuid, filename, path, size, mime from backend
                 });
             } catch (error: any) {
-                this.setStatus(index, 'error', error?.message || 'Échec de l\'upload');
+                this.setStatus(index, 'error', error?.message || (window.t?.('uploadFailed') ?? 'Upload failed'));
                 dispatch?.('upload:error', { file, index, error });
             } finally {
                 const currentPreview = this.previews[index];
@@ -416,5 +422,3 @@ export function neuraDropzone(options: DropzoneOptions = {}) {
 if (typeof window !== 'undefined') {
     (window as any).neuraDropzone = neuraDropzone;
 }
-
-// Type déjà déclaré dans globals/types.ts, pas besoin de re-déclarer ici
