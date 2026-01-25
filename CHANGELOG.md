@@ -7,6 +7,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.0.21] - 2026-01-25
+
+### Added
+- **Select Component**: Added `value` prop for default option selection
+  - New `value` prop allows setting a default selected option without `wire:model` or `x-model`
+  - Works for both single and multiple selects
+  - For single selects: pass a string value (e.g., `value="option2"`)
+  - For multiple selects: pass an array of values (e.g., `:value="['option1', 'option3']"`)
+  - Default value is used as fallback when no value is set in `wire:model` or `x-model`
+  - Updated documentation with examples for default value usage
+
 ## [1.0.20] - 2026-01-25
 
 ### Added

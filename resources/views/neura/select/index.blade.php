@@ -12,6 +12,7 @@
     'iconAfter' => 'chevron-up-down',
     'invalid' => null,
     'triggerClass' => null,
+    'value' => null,
 ])
 
 @php
@@ -38,20 +39,43 @@
     searchPlaceholder: @js($searchPlaceholder ?? ucfirst(neura_trans('search'))),
     placeholder: @js($placeholder ?? ucfirst(neura_trans('select'))),
     wireProperty: @js($wireModel),
+    defaultValue: @js($value),
     // FIX: Initialize internal state for x-model
-    _internalState: @js($multiple ? [] : null),
+    _internalState: @js($multiple ? (is_array($value) ? $value : ($value !== null ? [$value] : [])) : $value),
 
     get state() {
         // Check if we have a wire:model property
         if (this.wireProperty && this.$wire) {
             const value = this.$wire.get(this.wireProperty);
             if (this.isMultiple) {
-                return Array.isArray(value) ? value : (value ? [value] : []);
+                // For multiple, return array if exists, otherwise use default value
+                if (Array.isArray(value) && value.length > 0) {
+                    return value;
+                }
+                if (value && !Array.isArray(value)) {
+                    return [value];
+                }
+                // Use default value if provided
+                if (this.defaultValue !== null && this.defaultValue !== undefined) {
+                    return Array.isArray(this.defaultValue) ? this.defaultValue : [this.defaultValue];
+                }
+                return [];
             }
-            return value ?? null;
+            // If wire model has a value, use it; otherwise use default value
+            return value !== null && value !== undefined ? value : (this.defaultValue ?? null);
         }
 
         // FIX: Fall back to internal state for x-model binding
+        // If internal state is null/undefined and we have a default value, use it
+        if (this._internalState === null || this._internalState === undefined) {
+            if (this.isMultiple) {
+                if (this.defaultValue !== null && this.defaultValue !== undefined) {
+                    return Array.isArray(this.defaultValue) ? this.defaultValue : [this.defaultValue];
+                }
+                return [];
+            }
+            return this.defaultValue ?? null;
+        }
         return this._internalState;
     },
 
