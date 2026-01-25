@@ -7,6 +7,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.0.23] - 2026-01-25
+
+### Fixed
+- **Select Component**: Fixed default value not being detected when passed as HTML attribute
+  - When `value` was passed as HTML attribute (e.g., `value="{{ Auth::user()->company_id }}"`), it wasn't being extracted correctly
+  - Now extracts value from `$attributes->get('value')` before filtering attributes
+  - Default value now works correctly whether passed as Blade prop (`:value="..."`) or HTML attribute (`value="..."`)
+  - Fixes issue where adding custom classes would break default value selection
+
 ## [1.0.22] - 2026-01-25
 
 ### Fixed

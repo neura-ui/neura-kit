@@ -16,6 +16,9 @@
 ])
 
 @php
+    // Extract value from attributes if passed as HTML attribute (e.g., value="{{ ... }}")
+    $defaultValue = $value ?? $attributes->get('value');
+    
     $wireModel = null;
     foreach ($attributes->getAttributes() as $key => $value) {
         if (str_starts_with($key, 'wire:model')) {
@@ -39,9 +42,9 @@
     searchPlaceholder: @js($searchPlaceholder ?? ucfirst(neura_trans('search'))),
     placeholder: @js($placeholder ?? ucfirst(neura_trans('select'))),
     wireProperty: @js($wireModel),
-    defaultValue: @js($value),
+    defaultValue: @js($defaultValue),
     // FIX: Initialize internal state for x-model
-    _internalState: @js($multiple ? (is_array($value) ? $value : ($value !== null ? [$value] : [])) : $value),
+    _internalState: @js($multiple ? (is_array($defaultValue) ? $defaultValue : ($defaultValue !== null ? [$defaultValue] : [])) : $defaultValue),
 
     get state() {
         // Check if we have a wire:model property
