@@ -7,6 +7,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.0.24] - 2026-01-25
+
+### Added
+- **Spinner Component**: New loading spinner component with multiple variants and styles
+  - 7 variants: `default`, `ring`, `dual-ring`, `dots`, `pulse`, `bars`, `square`
+  - 7 sizes: `xs`, `sm`, `md`, `lg`, `xl`, `2xl`, `3xl`
+  - 9 colors: `primary`, `secondary`, `success`, `danger`, `warning`, `info`, `white`, `black`, `current`
+  - Labels with 4 positions: `top`, `bottom`, `left`, `right`
+  - 3 animation speeds: `slow`, `normal`, `fast`
+  - Comprehensive documentation with use case examples
+
+- **Progress Component**: New progress bar component for showing completion status
+  - 3 variants: `default`, `soft`, `bordered`
+  - 6 sizes: `xs`, `sm`, `md`, `lg`, `xl`, `2xl`
+  - 10 colors including 5 gradient options
+  - Value display with 3 positions: `top`, `bottom`, `right`
+  - Labels for describing progress
+  - 5 border radius options: `none`, `sm`, `md`, `lg`, `full`
+  - Animated transitions
+  - Striped pattern option
+  - Indeterminate mode for unknown progress
+  - Comprehensive documentation with use case examples
+
 ## [1.0.23] - 2026-01-25
 
 ### Fixed
