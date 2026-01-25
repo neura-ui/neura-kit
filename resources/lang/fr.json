@@ -90,5 +90,11 @@
     "uploadError": "Erreur de téléversement ({code})",
     "networkError": "Erreur réseau - Impossible de se connecter au serveur",
     "uploadCancelled": "Téléversement annulé",
-    "uploadFailed": "Échec du téléversement"
+    "uploadFailed": "Échec du téléversement",
+    "dropFilesHere": "Déposez les fichiers ici",
+    "uploading": "Téléversement...",
+    "complete": "Terminé",
+    "failed": "Échoué",
+    "pending": "En attente",
+    "invalidFileType": "Type de fichier invalide : {fileName}"
 }

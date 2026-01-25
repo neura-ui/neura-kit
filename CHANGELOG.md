@@ -6,6 +6,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.28] - 2026-01-25
+
+### Fixed
+- **Dropzone Component**: Fixed Livewire validation error state not displaying correctly
+  - Now uses hybrid Blade + Alpine approach for reliable error state detection
+  - Blade `@class` directive applies error styles during server-side render
+  - Alpine `:class` handles dynamic states (dragging, client-side errors)
+  - Error state (red border, background, icon) now shows immediately after Livewire validation
+  - Works correctly with `wire:model` and array validation (`documents.*`)
+
+### Changed
+- **Dropzone Component**: Improved error state styling architecture
+  - Static error classes from Blade using `$errors->has()` for server-side detection
+  - Dynamic error classes from Alpine for client-side state management
+  - Uses CSS `!important` modifiers to ensure Alpine classes override Blade classes when needed
+
+### Added
+- **Translations**: Added French translations for dropzone component
+  - `dropFilesHere`: "Déposez les fichiers ici"
+  - `uploading`: "Téléversement..."
+  - `complete`: "Terminé"
+  - `failed`: "Échoué"
+  - `pending`: "En attente"
+  - `invalidFileType`: "Type de fichier invalide"
+
+### Technical
+- Refactored dropzone template to use `@class` Blade directive for conditional classes
+- Added `$isInvalid` computed variable in Blade for cleaner error detection
+- Simplified JavaScript validation sync logic
+- Removed debug logging from production code
+
 ## [1.0.27] - 2026-01-25
 
 ### Fixed

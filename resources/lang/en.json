@@ -90,6 +90,12 @@
     "uploadError": "Upload error ({code})",
     "networkError": "Network error - Unable to connect to server",
     "uploadCancelled": "Upload cancelled",
-    "uploadFailed": "Upload failed"
+    "uploadFailed": "Upload failed",
+    "dropFilesHere": "Drop files here",
+    "uploading": "Uploading...",
+    "complete": "Complete",
+    "failed": "Failed",
+    "pending": "Pending",
+    "invalidFileType": "Invalid file type: {fileName}"
 }
 
