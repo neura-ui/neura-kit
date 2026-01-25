@@ -27,6 +27,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Alpine.js initialization issues with proper event listener registration
+- **Dropzone Component**: Error state styling now properly displays when validation fails
+  - Added reactive `hasError` computed property
+  - Danger border and background colors now show when files have errors
+  - Fixed static validation state not updating dynamically
 
 ## [1.0.24] - 2026-01-25
 
