@@ -10,11 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.26] - 2026-01-25
 
 ### Fixed
-- **Dropzone Component**: Error state now fully reactive to Livewire validation
-  - Error styling updates dynamically when validation changes
-  - Added Livewire error watcher (`$wire.errors`)
-  - Dropzone border and background properly display danger colors on validation errors
-  - Works correctly with `wire:model` validation
+- **Dropzone Component**: Complete fix for validation error display
+  - Properly extracts field name from `wire:model` attribute
+  - Checks for array validation errors (e.g., `documents`, `documents.*`, `documents.0`)
+  - Uses `red-` colors instead of `danger-` for proper Tailwind compatibility
+  - Visual feedback on error: red border, red background, red icon
+  - Icon container and upload icon change to red on validation error
+  - Works correctly with Livewire validation for single and multiple file uploads
 
 ## [1.0.25] - 2026-01-25
 
