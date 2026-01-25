@@ -7,6 +7,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.0.25] - 2026-01-25
+
+### Added
+- **Tree View Component**: Hierarchical tree component for displaying folders and documents
+  - 4 variants: `default`, `minimal`, `bordered`, `filled`
+  - 3 sizes: `sm`, `md`, `lg`
+  - 6 colors: `primary`, `secondary`, `success`, `danger`, `warning`, `info`
+  - Drag and drop support for reorganizing items
+  - Single and multi-select with Ctrl/Cmd support
+  - Folders only mode to filter out files
+  - Expand all option
+  - Badge support for counts/status
+  - Custom icons (folder, file, image, code)
+  - Events: `tree-select`, `tree-move`
+  - Comprehensive documentation with examples
+
 ## [1.0.24] - 2026-01-25
 
 ### Added
