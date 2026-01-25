@@ -14,13 +14,24 @@
 ])
 
 @php
-    $invalid ??= $name && $errors->has($name);
     $maxSizeBytes = $maxSize * 1024 * 1024;
     $chunkSizeBytes = $chunkSize * 1024 * 1024;
     
+    // Get wire:model value using Livewire's attribute helpers
+    $wireModelValue = $attributes->whereStartsWith('wire:model')->first();
+    $hasWireModel = $wireModelValue !== null;
+    
     // Utiliser la route intégrée par défaut si uploadUrl n'est pas fourni et qu'on n'utilise pas wire:model
-    $hasWireModel = $attributes->has('wire:model');
     $defaultUploadUrl = !$hasWireModel && $uploadUrl === null ? route('neura-kit.upload.chunks') : $uploadUrl;
+    
+    // Get field name from wire:model or name prop
+    $fieldName = $name ?? $wireModelValue;
+    
+    // Check for validation errors - handle both direct and array errors (documents, documents.*, documents.0, etc.)
+    if ($invalid === null && $fieldName) {
+        $invalid = $errors->has($fieldName) || $errors->has($fieldName . '.*') || collect($errors->keys())->contains(fn($key) => str_starts_with($key, $fieldName . '.'));
+    }
+    $invalid = $invalid ?? false;
 @endphp
 
 <div x-data="neuraDropzone({
@@ -30,7 +41,7 @@
     chunkSize: @js($chunkSizeBytes),
     uploadUrl: @js($defaultUploadUrl),
     uploadHeaders: @js(array_merge(['X-CSRF-TOKEN' => csrf_token()], $uploadHeaders)),
-    name: @js($name),
+    name: @js($fieldName),
     invalid: @js($invalid),
 })" {{ $attributes->class('w-full') }}>
     @if ($label)
@@ -45,19 +56,28 @@
         x-on:click="triggerFileInput"
         class="relative border-2 border-dashed rounded-xl p-8 transition-all duration-150 cursor-pointer"
         :class="{
-            'border-danger-500 dark:border-danger-400 bg-danger-50/50 dark:bg-danger-950/20': hasError || invalid,
+            'border-red-500 dark:border-red-400 bg-red-50/50 dark:bg-red-950/30': hasError || invalid,
             'border-primary-500 bg-primary-50 dark:border-primary-400 dark:bg-primary-950/50 shadow-sm': isDragging && !hasError && !invalid,
-            'border-primary-200 dark:border-primary-800 hover:border-primary-400 dark:hover:border-primary-600 hover:bg-primary-50/50 dark:hover:bg-primary-950/30': !isDragging && !hasError && !invalid
+            'border-neutral-300 dark:border-neutral-700 hover:border-primary-400 dark:hover:border-primary-600 hover:bg-primary-50/50 dark:hover:bg-primary-950/30': !isDragging && !hasError && !invalid
         }">
         <input x-ref="fileInput" type="file" :accept="accept" :multiple="multiple"
             x-on:change="handleFileSelect" class="hidden"
-            @if ($name) name="{{ $name }}" @endif
-            @if ($attributes->has('wire:model')) wire:model="{{ $attributes->get('wire:model') }}" @endif />
+            @if ($fieldName && !$hasWireModel) name="{{ $fieldName }}" @endif
+            @if ($hasWireModel) {{ $attributes->wire('model') }} @endif />
 
         <div class="flex flex-col items-center justify-center text-center space-y-3">
             <div
-                class="w-12 h-12 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center shadow-inner">
-                <neura::icon name="arrow-up-tray" class="w-6 h-6 text-neutral-600 dark:text-neutral-400" />
+                class="w-12 h-12 rounded-full flex items-center justify-center shadow-inner transition-colors"
+                :class="{
+                    'bg-red-100 dark:bg-red-900/30': hasError || invalid,
+                    'bg-neutral-100 dark:bg-neutral-800': !hasError && !invalid
+                }">
+                <neura::icon name="arrow-up-tray" 
+                    class="w-6 h-6 transition-colors"
+                    x-bind:class="{
+                        'text-red-500 dark:text-red-400': hasError || invalid,
+                        'text-neutral-600 dark:text-neutral-400': !hasError && !invalid
+                    }" />
             </div>
 
             <div>
@@ -149,7 +169,7 @@
         </div>
     @endif
 
-    @if ($name)
-        <neura::error :name="$name" />
+    @if ($fieldName)
+        <neura::error :name="$fieldName" />
     @endif
 </div>
