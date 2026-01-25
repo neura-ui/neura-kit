@@ -218,8 +218,7 @@
 </div>
 
 <script>
-if (typeof Alpine !== 'undefined' && !Alpine._neuraTreeRegistered) {
-    Alpine._neuraTreeRegistered = true;
+document.addEventListener('alpine:init', () => {
     Alpine.data('neuraTree', (config) => ({
         items: config.items || [],
         selectable: config.selectable || false,
@@ -465,5 +464,5 @@ if (typeof Alpine !== 'undefined' && !Alpine._neuraTreeRegistered) {
             }
         },
     }));
-}
+});
 </script>
