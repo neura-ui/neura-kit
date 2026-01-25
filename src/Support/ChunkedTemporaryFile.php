@@ -11,41 +11,71 @@ use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 class ChunkedTemporaryFile
 {
     /**
-     * Créer un TemporaryUploadedFile depuis un UUID de chunk upload
+     * Créer un TemporaryUploadedFile depuis un UUID ou un array de données dropzone
      * 
-     * @param string $uuid
+     * @param string|array $data UUID string ou array avec 'uuid' key
      * @return TemporaryUploadedFile|null
      */
-    public static function createFromChunkUpload(string $uuid): ?TemporaryUploadedFile
+    public static function createFromChunkUpload(string|array $data): ?TemporaryUploadedFile
     {
+        // Extraire l'UUID si c'est un array
+        $uuid = is_array($data) ? ($data['uuid'] ?? null) : $data;
+        
+        if (!$uuid) {
+            return null;
+        }
+        
         $disk = config('livewire.temporary_file_upload.disk', 'local');
         $path = "livewire-tmp/{$uuid}";
         $metaPath = "{$path}.meta";
 
-        if (!Storage::disk($disk)->exists($path) || !Storage::disk($disk)->exists($metaPath)) {
+        if (!Storage::disk($disk)->exists($path)) {
             return null;
         }
 
-        $metadata = json_decode(Storage::disk($disk)->get($metaPath), true);
-
-        // Créer un TemporaryUploadedFile compatible Livewire
-        // Le constructeur Livewire prend (path_relatif, disk)
         $tmpFile = new TemporaryUploadedFile($uuid, $disk);
         
         return $tmpFile;
     }
 
     /**
-     * Créer plusieurs TemporaryUploadedFile depuis des UUIDs
+     * Créer plusieurs TemporaryUploadedFile depuis des UUIDs ou arrays de données dropzone
      * 
-     * @param array $uuids
-     * @return array
+     * Accepte:
+     * - Array d'UUIDs: ['uuid1', 'uuid2']
+     * - Array d'arrays dropzone: [['uuid' => 'uuid1', 'filename' => '...'], ...]
+     * 
+     * @param array $items
+     * @return TemporaryUploadedFile[]
      */
-    public static function createMultipleFromChunkUpload(array $uuids): array
+    public static function createMultipleFromChunkUpload(array $items): array
     {
-        return array_filter(array_map(function ($uuid) {
-            return self::createFromChunkUpload($uuid);
-        }, $uuids));
+        return array_values(array_filter(array_map(function ($item) {
+            return self::createFromChunkUpload($item);
+        }, $items)));
+    }
+    
+    /**
+     * Créer un TemporaryUploadedFile depuis les données du dropzone (single file)
+     * Alias pour createFromChunkUpload pour plus de clarté
+     * 
+     * @param array $dropzoneData Array avec 'uuid', 'filename', 'path', 'size', 'mime'
+     * @return TemporaryUploadedFile|null
+     */
+    public static function fromDropzone(array $dropzoneData): ?TemporaryUploadedFile
+    {
+        return self::createFromChunkUpload($dropzoneData);
+    }
+    
+    /**
+     * Créer plusieurs TemporaryUploadedFile depuis les données du dropzone (multiple files)
+     * 
+     * @param array $dropzoneDataArray Array of dropzone data arrays
+     * @return TemporaryUploadedFile[]
+     */
+    public static function fromDropzoneMultiple(array $dropzoneDataArray): array
+    {
+        return self::createMultipleFromChunkUpload($dropzoneDataArray);
     }
 
     /**
@@ -67,7 +97,6 @@ class ChunkedTemporaryFile
         $files = Storage::disk($disk)->files($tmpDir);
 
         foreach ($files as $file) {
-            // Skip les fichiers de métadonnées
             if (str_ends_with($file, '.meta')) {
                 continue;
             }
@@ -79,7 +108,6 @@ class ChunkedTemporaryFile
                 $uploadedAt = $metadata['uploaded_at'] ?? 0;
                 
                 if (now()->timestamp - $uploadedAt > ($olderThanMinutes * 60)) {
-                    // Supprimer le fichier et ses métadonnées
                     Storage::disk($disk)->delete($file);
                     Storage::disk($disk)->delete($metaFile);
                     $count++;

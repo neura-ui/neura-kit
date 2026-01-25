@@ -6,6 +6,52 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.29] - 2026-01-25
+
+### Added
+- **WithDropzone Trait**: New trait for Livewire components to simplify dropzone file handling
+  - `getDropzoneFiles($property)` - Get files as TemporaryUploadedFile collection
+  - `getDropzoneFile($property)` - Get single file as TemporaryUploadedFile
+  - `storeDropzoneFiles($property, $path, $disk)` - Store all files directly
+  - `storeDropzoneFile($property, $path, $disk)` - Store single file directly
+  - `clearDropzone($property)` - Clear dropzone after processing
+
+- **DropzoneFiles Collection**: New collection class extending Laravel Collection
+  - `DropzoneFiles::from($data)` - Create from dropzone data
+  - `storeAll($path, $disk)` - Store all files and return paths
+  - `storeAllAs($path, $disk)` - Store all files with original names
+
+- **ChunkedTemporaryFile**: Improved helper methods
+  - `fromDropzone($data)` - Create from single dropzone data array
+  - `fromDropzoneMultiple($dataArray)` - Create from multiple dropzone data arrays
+  - Now accepts both UUID strings and dropzone data arrays
+
+### Usage Example
+```php
+use Neura\Kit\Traits\WithDropzone;
+
+class DocumentUploader extends Component
+{
+    use WithDropzone;
+    
+    public $documents = [];
+    
+    public function save()
+    {
+        // Store all files directly
+        $paths = $this->storeDropzoneFiles('documents', 'uploads');
+        
+        // Or get files for manual processing
+        $files = $this->getDropzoneFiles('documents');
+        foreach ($files as $file) {
+            $file->store('documents');
+        }
+        
+        $this->clearDropzone('documents');
+    }
+}
+```
+
 ## [1.0.28] - 2026-01-25
 
 ### Fixed
