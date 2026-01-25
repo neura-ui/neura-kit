@@ -12,5 +12,6 @@ import './globals/lottie';
 import './globals/editor';
 import './globals/clipboard';
 import './globals/phone-input';
+import './globals/tree';
 import './components';
 
