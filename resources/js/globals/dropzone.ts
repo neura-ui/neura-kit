@@ -20,6 +20,7 @@ export type DropzoneOptions = {
     uploadUrl?: string | null;
     uploadHeaders?: Record<string, string>;
     name?: string | null;
+    invalid?: boolean;
 };
 
 const defaultOptions: Required<DropzoneOptions> = {
@@ -30,6 +31,7 @@ const defaultOptions: Required<DropzoneOptions> = {
     uploadUrl: null,
     uploadHeaders: {},
     name: null,
+    invalid: false,
 };
 
 function uid() {
@@ -210,6 +212,7 @@ export function neuraDropzone(options: DropzoneOptions = {}) {
         files: [] as File[],
         previews: [] as DropzonePreview[],
         isDragging: false,
+        invalid: config.invalid,
         accept: config.accept,
         maxSize: config.maxSizeBytes,
         multiple: config.multiple,
@@ -225,6 +228,13 @@ export function neuraDropzone(options: DropzoneOptions = {}) {
         init() {
             // Préparer l'état initial
             this.previews = [];
+            
+            // Watch for Livewire validation errors
+            if (this.fieldName && (this as any).$wire) {
+                (this as any).$watch('$wire.errors.' + this.fieldName, (value: any) => {
+                    this.invalid = value && value.length > 0;
+                });
+            }
         },
 
         triggerFileInput() {

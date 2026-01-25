@@ -31,6 +31,7 @@
     uploadUrl: @js($defaultUploadUrl),
     uploadHeaders: @js(array_merge(['X-CSRF-TOKEN' => csrf_token()], $uploadHeaders)),
     name: @js($name),
+    invalid: @js($invalid),
 })" {{ $attributes->class('w-full') }}>
     @if ($label)
         <neura::label :text="$label" class="mb-2" />
@@ -44,9 +45,9 @@
         x-on:click="triggerFileInput"
         class="relative border-2 border-dashed rounded-xl p-8 transition-all duration-150 cursor-pointer"
         :class="{
-            'border-danger-500 dark:border-danger-400 bg-danger-50/50 dark:bg-danger-950/20': hasError || @js($invalid),
-            'border-primary-500 bg-primary-50 dark:border-primary-400 dark:bg-primary-950/50 shadow-sm': isDragging && !hasError,
-            'border-primary-200 dark:border-primary-800 hover:border-primary-400 dark:hover:border-primary-600 hover:bg-primary-50/50 dark:hover:bg-primary-950/30': !isDragging && !hasError
+            'border-danger-500 dark:border-danger-400 bg-danger-50/50 dark:bg-danger-950/20': hasError || invalid,
+            'border-primary-500 bg-primary-50 dark:border-primary-400 dark:bg-primary-950/50 shadow-sm': isDragging && !hasError && !invalid,
+            'border-primary-200 dark:border-primary-800 hover:border-primary-400 dark:hover:border-primary-600 hover:bg-primary-50/50 dark:hover:bg-primary-950/30': !isDragging && !hasError && !invalid
         }">
         <input x-ref="fileInput" type="file" :accept="accept" :multiple="multiple"
             x-on:change="handleFileSelect" class="hidden"
