@@ -5,7 +5,7 @@
     'selectable' => false,
     'multiSelect' => false,
     'showIcons' => true,
-    'showLines' => true,
+    'showLines' => false,
     'size' => 'md',
     'color' => 'primary',
     'expandAll' => false,
@@ -19,28 +19,28 @@
             'text' => 'text-sm',
             'icon' => 'size-4',
             'padding' => 'py-1 px-2',
-            'indent' => 'pl-4',
+            'indent' => 16,
             'gap' => 'gap-1.5',
         ],
         'md' => [
             'text' => 'text-sm',
             'icon' => 'size-5',
             'padding' => 'py-1.5 px-2',
-            'indent' => 'pl-5',
+            'indent' => 20,
             'gap' => 'gap-2',
         ],
         'lg' => [
             'text' => 'text-base',
             'icon' => 'size-6',
             'padding' => 'py-2 px-3',
-            'indent' => 'pl-6',
+            'indent' => 24,
             'gap' => 'gap-2.5',
         ],
         default => [
             'text' => 'text-sm',
             'icon' => 'size-5',
             'padding' => 'py-1.5 px-2',
-            'indent' => 'pl-5',
+            'indent' => 20,
             'gap' => 'gap-2',
         ],
     };
@@ -59,7 +59,7 @@
         ],
         'bordered' => [
             'item' => 'hover:bg-neutral-50 dark:hover:bg-neutral-900 border-l-2 border-transparent hover:border-primary-500',
-            'selected' => 'bg-primary-50 dark:bg-primary-900/30 border-l-2 border-primary-500',
+            'selected' => 'bg-primary-50 dark:bg-primary-900/30 border-l-2 !border-primary-500',
             'line' => 'border-neutral-300 dark:border-neutral-700',
         ],
         'filled' => [
@@ -85,40 +85,39 @@
         default => 'text-primary-500',
     };
 
-    $jsonItems = json_encode($items);
+    $componentId = 'tree-' . uniqid();
 @endphp
 
 <div 
+    id="{{ $componentId }}"
     x-data="neuraTreeView({
-        items: {{ $jsonItems }},
+        items: {{ json_encode($items) }},
         draggable: {{ $draggable ? 'true' : 'false' }},
         selectable: {{ $selectable ? 'true' : 'false' }},
         multiSelect: {{ $multiSelect ? 'true' : 'false' }},
         expandAll: {{ $expandAll ? 'true' : 'false' }},
         onlyFolders: {{ $onlyFolders ? 'true' : 'false' }},
+        indent: {{ $sizeClasses['indent'] }},
     })"
     {{ $attributes->class(['w-full']) }}
     role="tree"
 >
-    <template x-for="(item, index) in visibleItems" :key="item.id">
-        <div>
-            <neura::tree.item 
-                :size-classes="@js($sizeClasses)"
-                :variant-classes="@js($variantClasses)"
-                :color-classes="@js($colorClasses)"
-                :show-icons="$showIcons"
-                :show-lines="$showLines"
-                :draggable="$draggable"
-            />
+    {{-- Recursive tree rendering --}}
+    <template x-for="item in processedItems" :key="item.id">
+        <div class="tree-node">
+            @include('neura::tree.node', [
+                'sizeClasses' => $sizeClasses,
+                'variantClasses' => $variantClasses,
+                'colorClasses' => $colorClasses,
+                'showIcons' => $showIcons,
+                'showLines' => $showLines,
+                'draggable' => $draggable,
+            ])
         </div>
     </template>
-
-    {{-- Render slot for custom items --}}
-    @if($slot->isNotEmpty())
-        {{ $slot }}
-    @endif
 </div>
 
+@once
 <script>
 document.addEventListener('alpine:init', () => {
     Alpine.data('neuraTreeView', (config) => ({
@@ -128,25 +127,24 @@ document.addEventListener('alpine:init', () => {
         multiSelect: config.multiSelect || false,
         expandAll: config.expandAll || false,
         onlyFolders: config.onlyFolders || false,
+        indent: config.indent || 20,
         expandedItems: new Set(),
         selectedItems: new Set(),
         draggedItem: null,
         dropTarget: null,
 
         init() {
-            // If expandAll is true, expand all folders
             if (this.expandAll) {
                 this.expandAllItems(this.items);
             }
-            
-            // Filter items if onlyFolders is true
-            if (this.onlyFolders) {
-                this.items = this.filterFolders(this.items);
-            }
         },
 
-        get visibleItems() {
-            return this.items;
+        get processedItems() {
+            let items = this.items;
+            if (this.onlyFolders) {
+                items = this.filterFolders(items);
+            }
+            return this.flattenItems(items, 0);
         },
 
         filterFolders(items) {
@@ -154,6 +152,17 @@ document.addEventListener('alpine:init', () => {
                 ...item,
                 children: item.children ? this.filterFolders(item.children) : []
             }));
+        },
+
+        flattenItems(items, level) {
+            let result = [];
+            for (const item of items) {
+                result.push({ ...item, level });
+                if (item.type === 'folder' && item.children && this.isExpanded(item.id)) {
+                    result = result.concat(this.flattenItems(item.children, level + 1));
+                }
+            }
+            return result;
         },
 
         expandAllItems(items) {
@@ -167,6 +176,10 @@ document.addEventListener('alpine:init', () => {
 
         isExpanded(itemId) {
             return this.expandedItems.has(itemId);
+        },
+
+        hasChildren(item) {
+            return item.type === 'folder' && item.children && item.children.length > 0;
         },
 
         toggleExpand(itemId) {
@@ -213,7 +226,6 @@ document.addEventListener('alpine:init', () => {
             return null;
         },
 
-        // Drag and Drop
         onDragStart(event, item) {
             if (!this.draggable) return;
             this.draggedItem = item;
@@ -247,23 +259,20 @@ document.addEventListener('alpine:init', () => {
 
             event.preventDefault();
             
-            // Remove from old location
             this.removeItem(this.draggedItem.id, this.items);
             
-            // Add to new location
             if (targetItem.type === 'folder') {
                 if (!targetItem.children) targetItem.children = [];
-                targetItem.children.push(this.draggedItem);
+                targetItem.children.push({...this.draggedItem});
                 this.expandedItems.add(targetItem.id);
             } else {
-                // Add as sibling
                 const parent = this.findParent(targetItem.id, this.items, null);
                 if (parent) {
                     const index = parent.children.findIndex(c => c.id === targetItem.id);
-                    parent.children.splice(index + 1, 0, this.draggedItem);
+                    parent.children.splice(index + 1, 0, {...this.draggedItem});
                 } else {
                     const index = this.items.findIndex(i => i.id === targetItem.id);
-                    this.items.splice(index + 1, 0, this.draggedItem);
+                    this.items.splice(index + 1, 0, {...this.draggedItem});
                 }
             }
 
@@ -275,6 +284,7 @@ document.addEventListener('alpine:init', () => {
 
             this.dropTarget = null;
             this.draggedItem = null;
+            this.expandedItems = new Set(this.expandedItems);
         },
 
         removeItem(id, items) {
@@ -308,3 +318,4 @@ document.addEventListener('alpine:init', () => {
     }));
 });
 </script>
+@endonce
