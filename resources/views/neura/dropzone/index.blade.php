@@ -191,8 +191,4 @@
             </template>
         </div>
     @endif
-
-    @if ($fieldName)
-        <neura::error :name="$fieldName" />
-    @endif
 </div>

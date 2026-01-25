@@ -7,10 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [1.0.27] - 2026-01-25
+## [1.0.26] - 2026-01-25
 
 ### Changed
-- **Dropzone Component**: Complete UI modernization
+- **Dropzone Component**: Complete UI modernization with improved validation error display
   - Redesigned borders with subtle ring effects on error and drag states
   - Larger, rounded icon container (14x14) with smooth hover animations
   - Icon scales up and changes color on drag/error/hover
@@ -22,8 +22,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Remove button style adapts to file status
   - Overall cleaner, more polished modern appearance
 
-## [1.0.26] - 2026-01-25
-
 ### Fixed
 - **Dropzone Component**: Complete fix for validation error display
   - Properly extracts field name from `wire:model` attribute
@@ -32,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Visual feedback on error: red border, red background, red icon
   - Icon container and upload icon change to red on validation error
   - Works correctly with Livewire validation for single and multiple file uploads
+  - Removed internal error display - use external `<neura::error>` component instead
 
 ## [1.0.25] - 2026-01-25
 
