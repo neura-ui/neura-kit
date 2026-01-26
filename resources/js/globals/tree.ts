@@ -35,14 +35,15 @@ interface DragState {
     dropPosition: 'before' | 'after' | 'inside' | null;
 }
 
-// Ensure we only register once
-const NK_TREE_BOOT = (window as any).__NK_TREE_BOOT__ ??= { booted: false };
+// Ensure we only register once, and only in browser environment
+if (typeof window !== 'undefined') {
+    const NK_TREE_BOOT = (window as any).__NK_TREE_BOOT__ ??= { booted: false };
 
-if (!NK_TREE_BOOT.booted) {
-    NK_TREE_BOOT.booted = true;
+    if (!NK_TREE_BOOT.booted) {
+        NK_TREE_BOOT.booted = true;
 
-    document.addEventListener('alpine:init', () => {
-        (window as any).Alpine.data('neuraTree', (config: TreeConfig) => ({
+        document.addEventListener('alpine:init', () => {
+            (window as any).Alpine.data('neuraTree', (config: TreeConfig) => ({
             items: config.items || [],
             selectable: config.selectable || false,
             multiSelect: config.multiSelect || false,
@@ -294,8 +295,9 @@ if (!NK_TREE_BOOT.booted) {
                     (this as any).$wire.set(this.wireModel, this.items);
                 }
             },
-        }));
-    });
+            }));
+        });
+    }
 }
 
 export {};
