@@ -188,8 +188,7 @@ function neuraPhoneInput(config: PhoneInputConfig) {
             if (this.wireProperty && this.$wire) {
                 const value = this.$wire.get(this.wireProperty);
                 if (value) {
-                    this._lastSyncedValue = value;
-                    this.parseFullNumber(value);
+                    this.parseFullNumber(value, true); // skipSync = true for initial load
                 }
                 
                 // Watch for EXTERNAL changes only (not our own updates)
@@ -202,14 +201,13 @@ function neuraPhoneInput(config: PhoneInputConfig) {
                     const currentDigits = this.fullNumber.replace(/\D/g, '');
                     
                     if (newDigits !== currentDigits) {
-                        this._lastSyncedValue = newValue;
-                        this.parseFullNumber(newValue);
+                        this.parseFullNumber(newValue, true); // skipSync = true for watcher updates
                     }
                 });
             }
         },
         
-        parseFullNumber(fullNumber: string) {
+        parseFullNumber(fullNumber: string, skipSync = false) {
             if (!fullNumber) return;
             
             // Remove all non-digit characters except +
@@ -230,6 +228,10 @@ function neuraPhoneInput(config: PhoneInputConfig) {
                         if (this.autoFormat) {
                             this.formatNumber();
                         }
+                        // When parsing from external source, update lastSyncedValue to prevent loop
+                        if (skipSync) {
+                            this._lastSyncedValue = this.fullNumber;
+                        }
                         return;
                     }
                 }
@@ -237,6 +239,9 @@ function neuraPhoneInput(config: PhoneInputConfig) {
             
             // If no country found, just set the number
             this.nationalNumber = cleaned.replace(/^\+/, '');
+            if (skipSync) {
+                this._lastSyncedValue = this.fullNumber;
+            }
         },
         
         toggleDropdown() {
