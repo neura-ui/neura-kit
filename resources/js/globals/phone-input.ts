@@ -122,6 +122,7 @@ function neuraPhoneInput(config: PhoneInputConfig) {
         isValid: false,
         validationMessage: '',
         touched: false,
+        _syncing: false, // Flag to prevent sync loops
         
         // Config
         isDisabled: config.disabled,
@@ -192,6 +193,8 @@ function neuraPhoneInput(config: PhoneInputConfig) {
                 
                 // Watch for external changes
                 this.$watch(() => this.$wire.get(this.wireProperty), (newValue: string) => {
+                    // Skip if we're the ones who triggered the update
+                    if (this._syncing) return;
                     if (newValue && newValue !== this.fullNumber) {
                         this.parseFullNumber(newValue);
                     }
@@ -407,8 +410,14 @@ function neuraPhoneInput(config: PhoneInputConfig) {
         },
         
         syncToWire() {
+            if (this._syncing) return;
             if (this.wireProperty && this.$wire) {
+                this._syncing = true;
                 this.$wire.set(this.wireProperty, this.fullNumber);
+                // Reset flag after a short delay to allow Livewire to process
+                setTimeout(() => {
+                    this._syncing = false;
+                }, 100);
             }
         },
         
