@@ -122,7 +122,7 @@ function neuraPhoneInput(config: PhoneInputConfig) {
         isValid: false,
         validationMessage: '',
         touched: false,
-        _syncing: false, // Flag to prevent sync loops
+        _lastSyncedValue: '', // Track last synced value to prevent loops
         
         // Config
         isDisabled: config.disabled,
@@ -188,14 +188,21 @@ function neuraPhoneInput(config: PhoneInputConfig) {
             if (this.wireProperty && this.$wire) {
                 const value = this.$wire.get(this.wireProperty);
                 if (value) {
+                    this._lastSyncedValue = value;
                     this.parseFullNumber(value);
                 }
                 
-                // Watch for external changes
+                // Watch for EXTERNAL changes only (not our own updates)
                 this.$watch(() => this.$wire.get(this.wireProperty), (newValue: string) => {
-                    // Skip if we're the ones who triggered the update
-                    if (this._syncing) return;
-                    if (newValue && newValue !== this.fullNumber) {
+                    // Skip if this is the value we just sent
+                    if (newValue === this._lastSyncedValue) return;
+                    
+                    // Only parse if the cleaned digits are different
+                    const newDigits = (newValue || '').replace(/\D/g, '');
+                    const currentDigits = this.fullNumber.replace(/\D/g, '');
+                    
+                    if (newDigits !== currentDigits) {
+                        this._lastSyncedValue = newValue;
                         this.parseFullNumber(newValue);
                     }
                 });
@@ -410,14 +417,13 @@ function neuraPhoneInput(config: PhoneInputConfig) {
         },
         
         syncToWire() {
-            if (this._syncing) return;
             if (this.wireProperty && this.$wire) {
-                this._syncing = true;
-                this.$wire.set(this.wireProperty, this.fullNumber);
-                // Reset flag after a short delay to allow Livewire to process
-                setTimeout(() => {
-                    this._syncing = false;
-                }, 100);
+                const value = this.fullNumber;
+                // Only sync if value actually changed
+                if (value !== this._lastSyncedValue) {
+                    this._lastSyncedValue = value;
+                    this.$wire.set(this.wireProperty, value);
+                }
             }
         },
         
