@@ -25,7 +25,7 @@
     @if ($orientation === 'vertical')
         <div
             data-orientation="{{ $orientation }}"
-            {{ $attributes->class($lineClasses) }}
+            {{ $attributes->merge(['class' => $lineClasses]) }}
             role="separator"
             aria-orientation="{{ $orientation }}"
             data-slot="separator"
@@ -34,12 +34,12 @@
 
         <div
             data-orientation="{{ $orientation }}"
-            {{ $attributes->class('w-full') }}
+            {{ $attributes->merge(['class' => 'w-full']) }}
             data-slot="separator"
             role="separator"
             aria-orientation="{{ $orientation }}"
         >
-            <div class="{{ $lineClasses }}"></div>
+            <div {{ $attributes->only('class')->merge(['class' => $lineClasses]) }}></div>
         </div>
     @endif
 @else
@@ -51,11 +51,11 @@
             aria-orientation="{{ $orientation }}"
             aria-label="{{ $label }}"
         >
-            <div class="{{ $lineClasses }}" aria-hidden="true"></div>
+            <div {{ $attributes->only('class')->merge(['class' => $lineClasses]) }} aria-hidden="true"></div>
             <div class="text-sm leading-none text-neutral-500 dark:text-neutral-300 pb-[0.22rem] whitespace-nowrap">
                 {{ $label }}
             </div>
-            <div class="{{ $lineClasses }}" aria-hidden="true"></div>
+            <div {{ $attributes->only('class')->merge(['class' => $lineClasses]) }} aria-hidden="true"></div>
         </div>
     @else
         <div
@@ -66,11 +66,11 @@
             aria-label="{{ $label }}"
             data-slot="separator"
         >
-            <div class="{{ $lineClasses }}" aria-hidden="true"></div>
+            <div {{ $attributes->only('class')->merge(['class' => $lineClasses]) }} aria-hidden="true"></div>
             <span class="shrink-0 mx-6 font-medium text-sm text-neutral-500 dark:text-neutral-300 whitespace-nowrap">
                 {{ $label }}
             </span>
-            <div class="{{ $lineClasses }}" aria-hidden="true"></div>
+            <div {{ $attributes->only('class')->merge(['class' => $lineClasses]) }} aria-hidden="true"></div>
         </div>
     @endif
 @endif

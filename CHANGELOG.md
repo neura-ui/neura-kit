@@ -6,6 +6,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.38] - 2026-01-27
+
+### Fixed
+- **Separator Component**: Fixed class merging not working properly
+  - Changed from `$attributes->class()` to `$attributes->merge(['class' => ...])` 
+  - Inner line divs now properly merge custom classes using `$attributes->only('class')`
+  - Custom classes like `bg-neutral-100 dark:bg-neutral-950` now work correctly
+  - Applies to both labeled and unlabeled separators, horizontal and vertical orientations
+
 ## [1.0.37] - 2026-01-27
 
 ### Fixed
