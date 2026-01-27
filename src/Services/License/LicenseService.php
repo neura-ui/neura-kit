@@ -6,6 +6,7 @@ namespace Neura\Kit\Services\License;
 
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Support\Facades\Log;
 use Neura\Kit\Exceptions\LicenseException;
 use RuntimeException;
 
@@ -13,6 +14,9 @@ final class LicenseService
 {
     private ?array $tokenData = null;
     private ?bool $isValidCache = null;
+    private static ?int $lastRefreshAttempt = null;
+    private static ?string $lastRefreshError = null;
+    private const int REFRESH_COOLDOWN_SECONDS = 300; // 5 minutes
 
     public function __construct(
         private readonly ActivationClient $client,
@@ -131,29 +135,35 @@ final class LicenseService
             return false;
         }
 
+        if ($this->isInCooldown()) {
+            return false;
+        }
+
         try {
             $response = $this->client->refresh($data['token']);
 
             if (!$response['ok']) {
-                // Check if it's a license expiration vs token issue
                 $error = $response['error'] ?? '';
 
+                self::$lastRefreshAttempt = time();
+                self::$lastRefreshError = $error;
+
                 if (in_array($error, ['LICENSE_EXPIRED', 'LICENSE_REVOKED', 'LICENSE_SUSPENDED'])) {
-                    // License itself is expired/invalid - clear cache
                     $this->cache->forget();
                     $this->tokenData = null;
                     $this->isValidCache = false;
 
-                    \Log::error("License error during refresh: {$error}");
+                    Log::error("License error during refresh: {$error}");
                 } else {
-                    // Just a token refresh issue - might be temporary
-                    \Log::warning("Token refresh failed: {$error}");
+                    Log::debug("Token refresh failed: {$error} (cooldown active for " . self::REFRESH_COOLDOWN_SECONDS . "s)");
                 }
 
                 return false;
             }
+            
+            self::$lastRefreshAttempt = null;
+            self::$lastRefreshError = null;
 
-            // Update token data while preserving license information
             $tokenData = [
                 'token' => $response['token'],
                 'expires_at' => $response['expires_at'],
@@ -161,7 +171,6 @@ final class LicenseService
                 'project_id' => $data['project_id'],
                 'activated_at' => $data['activated_at'],
                 'refreshed_at' => now()->toIso8601String(),
-                // Preserve license data or update if provided
                 'license_data' => $response['license_data'] ?? $data['license_data'] ?? [],
             ];
 
@@ -171,9 +180,45 @@ final class LicenseService
 
             return true;
         } catch (Exception $e) {
-            \Log::error('Token refresh exception: ' . $e->getMessage());
+            self::$lastRefreshAttempt = time();
+            self::$lastRefreshError = 'EXCEPTION';
+            Log::debug('Token refresh exception: ' . $e->getMessage() . ' (cooldown active)');
             return false;
         }
+    }
+
+    /**
+     * Check if we're in cooldown period after a failed refresh
+     */
+    private function isInCooldown(): bool
+    {
+        if (self::$lastRefreshAttempt === null) {
+            return false;
+        }
+
+        $elapsed = time() - self::$lastRefreshAttempt;
+        return $elapsed < self::REFRESH_COOLDOWN_SECONDS;
+    }
+
+    /**
+     * Get remaining cooldown time in seconds
+     */
+    public function getCooldownRemaining(): int
+    {
+        if (!$this->isInCooldown()) {
+            return 0;
+        }
+
+        return self::REFRESH_COOLDOWN_SECONDS - (time() - self::$lastRefreshAttempt);
+    }
+
+    /**
+     * Force reset the cooldown (useful for manual retry)
+     */
+    public function resetCooldown(): void
+    {
+        self::$lastRefreshAttempt = null;
+        self::$lastRefreshError = null;
     }
 
     public function getToken(): ?string

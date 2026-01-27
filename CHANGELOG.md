@@ -6,6 +6,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.35] - 2026-01-27
+
+### Fixed
+- **License Service**: Fixed excessive "Token refresh failed" log spam
+  - Added 5-minute cooldown mechanism after failed refresh attempts
+  - Changed log level from WARNING to DEBUG for repeated failures
+  - Added `getCooldownRemaining()` and `resetCooldown()` methods for manual control
+  - Prevents spamming the license server and log files
+
 ## [1.0.34] - 2026-01-26
 
 ### Fixed
