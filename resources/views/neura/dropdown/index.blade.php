@@ -5,12 +5,9 @@
 ])
 
 @php
-    $menuClasses = $menu->attributes->get('class', '');
-    $menuAttributes = $menu->attributes->except('class');
-
     $disabled = $attributes->has('disabled') && !in_array($attributes->get('disabled'), [false, 0, '0', 'false', ''], true);
 
-    $classes = [
+    $defaultPanelClasses = [
         'isolate',
         'z-50',
         'grid',
@@ -19,11 +16,11 @@
         'text-start',
         'bg-white dark:bg-neutral-900',
         'border border-black/10 dark:border-white/10',
+        'shadow-lg',
         'rounded-(--dropdown-radius)',
         'p-(--dropdown-padding)',
         '[--dropdown-radius:var(--radius-box)]',
         '[--dropdown-padding:--spacing(.75)]',
-        $menuClasses,
     ];
 @endphp
 
@@ -121,11 +118,10 @@
                     x-on:click.away="close($refs.button)"
                     x-bind:id="$id('dropdown-panel')"
                     style="display: none; backdrop-filter: blur(64px); -webkit-backdrop-filter: blur(64px); z-index: 9999"
-                    {{ $menuAttributes->class(Arr::toCssClasses($classes)) }}
+                    role="menu"
+                    {{ $menu->attributes->merge(['class' => Arr::toCssClasses($defaultPanelClasses)]) }}
                 >
-                    <div {{ $menu->attributes->class('') }}>
-                        {{ $menu }}
-                    </div>
+                    {{ $menu }}
                 </div>
 
                 @if($portal)

@@ -6,6 +6,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.41] - 2026-01-27
+
+### Improved
+- **Dropdown Submenu**: Complete redesign for better UX
+  - Added chevron arrow icon to indicate submenu presence
+  - Added open/close delay timers to prevent accidental closing
+  - Improved hover behavior with `keepOpen()` function
+  - Added `icon` and `iconVariant` props to submenu trigger
+  - Added `position` prop (default: `right-start`) for flexible positioning
+  - Added slide animation (`translate-x`) instead of scale
+  - Better accessibility with `aria-haspopup` and `aria-expanded`
+  - Added backdrop blur effect
+  - Higher z-index (60) to ensure submenu appears above parent
+
+- **Dropdown Menu**: Custom class merging now works properly
+  - Menu slot now uses `$menu->attributes->merge()` for proper class merging
+  - Custom classes passed to `<x-slot:menu class="...">` are now correctly applied
+  - Added `shadow-lg` for better visual depth
+  - Added `role="menu"` for accessibility
+
+### Example Usage
+```blade
+<neura::dropdown>
+    <x-slot:button>Open</x-slot:button>
+    <x-slot:menu class="w-64 bg-neutral-50 dark:bg-neutral-800">
+        <neura::dropdown.item>Item 1</neura::dropdown.item>
+        <neura::dropdown.submenu label="More Options" icon="cog-6-tooth">
+            <neura::dropdown.item>Sub Item 1</neura::dropdown.item>
+            <neura::dropdown.item>Sub Item 2</neura::dropdown.item>
+        </neura::dropdown.submenu>
+    </x-slot:menu>
+</neura::dropdown>
+```
+
 ## [1.0.40] - 2026-01-27
 
 ### Fixed
