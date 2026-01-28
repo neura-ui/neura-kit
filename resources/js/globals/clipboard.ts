@@ -3,40 +3,73 @@ import './types';
 export {};
 
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
-    // Créer l'objet Clipboard
-    window.Clipboard = {
-        async copy(text: string): Promise<boolean> {
-            // Try modern Clipboard API first
-            if (navigator?.clipboard?.writeText) {
-                try {
-                    await navigator.clipboard.writeText(text);
-                    return true;
-                } catch (error) {
-                    // Clipboard API failed (common on Safari/Mac without user gesture)
-                    // Fall through to fallback
-                }
+    /**
+     * Safe clipboard copy function that works everywhere
+     */
+    async function copyToClipboard(text: string): Promise<boolean> {
+        // Try modern Clipboard API first
+        if (navigator?.clipboard?.writeText) {
+            try {
+                await navigator.clipboard.writeText(text);
+                return true;
+            } catch (error) {
+                // Clipboard API failed (common on Safari/Mac without user gesture)
+                // Fall through to fallback
             }
+        }
 
-            // Fallback for Safari/Mac and older browsers
-            return fallbackCopy(text);
-        },
+        // Fallback for Safari/Mac and older browsers
+        return fallbackCopy(text);
+    }
+
+    // Expose globally for direct usage: window.Clipboard.copy('text')
+    window.Clipboard = {
+        copy: copyToClipboard,
     };
 
-    // Listener Livewire (IMPORTANT)
-    document.addEventListener('livewire:init', () => {
-        window.Livewire?.on('clipboard:copy', (event: any) => {
-            const text = event.text || event[0]?.text || event;
+    // Also expose as a simple global function: copyToClipboard('text')
+    (window as any).copyToClipboard = copyToClipboard;
 
-            if (text) {
-                window.Clipboard.copy(text);
-            }
+    /**
+     * Register Alpine magic and directive
+     * Use: $clipboard('text to copy') or x-clipboard="textVariable"
+     */
+    function registerAlpineClipboard(Alpine: any) {
+        // Magic: $clipboard('text')
+        Alpine.magic('clipboard', () => copyToClipboard);
+
+        // Directive: x-clipboard="text" (copies on click)
+        Alpine.directive('clipboard', (el: HTMLElement, { expression }: any, { evaluate }: any) => {
+            el.addEventListener('click', async () => {
+                const text = evaluate(expression);
+                if (text) {
+                    await copyToClipboard(String(text));
+                }
+            });
         });
+    }
+
+    // Register with Alpine - try multiple approaches for reliability
+    if ((window as any).Alpine) {
+        // Alpine already loaded
+        registerAlpineClipboard((window as any).Alpine);
+    }
+
+    // Also listen for alpine:init (for deferred loading)
+    document.addEventListener('alpine:init', () => {
+        if ((window as any).Alpine) {
+            registerAlpineClipboard((window as any).Alpine);
+        }
     });
 
-    // Magic Alpine (optionnel mais utile)
-    document.addEventListener('alpine:init', () => {
-        window.Alpine?.magic('clipboard', () => {
-            return (text: string) => window.Clipboard.copy(text);
+    // Listener Livewire
+    document.addEventListener('livewire:init', () => {
+        window.Livewire?.on('clipboard:copy', (event: any) => {
+            const text = event?.text || event?.[0]?.text || (typeof event === 'string' ? event : null);
+
+            if (text) {
+                copyToClipboard(text);
+            }
         });
     });
 }

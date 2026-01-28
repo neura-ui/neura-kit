@@ -6,6 +6,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.42] - 2026-01-27
+
+### Improved
+- **Clipboard**: Enhanced Alpine integration and reliability
+  - Added `$clipboard('text')` Alpine magic function for safe clipboard operations
+  - Added `x-clipboard="expression"` directive for click-to-copy functionality
+  - Added global `copyToClipboard('text')` function for direct use
+  - Multiple registration approaches for better Alpine compatibility
+  - Fixed "Cannot read properties of undefined (reading 'writeText')" error
+
+### Usage
+```blade
+{{-- Alpine Magic --}}
+<button @click="$clipboard('Text to copy')">Copy</button>
+
+{{-- Alpine Directive --}}
+<button x-clipboard="myVariable">Copy Variable</button>
+
+{{-- From Livewire PHP --}}
+$this->clipboard()->copy('Text to copy');
+```
+
 ## [1.0.41] - 2026-01-27
 
 ### Improved
