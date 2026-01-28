@@ -6,6 +6,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.39] - 2026-01-27
+
+### Fixed
+- **Badge Component**: Fixed Tailwind colors not working (red, orange, amber, yellow, lime, green, etc.)
+  - Replaced dynamic template strings `bg-${color}-500` with explicit class names
+  - All 17 Tailwind colors now work correctly with all variants (solid, outline, soft)
+  - Classes are properly detected by Tailwind CSS v4 during build
+  - Colors: red, orange, amber, yellow, lime, green, emerald, teal, cyan, sky, blue, indigo, violet, purple, fuchsia, pink, rose
+
 ## [1.0.38] - 2026-01-27
 
 ### Fixed
