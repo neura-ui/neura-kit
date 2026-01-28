@@ -6,6 +6,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.40] - 2026-01-27
+
+### Fixed
+- **Clipboard**: Fixed copy not working on Mac/Safari
+  - Improved fallback mechanism when Clipboard API fails (common on Safari without user gesture)
+  - Added iOS/iPad detection for proper selection handling
+  - Textarea element now properly styled for Safari compatibility
+  - Added `contentEditable` and `readOnly` attributes required for iOS
+  - Removed console.log statements for cleaner production output
+
 ## [1.0.39] - 2026-01-27
 
 ### Fixed
