@@ -190,21 +190,22 @@ if (typeof window !== 'undefined') {
 
             open(options: SpotlightOptions = {}) {
                 const wasOpen = this.isOpen;
+                const previousMode = this.mode;
+                
                 this.isOpen = true;
                 
-                // Only change mode if explicitly provided OR if this is a fresh open
+                // Change mode if explicitly provided
                 if (options.mode) {
                     this.mode = options.mode;
-                } else if (!wasOpen) {
-                    // Fresh open without mode specified - keep last mode or default to search
-                    // Do nothing, keep current mode
+                    // Sync with Livewire
+                    (this as any).$wire?.setMode(options.mode);
                 }
                 
                 if (options.placeholder) this.placeholder = options.placeholder;
                 if (options.query !== undefined) this.query = options.query;
                 
-                // Only reset if fresh open
-                if (!wasOpen) {
+                // Reset if fresh open OR if mode changed
+                if (!wasOpen || (options.mode && options.mode !== previousMode)) {
                     this.results = [];
                     this.aiResponse = '';
                     this.selectedIndex = 0;
