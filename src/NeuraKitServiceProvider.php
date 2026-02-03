@@ -190,6 +190,7 @@ class NeuraKitServiceProvider extends ServiceProvider
     {
         if (class_exists(Livewire::class)) {
             Livewire::component('neura-kit.modal-manager', Components\Atoms\ModalManager::class);
+            Livewire::component('neura-kit.spotlight-manager', Components\Atoms\SpotlightManager::class);
         }
 
         Blade::directive('neuraKit', function () {

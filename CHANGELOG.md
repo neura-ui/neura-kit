@@ -6,6 +6,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.43] - 2026-01-26
+
+### Added
+- **Spotlight**: New command palette and search component with multiple modes
+  - **Search Mode**: Global search across your application (Cmd+K)
+  - **Command Mode**: Quick actions and commands (Cmd+P)
+  - **AI Mode**: Ask questions with streaming AI responses
+  - Keyboard navigation with arrow keys, Tab to switch modes, Enter to select
+  - Mode persistence - remembers last used mode
+  - Customizable placeholder and initial query
+  - Server-side via `SpotlightCall` class with fluent API
+  - Client-side via global `NeuraKitSpotlight` JavaScript API
+  - Extensible command system with `SpotlightCommand` base class
+  - Search providers for custom result sources
+  - `SpotlightResult` class with factory methods for URL, action, and event results
+  - Full Livewire integration with event dispatching
+
+### Fixed
+- **Spotlight**: Mode no longer resets when toggling with keyboard shortcuts
+  - Opening with same shortcut twice now properly closes instead of resetting mode
+  - Toggle behavior improved: same mode = close, different mode = switch
+
+### Usage
+```blade
+{{-- Keyboard shortcuts --}}
+Cmd+K → Open Search
+Cmd+P → Open Commands
+Tab → Switch mode
+Esc → Close
+
+{{-- JavaScript API --}}
+<button x-on:click="NeuraKitSpotlight.open()">Search</button>
+<button x-on:click="NeuraKitSpotlight.open({ mode: 'ai' })">AI</button>
+<button x-on:click="NeuraKitSpotlight.toggle({ mode: 'command' })">Commands</button>
+
+{{-- From Livewire PHP --}}
+$this->spotlight()->search()->open();
+$this->spotlight()->ai()->placeholder('Ask anything...')->open();
+$this->spotlight()->command()->open('theme');
+```
+
 ## [1.0.42] - 2026-01-27
 
 ### Improved

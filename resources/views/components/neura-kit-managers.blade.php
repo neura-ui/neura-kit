@@ -23,6 +23,7 @@
 
 @if(class_exists(Livewire::class))
     @livewire('neura-kit.modal-manager')
+    @livewire('neura-kit.spotlight-manager')
 @endif
 
 <neura::dialog-manager/>
