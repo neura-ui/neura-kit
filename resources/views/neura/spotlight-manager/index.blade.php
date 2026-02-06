@@ -13,12 +13,12 @@
         config: @js($this->configData),
     })"
     x-on:keydown.escape.window="if (isOpen) $wire.close()"
-    x-on:keydown.cmd.k.window.prevent="$wire.toggle({ mode: 'search' })"
-    x-on:keydown.ctrl.k.window.prevent="$wire.toggle({ mode: 'search' })"
-    x-on:keydown.cmd.p.window.prevent="$wire.toggle({ mode: 'command' })"
-    x-on:keydown.ctrl.p.window.prevent="$wire.toggle({ mode: 'command' })"
-    x-on:keydown.cmd.i.window.prevent="$wire.toggle({ mode: 'ai' })"
-    x-on:keydown.ctrl.i.window.prevent="$wire.toggle({ mode: 'ai' })"
+    x-on:keydown.cmd.k.window.prevent="if (isModeAvailable('search')) $wire.toggle({ mode: 'search' })"
+    x-on:keydown.ctrl.k.window.prevent="if (isModeAvailable('search')) $wire.toggle({ mode: 'search' })"
+    x-on:keydown.cmd.p.window.prevent="if (isModeAvailable('command')) $wire.toggle({ mode: 'command' })"
+    x-on:keydown.ctrl.p.window.prevent="if (isModeAvailable('command')) $wire.toggle({ mode: 'command' })"
+    x-on:keydown.cmd.i.window.prevent="if (isModeAvailable('ai')) $wire.toggle({ mode: 'ai' })"
+    x-on:keydown.ctrl.i.window.prevent="if (isModeAvailable('ai')) $wire.toggle({ mode: 'ai' })"
     class="spotlight-container antialiased"
 >
     {{-- Backdrop --}}
@@ -60,7 +60,7 @@
             <div class="flex items-center gap-3 px-4 py-3 border-b border-neutral-100 dark:border-neutral-800">
                 {{-- Mode Icon --}}
                 <div class="shrink-0 text-neutral-400 dark:text-neutral-500">
-                    <template x-if="mode === 'search'">
+                    <template x-if="isModeAvailable('search') && mode === 'search'">
                         <div 
                             x-transition:enter="transition ease-out duration-300"
                             x-transition:enter-start="opacity-0"
@@ -69,7 +69,7 @@
                             <x-neura::icon name="magnifying-glass" class="size-5" />
                         </div>
                     </template>
-                    <template x-if="mode === 'command'">
+                    <template x-if="isModeAvailable('command') && mode === 'command'">
                         <div 
                             x-transition:enter="transition ease-out duration-300"
                             x-transition:enter-start="opacity-0"
@@ -78,7 +78,7 @@
                             <x-neura::icon name="command-line" class="size-5" />
                         </div>
                     </template>
-                    <template x-if="mode === 'ai'">
+                    <template x-if="isModeAvailable('ai') && mode === 'ai'">
                         <div 
                             x-transition:enter="transition ease-out duration-300"
                             x-transition:enter-start="opacity-0"
@@ -111,43 +111,27 @@
                     <x-neura::spinner size="sm" color="primary" />
                 </div>
 
-                {{-- Mode Tabs (Desktop) --}}
-                <div class="hidden sm:flex items-center gap-1 shrink-0 p-1 bg-neutral-100 dark:bg-neutral-800 rounded-lg">
-                    <button
-                        type="button"
-                        @click.stop="$wire.setMode('search')"
-                        :class="mode === 'search' 
-                            ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 shadow-sm' 
-                            : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'"
-                        class="px-2.5 py-1.5 text-xs font-medium rounded-md transition-all duration-200"
-                        title="{{ __('search') }} (⌘K)"
-                    >
-                        {{ __('search') }}
-                    </button>
-                    <button
-                        type="button"
-                        @click.stop="$wire.setMode('command')"
-                        :class="mode === 'command' 
-                            ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 shadow-sm' 
-                            : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'"
-                        class="px-2.5 py-1.5 text-xs font-medium rounded-md transition-all duration-200"
-                        title="{{ __('commands') }} (⌘P)"
-                    >
-                        {{ __('commands') }}
-                    </button>
-                    <button
-                        type="button"
-                        @click.stop="$wire.setMode('ai')"
-                        :class="mode === 'ai' 
-                            ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 shadow-sm' 
-                            : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'"
-                        class="px-2.5 py-1.5 text-xs font-medium rounded-md transition-all duration-200 flex items-center gap-1"
-                        title="{{ __('ai') }} (⌘I)"
-                    >
-                        <x-neura::icon name="sparkles" class="size-3" variant="solid" />
-                        {{ __('ai') }}
-                    </button>
-                </div>
+                {{-- Mode Tabs (Desktop) - Only show if more than 1 mode available --}}
+                <template x-if="getAvailableModes().length > 1">
+                    <div class="hidden sm:flex items-center gap-1 shrink-0 p-1 bg-neutral-100 dark:bg-neutral-800 rounded-lg">
+                        <template x-for="m in getAvailableModes()" :key="m.value">
+                            <button
+                                type="button"
+                                @click.stop="$wire.setMode(m.value)"
+                                :class="mode === m.value 
+                                    ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 shadow-sm' 
+                                    : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'"
+                                class="px-2.5 py-1.5 text-xs font-medium rounded-md transition-all duration-200 flex items-center gap-1"
+                                :title="m.label + ' (' + m.shortcut + ')'"
+                            >
+                                <template x-if="m.value === 'ai'">
+                                    <span x-html="getIconSvg('sparkles')" class="size-3"></span>
+                                </template>
+                                <span x-text="m.label"></span>
+                            </button>
+                        </template>
+                    </div>
+                </template>
 
                 {{-- Close --}}
                 <button
@@ -290,7 +274,7 @@
 
             {{-- AI Response Area --}}
             <div 
-                x-show="mode === 'ai'"
+                x-show="isModeAvailable('ai') && mode === 'ai'"
                 x-transition:enter="transition ease-out duration-300"
                 x-transition:enter-start="opacity-0"
                 x-transition:enter-end="opacity-100"
@@ -328,39 +312,29 @@
                         <kbd class="inline-flex items-center justify-center px-1.5 h-5 bg-white dark:bg-neutral-700 border border-neutral-200 dark:border-neutral-600 rounded text-[10px] font-medium shadow-sm">↵</kbd>
                         <span class="ml-0.5">{{ __('select') }}</span>
                     </span>
-                    <span class="hidden sm:flex items-center gap-1.5">
-                        <kbd class="inline-flex items-center justify-center px-1.5 h-5 bg-white dark:bg-neutral-700 border border-neutral-200 dark:border-neutral-600 rounded text-[10px] font-medium shadow-sm">Tab</kbd>
-                        <span class="ml-0.5">{{ __('switchMode') }}</span>
-                    </span>
+                    <template x-if="getAvailableModes().length > 1">
+                        <span class="hidden sm:flex items-center gap-1.5">
+                            <kbd class="inline-flex items-center justify-center px-1.5 h-5 bg-white dark:bg-neutral-700 border border-neutral-200 dark:border-neutral-600 rounded text-[10px] font-medium shadow-sm">Tab</kbd>
+                            <span class="ml-0.5">{{ __('switchMode') }}</span>
+                        </span>
+                    </template>
                 </div>
                 
-                {{-- Mobile Mode Switcher --}}
-                <div class="flex sm:hidden items-center gap-1">
-                    <button
-                        type="button"
-                        @click.stop="$wire.setMode('search')"
-                        :class="mode === 'search' ? 'bg-neutral-200 dark:bg-neutral-700' : ''"
-                        class="p-2 rounded-lg transition-colors"
-                    >
-                        <x-neura::icon name="magnifying-glass" class="size-4 text-neutral-600 dark:text-neutral-300" />
-                    </button>
-                    <button
-                        type="button"
-                        @click.stop="$wire.setMode('command')"
-                        :class="mode === 'command' ? 'bg-neutral-200 dark:bg-neutral-700' : ''"
-                        class="p-2 rounded-lg transition-colors"
-                    >
-                        <x-neura::icon name="command-line" class="size-4 text-neutral-600 dark:text-neutral-300" />
-                    </button>
-                    <button
-                        type="button"
-                        @click.stop="$wire.setMode('ai')"
-                        :class="mode === 'ai' ? 'bg-neutral-200 dark:bg-neutral-700' : ''"
-                        class="p-2 rounded-lg transition-colors"
-                    >
-                        <x-neura::icon name="sparkles" class="size-4 text-neutral-600 dark:text-neutral-300" />
-                    </button>
-                </div>
+                {{-- Mobile Mode Switcher - Only show if more than 1 mode available --}}
+                <template x-if="getAvailableModes().length > 1">
+                    <div class="flex sm:hidden items-center gap-1">
+                        <template x-for="m in getAvailableModes()" :key="m.value">
+                            <button
+                                type="button"
+                                @click.stop="$wire.setMode(m.value)"
+                                :class="mode === m.value ? 'bg-neutral-200 dark:bg-neutral-700' : ''"
+                                class="p-2 rounded-lg transition-colors"
+                            >
+                                <span x-html="getIconSvg(m.icon)" class="size-4 text-neutral-600 dark:text-neutral-300"></span>
+                            </button>
+                        </template>
+                    </div>
+                </template>
 
                 <div class="hidden sm:block text-[11px] text-neutral-400 dark:text-neutral-500 font-medium">
                     NeuraKit Spotlight

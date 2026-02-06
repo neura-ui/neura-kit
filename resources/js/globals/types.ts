@@ -138,6 +138,7 @@ interface NeuraKitAPI {
 
 interface ClipboardAPI {
     copy(text: string): Promise<boolean>;
+    read(): Promise<string | null>;
 }
 
 declare global {
@@ -227,6 +228,8 @@ interface LivewireComponent {
 
 interface LivewireAPI {
     find(id: string): LivewireComponent | null;
+
+    on(event: string, callback: (...args: any[]) => void): void;
 
     navigate?(url: string): void;
 }

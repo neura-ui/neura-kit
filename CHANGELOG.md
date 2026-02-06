@@ -6,6 +6,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.46] - 2026-02-06
+
+### Improved
+- **Spotlight**: Modes are now dynamic — only modes with registered providers/commands are shown
+  - Search tab hidden when no search providers or commands are registered
+  - Command tab hidden when no commands are registered
+  - AI tab hidden when no AI providers are registered
+  - Mode tabs, keyboard shortcuts, and footer hints adapt automatically
+  - `nextMode()` cycles only through available modes
+  - `setMode()` rejects unavailable modes
+  - `open()` falls back to first available mode
+- **Clipboard**: Enhanced module with better reliability and feedback
+  - Added `Clipboard.read()` for reading from clipboard (with permission handling)
+  - Added `clipboard:copied` and `clipboard:error` custom events on `document` for UI feedback
+  - Prevented double Alpine registration with guard flag
+  - Improved `x-clipboard` directive validation (null/empty check)
+  - All code properly encapsulated inside environment guard
+  - Added `on()` method to LivewireAPI type definition
+
 ## [1.0.44] - 2026-01-26
 
 ### Fixed

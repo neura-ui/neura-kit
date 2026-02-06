@@ -67,6 +67,7 @@ interface SpotlightConfig {
     maxResults: number;
     showModes: boolean;
     showFooter: boolean;
+    enabledModes: string[];
     modes: Array<{ value: string; label: string; icon: string; shortcut: string }>;
     groups: Array<{ value: string; label: string; icon: string; priority: number }>;
 }
@@ -185,6 +186,19 @@ if (typeof window !== 'undefined') {
             },
 
             // Helpers
+            isModeAvailable(mode: string): boolean {
+                const enabled = this.config?.enabledModes;
+                if (!enabled || enabled.length === 0) return true;
+                return enabled.includes(mode);
+            },
+
+            getAvailableModes(): Array<{ value: string; label: string; icon: string; shortcut: string }> {
+                const enabled = this.config?.enabledModes;
+                const allModes = this.config?.modes || [];
+                if (!enabled || enabled.length === 0) return allModes;
+                return allModes.filter((m: any) => enabled.includes(m.value));
+            },
+
             getPlaceholder(): string {
                 if (this.placeholder) return this.placeholder;
                 // Try to get from config (translated), fallback to defaults

@@ -60,12 +60,23 @@ class SpotlightManager extends Component
     public function mount(): void
     {
         $this->commands = $this->loadCommands();
-        $this->configData = SpotlightRegistry::getConfig()->toArray();
+        $this->configData = $this->buildConfigData();
     }
 
     public function hydrate(): void
     {
         $this->commands = $this->loadCommands();
+    }
+
+    protected function buildConfigData(): array
+    {
+        $config = SpotlightRegistry::getConfig()->toArray();
+
+        // Override enabledModes with actually available modes
+        $availableModes = SpotlightRegistry::getAvailableModes();
+        $config['enabledModes'] = array_map(fn (SpotlightMode $m) => $m->value, $availableModes);
+
+        return $config;
     }
 
     protected function loadCommands(): array
@@ -82,16 +93,29 @@ class SpotlightManager extends Component
 
     public function open(array $options = []): void
     {
-        $requestedMode = $options['mode'] ?? 'search';
+        $availableModes = SpotlightRegistry::getAvailableModes();
+
+        // No modes available = nothing to show
+        if (empty($availableModes)) {
+            return;
+        }
+
+        $requestedMode = $options['mode'] ?? null;
+        $modeEnum = $requestedMode !== null ? SpotlightMode::tryFrom($requestedMode) : null;
+
+        // If requested mode is not available, fallback to first available
+        if ($modeEnum === null || ! in_array($modeEnum, $availableModes, true)) {
+            $modeEnum = $availableModes[0];
+        }
 
         // Guard: Already open with same mode
-        if ($this->isOpen && $this->mode === $requestedMode) {
+        if ($this->isOpen && $this->mode === $modeEnum->value) {
             return;
         }
 
         $this->isOpen = true;
         $this->resetState();
-        $this->mode = SpotlightMode::tryFrom($requestedMode)?->value ?? 'search';
+        $this->mode = $modeEnum->value;
         $this->placeholder = $options['placeholder'] ?? null;
         $this->query = $options['query'] ?? '';
 
@@ -153,6 +177,12 @@ class SpotlightManager extends Component
             return;
         }
 
+        // Only allow switching to available modes
+        $availableModes = SpotlightRegistry::getAvailableModes();
+        if (! empty($availableModes) && ! in_array($modeEnum, $availableModes, true)) {
+            return;
+        }
+
         $this->mode = $modeEnum->value;
         $this->query = '';
         $this->aiResponse = '';
@@ -162,7 +192,17 @@ class SpotlightManager extends Component
 
     public function nextMode(): void
     {
-        $this->setMode($this->currentMode()->next()->value);
+        $availableModes = SpotlightRegistry::getAvailableModes();
+
+        if (count($availableModes) <= 1) {
+            return;
+        }
+
+        $current = $this->currentMode();
+        $currentIndex = array_search($current, $availableModes, true);
+        $nextIndex = ($currentIndex === false ? 0 : $currentIndex + 1) % count($availableModes);
+
+        $this->setMode($availableModes[$nextIndex]->value);
     }
 
     protected function currentMode(): SpotlightMode
@@ -546,7 +586,18 @@ class SpotlightManager extends Component
     #[Computed]
     public function availableModes(): array
     {
-        return SpotlightMode::toArray();
+        $available = SpotlightRegistry::getAvailableModes();
+
+        if (empty($available)) {
+            return [];
+        }
+
+        return array_map(fn (SpotlightMode $mode) => [
+            'value' => $mode->value,
+            'label' => $mode->defaultLabel(),
+            'icon' => $mode->icon(),
+            'shortcut' => $mode->shortcut(),
+        ], $available);
     }
 
     /**

@@ -563,6 +563,59 @@ final class SpotlightRegistry
     }
 
     /**
+     * Check if any commands are registered.
+     */
+    public static function hasCommands(): bool
+    {
+        return ! empty(self::$commands);
+    }
+
+    /**
+     * Check if any search providers are registered.
+     */
+    public static function hasSearchProviders(): bool
+    {
+        return ! empty(self::$searchProviders) || ! empty(self::$searchProviderClasses);
+    }
+
+    /**
+     * Check if any AI providers are registered.
+     */
+    public static function hasAiProviders(): bool
+    {
+        return ! empty(self::$aiProviders);
+    }
+
+    /**
+     * Get available modes based on what is registered.
+     *
+     * A mode is available only if the corresponding providers/commands exist.
+     * - Search: requires search providers or commands with search methods
+     * - Command: requires registered commands
+     * - AI: requires registered AI providers
+     *
+     * @return array<SpotlightMode>
+     */
+    public static function getAvailableModes(): array
+    {
+        $modes = [];
+
+        if (self::hasSearchProviders() || self::hasCommands()) {
+            $modes[] = SpotlightMode::Search;
+        }
+
+        if (self::hasCommands()) {
+            $modes[] = SpotlightMode::Command;
+        }
+
+        if (self::hasAiProviders()) {
+            $modes[] = SpotlightMode::Ai;
+        }
+
+        return $modes;
+    }
+
+    /**
      * Export all commands for debugging.
      *
      * @return array<string, array<string, mixed>>
