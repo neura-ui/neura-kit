@@ -1,6 +1,7 @@
 @aware([
-    'onHover' => false
+    'onHover' => false,
 ])
+
 @props([
     'onHover' => false,
 ])
@@ -8,12 +9,11 @@
 <div
     x-ref="popoverTrigger"
     @if($onHover)
-        x-on:mouseover="show()"
-        x-on:mouseleave="hide()"
+        x-on:mouseenter="hoverShow()"
+        x-on:mouseleave="hoverHide()"
     @endif
-
     x-on:click="toggle()"
-    {{ $attributes->merge(['class' => 'cursor-pointer']) }}
+    {{ $attributes->merge(['class' => 'inline-flex cursor-pointer']) }}
 >
     {{ $slot }}
 </div>

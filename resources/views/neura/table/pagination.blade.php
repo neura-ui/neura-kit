@@ -1,86 +1,89 @@
-
 @if ($paginator->hasPages())
-    <nav role="navigation" aria-label="{{ neura_trans('paginationNavigation') }}" class="flex items-center justify-between w-full">
+    <nav role="navigation" aria-label="{{ neura_trans('paginationNavigation') }}" class="flex items-center justify-between">
+        {{-- Mobile --}}
         <div class="flex justify-between flex-1 sm:hidden gap-2">
             @if ($paginator->onFirstPage())
-                <neura::button variant="outline" disabled class="w-full justify-center">
+                <neura::button variant="outline" disabled size="sm" class="w-full justify-center">
                     {!! __('pagination.previous') !!}
                 </neura::button>
             @else
-                <neura::button variant="outline" wire:click="previousPage" wire:loading.attr="disabled" class="w-full justify-center">
+                <neura::button variant="outline" size="sm" wire:click="previousPage" wire:loading.attr="disabled" class="w-full justify-center">
                     {!! __('pagination.previous') !!}
                 </neura::button>
             @endif
 
             @if ($paginator->hasMorePages())
-                <neura::button variant="outline" wire:click="nextPage" wire:loading.attr="disabled" class="w-full justify-center">
+                <neura::button variant="outline" size="sm" wire:click="nextPage" wire:loading.attr="disabled" class="w-full justify-center">
                     {!! __('pagination.next') !!}
                 </neura::button>
             @else
-                <neura::button variant="outline" disabled class="w-full justify-center">
+                <neura::button variant="outline" disabled size="sm" class="w-full justify-center">
                     {!! __('pagination.next') !!}
                 </neura::button>
             @endif
         </div>
 
-        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-            <div>
-                <p class="text-sm text-neutral-700 dark:text-neutral-400">
-                    {{ neura_trans('showing') }}
-                        @if ($paginator->firstItem())
-                        <span class="font-medium text-neutral-900 dark:text-white">{{ $paginator->firstItem() }}</span>
-                        {{ neura_trans('to') }}
-                        <span class="font-medium text-neutral-900 dark:text-white">{{ $paginator->lastItem() }}</span>
-                    @else
-                        {{ $paginator->count() }}
-                    @endif
+        {{-- Desktop --}}
+        <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+            <p class="text-xs text-neutral-500 dark:text-neutral-400 tabular-nums">
+                @if ($paginator->firstItem())
+                    <span class="font-medium text-neutral-700 dark:text-neutral-300">{{ $paginator->firstItem() }}–{{ $paginator->lastItem() }}</span>
                     {{ neura_trans('of') }}
-                    <span class="font-medium text-neutral-900 dark:text-white">{{ $paginator->total() }}</span>
-                    {{ neura_trans('results') }}
-                </p>
-            </div>
+                    <span class="font-medium text-neutral-700 dark:text-neutral-300">{{ $paginator->total() }}</span>
+                @else
+                    0 {{ neura_trans('results') }}
+                @endif
+            </p>
 
-            <div>
-                <div class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-                    {{-- Previous Page Link --}}
-                    @if ($paginator->onFirstPage())
-                        <neura::button variant="outline" disabled class="rounded-r-none px-2.5" icon="chevron-left" iconVariant="mini" />
-                    @else
-                        <neura::button variant="outline" wire:click="previousPage" wire:loading.attr="disabled" class="rounded-r-none px-2.5" icon="chevron-left" iconVariant="mini" />
+            <div class="flex items-center gap-1">
+                {{-- Previous --}}
+                @if ($paginator->onFirstPage())
+                    <button disabled class="inline-flex items-center justify-center size-8 rounded-md text-neutral-300 dark:text-neutral-600 cursor-not-allowed">
+                        <neura::icon name="chevron-left" class="size-4" variant="mini" />
+                    </button>
+                @else
+                    <button wire:click="previousPage" wire:loading.attr="disabled"
+                        class="inline-flex items-center justify-center size-8 rounded-md text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-700 dark:hover:text-neutral-200 transition-colors">
+                        <neura::icon name="chevron-left" class="size-4" variant="mini" />
+                    </button>
+                @endif
+
+                {{-- Pages --}}
+                @foreach ($elements as $element)
+                    @if (is_string($element))
+                        <span class="inline-flex items-center justify-center size-8 text-xs text-neutral-400 dark:text-neutral-500">
+                            {{ $element }}
+                        </span>
                     @endif
 
-                    {{-- Pagination Elements --}}
-                    @foreach ($elements as $element)
-                        {{-- "Three Dots" Separator --}}
-                        @if (is_string($element))
-                            <span aria-disabled="true" class="relative inline-flex items-center px-4 py-2 -ml-px text-sm font-medium text-neutral-700 bg-white border border-neutral-300 cursor-default leading-5 dark:bg-neutral-950 dark:border-neutral-800 dark:text-neutral-400">
-                                {{ $element }}
-                            </span>
-                        @endif
-
-                        {{-- Array Of Links --}}
-                        @if (is_array($element))
-                            @foreach ($element as $page => $url)
-                                @if ($page == $paginator->currentPage())
-                                    <neura::button variant="outline" class="rounded-none -ml-px bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-white ring-1 ring-neutral-950/5 dark:ring-white/10 z-10" disabled>
-                                        {{ $page }}
-                                    </neura::button>
-                                @else
-                                    <neura::button variant="outline" wire:click="gotoPage({{ $page }})" wire:loading.attr="disabled" class="rounded-none -ml-px bg-white dark:bg-neutral-950 hover:bg-neutral-50 dark:hover:bg-neutral-800">
-                                        {{ $page }}
-                                    </neura::button>
-                                @endif
-                            @endforeach
-                        @endif
-                    @endforeach
-
-                    {{-- Next Page Link --}}
-                    @if ($paginator->hasMorePages())
-                        <neura::button variant="outline" wire:click="nextPage" wire:loading.attr="disabled" class="rounded-l-none -ml-px px-2.5" icon="chevron-right" iconVariant="mini" />
-                    @else
-                        <neura::button variant="outline" disabled class="rounded-l-none -ml-px px-2.5" icon="chevron-right" iconVariant="mini" />
+                    @if (is_array($element))
+                        @foreach ($element as $page => $url)
+                            @if ($page == $paginator->currentPage())
+                                <button disabled
+                                    class="inline-flex items-center justify-center size-8 rounded-md text-xs font-medium bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 tabular-nums">
+                                    {{ $page }}
+                                </button>
+                            @else
+                                <button wire:click="gotoPage({{ $page }})" wire:loading.attr="disabled"
+                                    class="inline-flex items-center justify-center size-8 rounded-md text-xs font-medium text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-neutral-200 transition-colors tabular-nums">
+                                    {{ $page }}
+                                </button>
+                            @endif
+                        @endforeach
                     @endif
-                </div>
+                @endforeach
+
+                {{-- Next --}}
+                @if ($paginator->hasMorePages())
+                    <button wire:click="nextPage" wire:loading.attr="disabled"
+                        class="inline-flex items-center justify-center size-8 rounded-md text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-700 dark:hover:text-neutral-200 transition-colors">
+                        <neura::icon name="chevron-right" class="size-4" variant="mini" />
+                    </button>
+                @else
+                    <button disabled class="inline-flex items-center justify-center size-8 rounded-md text-neutral-300 dark:text-neutral-600 cursor-not-allowed">
+                        <neura::icon name="chevron-right" class="size-4" variant="mini" />
+                    </button>
+                @endif
             </div>
         </div>
     </nav>

@@ -6,6 +6,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.47] - 2026-02-06
+
+### Improved
+- **Table**: Notion/Twenty-style UI overhaul
+  - Flattened container with subtle border and rounded corners
+  - Sticky header with backdrop blur, uppercase text, and wider tracking
+  - Subtle row dividers and hover effects for better readability
+  - Refined column resizer (thinner, rounded, hover-activated)
+  - Improved empty state with centered icon
+  - Compact pagination with minimalist page buttons and icon-only arrows
+- **Table Columns**: Enhanced default column with dash placeholder, alignment, truncate, and hover-copyable support
+- **Table Actions**: Color variants now properly applied (primary, danger, success, warning, info, ghost, secondary)
+  - Icon-only compact buttons with variant-aware hover colors
+  - Popover-based tooltips using `variant="tooltip"` for clean, compact display
+  - Actions fade in on row hover for a cleaner table look
+- **Popover**: Improved hover behavior and UI
+  - Hover delay (75ms show, 150ms hide) to prevent flickering
+  - Overlay stays open when mouse moves from trigger to overlay
+  - `matchWidth` prop to match overlay min-width with trigger width
+  - `inline-flex` trigger for correct width adaptation
+- **Popup**: Enhanced visual styling
+  - New `tooltip` variant for small, dark tooltips
+  - Smoother transitions with subtle scale animation (`scale-[0.97]`)
+  - Added `ring-1` for extra crispness and refined dark mode shadows
+  - Custom scrollbar styling
+
 ## [1.0.46] - 2026-02-06
 
 ### Improved
@@ -24,6 +50,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Improved `x-clipboard` directive validation (null/empty check)
   - All code properly encapsulated inside environment guard
   - Added `on()` method to LivewireAPI type definition
+
+## [1.0.45] - 2026-02-06
+
+### Added
+- **Spotlight**: AI providers system for streaming AI responses
+  - `SpotlightAiProvider` base class and `Contracts\SpotlightAiProvider` interface
+  - `registerAiProvider()` / `registerAiProviders()` on `SpotlightRegistry`
+  - AI response streaming with `spotlight:stream` and `spotlight:ai-complete` events
+  - Custom AI view support via `SpotlightConfig::$aiView`
+  - Dedicated AI response Blade partial (`ai-response.blade.php`)
+- **Spotlight**: Search providers system for custom search sources
+  - `SpotlightSearchProvider` base class and `Contracts\SpotlightSearchProvider` interface
+  - `registerSearchProviderClass()` / `registerSearchProviderClasses()` on `SpotlightRegistry`
+  - Priority-based provider sorting and `canHandle()` filtering
+- **Spotlight**: `make:spotlight` artisan command to generate commands, search providers and AI providers
+- **Spotlight**: `SpotlightConfig` configuration class with full panel customization
+  - Panel position (`top` / `center`), panel size (`sm` to `xl`)
+  - Per-mode placeholders, enabled modes/groups, keyboard shortcuts
+  - Recent searches, debounce, max results settings
+- **Spotlight**: `SpotlightResult` factory methods — `url()`, `action()`, `event()`, `livewire()`, `command()`, `copy()`, `modal()`, `javascript()`
+- **Spotlight**: Enums for `SpotlightActionType`, `SpotlightGroup`, `SpotlightMode`
+- **Spotlight**: `SpotlightCommand` enhanced with `matches()`, `getMatchScore()`, `toResult()`, group/icon/shortcut support
+- **Spotlight**: `SpotlightCall` fluent API — `search()`, `command()`, `ai()`, `placeholder()`, `query()`, `open()`, `toggle()`, `close()`
+
+### Improved
+- **Spotlight**: TypeScript rewrite with typed interfaces and icon SVG map
+- **Spotlight**: Grouped results with `groupedResults` computed property
+- Updated translations (en/fr) with all spotlight-related strings
 
 ## [1.0.44] - 2026-01-26
 

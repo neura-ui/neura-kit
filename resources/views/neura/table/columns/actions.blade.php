@@ -1,5 +1,10 @@
 @props([
+    'value' => null,
     'row' => null,
+    'column' => null,
+    'format' => null,
+    'formatUsing' => null,
+    'html' => null,
     'extraAttributes' => [],
     'variant' => 'ghost',
 ])
@@ -9,17 +14,14 @@
 
     $rawActions = $extraAttributes['actions'] ?? [];
 
-    // Normalize actions once
     $actions = collect($rawActions)->map(fn($action) =>
         $action instanceof Action ? $action->toArray() : $action
     );
 
-    // Helper function to resolve callable or static values
     $resolve = fn($value, $default = true) => is_callable($value)
         ? rescue(fn() => $value($row), $default, false)
         : ($value ?? $default);
 
-    // Helper function to recursively resolve callables in nested structures
     $resolveParams = function($params) use ($row, &$resolveParams) {
         if (is_array($params)) {
             return collect($params)->map(function($param) use ($row, $resolveParams) {
@@ -32,15 +34,12 @@
                 return $param;
             })->all();
         }
-
         if (is_callable($params)) {
             return rescue(fn() => $params($row), $params, false);
         }
-
         return $params;
     };
 
-    // Helper function to format wire:click parameters
     $formatWireParam = function($param) {
         return match(true) {
             is_string($param) => "'" . addslashes($param) . "'",
@@ -51,109 +50,109 @@
         };
     };
 
-    // Helper function to build wire:click string
-    $buildWireClick = function($wireClick, $rawParams) use ($resolveParams, $formatWireParam, $row) {
-        // Resolve all callables in params first
+    $buildWireClick = function($wireClick, $rawParams) use ($resolveParams, $formatWireParam) {
         $resolvedParams = $resolveParams($rawParams);
-
-        // Ensure params is an array
         $paramsArray = is_array($resolvedParams) ? $resolvedParams : [$resolvedParams];
-
-        // Format params for wire:click
-        $formattedParams = collect($paramsArray)
-            ->map($formatWireParam)
-            ->join(', ');
-
+        $formattedParams = collect($paramsArray)->map($formatWireParam)->join(', ');
         return $wireClick . '(' . $formattedParams . ')';
     };
+
+    // Pre-build action data to keep template clean
+    $renderedActions = [];
+    foreach ($actions as $action) {
+        if (!$resolve($action['visible'] ?? true)) continue;
+
+        $params = $resolve($action['params'] ?? null, [$row->id ?? $row]);
+        $params = is_array($params) ? $params : [$params];
+
+        $tooltip = is_callable($action['tooltip'] ?? null)
+            ? rescue(fn() => ($action['tooltip'])($row), null, false)
+            : ($action['tooltip'] ?? null);
+
+        $wireClickString = null;
+        if (isset($action['wireClick'])) {
+            $wireClickString = $buildWireClick(
+                $action['wireClick'],
+                $action['params'] ?? [$row->id ?? $row]
+            );
+        }
+
+        $renderedActions[] = [
+            'icon' => $action['icon'] ?? null,
+            'label' => $action['label'] ?? null,
+            'variant' => $action['variant'] ?? $variant,
+            'size' => $action['size'] ?? 'sm',
+            'tooltip' => $tooltip,
+            'disabled' => !$resolve($action['enabled'] ?? true, true),
+            'confirm' => $action['confirm'] ?? null,
+            'route' => isset($action['route']) ? route($action['route'], $params) : null,
+            'href' => isset($action['href'])
+                ? (is_callable($action['href']) ? rescue(fn() => ($action['href'])($row), '#', false) : $action['href'])
+                : null,
+            'url' => $action['url'] ?? null,
+            'wireClick' => $wireClickString,
+            'dispatch' => $action['dispatch'] ?? null,
+            'dispatchPayload' => isset($action['dispatch'])
+                ? json_encode($resolveParams($action['dispatchParams'] ?? $params))
+                : null,
+        ];
+    }
 @endphp
 
-<div class="flex items-center gap-2">
-    @foreach($actions as $action)
+@php
+    $btnClass = 'inline-flex items-center justify-center rounded-md transition-colors size-7 text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800';
+    $disabledClass = 'pointer-events-none opacity-40';
+@endphp
+
+<div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+    @foreach($renderedActions as $a)
         @php
-            // Check visibility
-            if (!$resolve($action['visible'] ?? true)) {
-                continue;
-            }
-
-            // Resolve parameters for routes/URLs
-            $params = $resolve($action['params'] ?? null, [$row->id ?? $row]);
-            $params = is_array($params) ? $params : [$params];
-
-            // Extract action properties
-            $tooltip = $action['tooltip'] ?? null;
-            $icon = $action['icon'] ?? null;
-            $actionVariant = $action['variant'] ?? $variant;
-            $size = $action['size'] ?? 'sm';
-
-            // Build wire:click string if needed
-            $wireClickString = null;
-            if (isset($action['wireClick'])) {
-                $wireClickString = $buildWireClick(
-                    $action['wireClick'],
-                    $action['params'] ?? [$row->id ?? $row]
-                );
-            }
+            $classes = $btnClass . ($a['disabled'] ? ' ' . $disabledClass : '');
         @endphp
 
-        @if($tooltip)
-            <neura::popover :onHover="true">
-                <neura::popover.trigger>
-                    @if(isset($action['route']))
-                        <neura::button
-                            variant="{{ $actionVariant }}"
-                            size="{{ $size }}"
-                            icon="{{ $icon }}"
-                            as="a"
-                            href="{{ route($action['route'], $params) }}"
-                        />
-                    @elseif(isset($action['url']))
-                        <neura::button
-                            variant="{{ $actionVariant }}"
-                            size="{{ $size }}"
-                            icon="{{ $icon }}"
-                            as="a"
-                            href="{{ $action['url'] }}"
-                        />
-                    @elseif($wireClickString)
-                        <neura::button
-                            variant="{{ $actionVariant }}"
-                            size="{{ $size }}"
-                            icon="{{ $icon }}"
-                            wire:click="{{ $wireClickString }}"
-                        />
-                    @endif
-                </neura::popover.trigger>
-                <neura::popover.overlay>
-                    <div class="px-2 py-1 text-sm">
-                        {{ $tooltip }}
-                    </div>
-                </neura::popover.overlay>
-            </neura::popover>
-        @else
-            @if(isset($action['route']))
-                <neura::button
-                    variant="{{ $actionVariant }}"
-                    size="{{ $size }}"
-                    icon="{{ $icon }}"
-                    as="a"
-                    href="{{ route($action['route'], $params) }}"
-                />
-            @elseif(isset($action['url']))
-                <neura::button
-                    variant="{{ $actionVariant }}"
-                    size="{{ $size }}"
-                    icon="{{ $icon }}"
-                    as="a"
-                    href="{{ $action['url'] }}"
-                />
-            @elseif($wireClickString)
-                <neura::button
-                    variant="{{ $actionVariant }}"
-                    size="{{ $size }}"
-                    icon="{{ $icon }}"
-                    wire:click="{{ $wireClickString }}"
-                />
+        {{-- Build the button/link --}}
+        @if($a['route'] || $a['href'] || $a['url'])
+            @if($a['tooltip'])
+                <neura::popover :onHover="true" variant="tooltip" size="xs">
+                    <neura::popover.trigger>
+                        <a href="{{ $a['route'] ?? $a['href'] ?? $a['url'] }}" class="{{ $classes }}">
+                            @if($a['icon']) <neura::icon name="{{ $a['icon'] }}" class="size-4" /> @endif
+                        </a>
+                    </neura::popover.trigger>
+                    <neura::popover.overlay class="whitespace-nowrap">
+                        <div class="px-2 py-1 text-xs">{{ $a['tooltip'] }}</div>
+                    </neura::popover.overlay>
+                </neura::popover>
+            @else
+                <a href="{{ $a['route'] ?? $a['href'] ?? $a['url'] }}" class="{{ $classes }}">
+                    @if($a['icon']) <neura::icon name="{{ $a['icon'] }}" class="size-4" /> @endif
+                </a>
+            @endif
+        @elseif($a['wireClick'])
+            @if($a['tooltip'])
+                <neura::popover :onHover="true" variant="tooltip" size="xs">
+                    <neura::popover.trigger>
+                        <neura::button variant="{{ $a['variant'] }}" size="{{ $a['size'] }}" icon="{{ $a['icon'] }}" wire:click="{{ $a['wireClick'] }}" />
+                    </neura::popover.trigger>
+                    <neura::popover.overlay class="whitespace-nowrap">
+                        <div class="px-2 py-1 text-xs">{{ $a['tooltip'] }}</div>
+                    </neura::popover.overlay>
+                </neura::popover>
+            @else
+                <neura::button variant="{{ $a['variant'] }}" size="{{ $a['size'] }}" icon="{{ $a['icon'] }}" wire:click="{{ $a['wireClick'] }}" />
+            @endif
+        @elseif($a['dispatch'])
+            @if($a['tooltip'])
+                <neura::popover :onHover="true" variant="tooltip" size="xs">
+                    <neura::popover.trigger>
+                        <neura::button variant="{{ $a['variant'] }}" size="{{ $a['size'] }}" icon="{{ $a['icon'] }}" x-on:click="$dispatch('{{ $a['dispatch'] }}', {{ $a['dispatchPayload'] }})" />
+                    </neura::popover.trigger>
+                    <neura::popover.overlay class="whitespace-nowrap">
+                        <div class="px-2 py-1 text-xs">{{ $a['tooltip'] }}</div>
+                    </neura::popover.overlay>
+                </neura::popover>
+            @else
+                <neura::button variant="{{ $a['variant'] }}" size="{{ $a['size'] }}" icon="{{ $a['icon'] }}" x-on:click="$dispatch('{{ $a['dispatch'] }}', {{ $a['dispatchPayload'] }})" />
             @endif
         @endif
     @endforeach
