@@ -1,7 +1,22 @@
 {
     "bulkActions": "Bulk actions",
-    "search": "Search...",
-    "select": "select ...",
+    "search": "Search",
+    "select": "Select",
+    "commands": "Commands",
+    "ai": "AI",
+    "close": "Close",
+    "noResultsFor": "No results found for",
+    "tryDifferentSearch": "Try a different search term",
+    "typeToSearchCommands": "Start typing to search commands...",
+    "askAi": "Ask AI",
+    "askAiAnything": "Ask AI anything",
+    "pressEnterToSend": "Press Enter to send your question",
+    "aiThinking": "AI is thinking...",
+    "navigate": "Navigate",
+    "switchMode": "Switch mode",
+    "searchPlaceholder": "Search anything...",
+    "commandPlaceholder": "Type a command...",
+    "aiPlaceholder": "Ask AI anything...",
     "itemsSelected": "items selected",
     "noResultsFound": "no results found",
     "clearSearch": "Clear search",
@@ -33,7 +48,6 @@
     "warning": "Warning",
     "confirm": "Confirm",
     "cancel": "Cancel",
-    "close": "Close",
     "dragToResize": "Drag to resize",
     "filter": "Filter",
     "all": "All",
@@ -98,4 +112,3 @@
     "pending": "Pending",
     "invalidFileType": "Invalid file type: {fileName}"
 }
-

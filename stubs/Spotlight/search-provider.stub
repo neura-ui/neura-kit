@@ -1,0 +1,63 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use Neura\Kit\Support\Spotlight\SpotlightSearchProvider;
+
+/**
+ * {{ commandName }} Search Provider.
+ *
+ * @see https://neurakit.dev/docs/atoms/spotlight
+ */
+class {{ class }} extends SpotlightSearchProvider
+{
+    /**
+     * Unique identifier for this search provider.
+     */
+    protected string $id = '{{ commandId }}';
+
+    /**
+     * Display name for this search provider.
+     */
+    protected string $name = '{{ commandName }}';
+
+    /**
+     * Higher = shows first (0-100).
+     */
+    protected int $priority = 50;
+
+    /**
+     * Keywords to help identify when this provider should be used.
+     */
+    protected array $keywords = [];
+
+    /**
+     * Minimum query length before searching.
+     */
+    protected int $minQueryLength = 2;
+
+    /**
+     * Perform the search and return results.
+     *
+     * @param string $query The search query
+     * @return array Array of search results with 'id', 'name', 'description', 'icon', 'url', etc.
+     */
+    public function search(string $query): array
+    {
+        // TODO: Implement your search logic here
+        // Example:
+        // return [
+        //     [
+        //         'id' => 'result-1',
+        //         'name' => 'Result 1',
+        //         'description' => 'Description of result 1',
+        //         'icon' => 'document',
+        //         'url' => '/path/to/result-1',
+        //     ],
+        // ];
+
+        return [];
+    }
+}

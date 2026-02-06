@@ -1,0 +1,68 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use Neura\Kit\Support\Spotlight\Enums\SpotlightGroup;
+use Neura\Kit\Support\Spotlight\SpotlightCommand;
+
+/**
+ * {{ commandName }} Command.
+ *
+ * @see https://neurakit.dev/docs/atoms/spotlight
+ */
+class {{ class }} extends SpotlightCommand
+{
+    /**
+     * Command name shown in Spotlight.
+     */
+    protected string $name = '{{ commandName }}';
+
+    /**
+     * Brief description.
+     */
+    protected string $description = 'Description of {{ commandName }}';
+
+    /**
+     * Heroicon name (e.g., 'home', 'user', 'cog').
+     *
+     * @see https://heroicons.com
+     */
+    protected ?string $icon = 'bolt';
+
+    /**
+     * Keyboard shortcut (e.g., '⌘K', '⌘⇧D').
+     */
+    protected ?string $shortcut = null;
+
+    /**
+     * Category for grouping.
+     */
+    protected SpotlightGroup $group = SpotlightGroup::Actions;
+
+    /**
+     * Higher = shows first (0-100).
+     */
+    protected int $priority = 50;
+
+    /**
+     * Extra searchable words.
+     */
+    protected array $keywords = [];
+
+    /**
+     * What happens when this command is selected.
+     *
+     * Available helpers:
+     * - $this->goTo('/url')      Navigate to a URL
+     * - $this->emit('event')     Emit a browser event
+     * - $this->wire('method')    Call a Livewire method
+     * - $this->copy('text')      Copy text to clipboard
+     * - $this->modal('name')     Open a modal
+     */
+    public function execute(array $params = []): mixed
+    {
+        {{ executeMethod }}
+    }
+}

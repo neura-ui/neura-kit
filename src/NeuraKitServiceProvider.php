@@ -103,11 +103,17 @@ class NeuraKitServiceProvider extends ServiceProvider
         $this->bootTagCompiler();
         $this->configureComponents();
         $this->registerRoutes();
+        $this->loadTranslations();
 
         // Clear view cache in development when license status changes
         if ($this->app->environment('local') && config('app.debug')) {
             $this->clearViewCacheIfNeeded();
         }
+    }
+
+    protected function loadTranslations(): void
+    {
+        $this->loadJsonTranslationsFrom(__DIR__.'/../resources/lang');
     }
 
     protected function configurePublishing(): void
@@ -122,6 +128,7 @@ class NeuraKitServiceProvider extends ServiceProvider
             Console\InstallDependenciesCommand::class,
             Console\MakeModalCommand::class,
             Console\MakeTableCommand::class,
+            Console\MakeSpotlightCommand::class,
         ]);
 
         $this->publishes([

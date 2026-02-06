@@ -23,7 +23,9 @@
 
 @if(class_exists(Livewire::class))
     @livewire('neura-kit.modal-manager')
-    @livewire('neura-kit.spotlight-manager')
+    @once
+        @livewire('neura-kit.spotlight-manager')
+    @endonce
 @endif
 
 <neura::dialog-manager/>

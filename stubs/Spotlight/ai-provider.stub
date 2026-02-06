@@ -1,0 +1,67 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use Neura\Kit\Support\Spotlight\SpotlightAiProvider;
+
+/**
+ * {{ commandName }} AI Provider.
+ *
+ * The $stream callback uses Livewire's native stream() under the hood,
+ * sending each chunk directly to the browser via wire:stream.
+ *
+ * @see https://neurakit.dev/docs/atoms/spotlight
+ */
+class {{ class }} extends SpotlightAiProvider
+{
+    /**
+     * Higher = shows first (0-100).
+     */
+    protected int $priority = 50;
+
+    /**
+     * Keywords to help identify when this provider should be used.
+     * Leave empty to handle all queries.
+     */
+    protected array $keywords = [];
+
+    /**
+     * Handle the AI query and stream the response.
+     *
+     * Each call to $stream() pushes content to the browser in real-time
+     * using Livewire's wire:stream. No JavaScript needed.
+     *
+     * @param string $query The user's question
+     * @param callable(string): void $stream Stream chunks to the browser
+     * @return string|null
+     */
+    public function handle(string $query, callable $stream): ?string
+    {
+        // TODO: Implement your AI logic here
+        //
+        // Example 1 - Simple response:
+        // $stream("# Answer\n\nHere is the answer to: {$query}");
+        //
+        // Example 2 - Simulated streaming:
+        // $words = explode(' ', "This is a streamed response.");
+        // foreach ($words as $word) {
+        //     $stream($word . ' ');
+        //     usleep(50000); // 50ms between words
+        // }
+        //
+        // Example 3 - OpenAI streaming:
+        // $result = OpenAI::chat()->createStreamed([
+        //     'model' => 'gpt-4',
+        //     'messages' => [['role' => 'user', 'content' => $query]],
+        // ]);
+        // foreach ($result as $response) {
+        //     $stream($response->choices[0]->delta->content ?? '');
+        // }
+
+        $stream("# Response\n\nTODO: Implement AI logic for: {$query}");
+
+        return null;
+    }
+}
