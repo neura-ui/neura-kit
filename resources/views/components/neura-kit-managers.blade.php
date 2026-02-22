@@ -23,6 +23,7 @@
 
 @if(class_exists(Livewire::class))
     @livewire('neura-kit.modal-manager')
+    @livewire('neura-kit.sideover-manager')
     @once
         @livewire('neura-kit.spotlight-manager')
     @endonce

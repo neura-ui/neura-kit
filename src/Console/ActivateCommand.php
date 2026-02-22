@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Neura\Kit\Console;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 use Neura\Kit\Exceptions\LicenseException;
 use Neura\Kit\Services\License\LicenseService;
 
@@ -51,7 +52,7 @@ class ActivateCommand extends Command
             return self::FAILURE;
         } catch (\Exception $e) {
             $this->error('❌ Unexpected error: '.$e->getMessage());
-
+            Log::error('Unexpected error: '.$e);
             return self::FAILURE;
         }
     }

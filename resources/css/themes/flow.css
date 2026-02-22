@@ -1,0 +1,32 @@
+@import '@copyfactory/alpine-flow/dist/flow.css';
+
+/**
+ * Flow (alpine-flow) overrides — unlayered so they override flow.css.
+ * - .flow__nodes: pointer-events none so pan/zoom receives events on empty space;
+ *   .flow__node keeps pointer-events so nodes stay interactive.
+ * - Toolbar and buttons: Neura Kit style (rounded, neutral, border).
+ */
+.flow__nodes {
+  @apply pointer-events-none;
+}
+
+.flow__nodes .flow__node {
+  @apply pointer-events-auto;
+}
+
+.flow__toolbar {
+  @apply inline-flex items-center gap-0 rounded-lg border border-neutral-200 bg-white p-0.5 shadow-sm dark:border-neutral-700 dark:bg-neutral-900;
+}
+
+.flow__toolbar__button {
+  @apply inline-flex size-8 cursor-pointer select-none items-center justify-center rounded-md border-0 bg-transparent p-0 text-neutral-600 transition-colors duration-150 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-50;
+}
+
+.flow__toolbar__button:not(:first-child) {
+  @apply ml-0;
+}
+
+/* Dark mode: darker dots so they're visible on dark background */
+.dark .flow__background.dots {
+  @apply bg-[length:16px_16px] bg-[image:radial-gradient(rgb(64_64_64)_1px,transparent_1px)];
+}

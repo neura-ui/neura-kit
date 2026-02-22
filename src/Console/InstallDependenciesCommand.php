@@ -42,6 +42,9 @@ class InstallDependenciesCommand extends Command
         '@editorjs/marker' => '^1.3.0',
         '@editorjs/delimiter' => '^1.3.0',
         '@editorjs/table' => '^2.2.0',
+        
+        // Alpine Flow - Workflow/flowchart UI (Alpine.js provided by Livewire)
+        '@copyfactory/alpine-flow' => '^0.3.0',
     ];
 
     public function handle(LicenseService $licenseService): int

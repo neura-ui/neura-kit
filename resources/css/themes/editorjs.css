@@ -152,20 +152,20 @@
 
 .ct::before,
 .ct::after {
-  background-color: rgb(23 23 23) !important;
+  @apply !bg-neutral-900;
 }
 
 .dark .ct::before,
 .dark .ct::after {
-  background-color: rgb(245 245 245) !important;
+  @apply !bg-neutral-100;
 }
 
 .ct__content {
-  color: rgb(245 245 245) !important;
+  @apply !text-neutral-100;
 }
 
 .dark .ct__content {
-  color: rgb(23 23 23) !important;
+  @apply !text-neutral-900;
 }
 
 /* ============================================

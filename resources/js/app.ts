@@ -2,6 +2,7 @@ import './globals/translations';
 import './globals/theme';
 import './globals/toast';
 import './globals/modal';
+import './globals/sideover';
 import './globals/neura-kit';
 import './globals/command';
 import './globals/context-menu';
@@ -13,6 +14,7 @@ import './globals/editor';
 import './globals/clipboard';
 import './globals/phone-input';
 import './globals/tree';
+import './globals/flow';
 import './globals/spotlight';
 import './components';
 

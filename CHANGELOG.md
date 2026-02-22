@@ -6,6 +6,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.48] - 2026-02-19
+
+### Added
+- **Sideover**: Full sideover (drawer) panel system
+  - `SideoverManager` Livewire component for managing sideover lifecycle and stack
+  - `SideoverComponent` base class with configurable side, width, close behavior, and stack navigation
+  - `SideoverCall` fluent API (like `ModalCall`) for opening sideovers from Livewire components
+  - `sideover()` method added to `InteractsWithNeuraKit` trait — chain `->side()`, `->width()`, `->with()`, `->open()`
+  - `SideoverComponent` contract interface
+  - Alpine.js `sideoverManager` data component with stack, transitions, focus trap, and loading state
+  - `NeuraKitSideover` global JS API (`open`, `close`, `goBack`)
+  - Sideover config section in `neura-kit.php` with component defaults (side, width, close behaviors)
+  - Sideover manager Blade view with backdrop, slide transitions, and dynamic width classes
+  - Registered `neura-kit.sideover-manager` Livewire component in service provider
+  - Added `@livewire('neura-kit.sideover-manager')` to `neura-kit-managers` Blade
+- **Flow**: Alpine Flow integration for workflow/flowchart UI
+  - Added `@copyfactory/alpine-flow` dependency
+  - Flow CSS theme and JS global import
+
+### Fixed
+- **SideoverManager**: Width override now properly recalculates `widthClass` when `width` attribute is passed at open time
+- **ActivateCommand**: Added error logging on unexpected activation failures
+
+### Improved
+- **EditorJS theme**: Refactored inline color overrides to Tailwind `@apply` directives
+
 ## [1.0.47] - 2026-02-06
 
 ### Improved

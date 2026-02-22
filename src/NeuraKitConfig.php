@@ -117,6 +117,30 @@ class NeuraKitConfig
         ], $options);
     }
 
+    public static function sideover(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'side' => 'right',
+                'width' => 'md',
+                'close-on-click-away' => true,
+                'close-on-escape' => true,
+            ],
+            'packs' => [
+                'rounders' => Packs\Rounded::class,
+            ],
+            'component_defaults' => [
+                'sideover_side' => 'right',
+                'sideover_width' => 'md',
+                'close_sideover_on_click_away' => true,
+                'close_sideover_on_escape' => true,
+                'close_sideover_on_escape_is_forceful' => true,
+                'dispatch_close_event' => false,
+                'destroy_on_close' => true,
+            ],
+        ], $options);
+    }
+
     public static function card(array $options = []): array
     {
         return self::mix([

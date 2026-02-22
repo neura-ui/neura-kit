@@ -59,6 +59,8 @@ return [
 
     'modal' => Config::modal(),
 
+    'sideover' => Config::sideover(),
+
     'card' => Config::card(),
 
     'dropdown' => Config::dropdown(),
