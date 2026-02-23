@@ -1,22 +1,29 @@
 @props([
-    'tooltip'=>null
+    'tooltip' => null,
+    'mobile' => false,
 ])
 
-<neura::navlist.has-tooltip
-    tooltip="toggle sidebar"
-    :condition="true"
->
+@if ($mobile)
     <button
         {{ $attributes->class(
-            "relative [:where(&)]:mx-auto inline-flex hover:dark:bg-white/5 hover:bg-neutral-800/5 p-1.5 rounded-box cursor-pointer"
+            "relative inline-flex items-center justify-center size-9 rounded-lg cursor-pointer
+                     text-fg-muted hover:text-fg hover:bg-neutral-100 dark:hover:bg-white/5
+                     transition-colors duration-150",
         ) }}
-        x-on:click="toggle()"
-        data-slot="sidebar-toggle"
-    >
-        <neura::icon
-            name="code-bracket-square"
-        />
-        <span class="absolute size-12 top-1/2 left-1/2 -translate-1/2 pointer-fine:hidden">
-        </span>
+        x-on:click="toggle()" data-slot="sidebar-toggle">
+        <neura::icon name="bars-3" variant="micro" class="size-4" />
     </button>
-</neura::navlist.has-tooltip>
+@else
+    <button
+        {{ $attributes->class(
+            "relative inline-flex items-center justify-center size-7 rounded-md cursor-pointer
+                     text-neutral-400 dark:text-neutral-500
+                     hover:text-neutral-600 dark:hover:text-neutral-300
+                     hover:bg-neutral-100 dark:hover:bg-white/[0.06]
+                     active:bg-neutral-200 dark:active:bg-white/10
+                     transition-all duration-150",
+        ) }}
+        x-on:click="toggle()" data-slot="sidebar-toggle">
+        <neura::icon name="code-bracket-square" class="size-6" />
+    </button>
+@endif

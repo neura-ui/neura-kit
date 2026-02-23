@@ -54,7 +54,7 @@
     <div class="{{ $containerClasses }}">
         @if($withSidebarToggle)
             <div class="md:hidden -ml-2">
-                <neura::sidebar.toggle />
+                <neura::sidebar.toggle :mobile="true" />
             </div>
         @endif
 

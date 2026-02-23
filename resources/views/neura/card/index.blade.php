@@ -50,44 +50,40 @@
         default => '[:where(&)]:rounded-lg',
     };
 
-    // Shadow classes
+    // Shadow classes — layered compound shadows for modern depth
     $shadowClasses = match ($shadow) {
         'none' => '',
-        'xs' => 'shadow-xs',
-        'sm' => 'shadow-sm',
-        'md' => 'shadow-md',
-        'lg' => 'shadow-lg',
-        'xl' => 'shadow-xl',
-        '2xl' => 'shadow-2xl',
-        'inner' => 'shadow-inner',
-        default => 'shadow-sm',
+        'xs' => 'shadow-[0_1px_2px_rgb(0_0_0/0.04)] dark:shadow-[0_1px_2px_rgb(0_0_0/0.2)]',
+        'sm' => 'shadow-[0_1px_3px_rgb(0_0_0/0.04),0_1px_2px_-1px_rgb(0_0_0/0.03)] dark:shadow-[0_1px_3px_rgb(0_0_0/0.3),0_1px_2px_-1px_rgb(0_0_0/0.2)]',
+        'md' => 'shadow-[0_4px_6px_-1px_rgb(0_0_0/0.05),0_2px_4px_-2px_rgb(0_0_0/0.04)] dark:shadow-[0_4px_6px_-1px_rgb(0_0_0/0.35),0_2px_4px_-2px_rgb(0_0_0/0.25)]',
+        'lg' => 'shadow-[0_10px_15px_-3px_rgb(0_0_0/0.05),0_4px_6px_-4px_rgb(0_0_0/0.04)] dark:shadow-[0_10px_15px_-3px_rgb(0_0_0/0.4),0_4px_6px_-4px_rgb(0_0_0/0.3)]',
+        'xl' => 'shadow-[0_20px_25px_-5px_rgb(0_0_0/0.06),0_8px_10px_-6px_rgb(0_0_0/0.04)] dark:shadow-[0_20px_25px_-5px_rgb(0_0_0/0.45),0_8px_10px_-6px_rgb(0_0_0/0.3)]',
+        '2xl' => 'shadow-[0_25px_50px_-12px_rgb(0_0_0/0.15)] dark:shadow-[0_25px_50px_-12px_rgb(0_0_0/0.5)]',
+        'inner' => 'shadow-[inset_0_2px_4px_rgb(0_0_0/0.04)] dark:shadow-[inset_0_2px_4px_rgb(0_0_0/0.2)]',
+        default => 'shadow-[0_1px_3px_rgb(0_0_0/0.04),0_1px_2px_-1px_rgb(0_0_0/0.03)] dark:shadow-[0_1px_3px_rgb(0_0_0/0.3),0_1px_2px_-1px_rgb(0_0_0/0.2)]',
     };
 
-    // Variant styles
+    // Variant styles — subtle borders with ring for crispness
     $variantStyles = match ($variant) {
         'default' => [
             'bg' => 'bg-surface',
-            'border' => 'border border-edge',
+            'border' => 'border border-black/[0.06] dark:border-white/[0.08] ring-1 ring-black/[0.02] dark:ring-white/[0.03]',
         ],
         'outline' => [
             'bg' => 'bg-transparent',
-            'border' => 'border-2 border-edge-hover',
+            'border' => 'border-2 border-black/[0.1] dark:border-white/[0.12]',
         ],
         'soft' => [
             'bg' => 'bg-surface-inset',
-            'border' => 'border border-edge',
+            'border' => 'border border-black/[0.04] dark:border-white/[0.06]',
         ],
         'elevated' => [
             'bg' => 'bg-surface',
-            'border' => 'border border-edge',
+            'border' => 'border border-black/[0.04] dark:border-white/[0.06] ring-1 ring-black/[0.02] dark:ring-white/[0.03]',
         ],
         'flat' => [
-            'bg' => 'bg-surface',
+            'bg' => 'bg-neutral-50 dark:bg-white/[0.03]',
             'border' => 'border-0',
-        ],
-        'bordered' => [
-            'bg' => 'bg-surface',
-            'border' => 'border-2 border-edge-hover',
         ],
         'ghost' => [
             'bg' => 'bg-transparent',
@@ -95,7 +91,7 @@
         ],
         default => [
             'bg' => 'bg-surface',
-            'border' => 'border border-edge',
+            'border' => 'border border-black/[0.06] dark:border-white/[0.08] ring-1 ring-black/[0.02] dark:ring-white/[0.03]',
         ],
     };
 
@@ -143,9 +139,9 @@
         }
     }
 
-    // Adjust shadow for elevated variant
+    // Elevated variant gets a deeper shadow by default
     if ($variant === 'elevated' && $shadow === 'sm') {
-        $shadowClasses = 'shadow-lg';
+        $shadowClasses = 'shadow-[0_10px_15px_-3px_rgb(0_0_0/0.05),0_4px_6px_-4px_rgb(0_0_0/0.04)] dark:shadow-[0_10px_15px_-3px_rgb(0_0_0/0.4),0_4px_6px_-4px_rgb(0_0_0/0.3)]';
     }
 
     // Build final classes array

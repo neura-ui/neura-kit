@@ -162,9 +162,9 @@
                     x-bind:data-collapsable="collapsable"
                     class="
                         [&:not([data-collapsable=true])]:hidden
+                        opacity-0 group-hover:opacity-100 transition-opacity duration-150
                         in-[:has([data-collapsed]_&)_&]:group-hover:inline-flex
                         in-[:has([data-collapsed]_&)]:hidden
-                        in-[:has([data-collapsed]_&)]:cursor-ew-resize
                     "
                 />
             @endif

@@ -6,6 +6,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2026-02-23
+
+### Improved
+- **Card**: Border and shadow refinements
+  - Compound shadows with separate light/dark opacity for cleaner depth
+  - Subtle borders using opacity-based neutrals (`border-black/[0.06]`, `ring-1` for crispness)
+  - Outline variant uses dashed border to distinguish from solid bordered look
+  - Flat variant uses subtle tinted background (`bg-neutral-50` / `dark:bg-white/[0.03]`) vs ghost (transparent)
+- **Sidebar Toggle**: Twenty CRM–style and behavior
+  - Desktop: chevron icon with rotation when collapsed, subtle hover (opacity, scale), appears on sidebar brand hover
+  - Mobile: hamburger icon in header, compact rounded button
+  - Toggle hidden when layout is not collapsable
+
+### Removed
+- **Card**: `bordered` variant removed to simplify API; use `default` or `outline` instead. Existing `variant="bordered"` falls back to default styling.
+
 ## [1.1.0] - 2026-02-23
 
 ### Added
