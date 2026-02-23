@@ -13,7 +13,6 @@
     }
 @endphp
 
-<div>
+<div class="text-[13px] text-neutral-900 dark:text-neutral-100 [&_a]:text-primary-600 dark:[&_a]:text-primary-400 [&_a]:underline [&_a]:underline-offset-2">
     {!! $htmlContent !!}
 </div>
-

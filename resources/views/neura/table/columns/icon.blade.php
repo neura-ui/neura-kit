@@ -11,16 +11,16 @@
         'mac' => 'device-phone-mobile',
         'linux' => 'server',
     ];
-    
+
     $rawValue = $value ?? $extraAttributes['icon'] ?? null;
-    
+
     if (empty($rawValue)) {
         $iconNameValue = 'information-circle';
     } else {
         $rawValue = is_string($rawValue) ? strtolower(trim($rawValue)) : $rawValue;
         $iconNameValue = $iconMapping[$rawValue] ?? $rawValue;
     }
-    
+
     $iconVariantValue = $extraAttributes['variant'] ?? 'micro';
     $iconColorValue = $extraAttributes['color'] ?? null;
 @endphp
@@ -30,7 +30,7 @@
         <neura::icon
             name="{{ $iconNameValue }}"
             variant="{{ $iconVariantValue }}"
-            @if($iconColorValue) class="text-{{ $iconColorValue }}-500" @endif
+            class="size-4 {{ $iconColorValue ? 'text-' . $iconColorValue . '-500 dark:text-' . $iconColorValue . '-400' : 'text-neutral-500 dark:text-neutral-400' }}"
         />
     </div>
 @endif

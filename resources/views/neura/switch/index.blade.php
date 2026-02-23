@@ -87,7 +87,7 @@
 
                 @if ($iconOff)
                     <neura::icon name="{{ $iconOff }}" x-show="!checked"
-                        class="{{ $sizeConfig['iconSize'] }} text-neutral-400" style="display:none" />
+                        class="{{ $sizeConfig['iconSize'] }} text-fg-muted" style="display:none" />
                 @endif
             </span>
         </button>
@@ -95,7 +95,7 @@
         {{-- label --}}
         @if ($label)
             <label id="{{ $id }}-label"
-                class="block text-start flex-1 text-sm font-medium text-neutral-700 dark:text-neutral-300 cursor-pointer select-none"
+                class="block text-start flex-1 text-sm font-medium text-fg cursor-pointer select-none"
                 @if (!$disabled) @click.stop="toggle" @endif>
                 {{ $label }}
             </label>
@@ -107,7 +107,7 @@
     </div>
 
     @if ($description)
-        <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400 text-start">
+        <p class="mt-1 text-sm text-fg-muted text-start">
             {{ $description }}
         </p>
     @endif

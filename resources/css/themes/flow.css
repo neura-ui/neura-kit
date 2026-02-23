@@ -1,11 +1,7 @@
 @import '@copyfactory/alpine-flow/dist/flow.css';
 
-/**
- * Flow (alpine-flow) overrides — unlayered so they override flow.css.
- * - .flow__nodes: pointer-events none so pan/zoom receives events on empty space;
- *   .flow__node keeps pointer-events so nodes stay interactive.
- * - Toolbar and buttons: Neura Kit style (rounded, neutral, border).
- */
+/* ── Layout ────────────────────────────────────────────────────────── */
+
 .flow__nodes {
   @apply pointer-events-none;
 }
@@ -14,19 +10,209 @@
   @apply pointer-events-auto;
 }
 
+/* ── Background dots ───────────────────────────────────────────────── */
+
+.flow__background.dots {
+  @apply bg-[length:20px_20px] bg-[image:radial-gradient(oklch(0.86_0_0)_1px,transparent_1px)];
+}
+
+.dark .flow__background.dots {
+  @apply bg-[length:20px_20px] bg-[image:radial-gradient(oklch(0.22_0_0)_1px,transparent_1px)];
+}
+
+/* ── Edge paths ────────────────────────────────────────────────────── */
+
+.flow__edge-path {
+  stroke: oklch(0.72 0 0);
+  stroke-width: 1.5;
+  transition: stroke 0.15s ease, stroke-width 0.15s ease;
+}
+
+.dark .flow__edge-path {
+  stroke: oklch(0.38 0 0);
+}
+
+.flow__edges:hover .flow__edge-path {
+  stroke: oklch(0.55 0.1 250);
+  stroke-width: 2;
+}
+
+.dark .flow__edges:hover .flow__edge-path {
+  stroke: oklch(0.6 0.12 250);
+  stroke-width: 2;
+}
+
+.flow__edge-path.animated {
+  stroke-dasharray: 6 3;
+}
+
+/* Arrow marker — !important needed to override inline styles from alpine-flow */
+.flow__edges marker polyline {
+  stroke: oklch(0.62 0 0) !important;
+  stroke-width: 1.5 !important;
+  fill: none !important;
+}
+
+.dark .flow__edges marker polyline {
+  stroke: oklch(0.45 0 0) !important;
+}
+
+.flow__edges:hover marker polyline {
+  stroke: oklch(0.55 0.1 250) !important;
+}
+
+.dark .flow__edges:hover marker polyline {
+  stroke: oklch(0.6 0.12 250) !important;
+}
+
+/* ── Node cards — opaque overrides ─────────────────────────────────── */
+
+.flow__node {
+  --nk-surface: oklch(1 0 0);
+  --nk-surface-raised: oklch(1 0 0);
+  --nk-edge: oklch(0.87 0 0);
+}
+
+.dark .flow__node {
+  --nk-surface: oklch(0.16 0 0);
+  --nk-surface-raised: oklch(0.19 0 0);
+  --nk-edge: oklch(0.28 0 0);
+}
+
+.flow__node:hover {
+  --nk-edge: oklch(0.72 0 0);
+}
+
+.dark .flow__node:hover {
+  --nk-edge: oklch(0.38 0 0);
+}
+
+/* ── Connection handles ────────────────────────────────────────────── */
+
+.nk-flow-card {
+  position: relative;
+}
+
+.nk-flow-handle {
+  position: absolute;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  transform: translateX(-50%);
+  border-radius: 9999px;
+  border: 2px solid oklch(0.78 0 0);
+  background: oklch(0.97 0 0);
+  cursor: crosshair;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease, border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+  pointer-events: all;
+}
+
+.dark .nk-flow-handle {
+  border-color: oklch(0.4 0 0);
+  background: oklch(0.22 0 0);
+}
+
+.nk-flow-handle--target {
+  top: -6px;
+}
+
+.nk-flow-handle--source {
+  bottom: -6px;
+}
+
+/* Show on node hover */
+.flow__node:hover .nk-flow-handle {
+  opacity: 1;
+}
+
+/* Handle hover */
+.nk-flow-handle:hover {
+  opacity: 1;
+  border-color: oklch(0.55 0.15 250);
+  background: oklch(0.95 0.03 250);
+  transform: translateX(-50%) scale(1.25);
+  box-shadow: 0 0 0 3px oklch(0.7 0.1 250 / 0.2);
+}
+
+.dark .nk-flow-handle:hover {
+  border-color: oklch(0.65 0.15 250);
+  background: oklch(0.25 0.05 250);
+  box-shadow: 0 0 0 3px oklch(0.55 0.12 250 / 0.25);
+}
+
+/* ── Connecting state ──────────────────────────────────────────────── */
+
+/* When connecting, show all target handles */
+.nk-flow--connecting .nk-flow-handle--target {
+  opacity: 1;
+  border-color: oklch(0.65 0.12 250);
+  animation: nk-handle-pulse 1.5s ease-in-out infinite;
+}
+
+.dark .nk-flow--connecting .nk-flow-handle--target {
+  border-color: oklch(0.6 0.12 250);
+}
+
+/* Hide source handles on other nodes while connecting */
+.nk-flow--connecting .nk-flow-handle--source {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Keep source active visible */
+.nk-flow-node--source-active .nk-flow-handle--source {
+  opacity: 1 !important;
+  pointer-events: all !important;
+  border-color: oklch(0.55 0.18 250);
+  background: oklch(0.6 0.15 250);
+  box-shadow: 0 0 0 3px oklch(0.6 0.15 250 / 0.3);
+}
+
+.dark .nk-flow-node--source-active .nk-flow-handle--source {
+  border-color: oklch(0.65 0.18 250);
+  background: oklch(0.5 0.15 250);
+  box-shadow: 0 0 0 3px oklch(0.5 0.15 250 / 0.3);
+}
+
+/* Source node highlight border */
+.nk-flow-node--source-active .nk-flow-card > div:not([data-handle]) {
+  border-color: oklch(0.6 0.15 250);
+  box-shadow: 0 0 0 2px oklch(0.6 0.15 250 / 0.15);
+}
+
+.dark .nk-flow-node--source-active .nk-flow-card > div:not([data-handle]) {
+  border-color: oklch(0.55 0.15 250);
+  box-shadow: 0 0 0 2px oklch(0.55 0.15 250 / 0.2);
+}
+
+@keyframes nk-handle-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 oklch(0.6 0.12 250 / 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 4px oklch(0.6 0.12 250 / 0);
+  }
+}
+
+/* ── Toolbar ───────────────────────────────────────────────────────── */
+
 .flow__toolbar {
-  @apply inline-flex items-center gap-0 rounded-lg border border-neutral-200 bg-white p-0.5 shadow-sm dark:border-neutral-700 dark:bg-neutral-900;
+  @apply inline-flex items-center gap-0 rounded-lg border p-0.5 shadow-sm backdrop-blur-xl;
+  border-color: oklch(0.87 0 0);
+  background: oklch(1 0 0 / 0.92);
+}
+
+.dark .flow__toolbar {
+  border-color: oklch(0.28 0 0);
+  background: oklch(0.16 0 0 / 0.92);
 }
 
 .flow__toolbar__button {
-  @apply inline-flex size-8 cursor-pointer select-none items-center justify-center rounded-md border-0 bg-transparent p-0 text-neutral-600 transition-colors duration-150 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-50;
+  @apply inline-flex size-8 cursor-pointer select-none items-center justify-center rounded-md border-0 bg-transparent p-0 text-fg-secondary transition-colors duration-150 hover:bg-hover hover:text-fg;
 }
 
 .flow__toolbar__button:not(:first-child) {
   @apply ml-0;
-}
-
-/* Dark mode: darker dots so they're visible on dark background */
-.dark .flow__background.dots {
-  @apply bg-[length:16px_16px] bg-[image:radial-gradient(rgb(64_64_64)_1px,transparent_1px)];
 }

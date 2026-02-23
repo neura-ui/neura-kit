@@ -14,8 +14,8 @@
     };
 
     $variantClasses = match($variant) {
-        'muted' => 'bg-neutral-50/50 dark:bg-neutral-900/50',
-        'bordered' => 'border-y border-neutral-200 dark:border-neutral-800',
+        'muted' => 'bg-surface-inset',
+        'bordered' => 'border-y border-edge',
         default => '',
     };
 

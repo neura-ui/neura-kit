@@ -314,7 +314,7 @@
         />
     @endif
 
-    <div class="bg-white dark:bg-neutral-900 rounded-box shadow-lg p-4 w-full max-w-sm">
+    <div class="bg-surface-raised backdrop-blur-xl rounded-box shadow-lg p-4 w-full max-w-sm">
         <div class="flex items-center justify-between mb-4">
             <neura::button
                 variant="ghost"
@@ -333,8 +333,8 @@
             />
             
             <div class="flex flex-col items-center">
-                <h3 class="text-sm font-semibold text-neutral-900 dark:text-neutral-100" x-text="getMonthName()"></h3>
-                <span class="text-xs text-neutral-500 dark:text-neutral-400" x-text="currentYear"></span>
+                <h3 class="text-sm font-semibold text-fg" x-text="getMonthName()"></h3>
+                <span class="text-xs text-fg-muted" x-text="currentYear"></span>
             </div>
             
             <neura::button
@@ -356,7 +356,7 @@
 
         <div class="grid grid-cols-7 gap-1 mb-2">
             <template x-for="day in weekDays" :key="day">
-                <div class="text-center text-xs font-medium text-neutral-500 dark:text-neutral-400 py-2" x-text="day"></div>
+                <div class="text-center text-xs font-medium text-fg-muted py-2" x-text="day"></div>
             </template>
         </div>
 
@@ -368,10 +368,10 @@
                     x-on:click="selectDate(day)"
                     x-bind:disabled="day.isDisabled || !day.isCurrentMonth || isDisabled"
                     x-bind:class="{
-                        '[&]:bg-primary-600! [&]:text-white! dark:[&]:bg-primary-500! dark:[&]:text-white!': day.isSelected && day.isCurrentMonth,
-                        '[&]:bg-primary-100! [&]:text-primary-700! dark:[&]:bg-primary-900/50! dark:[&]:text-primary-300!': day.isInRange && day.isCurrentMonth,
-                        '[&]:bg-primary-50! [&]:text-primary-600! [&]:ring-1! [&]:ring-primary-300! dark:[&]:bg-primary-950/50! dark:[&]:text-primary-400! dark:[&]:ring-primary-700!': day.isToday && !day.isSelected && !day.isInRange && day.isCurrentMonth,
-                        '[&]:text-neutral-400!': !day.isCurrentMonth,
+                        '[&]:bg-primary-500! [&]:text-white! dark:[&]:bg-primary-500! dark:[&]:text-white! [&]:shadow-sm!': day.isSelected && day.isCurrentMonth,
+                        '[&]:bg-primary-100! [&]:text-primary-700! dark:[&]:bg-primary-500/20! dark:[&]:text-primary-300!': day.isInRange && day.isCurrentMonth,
+                        '[&]:bg-primary-50! [&]:text-primary-600! [&]:ring-1! [&]:ring-primary-400! dark:[&]:bg-primary-500/15! dark:[&]:text-primary-400! dark:[&]:ring-primary-500/50!': day.isToday && !day.isSelected && !day.isInRange && day.isCurrentMonth,
+                        '[&]:text-fg-disabled!': !day.isCurrentMonth,
                     }"
                     class="w-full! h-fit! aspect-square!"
                     x-text="day.date"

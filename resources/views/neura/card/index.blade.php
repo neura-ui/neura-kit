@@ -66,36 +66,36 @@
     // Variant styles
     $variantStyles = match ($variant) {
         'default' => [
-            'bg' => 'bg-white dark:bg-neutral-900',
-            'border' => 'border border-neutral-200 dark:border-neutral-800',
+            'bg' => 'bg-surface',
+            'border' => 'border border-edge',
         ],
         'outline' => [
             'bg' => 'bg-transparent',
-            'border' => 'border-2 border-neutral-300 dark:border-neutral-700',
+            'border' => 'border-2 border-edge-hover',
         ],
         'soft' => [
-            'bg' => 'bg-neutral-50 dark:bg-neutral-950',
-            'border' => 'border border-neutral-200 dark:border-neutral-800',
+            'bg' => 'bg-surface-inset',
+            'border' => 'border border-edge',
         ],
         'elevated' => [
-            'bg' => 'bg-white dark:bg-neutral-900',
-            'border' => 'border border-neutral-200 dark:border-neutral-800',
+            'bg' => 'bg-surface',
+            'border' => 'border border-edge',
         ],
         'flat' => [
-            'bg' => 'bg-white dark:bg-neutral-900',
+            'bg' => 'bg-surface',
             'border' => 'border-0',
         ],
         'bordered' => [
-            'bg' => 'bg-white dark:bg-neutral-900',
-            'border' => 'border-2 border-neutral-300 dark:border-neutral-700',
+            'bg' => 'bg-surface',
+            'border' => 'border-2 border-edge-hover',
         ],
         'ghost' => [
             'bg' => 'bg-transparent',
             'border' => 'border-0',
         ],
         default => [
-            'bg' => 'bg-white dark:bg-neutral-900',
-            'border' => 'border border-neutral-200 dark:border-neutral-800',
+            'bg' => 'bg-surface',
+            'border' => 'border border-edge',
         ],
     };
 
@@ -104,32 +104,32 @@
     if ($color) {
         $colorVariants = match ($color) {
             'primary' => [
-                'bg' => $variant === 'soft' ? 'bg-primary-50 dark:bg-primary-950' : ($variant === 'ghost' ? 'bg-transparent' : 'bg-white dark:bg-neutral-900'),
+                'bg' => $variant === 'soft' ? 'bg-primary-50 dark:bg-primary-950' : ($variant === 'ghost' ? 'bg-transparent' : 'bg-surface'),
                 'border' => $variant === 'outline' || $variant === 'bordered' ? 'border-2 border-primary-500 dark:border-primary-400' : 'border border-primary-200 dark:border-primary-800',
                 'text' => 'text-primary-900 dark:text-primary-100',
             ],
             'secondary' => [
-                'bg' => $variant === 'soft' ? 'bg-neutral-50 dark:bg-neutral-950' : ($variant === 'ghost' ? 'bg-transparent' : 'bg-white dark:bg-neutral-900'),
-                'border' => $variant === 'outline' || $variant === 'bordered' ? 'border-2 border-neutral-500 dark:border-neutral-400' : 'border border-neutral-200 dark:border-neutral-800',
-                'text' => 'text-neutral-900 dark:text-neutral-100',
+                'bg' => $variant === 'soft' ? 'bg-surface-inset' : ($variant === 'ghost' ? 'bg-transparent' : 'bg-surface'),
+                'border' => $variant === 'outline' || $variant === 'bordered' ? 'border-2 border-neutral-500 dark:border-neutral-400' : 'border border-edge',
+                'text' => 'text-fg',
             ],
             'success' => [
-                'bg' => $variant === 'soft' ? 'bg-green-50 dark:bg-green-950' : ($variant === 'ghost' ? 'bg-transparent' : 'bg-white dark:bg-neutral-900'),
+                'bg' => $variant === 'soft' ? 'bg-green-50 dark:bg-green-950' : ($variant === 'ghost' ? 'bg-transparent' : 'bg-surface'),
                 'border' => $variant === 'outline' || $variant === 'bordered' ? 'border-2 border-green-500 dark:border-green-400' : 'border border-green-200 dark:border-green-800',
                 'text' => 'text-green-900 dark:text-green-100',
             ],
             'danger' => [
-                'bg' => $variant === 'soft' ? 'bg-red-50 dark:bg-red-950' : ($variant === 'ghost' ? 'bg-transparent' : 'bg-white dark:bg-neutral-900'),
+                'bg' => $variant === 'soft' ? 'bg-red-50 dark:bg-red-950' : ($variant === 'ghost' ? 'bg-transparent' : 'bg-surface'),
                 'border' => $variant === 'outline' || $variant === 'bordered' ? 'border-2 border-red-500 dark:border-red-400' : 'border border-red-200 dark:border-red-800',
                 'text' => 'text-red-900 dark:text-red-100',
             ],
             'warning' => [
-                'bg' => $variant === 'soft' ? 'bg-yellow-50 dark:bg-yellow-950' : ($variant === 'ghost' ? 'bg-transparent' : 'bg-white dark:bg-neutral-900'),
+                'bg' => $variant === 'soft' ? 'bg-yellow-50 dark:bg-yellow-950' : ($variant === 'ghost' ? 'bg-transparent' : 'bg-surface'),
                 'border' => $variant === 'outline' || $variant === 'bordered' ? 'border-2 border-yellow-500 dark:border-yellow-400' : 'border border-yellow-200 dark:border-yellow-800',
                 'text' => 'text-yellow-900 dark:text-yellow-100',
             ],
             'info' => [
-                'bg' => $variant === 'soft' ? 'bg-blue-50 dark:bg-blue-950' : ($variant === 'ghost' ? 'bg-transparent' : 'bg-white dark:bg-neutral-900'),
+                'bg' => $variant === 'soft' ? 'bg-blue-50 dark:bg-blue-950' : ($variant === 'ghost' ? 'bg-transparent' : 'bg-surface'),
                 'border' => $variant === 'outline' || $variant === 'bordered' ? 'border-2 border-blue-500 dark:border-blue-400' : 'border border-blue-200 dark:border-blue-800',
                 'text' => 'text-blue-900 dark:text-blue-100',
             ],

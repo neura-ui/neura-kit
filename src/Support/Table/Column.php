@@ -38,6 +38,10 @@ class Column
     public bool $truncate = false;
     public ?int $truncateLength = null;
 
+    public bool $editable = false;
+    public ?string $editableType = null;
+    public ?array $editableOptions = null;
+
     public array $extraAttributes = [];
 
     public function __construct($key, $label) {
@@ -423,6 +427,26 @@ class Column
 
     public function class(string $class): static {
         $this->extraAttributes['class'] = $class;
+        return $this;
+    }
+
+    public function editable(bool|string $type = true, ?array $options = null): static {
+        if (is_string($type)) {
+            $this->editable = true;
+            $this->editableType = $type;
+        } else {
+            $this->editable = $type;
+            $this->editableType = match ($this->component) {
+                'neura::table.columns.boolean' => 'boolean',
+                'neura::table.columns.date' => 'date',
+                default => 'text',
+            };
+        }
+
+        if ($options !== null) {
+            $this->editableOptions = $options;
+        }
+
         return $this;
     }
 }

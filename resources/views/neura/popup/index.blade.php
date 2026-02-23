@@ -37,26 +37,26 @@
         'tooltip' => [
             'radius' => 'rounded-lg',
             'shadow' => 'shadow-md shadow-black/10 dark:shadow-black/30',
-            'border' => 'border border-neutral-200/60 dark:border-neutral-700/60',
-            'bg' => 'bg-white dark:bg-neutral-800',
+            'border' => 'border border-edge',
+            'bg' => 'bg-surface-raised backdrop-blur-xl',
         ],
         'menu' => [
             'radius' => 'rounded-lg',
             'shadow' => 'shadow-md shadow-black/8 dark:shadow-black/25',
-            'border' => 'border border-neutral-200/70 dark:border-neutral-800',
-            'bg' => 'bg-white dark:bg-neutral-950',
+            'border' => 'border border-edge',
+            'bg' => 'bg-surface-raised backdrop-blur-xl',
         ],
         'compact' => [
             'radius' => 'rounded-lg',
             'shadow' => 'shadow-lg shadow-black/8 dark:shadow-black/30',
-            'border' => 'border border-neutral-200/70 dark:border-neutral-800',
-            'bg' => 'bg-white dark:bg-neutral-950',
+            'border' => 'border border-edge',
+            'bg' => 'bg-surface-raised backdrop-blur-xl',
         ],
         'default' => [
             'radius' => 'rounded-xl',
             'shadow' => 'shadow-lg shadow-black/8 dark:shadow-black/30',
-            'border' => 'border border-neutral-200/60 dark:border-neutral-800/80',
-            'bg' => 'bg-white dark:bg-neutral-950',
+            'border' => 'border border-edge',
+            'bg' => 'bg-surface-raised backdrop-blur-xl',
         ],
     ];
 

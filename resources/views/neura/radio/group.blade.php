@@ -14,12 +14,12 @@
 @php
     $componentId = $id ?? 'radio-group-' . uniqid();
 
-    $labelClasses = ['text-neutral-800 dark:text-neutral-300 font-semibold mb-4 inline-block', $labelClass];
+    $labelClasses = ['text-fg font-semibold mb-4 inline-block', $labelClass];
 
     $variantClass = [
         'space-y-2' => $direction === 'vertical' && !str_contains($wrapperClass, 'grid'),
         'flex gap-1 items-stretch' => $direction === 'horizontal',
-        'bg-neutral-200 dark:bg-neutral-800 rounded-box w-fit p-1' => $variant === 'segmented',
+        'bg-neutral-100 dark:bg-white/[0.04] rounded-box w-fit p-1' => $variant === 'segmented',
         $wrapperClass,
     ];
 @endphp

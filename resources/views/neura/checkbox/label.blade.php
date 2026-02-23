@@ -4,7 +4,7 @@
     $classes = [
         // typography & color (match form label)
         'text-sm font-base select-none',
-        '[:where(&)]:text-neutral-900 [:where(&)]:dark:text-white',
+        '[:where(&)]:text-fg',
         '[:where(&)]:text-start',
 
         // behavior

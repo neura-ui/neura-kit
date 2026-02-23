@@ -1,18 +1,12 @@
 import './types';
-export {}; // top-level ONLY
+export {};
 
-/* -------------------------------------------------------------------------- */
-/* Environment guard                                                          */
-/* -------------------------------------------------------------------------- */
 const isBrowser =
     typeof window !== 'undefined' &&
     typeof document !== 'undefined';
 
 if (!isBrowser) {
 } else {
-    /* ------------------------------------------------------------------------ */
-    /* Types                                                                    */
-    /* ------------------------------------------------------------------------ */
     type LivewireComponent = {
         call(method: string, ...args: unknown[]): void;
         on?(event: string, callback: (...args: any[]) => void): void;
@@ -28,14 +22,10 @@ if (!isBrowser) {
     type UiOpenDetail = { component?: string; attrs?: SideoverAttrs } | undefined;
     type UiCloseDetail = { force?: boolean; skipPreviousSideovers?: number; destroySkipped?: boolean } | undefined;
 
-    /* ------------------------------------------------------------------------ */
-    /* Boot guard                                                                */
-    /* ------------------------------------------------------------------------ */
+    type PushSide = 'left' | 'right';
+
     const NK_SIDEOVER_BOOT = ((window as any).__NK_SIDEOVER_BOOT__ ??= { booted: false });
 
-    /* ------------------------------------------------------------------------ */
-    /* SideoverManager cache                                                     */
-    /* ------------------------------------------------------------------------ */
     const SideoverManagerCache = {
         element: null as HTMLElement | null,
         wireId: null as string | null,
@@ -70,9 +60,61 @@ if (!isBrowser) {
     const UI_OPEN_EVENT = 'nk-sideover-ui-open';
     const UI_CLOSE_EVENT = 'nk-sideover-ui-close';
 
-    /* ------------------------------------------------------------------------ */
-    /* Global API                                                                */
-    /* ------------------------------------------------------------------------ */
+    let _currentPushSide: PushSide | null = null;
+
+    function getLayoutEl(): HTMLElement | null {
+        return document.querySelector<HTMLElement>('[data-slot="layout"]')
+            ?? document.querySelector<HTMLElement>('[data-slot="main"]')
+            ?? document.querySelector<HTMLElement>('main');
+    }
+
+    function pushLayout(width: string, side: PushSide) {
+        const layout = getLayoutEl();
+        if (!layout) return;
+
+        unpushLayoutImmediate(layout);
+
+        _currentPushSide = side;
+        if (side === 'left') {
+            layout.style.marginLeft = width;
+        } else {
+            layout.style.marginRight = width;
+        }
+    }
+
+    function unpushLayoutImmediate(layout: HTMLElement) {
+        if (_currentPushSide === 'left') {
+            layout.style.marginLeft = '0px';
+        } else if (_currentPushSide === 'right') {
+            layout.style.marginRight = '0px';
+        }
+    }
+
+    function unpushLayout() {
+        const layout = getLayoutEl();
+        if (!layout || !_currentPushSide) return;
+
+        unpushLayoutImmediate(layout);
+        const side = _currentPushSide;
+
+        setTimeout(() => {
+            const prop = side === 'left' ? 'marginLeft' : 'marginRight';
+            if (layout.style[prop] === '0px') {
+                layout.style[prop] = '';
+            }
+            _currentPushSide = null;
+        }, 350);
+    }
+
+    function getActivePanelInfo(activeId: string | null): { width: string; side: PushSide } {
+        if (!activeId) return { width: '0px', side: 'right' };
+        const panel = document.querySelector<HTMLElement>(`[data-sideover-id="${activeId}"]`);
+        return {
+            width: panel?.dataset.sideoverPushWidth ?? '24rem',
+            side: (panel?.dataset.sideoverSide as PushSide) ?? 'right',
+        };
+    }
+
     if (!(window as any).NeuraKitSideover) {
         (window as any).NeuraKitSideover = {
             open(
@@ -103,13 +145,13 @@ if (!isBrowser) {
         };
     }
 
-    /* ------------------------------------------------------------------------ */
-    /* Boot-once listeners                                                       */
-    /* ------------------------------------------------------------------------ */
     if (!NK_SIDEOVER_BOOT.booted) {
         NK_SIDEOVER_BOOT.booted = true;
 
-        document.addEventListener('livewire:navigated', () => SideoverManagerCache.invalidate(), { passive: true });
+        document.addEventListener('livewire:navigated', () => {
+            SideoverManagerCache.invalidate();
+            unpushLayout();
+        }, { passive: true });
 
         window.addEventListener(
             'sideover-close',
@@ -140,7 +182,6 @@ if (!isBrowser) {
                 _transitionTimeout: null as number | null,
                 _prevFocus: null as HTMLElement | null,
                 _focusStack: [] as HTMLElement[],
-                _main: document.querySelector<HTMLElement>('[data-slot="main"], main, [data-slot="layout"]'),
 
                 _teardownDelayMs: 200,
                 _loadingDelayMs: 150,
@@ -150,16 +191,22 @@ if (!isBrowser) {
                     this.$watch('show', (open: boolean) => {
                         if (open) {
                             this._prevFocus = document.activeElement as HTMLElement;
-                            document.body.style.overflow = 'hidden';
-                            this._main?.setAttribute('inert', '');
                         } else {
-                            document.body.style.overflow = '';
-                            this._main?.removeAttribute('inert');
+                            unpushLayout();
                             clearTimeout(this._loadingTimeout!);
                             this.isLoading = false;
                             const prev = this._prevFocus;
                             this._prevFocus = null;
                             requestAnimationFrame(() => prev?.focus?.());
+                        }
+                    });
+
+                    this.$watch('activeComponent', (id: string | null) => {
+                        if (id && this.show) {
+                            this.$nextTick(() => {
+                                const info = getActivePanelInfo(id);
+                                pushLayout(info.width, info.side);
+                            });
                         }
                     });
 
@@ -201,10 +248,12 @@ if (!isBrowser) {
                         } else {
                             this.activeComponent = id;
                             this._attrs = attrs ? { id, attrs } : null;
-                            this.showActiveComponent = true;
                             this.isLoading = false;
-                            this.$nextTick(() => {
-                                requestAnimationFrame(() => this.focusSideover());
+                            requestAnimationFrame(() => {
+                                this.showActiveComponent = true;
+                                this.$nextTick(() => {
+                                    requestAnimationFrame(() => this.focusSideover());
+                                });
                             });
                         }
                     };

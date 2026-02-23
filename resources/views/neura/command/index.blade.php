@@ -36,7 +36,7 @@
     })->values()->toArray();
 
     $shortcutBindings = collect($shortcuts)->map(
-        fn ($key) => "@keydown.window.prevent.cmd.$key=\"toggleOpen()\" @keydown.window.prevent.ctrl.$key=\"toggleOpen()\""
+        fn ($key) => "@keydown.window.prevent.cmd.$key=\"window.__nkCmdHandled=true;toggleOpen()\" @keydown.window.prevent.ctrl.$key=\"window.__nkCmdHandled=true;toggleOpen()\""
     )->implode(' ');
 @endphp
 
@@ -53,13 +53,13 @@
     @toggle-command.window="toggleOpen()"
     @command-close-all.window="close()"
     class="fixed inset-0 z-9999 flex items-start justify-center px-4 pt-20 sm:pt-28">
-    <div x-show="isOpen" x-transition.opacity class="absolute inset-0 bg-neutral-900/40 dark:bg-black/60 backdrop-blur-sm" @click="close()"></div>
+    <div x-show="isOpen" x-transition.opacity class="absolute inset-0 bg-surface-overlay backdrop-blur-sm" @click="close()"></div>
 
     <div
         x-show="isOpen"
         x-transition.scale.origin.top
-        class="relative w-full max-w-[640px] rounded-xl overflow-hidden bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-2xl">
-        <div class="px-4 py-3 border-b border-neutral-100 dark:border-neutral-800">
+        class="relative w-full max-w-[640px] rounded-xl overflow-hidden bg-surface-raised backdrop-blur-xl border border-edge shadow-2xl">
+        <div class="px-4 py-3 border-b border-separator">
             <neura::input
                 x-ref="input"
                 x-model="input"
@@ -79,13 +79,13 @@
                     @click="go(item[0].item.id)"
                     @mousemove="activeIndex = i"
                     :class="{
-                        'bg-neutral-100 dark:bg-neutral-800': activeIndex === i,
-                        'hover:bg-neutral-100 dark:hover:bg-neutral-800': activeIndex !== i
+                        'bg-active': activeIndex === i,
+                        'hover:bg-hover': activeIndex !== i
                     }"
                     class="w-full flex items-center gap-3 px-4 py-2.5 mb-1 rounded-md text-left text-sm transition">
                     <template x-if="item[0].item.iconHtml">
                         <span
-                            class="text-neutral-500 dark:text-neutral-400"
+                            class="text-fg-muted"
                             x-html="item[0].item.iconHtml"
                         ></span>
                     </template>
@@ -107,7 +107,7 @@
         </div>
 
         <div x-show="!filteredItems().length && input.trim().length" class="px-4 py-12 text-center">
-            <neura::text class="text-sm text-neutral-500 dark:text-neutral-400">
+            <neura::text class="text-sm text-fg-muted">
                 {{ __('No results found') }}
             </neura::text>
         </div>

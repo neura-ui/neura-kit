@@ -23,7 +23,6 @@
     }
 @endphp
 
-<div class="text-sm">
-    {{ $displayValue ?? '-' }}
+<div class="text-[13px] text-neutral-500 dark:text-neutral-400 tabular-nums">
+    {{ $displayValue ?? '—' }}
 </div>
-

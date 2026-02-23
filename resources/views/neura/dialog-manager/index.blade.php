@@ -140,13 +140,13 @@
             x-transition:leave-end="opacity-0"
         >
             <div
-                class="fixed inset-0 bg-black/50 dark:bg-black/70"
+                class="fixed inset-0 bg-surface-overlay"
                 x-on:click="cancel(dialog.id)"
             ></div>
 
             <div class="flex min-h-full items-center justify-center p-4">
                 <div
-                    class="relative bg-white dark:bg-neutral-900 rounded-lg shadow-xl w-full border border-neutral-200 dark:border-neutral-800 overflow-hidden"
+                    class="relative bg-surface-raised backdrop-blur-xl rounded-lg shadow-xl w-full border border-edge overflow-hidden"
                     :class="getSizeClass(dialog.size)"
                     x-on:click.stop
                     x-on:keydown.escape.window="cancel(dialog.id)"
@@ -179,11 +179,11 @@
 
                             <div class="flex-1 min-w-0">
                                 <h3
-                                    class="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2"
+                                    class="text-lg font-semibold text-fg mb-2"
                                     x-text="dialog.title"
                                 ></h3>
                                 <p
-                                    class="text-sm text-neutral-600 dark:text-neutral-400 mb-6"
+                                    class="text-sm text-fg-secondary mb-6"
                                     x-show="dialog.message"
                                     x-text="dialog.message"
                                 ></p>
@@ -193,7 +193,7 @@
                                         type="text"
                                         x-model="dialog.inputValue"
                                         :placeholder="dialog.inputPlaceholder"
-                                        class="w-full px-3 py-2 text-sm bg-white dark:bg-neutral-950 border border-neutral-300 dark:border-neutral-700 rounded-lg text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-neutral-100 focus:border-transparent"
+                                        class="w-full px-3 py-2 text-sm bg-surface-raised border border-edge-hover rounded-lg text-fg placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-transparent"
                                         x-on:keydown.enter="confirm(dialog.id)"
                                         :disabled="loading[dialog.id]"
                                     />

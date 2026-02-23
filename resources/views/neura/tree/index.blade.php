@@ -50,24 +50,24 @@
     // Minimal, clean variants (shadcn/Notion style)
     $variantConfig = match ($variant) {
         'default' => [
-            'item' => 'hover:bg-neutral-100/60 dark:hover:bg-neutral-800/60 rounded-md transition-colors',
-            'selected' => 'bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100',
-            'chevron' => 'text-neutral-400 hover:text-neutral-600 dark:text-neutral-600 dark:hover:text-neutral-400',
+            'item' => 'hover:bg-hover rounded-md transition-colors',
+            'selected' => 'bg-active text-fg',
+            'chevron' => 'text-fg-disabled hover:text-fg-secondary',
         ],
         'ghost' => [
-            'item' => 'hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors',
-            'selected' => 'bg-neutral-50 dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 font-medium',
-            'chevron' => 'text-neutral-400 hover:text-neutral-600 dark:text-neutral-600 dark:hover:text-neutral-400',
+            'item' => 'hover:bg-hover transition-colors',
+            'selected' => 'bg-active text-fg font-medium',
+            'chevron' => 'text-fg-disabled hover:text-fg-secondary',
         ],
         'bordered' => [
-            'item' => 'hover:bg-neutral-50 dark:hover:bg-neutral-900 border-l-2 border-transparent hover:border-neutral-300 dark:hover:border-neutral-700 transition-all',
-            'selected' => 'bg-neutral-50 dark:bg-neutral-900 !border-neutral-900 dark:!border-neutral-100 text-neutral-900 dark:text-neutral-100',
-            'chevron' => 'text-neutral-400 hover:text-neutral-600 dark:text-neutral-600 dark:hover:text-neutral-400',
+            'item' => 'hover:bg-hover border-l-2 border-transparent hover:border-edge-hover transition-all',
+            'selected' => 'bg-active !border-neutral-900 dark:!border-neutral-100 text-fg',
+            'chevron' => 'text-fg-disabled hover:text-fg-secondary',
         ],
         default => [
-            'item' => 'hover:bg-neutral-100/60 dark:hover:bg-neutral-800/60 rounded-md transition-colors',
-            'selected' => 'bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100',
-            'chevron' => 'text-neutral-400 hover:text-neutral-600 dark:text-neutral-600 dark:hover:text-neutral-400',
+            'item' => 'hover:bg-hover rounded-md transition-colors',
+            'selected' => 'bg-active text-fg',
+            'chevron' => 'text-fg-disabled hover:text-fg-secondary',
         ],
     };
 @endphp
@@ -132,7 +132,7 @@
 
             {{-- Icon --}}
             @if($showIcons)
-                <div class="{{ $sizeConfig['icon'] }} shrink-0 text-neutral-500 dark:text-neutral-400" :class="item.iconClass">
+                <div class="{{ $sizeConfig['icon'] }} shrink-0 text-fg-muted" :class="item.iconClass">
                     {{-- Folder icons (Notion/shadcn style) --}}
                     <template x-if="item.type === 'folder'">
                         <svg class="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -176,9 +176,9 @@
 
             {{-- Label --}}
             <span 
-                class="{{ $sizeConfig['text'] }} truncate font-medium text-neutral-700 dark:text-neutral-300"
+                class="{{ $sizeConfig['text'] }} truncate font-medium text-fg-secondary"
                 :class="{
-                    'text-neutral-900 dark:text-neutral-100': isSelected(item.id)
+                    'text-fg': isSelected(item.id)
                 }"
                 x-text="item.label || item.name"
             ></span>
@@ -186,7 +186,7 @@
             {{-- Badge (Notion style) --}}
             <template x-if="item.badge">
                 <span 
-                    class="ml-auto text-xs px-1.5 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 font-medium"
+                    class="ml-auto text-xs px-1.5 py-0.5 rounded-md bg-surface-inset text-fg-secondary font-medium"
                     x-text="item.badge"
                 ></span>
             </template>

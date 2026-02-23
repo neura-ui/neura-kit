@@ -15,7 +15,7 @@
     x-anchor.offset.3="$refs.selectTrigger"
 >
     @if ($searchable)
-        <div class="px-2 mb-1 pb-2 border-b border-neutral-200 dark:border-neutral-700">
+            <div class="px-2 mb-1 pb-2 border-b border-separator">
             <div class="relative [&_input[data-slot=control]]:pr-8">
                 <neura::input
                     x-model="search"

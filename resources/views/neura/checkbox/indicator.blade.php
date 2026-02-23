@@ -19,11 +19,11 @@
 
     $sizeClasses = match ($size) {
         'xs' => 'size-4',
-        'sm' => 'size-5',
-        'md' => 'size-6',
-        'lg' => 'size-7',
-        'xl' => 'size-8',
-        default => 'size-6',
+        'sm' => 'size-[18px]',
+        'md' => 'size-5',
+        'lg' => 'size-6',
+        'xl' => 'size-7',
+        default => 'size-5',
     };
 
     $iconVariant = match ($size) {
@@ -36,32 +36,32 @@
     };
 
     $iconSizeClasses = match ($size) {
-        'xs' => 'size-3',
-        'sm' => 'size-4',
-        'md' => 'size-4',
-        'lg' => 'size-5',
+        'xs' => 'size-2.5',
+        'sm' => 'size-3',
+        'md' => 'size-3.5',
+        'lg' => 'size-4',
         'xl' => 'size-5',
-        default => 'size-4',
+        default => 'size-3.5',
     };
 
     $buttonClasses = [
         'flex items-center justify-center border overflow-hidden appearance-none',
-        'bg-white dark:bg-neutral-900',
+        'bg-transparent',
         'disabled:cursor-not-allowed disabled:opacity-50',
         'transition-all duration-200',
-        'shadow-none dark:shadow-sm disabled:shadow-none',
+        'shadow-none disabled:shadow-none',
         'focus:ring-offset-0 focus:outline-none',
         $sizeClasses,
-        'rounded-field',
+        'rounded-[5px]',
         $checkboxColors['border'] => !$invalid,
         $checkboxColors['focus'] => !$invalid,
         $checkboxColors['invalid'] => $invalid,
-        'hover:border-primary-400 dark:hover:border-primary-500' => !$disabled && !$invalid,
+        'hover:border-neutral-400 dark:hover:border-white/30' => !$disabled && !$invalid,
         $checkboxColors['checked'],
         $checkboxColors['indeterminate'],
     ];
 
-    $iconClasses = [$iconSizeClasses, 'text-white dark:text-white', 'transition-all duration-200'];
+    $iconClasses = [$iconSizeClasses, 'text-white', 'transition-all duration-200'];
 @endphp
 
 <div x-bind:data-checked="_checked && !_indeterminate" x-bind:data-indeterminate="_indeterminate"
@@ -76,8 +76,14 @@
     {{ $attributes->class($buttonClasses) }}>
 
     <neura::icon name="check" :variant="$iconVariant" @class($iconClasses) x-show="_checked && !_indeterminate"
+        x-transition:enter="transition-all duration-150"
+        x-transition:enter-start="opacity-0 scale-50"
+        x-transition:enter-end="opacity-100 scale-100"
         style="display:none" />
 
     <neura::icon name="minus" :variant="$iconVariant" @class($iconClasses) x-show="_indeterminate"
+        x-transition:enter="transition-all duration-150"
+        x-transition:enter-start="opacity-0 scale-50"
+        x-transition:enter-end="opacity-100 scale-100"
         style="display:none" />
 </div>

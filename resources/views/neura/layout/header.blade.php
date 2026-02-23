@@ -2,28 +2,22 @@
     'sticky' => true,
     'brand' => null,
     'actions' => null,
+    'withSidebarToggle' => true,
 
-    // container concerns
-    'size' => 'xl',
+    'size' => 'full',
     'centered' => true,
     'direction' => 'horizontal',
 ])
 
 @php
-    /* --------------------------------------------
-     | Header shell classes
-     |-------------------------------------------- */
     $headerClasses = [
         '[grid-area:header]',
         'z-40 min-h-[var(--header-height)]',
         'border-b flex items-center',
-        'dark:border-b-white/5 border-neutral-800/5',
-        'sticky top-0 dark:bg-neutral-950 bg-white' => $sticky,
+        'border-separator',
+        'sticky top-0 bg-surface backdrop-blur-xl' => $sticky,
     ];
 
-    /* --------------------------------------------
-     | Container sizing
-     |-------------------------------------------- */
     $sizeClasses = match ($size) {
         'xs' => 'max-w-xl',
         'sm' => 'max-w-2xl',
@@ -42,18 +36,12 @@
         default => 'max-w-5xl',
     };
 
-    /* --------------------------------------------
-     | Layout direction
-     |-------------------------------------------- */
     $directionClasses = match ($direction) {
         'horizontal' => 'flex flex-row items-center',
         'vertical' => 'flex flex-col',
         default => '',
     };
 
-    /* --------------------------------------------
-     | Inner container classes
-     |-------------------------------------------- */
     $containerClasses = Arr::toCssClasses([
         'w-full px-4 sm:px-6 lg:px-8',
         $centered ? 'mx-auto' : '',
@@ -64,9 +52,12 @@
 
 <div {{ $attributes->class($headerClasses) }} data-slot="header">
     <div class="{{ $containerClasses }}">
-        <div class="md:hidden -ml-2">
-            <neura::sidebar.toggle />
-        </div>
+        @if($withSidebarToggle)
+            <div class="md:hidden -ml-2">
+                <neura::sidebar.toggle />
+            </div>
+        @endif
+
         @if (isset($slot->brand) || isset($brand))
             <div data-slot="header-brand" {{ $brand->attributes->merge(['class' => "flex items-center shrink-0 gap-2"]) }}>
                 {{ isset($slot->brand) ? $slot->brand : $brand }}

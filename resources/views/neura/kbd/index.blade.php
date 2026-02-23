@@ -5,7 +5,7 @@
 
 @php
     $classes = [
-        'default' => 'bg-neutral-100 dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 text-neutral-500 dark:text-neutral-400',
+        'default' => 'bg-surface-inset border-edge text-fg-muted',
         'primary' => 'bg-primary/10 border-primary/20 text-primary',
     ];
 

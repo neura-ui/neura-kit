@@ -23,7 +23,7 @@
     <a
         href="{{ $urlValue }}"
         target="{{ $targetValue }}"
-        class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline"
+        class="text-[13px] text-neutral-900 dark:text-neutral-100 hover:text-primary-600 dark:hover:text-primary-400 underline decoration-neutral-300 dark:decoration-neutral-600 underline-offset-2 hover:decoration-primary-400 dark:hover:decoration-primary-500 transition-colors"
     >
         {{ $labelValue }}
     </a>

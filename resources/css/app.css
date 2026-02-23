@@ -3,6 +3,71 @@
 
 /**
  * ============================================================================
+ * Design Tokens - Semantic Color System
+ * ============================================================================
+ */
+:root {
+  --nk-surface: oklch(1 0 0);
+  --nk-surface-raised: oklch(1 0 0);
+  --nk-surface-inset: oklch(0.967 0 0);
+  --nk-overlay: oklch(0 0 0 / 0.40);
+
+  --nk-hover: oklch(0.955 0 0);
+  --nk-active: oklch(0.922 0 0);
+
+  --nk-edge: oklch(0.87 0 0);
+  --nk-edge-hover: oklch(0.80 0 0);
+  --nk-edge-focus: oklch(0.70 0 0);
+  --nk-separator: oklch(0.955 0 0);
+
+  --nk-fg: oklch(0.145 0 0);
+  --nk-fg-secondary: oklch(0.44 0 0);
+  --nk-fg-muted: oklch(0.556 0 0);
+  --nk-fg-disabled: oklch(0.652 0 0);
+  --nk-fg-on-emphasis: oklch(1 0 0);
+}
+
+.dark {
+  --nk-surface: oklch(0.145 0 0 / 0.80);
+  --nk-surface-raised: oklch(0.145 0 0 / 0.90);
+  --nk-surface-inset: oklch(1 0 0 / 0.03);
+  --nk-overlay: oklch(0 0 0 / 0.60);
+
+  --nk-hover: oklch(1 0 0 / 0.04);
+  --nk-active: oklch(1 0 0 / 0.08);
+
+  --nk-edge: oklch(1 0 0 / 0.06);
+  --nk-edge-hover: oklch(1 0 0 / 0.10);
+  --nk-edge-focus: oklch(1 0 0 / 0.15);
+  --nk-separator: oklch(1 0 0 / 0.04);
+
+  --nk-fg: oklch(0.93 0 0);
+  --nk-fg-secondary: oklch(0.652 0 0);
+  --nk-fg-muted: oklch(0.556 0 0);
+  --nk-fg-disabled: oklch(0.44 0 0);
+  --nk-fg-on-emphasis: oklch(1 0 0);
+}
+
+@theme {
+  --color-surface: var(--nk-surface);
+  --color-surface-raised: var(--nk-surface-raised);
+  --color-surface-inset: var(--nk-surface-inset);
+  --color-surface-overlay: var(--nk-overlay);
+  --color-hover: var(--nk-hover);
+  --color-active: var(--nk-active);
+  --color-edge: var(--nk-edge);
+  --color-edge-hover: var(--nk-edge-hover);
+  --color-edge-focus: var(--nk-edge-focus);
+  --color-separator: var(--nk-separator);
+  --color-fg: var(--nk-fg);
+  --color-fg-secondary: var(--nk-fg-secondary);
+  --color-fg-muted: var(--nk-fg-muted);
+  --color-fg-disabled: var(--nk-fg-disabled);
+  --color-fg-on-emphasis: var(--nk-fg-on-emphasis);
+}
+
+/**
+ * ============================================================================
  * Base Layer - Foundation & Resets
  * ============================================================================
  */
@@ -160,6 +225,16 @@
   .subgrid-rows {
     grid-template-rows: subgrid;
   }
+}
+
+/**
+ * ============================================================================
+ * Sideover Push Layout
+ * ============================================================================
+ */
+[data-slot="layout"] {
+  transition: margin-left 300ms cubic-bezier(0.4, 0, 0.2, 1),
+              margin-right 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /**

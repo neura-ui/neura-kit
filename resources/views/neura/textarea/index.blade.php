@@ -14,8 +14,8 @@
     $initialHeight = (($rows) * 1.5) + 0.75;
 
     $classes = [
-        'inline-block px-3 py-2 w-full text-sm text-neutral-900 disabled:text-neutral-500 placeholder-neutral-400 disabled:placeholder-neutral-400/70 dark:text-neutral-100 dark:disabled:text-neutral-500 dark:placeholder-neutral-500 dark:disabled:placeholder-neutral-600',
-        'bg-white dark:bg-neutral-950 disabled:bg-neutral-50 dark:disabled:bg-neutral-900',
+        'inline-block px-3 py-2 w-full text-sm text-fg disabled:text-fg-muted placeholder-neutral-400 disabled:placeholder-neutral-400/70 dark:placeholder-neutral-500 dark:disabled:placeholder-neutral-600',
+        'bg-surface disabled:bg-neutral-50 dark:disabled:bg-neutral-900',
         'disabled:cursor-not-allowed transition-colors duration-150',
         'shadow-sm disabled:shadow-none border rounded-lg',
         'focus:ring-offset-0 focus:outline-none',

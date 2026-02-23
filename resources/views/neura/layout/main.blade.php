@@ -2,7 +2,7 @@
     $classes = [
         '[grid-area:main]',
         'overflow-y-auto',
-        'min-h-screen max-h-screen',
+        'min-h-0 max-h-screen',
         '[&>:has([data-slot=header])]:p-0',
         '[&>:not(:has([data-slot=header]))]:p-2',
     ];

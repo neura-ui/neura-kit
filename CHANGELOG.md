@@ -6,6 +6,54 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-02-23
+
+### Added
+- **Table Inline Editing**: Editable columns for inline data modification (inspired by Twenty CRM)
+  - `Column::editable()` fluent method with support for `text`, `number`, `date`, `select`, `textarea`, and `boolean` types
+  - `Table::updateField()` server-side method for persisting changes (Eloquent & Query Builder)
+  - Alpine.js-powered editing UX: click to edit, Enter to save, Escape to cancel, blur to save
+  - Pencil icon indicator on row hover for editable cells
+  - Boolean columns toggle on click without entering edit mode
+  - Select columns with configurable options via `editableOptions`
+- **Flow Connectable Nodes**: Interactive edge creation via click-to-connect handles
+  - Source (bottom) and target (top) circular handles on each node
+  - Click-based connection workflow: click source → click target → edge created
+  - Visual feedback during connection: pulsing target handles, highlighted source node
+  - Escape key to cancel in-progress connections
+  - Duplicate edge prevention
+- **Navlist**: New `label` and `separator` subcomponents
+- **Sideover**: Header, footer, body, and close subcomponents
+
+### Improved
+- **Theme**: Fixed flash of dark mode (FOUC) on page refresh in light mode
+  - Set `document.documentElement.style.colorScheme` in inline script before CSS loads
+  - Synced `color-scheme` on dynamic theme changes in `theme.ts`
+- **Sideover**: Multiple improvements
+  - Header height synchronized with layout header (`h-16` / 4rem)
+  - Fixed missing enter transition on open (staggered state with `requestAnimationFrame`)
+  - Mobile responsive: full-width on small screens, backdrop overlay with blur, safe area padding in footer
+  - Push-content mode improvements
+- **Flow Component**: Visual overhaul for light and dark modes
+  - Opaque node cards (override transparent `bg-surface` with explicit colors)
+  - Improved edge paths with hover effects, color transitions, and arrowhead markers
+  - Custom background dot pattern for light/dark modes
+  - Connection handle animations (scale, glow, pulse)
+- **Spotlight / Command Priority**: Keyboard shortcut conflict resolution
+  - Command palette takes priority over spotlight when both share the same shortcut (e.g. `Ctrl+K`)
+  - `window.__nkCmdHandled` flag prevents spotlight from opening when a command palette already handled the shortcut
+  - Spotlight dispatches `command-close-all` to close any open command palette when no conflict
+- **Component Styling**: Broad UI refinements across 100+ component views
+  - Refactored color packs for Avatar, Badge, Button, Input, and Wizard with explicit Tailwind classes
+  - Updated Blade views for consistency: Accordion, Box, Calendar, Card, Chart, Checkbox, Color Picker, Command, Composer, Context Menu, Dialog, Divider, Dropdown, Dropzone, Editor, Empty State, Fieldset, Image Gallery, Input, Kanban, KBD, Layout, Modal, Navlist, OTP, Phone Input, Popup, Progress, Radio, Section, Select, Sidebar, Skeleton, Switch, Table columns, Tabs, Tags Input, Textarea, Theme Switcher, Timeline, Tree, Wizard
+  - EditorJS theme CSS refactored
+
+### Fixed
+- **Theme**: Browser `color-scheme` now set immediately, preventing native dark scrollbars/backgrounds flash
+- **Sideover**: Enter transition now works reliably (DOM renders before animation starts)
+- **Spotlight + Command**: Both no longer open simultaneously on `Ctrl+K` when a command palette is present
+- **Table**: Fixed `@js()` parse error in Blade (replaced with `Js::from()`)
+
 ## [1.0.48] - 2026-02-19
 
 ### Added

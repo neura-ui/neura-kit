@@ -19,12 +19,12 @@
 @endphp
 <div x-data="modalManager()" x-show="show" x-cloak class="fixed inset-0 z-[9999] overflow-y-auto"
     @modal-close.window="setShow(false)" @keydown.escape.window="show && closeModalOnEscape()">
-    <div class="fixed inset-0 bg-black/50 dark:bg-black/70" @click="closeModalOnClickAway()" aria-hidden="true"></div>
+    <div class="fixed inset-0 bg-surface-overlay" @click="closeModalOnClickAway()" aria-hidden="true"></div>
 
     <div class="flex min-h-full items-center justify-center p-4">
         <div x-show="isLoading" class="relative flex w-fit justify-center">
-            <div class="bg-white dark:bg-neutral-900 rounded-lg shadow-xl p-8">
-                <neura::icon.loading data-slot="loading-indicator" class="text-neutral-600 dark:text-neutral-400" />
+            <div class="bg-surface-raised backdrop-blur-xl rounded-lg shadow-xl p-8">
+                <neura::icon.loading data-slot="loading-indicator" class="text-fg-secondary" />
             </div>
         </div>
 
@@ -61,9 +61,9 @@
                     class="
                         w-full
                         {{ $widthClass }}
-                        bg-white dark:bg-neutral-900
+                        bg-surface-raised backdrop-blur-xl
                         rounded-lg shadow-xl
-                        border border-neutral-200 dark:border-neutral-800
+                        border border-edge
                     ">
                     @livewire($component['name'], $component['arguments'], key($id))
                 </div>

@@ -43,8 +43,8 @@
 
     $inputClasses = [
         'z-10',
-        'inline-block border w-full text-neutral-900 disabled:text-neutral-500 placeholder-neutral-400 disabled:placeholder-neutral-400/70 dark:text-neutral-100 dark:disabled:text-neutral-500 dark:placeholder-neutral-500 dark:disabled:placeholder-neutral-600',
-        'bg-white dark:bg-neutral-950 disabled:bg-neutral-50 dark:disabled:bg-neutral-900',
+        'inline-block border w-full text-fg disabled:text-fg-muted placeholder-neutral-400 disabled:placeholder-neutral-400/70 dark:placeholder-neutral-500 dark:disabled:placeholder-neutral-600',
+        'bg-surface disabled:bg-neutral-50 dark:disabled:bg-neutral-900/60',
         'disabled:cursor-not-allowed transition-colors duration-150',
         'shadow-sm disabled:shadow-none',
         'focus:ring-offset-0 focus:outline-none',
@@ -423,7 +423,7 @@
         @if($showCounter || $showClearAll)
             <div class="flex items-center justify-between p-2 ">
                 @if($showCounter)
-                    <span class="text-sm text-neutral-500 dark:text-neutral-400">
+                    <span class="text-sm text-fg-muted">
                         <span x-text="tagCount()"></span>
                         @if($maxTags)
                             / {{ $maxTags }}
@@ -473,7 +473,7 @@
             x-transition
             x-ref="suggestions"
             x-anchor.bottom-start="$refs.input"
-            class="absolute z-10 max-w-40 mt-1 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 rounded-md shadow-lg"
+            class="absolute z-10 max-w-40 mt-1 bg-surface border border-edge rounded-md shadow-lg"
         >
             <template x-for="(suggestion, index) in filteredSuggestions" x-bind:key="index">
                 <div
@@ -481,7 +481,7 @@
                     x-on:click.stop="addTag(suggestion); hideSuggestions()"
                     x-on:keydown.enter="addTag(suggestion); hideSuggestions()"
                     x-text="suggestion"
-                    class="px-3 py-2 text-sm cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-700"
+                    class="px-3 py-2 text-sm cursor-pointer hover:bg-hover"
                     :class="{ 'bg-white/5': selectedSuggestionIndex === index }"
                 ></div>
             </template>
@@ -489,7 +489,7 @@
 
         <div wire:ignore class="inline-block w-full">
             <template x-if="state?.length">
-                <div class="flex w-full flex-wrap gap-1.5 p-2 border-t border-t-neutral-200 dark:border-t-white/10">
+                <div class="flex w-full flex-wrap gap-1.5 p-2 border-t border-t-separator">
                     <template x-for="(tag, index) in state" :key="`${tag}-${index}`">
                         <neura::tags-input.tag
                             :$tagVariant

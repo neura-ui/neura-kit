@@ -9,7 +9,6 @@
     $avg = count($items) > 0 ? array_sum($items) / count($items) : 0;
 @endphp
 
-<div class="font-medium">
+<div class="text-[13px] text-neutral-900 dark:text-neutral-100 tabular-nums">
     {{ number_format($avg, 2) }}
 </div>
-

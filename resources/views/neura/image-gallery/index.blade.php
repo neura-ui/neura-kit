@@ -65,7 +65,7 @@
     {{ $attributes->class(['w-full select-none']) }}
 >
     @if($galleryImages->isEmpty())
-        <div class="rounded-lg border border-dashed border-neutral-200 dark:border-neutral-800 px-6 py-12 text-center text-sm text-neutral-500 dark:text-neutral-400">
+        <div class="rounded-lg border border-dashed border-edge px-6 py-12 text-center text-sm text-fg-muted">
             No images available
         </div>
     @else
@@ -78,7 +78,7 @@
                             :src="image.photo || image.url || image.src" 
                             :alt="image.alt || image.caption || ''" 
                             :data-index="index + 1" 
-                            class="object-cover select-none w-full h-auto bg-neutral-200 dark:bg-neutral-800 rounded-lg cursor-zoom-in transition-transform hover:scale-105 {{ $aspectRatio }}"
+                            class="object-cover select-none w-full h-auto bg-surface-inset rounded-lg cursor-zoom-in transition-transform hover:scale-105 {{ $aspectRatio }}"
                         />
                     </li>
                 </template>

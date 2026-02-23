@@ -15,8 +15,8 @@
     $classes = [
         'isolate',
         '[grid-area:sidebar]',
-        'z-40 dark:bg-neutral-950 bg-white lg:block',
-        'border-r dark:border-white/5 border-black/5',
+        'z-40 bg-surface backdrop-blur-xl lg:block',
+        'border-r border-separator',
         'transition-[width] duration-500',
         'overflow-x-visible',
         '!overflow-y-auto' => $scrollable,
@@ -26,7 +26,6 @@
 <div
     {{ $attributes->class($classes) }}
     data-slot="sidebar"
-    style="z-index:99;"
     @if ($collapsable || $scrollToActive)
         x-data="{
             collapsable: @js($collapsable),
@@ -144,7 +143,7 @@
                 [:not(:has([data-collapsed]_&))_&]:px-4
                 mx-auto flex-shrink-0",
 
-                'sticky z-10 top-0 dark:bg-neutral-950 bg-white' => $stickyHeader,
+                'sticky z-10 top-0 bg-surface backdrop-blur-xl' => $stickyHeader,
             ])
         >
             <div

@@ -42,33 +42,55 @@
 
     $label = $uppercase ? ucfirst($label) : $label;
 
-    $colorClasses = match ($color) {
-        'green', 'success' => 'bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-300',
-        'yellow', 'warning' => 'bg-yellow-50 text-yellow-700 dark:bg-yellow-950/40 dark:text-yellow-300',
-        'orange' => 'bg-orange-50 text-orange-700 dark:bg-orange-950/40 dark:text-orange-300',
-        'red', 'danger' => 'bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300',
-        'blue', 'info', 'primary' => 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300',
-        'purple' => 'bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300',
-        'teal' => 'bg-teal-50 text-teal-700 dark:bg-teal-950/40 dark:text-teal-300',
-        'gray', 'neutral', 'secondary' => 'bg-neutral-100 text-neutral-700 dark:bg-neutral-900 dark:text-neutral-300',
-        default => 'bg-neutral-100 text-neutral-700 dark:bg-neutral-900 dark:text-neutral-300',
+    $bgColor = match ($color) {
+        'green', 'success' => 'bg-emerald-50 dark:bg-emerald-500/10',
+        'yellow', 'warning' => 'bg-amber-50 dark:bg-amber-500/10',
+        'orange' => 'bg-orange-50 dark:bg-orange-500/10',
+        'red', 'danger' => 'bg-red-50 dark:bg-red-500/10',
+        'blue', 'info', 'primary' => 'bg-blue-50 dark:bg-blue-500/10',
+        'purple' => 'bg-violet-50 dark:bg-violet-500/10',
+        'teal' => 'bg-teal-50 dark:bg-teal-500/10',
+        default => 'bg-neutral-100 dark:bg-white/[0.06]',
+    };
+
+    $textColor = match ($color) {
+        'green', 'success' => 'text-emerald-700 dark:text-emerald-400',
+        'yellow', 'warning' => 'text-amber-700 dark:text-amber-400',
+        'orange' => 'text-orange-700 dark:text-orange-400',
+        'red', 'danger' => 'text-red-700 dark:text-red-400',
+        'blue', 'info', 'primary' => 'text-blue-700 dark:text-blue-400',
+        'purple' => 'text-violet-700 dark:text-violet-400',
+        'teal' => 'text-teal-700 dark:text-teal-400',
+        default => 'text-neutral-600 dark:text-neutral-400',
+    };
+
+    $dotColor = match ($color) {
+        'green', 'success' => 'bg-emerald-500',
+        'yellow', 'warning' => 'bg-amber-500',
+        'orange' => 'bg-orange-500',
+        'red', 'danger' => 'bg-red-500',
+        'blue', 'info', 'primary' => 'bg-blue-500',
+        'purple' => 'bg-violet-500',
+        'teal' => 'bg-teal-500',
+        default => 'bg-neutral-400 dark:bg-neutral-500',
     };
 @endphp
 
 <div class="flex items-center">
     <span @class([
         'inline-flex items-center gap-1.5',
-        'rounded-lg px-2 py-1',
-        'text-sm font-base leading-4',
+        'rounded-md px-1.5 py-0.5',
+        'text-xs font-medium leading-4',
         'whitespace-nowrap select-none',
-        $colorClasses,
+        $bgColor,
+        $textColor,
     ])>
         @if($showDot)
-            <span class="h-1.5 w-1.5 rounded-full bg-current opacity-70"></span>
+            <span class="size-1.5 rounded-full {{ $dotColor }}"></span>
         @endif
 
         @if($icon)
-            <x-icon :name="$icon" class="size-3.5" />
+            <x-icon :name="$icon" class="size-3" />
         @endif
 
         {{ $label }}

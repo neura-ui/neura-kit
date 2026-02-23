@@ -22,7 +22,7 @@
     </div>
 
     @if ($description)
-        <span data-slot="checkbox-description" class="text-sm text-neutral-500 dark:text-neutral-400 col-start-2">
+        <span data-slot="checkbox-description" class="text-sm text-fg-muted col-start-2">
             {{ $description }}
         </span>
     @endif

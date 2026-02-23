@@ -5,6 +5,7 @@
     'draggableColumns' => true,
     'onCardMove' => null,
     'showCount' => true,
+    'variant' => 'default',
 ])
 
 @php
@@ -12,6 +13,41 @@
 
     $boardColumns = collect($columns ?? []);
     $emptyStateLabel = $emptyState ?? neura_trans('noCardsYet');
+
+    $variants = [
+        'default' => [
+            'column' => 'rounded-[24px] bg-surface-raised backdrop-blur-xl border shadow-sm min-w-[18rem] max-w-xs px-4 py-4',
+            'card' => 'rounded-2xl border bg-surface p-4 shadow-sm',
+            'gap' => 'gap-4',
+            'cardGap' => 'gap-3',
+        ],
+        'compact' => [
+            'column' => 'rounded-xl bg-surface-raised backdrop-blur-xl border shadow-sm min-w-[15rem] max-w-[17rem] px-3 py-3',
+            'card' => 'rounded-lg border bg-surface p-3 shadow-xs',
+            'gap' => 'gap-3',
+            'cardGap' => 'gap-2',
+        ],
+        'flat' => [
+            'column' => 'rounded-xl bg-surface-inset min-w-[18rem] max-w-xs px-4 py-4',
+            'card' => 'rounded-xl bg-surface-raised border border-edge p-4',
+            'gap' => 'gap-4',
+            'cardGap' => 'gap-2',
+        ],
+        'outlined' => [
+            'column' => 'rounded-xl border-2 border-edge border-dashed bg-transparent min-w-[18rem] max-w-xs px-4 py-4',
+            'card' => 'rounded-xl border border-edge bg-surface p-4 shadow-sm',
+            'gap' => 'gap-4',
+            'cardGap' => 'gap-3',
+        ],
+        'colorful' => [
+            'column' => 'rounded-[24px] bg-surface-raised backdrop-blur-xl border shadow-sm min-w-[18rem] max-w-xs px-4 pt-0 pb-4 overflow-hidden',
+            'card' => 'rounded-2xl border bg-surface p-4 shadow-sm',
+            'gap' => 'gap-4',
+            'cardGap' => 'gap-3',
+        ],
+    ];
+
+    $v = $variants[$variant] ?? $variants['default'];
 @endphp
 
 <div 
@@ -248,17 +284,17 @@
     {{ $attributes->merge(['class' => 'w-full']) }}
 >
     @if($boardColumns->isEmpty())
-        <div class="rounded-[28px] border border-dashed border-neutral-200 dark:border-neutral-800 px-6 py-12 text-center text-sm text-neutral-500 dark:text-neutral-400">
+        <div class="rounded-[28px] border border-dashed border-edge px-6 py-12 text-center text-sm text-fg-muted">
             {{ $emptyStateLabel }}
         </div>
     @else
         <div class="overflow-x-auto">
-            <div class="flex gap-4 px-1 pb-2">
+            <div class="flex {{ $v['gap'] }} px-1 pb-2">
                 <template x-for="(column, columnIndex) in columns" :key="columnIndex">
                     <section 
                         :class="[
-                            'flex flex-col rounded-[24px] bg-white dark:bg-neutral-950 border shadow-sm min-w-[18rem] max-w-xs px-4 py-4',
-                            dragOverColumn === columnIndex ? 'border-blue-500 dark:border-blue-400 bg-blue-50/50 dark:bg-blue-950/20' : 'border-neutral-200 dark:border-neutral-900',
+                            'flex flex-col {{ $v['column'] }}',
+                            dragOverColumn === columnIndex ? 'border-blue-500 dark:border-blue-400 bg-blue-50/50 dark:bg-blue-950/20' : '{{ $variant !== 'flat' && $variant !== 'outlined' ? 'border-edge' : '' }}',
                             dragOverColumnIndex === columnIndex && @js($draggableColumns) ? 'border-purple-500 dark:border-purple-400 bg-purple-50/50 dark:bg-purple-950/20' : '',
                             draggedColumnIndex === columnIndex && @js($draggableColumns) ? 'opacity-50' : '',
                             column.class || ''
@@ -267,6 +303,10 @@
                         x-on:dragleave="handleDragLeave()"
                         x-on:drop="handleDrop(columnIndex, $event)"
                     >
+                        @if($variant === 'colorful')
+                        <div class="h-1.5 -mx-4 mb-3" :style="{ backgroundColor: column.color || '#6366f1' }"></div>
+                        @endif
+
                         <div 
                             :draggable="@js($draggableColumns)"
                             x-on:dragstart="handleColumnDragStart(columnIndex, $event)"
@@ -278,18 +318,23 @@
                                 @js($draggableColumns) ? 'cursor-move' : ''
                             ]"
                         >
-                            <div>
-                                <p class="text-sm font-semibold text-neutral-900 dark:text-neutral-100 truncate" x-text="column.title || ''"></p>
-                                <template x-if="column.description">
-                                    <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-[2px]" x-text="column.description"></p>
-                                </template>
+                            <div class="flex items-center gap-2 min-w-0">
+                                @if($variant === 'colorful')
+                                <span class="size-2.5 rounded-full shrink-0" :style="{ backgroundColor: column.color || '#6366f1' }"></span>
+                                @endif
+                                <div class="min-w-0">
+                                    <p class="text-sm font-semibold text-fg truncate" x-text="column.title || ''"></p>
+                                    <template x-if="column.description">
+                                        <p class="text-xs text-fg-muted mt-[2px]" x-text="column.description"></p>
+                                    </template>
+                                </div>
                             </div>
                             <template x-if="@js($showCount)">
-                                <span class="text-[11px] font-semibold text-neutral-500 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-900 px-2 py-1 rounded-full" x-text="(column.cards || []).length"></span>
+                                <span class="text-[11px] font-semibold text-fg-muted bg-surface-inset px-2 py-1 rounded-full shrink-0" x-text="(column.cards || []).length"></span>
                             </template>
                         </div>
 
-                        <div class="mt-4 flex flex-col gap-3">
+                        <div class="mt-4 flex flex-col {{ $v['cardGap'] }}">
                             <template x-for="(card, cardIndex) in (column.cards || [])" :key="cardIndex">
                                 <article 
                                     :draggable="@js($draggable)"
@@ -297,41 +342,41 @@
                                     x-on:dragover.prevent=""
                                     x-on:drop="handleCardDrop(columnIndex, cardIndex, $event)"
                                     :class="[
-                                        'flex flex-col gap-2 rounded-2xl border bg-neutral-50 dark:bg-neutral-900/60 p-4 shadow-sm transition',
+                                        'flex flex-col gap-2 {{ $v['card'] }} transition',
                                         draggedFromColumn === columnIndex && draggedFromIndex === cardIndex 
                                             ? 'opacity-50 border-blue-500 dark:border-blue-400' 
-                                            : 'border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700',
+                                            : 'border-edge hover:border-edge-hover',
                                         @js($draggable) ? 'cursor-move' : ''
                                     ]"
                                 >
                                     <div class="flex items-start justify-between gap-3">
                                         <div class="min-w-0 space-y-1">
-                                            <p class="text-sm font-semibold text-neutral-900 dark:text-neutral-100 truncate" x-text="card.title || ''"></p>
+                                            <p class="text-sm font-semibold text-fg truncate" x-text="card.title || ''"></p>
                                             <template x-if="card.subtitle">
-                                                <p class="text-xs text-neutral-500 dark:text-neutral-400 truncate" x-text="card.subtitle"></p>
+                                                <p class="text-xs text-fg-muted truncate" x-text="card.subtitle"></p>
                                             </template>
                                         </div>
                                         <template x-if="card.badge">
-                                            <span class="text-[10px] font-semibold uppercase tracking-wide text-neutral-600 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-900/80 px-2 py-1 rounded-full" x-text="card.badge"></span>
+                                            <span class="text-[10px] font-semibold uppercase tracking-wide text-fg-secondary bg-surface-inset px-2 py-1 rounded-full" x-text="card.badge"></span>
                                         </template>
                                     </div>
                                     <template x-if="card.description">
-                                        <p class="text-xs text-neutral-500 dark:text-neutral-400" x-text="card.description"></p>
+                                        <p class="text-xs text-fg-muted" x-text="card.description"></p>
                                     </template>
                                     <template x-if="card.meta">
-                                        <div class="mt-2 flex flex-wrap gap-2 text-[11px] font-medium text-neutral-500 dark:text-neutral-400">
+                                        <div class="mt-2 flex flex-wrap gap-2 text-[11px] font-medium text-fg-muted">
                                             <template x-for="(metaItem, metaIndex) in (Array.isArray(card.meta) ? card.meta : [card.meta])" :key="metaIndex">
-                                                <span class="px-2 py-1 rounded-full bg-neutral-100 dark:bg-neutral-900/80" x-text="metaItem"></span>
+                                                <span class="px-2 py-1 rounded-full bg-surface-inset" x-text="metaItem"></span>
                                             </template>
                                         </div>
                                     </template>
                                     <template x-if="card.footer">
-                                        <div class="mt-2 text-[11px] text-neutral-400 dark:text-neutral-500" x-text="card.footer"></div>
+                                        <div class="mt-2 text-[11px] text-fg-disabled" x-text="card.footer"></div>
                                     </template>
                                 </article>
                             </template>
                             <template x-if="!column.cards || column.cards.length === 0">
-                                <p class="text-xs text-center text-neutral-400 dark:text-neutral-500 italic" x-text="column.emptyState || @js($emptyStateLabel)"></p>
+                                <p class="text-xs text-center text-fg-disabled italic" x-text="column.emptyState || @js($emptyStateLabel)"></p>
                             </template>
                         </div>
 
@@ -340,7 +385,7 @@
                                 <button 
                                     type="button" 
                                     :class="[
-                                        'flex items-center justify-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-neutral-600 border border-dashed border-neutral-300 rounded-2xl px-3 py-2 transition hover:border-neutral-400 hover:bg-neutral-50 dark:text-neutral-300 dark:border-neutral-800 dark:hover:border-neutral-700 dark:hover:bg-neutral-900/50',
+                                        'flex items-center justify-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-fg-secondary border border-dashed border-edge rounded-2xl px-3 py-2 transition hover:border-edge-hover hover:bg-hover',
                                         column.action.class || '',
                                         (column.action.attributes && column.action.attributes.class) || ''
                                     ]"

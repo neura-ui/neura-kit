@@ -15,7 +15,7 @@
 
             this.tooltipEl = document.createElement('div')
             this.tooltipEl.className =
-                'fixed z-[99999] px-2 py-2 mx-1 text-sm rounded-md shadow-md bg-neutral-200 dark:bg-neutral-700 dark:text-white text-black whitespace-nowrap pointer-events-none opacity-0 transition-opacity duration-150'
+                'fixed z-[99999] px-2 py-2 mx-1 text-sm rounded-md shadow-md bg-surface-inset dark:text-white text-black whitespace-nowrap pointer-events-none opacity-0 transition-opacity duration-150'
             this.tooltipEl.textContent = @js($tooltip)
             // show it only when collapsed
 

@@ -5,7 +5,7 @@
 
 @php
     $classes = [
-        'rounded-box border border-black/10 p-5 dark:border-white/10 text-start',
+        'rounded-box border border-edge p-5 text-start',
 
         '[&>[data-slot=field]]:my-0
         [&>[data-slot=field]:not(:first-of-type)]:my-2

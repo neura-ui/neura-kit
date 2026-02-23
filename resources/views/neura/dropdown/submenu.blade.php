@@ -14,8 +14,8 @@
         '[:where(&)]:max-w-96',
         '[:where(&)]:min-w-40',
         'text-start',
-        'bg-white dark:bg-neutral-900',
-        'border border-black/10 dark:border-white/10',
+        'bg-surface-raised',
+        'border border-edge',
         'shadow-lg',
         'rounded-(--dropdown-radius)',
         'p-(--dropdown-padding)',
@@ -59,7 +59,7 @@
                 if (el) $focus.focus($focus.within(el).getFirst());
             });
         "
-        {{ $attributes->only(['class'])->merge(['class' => 'flex items-center justify-between gap-2 w-full px-3 py-1.5 text-sm transition-colors duration-200 text-start text-neutral-800 dark:text-white rounded-[calc(var(--dropdown-radius)-var(--dropdown-padding))] cursor-pointer ' . ($disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-neutral-100 focus:bg-neutral-100 dark:hover:bg-white/5 dark:focus:bg-white/5')]) }}
+        {{ $attributes->only(['class'])->merge(['class' => 'flex items-center justify-between gap-2 w-full px-3 py-1.5 text-sm transition-colors duration-200 text-start text-neutral-800 dark:text-white rounded-[calc(var(--dropdown-radius)-var(--dropdown-padding))] cursor-pointer ' . ($disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-hover focus:bg-hover')]) }}
         tabindex="{{ $disabled ? '-1' : '0' }}"
         role="menuitem"
         aria-haspopup="true"

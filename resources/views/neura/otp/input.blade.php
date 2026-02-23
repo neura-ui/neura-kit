@@ -8,8 +8,8 @@
     $classes = [
         '[:where(&:first-child)]:rounded-l-box [:where(&:last-child)]:rounded-r-box',
         'text-center text-base max-w-12 w-full h-12',
-        'bg-white dark:bg-neutral-900',
-        'text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500',
+        'bg-surface',
+        'text-fg placeholder:text-neutral-400 dark:placeholder:text-neutral-500',
         $colors['border'] => !$invalid,
         $colors['focus'] => !$invalid,
         $colors['invalid'] => $invalid,

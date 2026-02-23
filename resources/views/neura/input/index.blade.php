@@ -112,7 +112,7 @@
         @if($leftIcon)
             <neura::icon
                 name="{{ $leftIcon }}"
-                class="text-neutral-500! dark:text-neutral-400! size-[1.15rem]!"
+                class="text-fg-muted! size-[1.15rem]!"
                 data-slot="left-icon"
             />
         @endif
@@ -123,8 +123,8 @@
         <input
             @class([
                 'z-10',
-                'inline-block border w-full text-neutral-900 disabled:text-neutral-500 placeholder-neutral-400 disabled:placeholder-neutral-400/70 dark:text-neutral-100 dark:disabled:text-neutral-500 dark:placeholder-neutral-500 dark:disabled:placeholder-neutral-600',
-                'bg-white dark:bg-neutral-950 disabled:bg-neutral-50 dark:disabled:bg-neutral-900',
+                'inline-block border w-full text-fg disabled:text-fg-muted placeholder-neutral-400 disabled:placeholder-neutral-400/70 dark:placeholder-neutral-500 dark:disabled:placeholder-neutral-600',
+                'bg-surface disabled:bg-neutral-50 dark:disabled:bg-neutral-900/60',
                 'disabled:cursor-not-allowed transition-colors duration-150',
                 'shadow-sm disabled:shadow-none',
                 $roundedClass,
@@ -155,7 +155,7 @@
             @if ($rightIcon)
                 <neura::icon
                     name="{{ $rightIcon }}"
-                    class="text-neutral-500! dark:text-neutral-400!"
+                    class="text-fg-muted!"
                     data-slot="input-option"
                 />
             @endif

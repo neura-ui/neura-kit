@@ -29,9 +29,9 @@
     };
 
     $variantClasses = match ($variant) {
-        'bordered' => 'border border-neutral-200 dark:border-neutral-800 rounded-lg',
-        'muted' => 'bg-neutral-50 dark:bg-neutral-900/50 rounded-lg',
-        'card' => 'bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-sm',
+        'bordered' => 'border border-edge rounded-lg',
+        'muted' => 'bg-surface-inset rounded-lg',
+        'card' => 'bg-surface border border-edge rounded-lg shadow-sm',
         default => '',
     };
 

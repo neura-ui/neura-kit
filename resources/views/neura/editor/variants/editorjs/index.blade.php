@@ -36,7 +36,7 @@
     @endif
     x-init="init()"
     {{ $attributes->whereDoesntStartWith(['wire:model', 'class']) }}
-    class="neura-editor-container relative w-full border border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-950 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden"
+    class="neura-editor-container relative w-full border border-edge bg-surface rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden"
     wire:ignore
 >
     <div x-ref="editor" class="neura-editor-content min-h-[200px] px-12 py-6"></div>

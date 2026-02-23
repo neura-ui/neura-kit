@@ -31,7 +31,7 @@
     @if (filled($icon))
         <neura::icon
             :name="$icon"
-            class="col-span-1 col-start-1 row-start-1 h-full w-full text-neutral-500 dark:text-neutral-400 flex items-center justify-center z-10 size-[1.10rem]!"
+            class="col-span-1 col-start-1 row-start-1 h-full w-full text-fg-muted flex items-center justify-center z-10 size-[1.10rem]!"
         />
     @endif
 
@@ -42,8 +42,8 @@
         aria-haspopup="listbox"
         data-slot="select-control"
         {{ $attributes->class([
-            'border bg-white truncate text-sm text-neutral-900 disabled:text-neutral-500 dark:text-neutral-100 dark:disabled:text-neutral-500',
-            'dark:bg-neutral-950 disabled:bg-neutral-50 dark:disabled:bg-neutral-900',
+            'border bg-surface truncate text-sm text-fg disabled:text-fg-muted',
+            'disabled:bg-neutral-50 dark:disabled:bg-neutral-900/60',
             'shadow-sm disabled:shadow-none rounded-lg px-3 py-2 text-start',
             'transition-colors duration-150',
             'col-span-4 col-start-1 row-start-1 justify-self-stretch',
@@ -67,7 +67,7 @@
     @if (filled($iconAfter))
         <neura::icon
             :name="$iconAfter"
-            class="col-span-1 row-start-1 text-neutral-500 dark:text-neutral-400 [&:has(+[data-slot=select-clear])]:col-start-3 [&:not(:has(+[data-slot=select-clear]))]:col-start-4 size-[1.15rem]!"
+            class="col-span-1 row-start-1 text-fg-muted [&:has(+[data-slot=select-clear])]:col-start-3 [&:not(:has(+[data-slot=select-clear]))]:col-start-4 size-[1.15rem]!"
         />
     @endif
 
@@ -76,7 +76,7 @@
             name="trash"
             data-slot="select-clear"
             x-on:click="clear"
-            class="col-span-1 row-start-1 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300 size-[1.15rem]! col-start-4 cursor-pointer transition-colors"
+            class="col-span-1 row-start-1 text-fg-muted hover:text-neutral-700 dark:hover:text-neutral-300 size-[1.15rem]! col-start-4 cursor-pointer transition-colors"
             x-bind:class="!hasSelection && 'opacity-50'"
         />
     @endif

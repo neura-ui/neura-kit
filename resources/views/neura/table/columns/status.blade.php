@@ -26,33 +26,30 @@
         $color = $colorMap[$status] ?? 'neutral';
     }
 
-    /**
-     * Calm, table-friendly color system
-     */
-    $colorClasses = match ($color) {
-        'green', 'success' => 'bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-300',
-        'yellow', 'warning' => 'bg-yellow-50 text-yellow-700 dark:bg-yellow-950/40 dark:text-yellow-300',
-        'orange' => 'bg-orange-50 text-orange-700 dark:bg-orange-950/40 dark:text-orange-300',
-        'red', 'danger' => 'bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300',
-        'blue', 'info' => 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300',
-        'purple' => 'bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300',
-        'teal' => 'bg-teal-50 text-teal-700 dark:bg-teal-950/40 dark:text-teal-300',
-        default => 'bg-neutral-100 text-neutral-700 dark:bg-neutral-900 dark:text-neutral-300',
+    $dotColor = match ($color) {
+        'green', 'success' => 'bg-emerald-500',
+        'yellow', 'warning' => 'bg-amber-500',
+        'orange' => 'bg-orange-500',
+        'red', 'danger' => 'bg-red-500',
+        'blue', 'info' => 'bg-blue-500',
+        'purple' => 'bg-violet-500',
+        'teal' => 'bg-teal-500',
+        default => 'bg-neutral-400 dark:bg-neutral-500',
+    };
+
+    $textColor = match ($color) {
+        'green', 'success' => 'text-emerald-700 dark:text-emerald-400',
+        'yellow', 'warning' => 'text-amber-700 dark:text-amber-400',
+        'orange' => 'text-orange-700 dark:text-orange-400',
+        'red', 'danger' => 'text-red-700 dark:text-red-400',
+        'blue', 'info' => 'text-blue-700 dark:text-blue-400',
+        'purple' => 'text-violet-700 dark:text-violet-400',
+        'teal' => 'text-teal-700 dark:text-teal-400',
+        default => 'text-neutral-600 dark:text-neutral-400',
     };
 @endphp
 
-<div class="flex items-center">
-    <span
-        @class([
-            'inline-flex items-center gap-1.5',
-            'rounded-lg px-2 py-1',
-            'text-sm font-base leading-4',
-            'whitespace-nowrap select-none',
-            $colorClasses,
-        ])
-    >
-        <span class="h-1.5 w-1.5 rounded-full bg-current opacity-70"></span>
-
-        {{ $label }}
-    </span>
+<div class="flex items-center gap-2">
+    <span class="size-1.5 rounded-full shrink-0 {{ $dotColor }}"></span>
+    <span class="text-[13px] font-normal {{ $textColor }}">{{ $label }}</span>
 </div>

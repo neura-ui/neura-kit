@@ -27,7 +27,7 @@
 }"
     {{ $attributes->class(
         Arr::toCssClasses([
-            'dark:text-white text-neutral-800 not-last:border-b border-black/10 dark:border-white/10 text-start',
+            'text-fg not-last:border-b border-edge text-start',
             'opacity-50' => $disabled,
         ]),
     ) }}>

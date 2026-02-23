@@ -76,9 +76,9 @@
         'lg' => ['padding' => 'p-2',   'text' => 'text-base','minWidth' => 'min-w-64', 'maxHeight' => 'max-h-96'],
     ];
     $popupVariants = [
-        'menu' => ['radius' => 'rounded-md', 'shadow' => 'shadow-sm', 'border' => 'border border-neutral-200/80 dark:border-neutral-800', 'bg' => 'bg-white dark:bg-neutral-950'],
-        'compact' => ['radius' => 'rounded-lg', 'shadow' => 'shadow-md', 'border' => 'border border-neutral-200/80 dark:border-neutral-800', 'bg' => 'bg-white dark:bg-neutral-950'],
-        'default' => ['radius' => 'rounded-lg', 'shadow' => 'shadow-lg shadow-black/5', 'border' => 'border border-neutral-200/80 dark:border-neutral-800', 'bg' => 'bg-white dark:bg-neutral-950'],
+        'menu' => ['radius' => 'rounded-md', 'shadow' => 'shadow-sm', 'border' => 'border border-edge', 'bg' => 'bg-surface-raised backdrop-blur-xl'],
+        'compact' => ['radius' => 'rounded-lg', 'shadow' => 'shadow-md', 'border' => 'border border-edge', 'bg' => 'bg-surface-raised backdrop-blur-xl'],
+        'default' => ['radius' => 'rounded-lg', 'shadow' => 'shadow-lg shadow-black/5', 'border' => 'border border-edge', 'bg' => 'bg-surface-raised backdrop-blur-xl'],
     ];
     $pv = $popupVariants[$popupVariant] ?? $popupVariants['default'];
     $ps = $popupSizes[$popupSize] ?? $popupSizes['md'];
@@ -119,7 +119,7 @@
         @endif
 
         @if ($label)
-            <label class="mb-1 block text-sm font-medium text-neutral-900 dark:text-neutral-100">
+            <label class="mb-1 block text-sm font-medium text-fg">
                 {{ $label }}
             </label>
         @endif
@@ -155,7 +155,7 @@
                 @if ($leftIcon)
                     <neura::icon
                         name="{{ $leftIcon }}"
-                        class="text-neutral-500! dark:text-neutral-400! size-[1.15rem]!"
+                        class="text-fg-muted! size-[1.15rem]!"
                         data-slot="left-icon"
                     />
                 @endif
@@ -174,8 +174,8 @@
                     x-on:keydown.escape="open = false"
                     @class([
                         'z-10',
-                        'inline-block border w-full text-neutral-900 disabled:text-neutral-500 placeholder-neutral-400 disabled:placeholder-neutral-400/70 dark:text-neutral-100 dark:disabled:text-neutral-500 dark:placeholder-neutral-500 dark:disabled:placeholder-neutral-600',
-                        'bg-white dark:bg-neutral-950 disabled:bg-neutral-50 dark:disabled:bg-neutral-900',
+                        'inline-block border w-full text-fg disabled:text-fg-muted placeholder-neutral-400 disabled:placeholder-neutral-400/70 dark:placeholder-neutral-500 dark:disabled:placeholder-neutral-600',
+                        'bg-surface disabled:bg-neutral-50 dark:disabled:bg-neutral-900/60',
                         'disabled:cursor-not-allowed transition-colors duration-150',
                         'shadow-sm disabled:shadow-none',
                         $roundedClass,
@@ -188,7 +188,7 @@
 
                 <div class="flex items-center justify-end h-full gap-1.5 pr-1.5" data-slot="input-actions">
                     <div 
-                        class="w-5 h-5 rounded-md border border-neutral-300 dark:border-neutral-700 shadow-sm shrink-0"
+                        class="w-5 h-5 rounded-md border border-edge shadow-sm shrink-0"
                         :style="{ backgroundColor: hex || 'transparent' }"
                         :title="hex || ''"
                         :class="{ 'opacity-50': !hex }"
@@ -196,12 +196,12 @@
                     <button
                         type="button"
                         @click.stop="if (!isDisabled) open = !open"
-                        class="text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200 transition-colors"
+                        class="text-fg-muted hover:text-neutral-700 dark:hover:text-neutral-200 transition-colors"
                         :disabled="isDisabled"
                     >
                         <neura::icon 
                             name="swatch" 
-                            class="text-neutral-500! dark:text-neutral-400! size-[1.15rem]! shrink-0" 
+                            class="text-fg-muted! size-[1.15rem]! shrink-0" 
                             data-slot="input-option" 
                         />
                     </button>
@@ -210,7 +210,7 @@
         </div>
 
         @if ($hint)
-            <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+            <p class="mt-1 text-xs text-fg-muted">
                 {{ $hint }}
             </p>
         @endif
@@ -228,7 +228,7 @@
             @click.stop=""
             style="display:none;"
         >
-            <div class="mb-2 pb-2 border-b border-neutral-200 dark:border-neutral-800">
+            <div class="mb-2 pb-2 border-b border-separator">
                 <div @class([
                     'isolate',
                     'relative flex items-stretch w-full shadow-xs transition-colors duration-200',
@@ -243,8 +243,8 @@
                         autocomplete="off"
                         @class([
                             'z-10',
-                            'inline-block border w-full text-neutral-900 placeholder-neutral-400 dark:text-neutral-100 dark:placeholder-neutral-500',
-                            'bg-white dark:bg-neutral-950',
+                            'inline-block border w-full text-fg placeholder-neutral-400 dark:placeholder-neutral-500',
+                            'bg-surface',
                             'transition-colors duration-150',
                             'shadow-sm',
                             $roundedClass,
@@ -262,27 +262,27 @@
                 <template x-for="(color, index) in filteredPalette()" :key="color.token || color.hex || index">
                     <button
                         type="button"
-                        class="group flex flex-col items-center gap-1 rounded-md p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600"
+                        class="group flex flex-col items-center gap-1 rounded-md p-2 hover:bg-hover focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600"
                         x-on:click.stop="choose(color)"
                         :title="color.token + ' ' + color.hex"
                     >
-                        <div class="size-7 rounded-md border border-neutral-300 dark:border-neutral-700 shadow-sm"
+                        <div class="size-7 rounded-md border border-edge shadow-sm"
                             :style="{ backgroundColor: color.hex }"></div>
-                        <span class="text-[10px] text-neutral-600 dark:text-neutral-300 font-mono truncate w-full text-center"
+                        <span class="text-[10px] text-fg-secondary font-mono truncate w-full text-center"
                             x-text="color.token"></span>
                     </button>
                 </template>
             </div>
 
-            <div class="mt-2 pt-2 border-t border-neutral-200 dark:border-neutral-800">
+            <div class="mt-2 pt-2 border-t border-separator">
                 <div class="flex items-center justify-between gap-2 px-1">
-                    <div class="text-xs text-neutral-600 dark:text-neutral-300">
+                    <div class="text-xs text-fg-secondary">
                         <span class="font-mono" x-text="hex ? hex.toUpperCase() : ''"></span>
                         <span class="mx-2 text-neutral-300 dark:text-neutral-700">·</span>
                         <span class="font-mono" x-text="rgb ? rgbToString(rgb) : ''"></span>
                     </div>
                     <button type="button"
-                        class="text-xs text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
+                        class="text-xs text-fg-muted hover:text-neutral-700 dark:hover:text-neutral-200"
                         x-on:click="display=''; applyInput(''); open=false;">
                         Effacer
                     </button>

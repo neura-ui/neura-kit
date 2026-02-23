@@ -8,7 +8,7 @@
 @php
     $model = $extraAttributes['model'] ?? null;
     $attribute = $extraAttributes['attribute'] ?? 'name';
-    $fallback = $extraAttributes['fallback'] ?? __('No data');
+    $fallback = $extraAttributes['fallback'] ?? null;
 
     $displayValue = $fallback;
 
@@ -18,7 +18,6 @@
         if (is_numeric($value)) {
             $related = $model::find($value);
         } else {
-
             $related = $model::where('name', $value)->first();
         }
 
@@ -30,6 +29,10 @@
     }
 @endphp
 
-<div>
-    {{ $displayValue }}
+<div class="text-[13px] text-neutral-900 dark:text-neutral-100">
+    @if($displayValue)
+        {{ $displayValue }}
+    @else
+        <span class="text-neutral-300 dark:text-neutral-600 text-xs">—</span>
+    @endif
 </div>

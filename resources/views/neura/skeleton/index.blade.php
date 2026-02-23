@@ -78,7 +78,7 @@
     };
 
     $classes = [
-        'bg-neutral-200 dark:bg-neutral-800',
+        'bg-surface-inset',
         $variantClasses,
         $widthClasses,
         $heightClasses,

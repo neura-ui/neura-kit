@@ -82,9 +82,9 @@
     $mergedOptions = array_merge_recursive($defaultOptions, $options);
     
     $variantClasses = match($variant) {
-        'card' => 'bg-white dark:bg-neutral-900 rounded-box border border-neutral-200 dark:border-neutral-800 p-6 shadow-sm',
+        'card' => 'bg-surface-raised backdrop-blur-xl rounded-box border border-edge p-6 shadow-sm',
         'minimal' => 'bg-transparent',
-        default => 'bg-white dark:bg-neutral-900 rounded-box border border-neutral-200 dark:border-neutral-800 p-6 shadow-sm',
+        default => 'bg-surface-raised backdrop-blur-xl rounded-box border border-edge p-6 shadow-sm',
     };
 @endphp
 

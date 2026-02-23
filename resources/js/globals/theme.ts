@@ -6,6 +6,7 @@ const getSystem = (): 'dark' | 'light' =>
   matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 
 const apply = (t: 'dark' | 'light'): void => {
+  document.documentElement.style.colorScheme = t;
   document.documentElement.classList.toggle('dark', t === 'dark');
   dispatchEvent(
     new CustomEvent<{ theme: 'dark' | 'light' }>('theme-changed', {

@@ -9,7 +9,7 @@
 ])
 
 @php
-    $baseClasses = "w-full relative flex flex-col bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm transition-colors focus-within:border-neutral-300 dark:focus-within:border-neutral-700 focus-within:ring-2 focus-within:ring-neutral-100 dark:focus-within:ring-white/5";
+    $baseClasses = "w-full relative flex flex-col bg-surface-raised backdrop-blur-xl border border-edge rounded-xl shadow-sm transition-colors focus-within:border-edge-hover focus-within:ring-2 focus-within:ring-neutral-100 dark:focus-within:ring-white/5";
     
     if ($disabled) {
         $baseClasses .= " opacity-60 cursor-not-allowed pointer-events-none";
@@ -31,7 +31,7 @@
     x-init="resize()"
 >
     @if(isset($header))
-        <div class="px-4 py-3 border-b border-neutral-100 dark:border-neutral-800">
+        <div class="px-4 py-3 border-b border-separator">
             {{ $header }}
         </div>
     @endif
@@ -52,7 +52,7 @@
             @if($autofocus) autofocus @endif
             @if($disabled) disabled @endif
             @class([
-                'bg-transparent border-0 outline-none px-2 py-1.5 text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:ring-0 focus:outline-none sm:text-sm sm:leading-6 resize-none overflow-y-auto',
+                'bg-transparent border-0 outline-none px-2 py-1.5 text-fg placeholder:text-fg-disabled focus:ring-0 focus:outline-none sm:text-sm sm:leading-6 resize-none overflow-y-auto',
                 'w-full' => !$inline,
                 'flex-1 min-w-0' => $inline,
                 'max-h-80' => !$inline,

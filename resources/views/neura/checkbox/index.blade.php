@@ -11,6 +11,8 @@
     'indeterminate' => false,
     'size' => 'md',
     'variant' => 'default',
+    'icon' => null,
+    'iconVariant' => 'outline',
 ])
 <div data-slot="checkbox-wrapper" x-data="{
     value: @js($value),

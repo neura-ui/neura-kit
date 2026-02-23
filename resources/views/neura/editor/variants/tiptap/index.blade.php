@@ -33,7 +33,7 @@
     @endif
     x-init="init()"
     {{ $attributes->whereDoesntStartWith(['wire:model', 'class']) }}
-    class="relative w-full border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 rounded-lg shadow-sm overflow-hidden"
+    class="relative w-full border border-edge bg-surface rounded-lg shadow-sm overflow-hidden"
     wire:ignore
 >
     <style>

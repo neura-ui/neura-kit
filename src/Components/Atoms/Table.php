@@ -286,6 +286,30 @@ abstract class Table extends Component
         $this->skipRender();
     }
 
+    public function updateField(string|int $rowId, string $column, mixed $value): void
+    {
+        $col = collect($this->getColumns())->firstWhere('key', $column);
+
+        if (! $col || ! ($col->editable ?? false)) {
+            return;
+        }
+
+        $query = $this->query();
+
+        if ($query instanceof Builder) {
+            $query->getModel()
+                ->newQuery()
+                ->where($this->getRowKey(), $rowId)
+                ->update([$column => $value]);
+        } else {
+            \Illuminate\Support\Facades\DB::table($query->from)
+                ->where($this->getRowKey(), $rowId)
+                ->update([$column => $value]);
+        }
+
+        $this->cachedData = null;
+    }
+
     protected function sortableKeys(): array
     {
         return array_map(

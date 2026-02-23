@@ -4,10 +4,10 @@
     'row' => null,
 ])
 
-<div>
+<div class="text-[13px] text-neutral-500 dark:text-neutral-400">
     @if($value)
         {{ Carbon::make($value)->diffForHumans() }}
     @else
-        <span class="text-gray-400 dark:text-gray-500">—</span>
+        <span class="text-neutral-300 dark:text-neutral-600">—</span>
     @endif
 </div>

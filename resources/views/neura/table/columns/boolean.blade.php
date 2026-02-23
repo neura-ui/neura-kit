@@ -10,13 +10,12 @@
 
 <div class="flex items-center">
     @if($isTrue)
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-        </svg>
+        <div class="size-5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center">
+            <neura::icon name="check" variant="micro" class="size-3 text-emerald-600 dark:text-emerald-400" />
+        </div>
     @else
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-        </svg>
+        <div class="size-5 rounded-full bg-neutral-100 dark:bg-white/[0.06] flex items-center justify-center">
+            <neura::icon name="x-mark" variant="micro" class="size-3 text-neutral-400 dark:text-neutral-500" />
+        </div>
     @endif
 </div>
-

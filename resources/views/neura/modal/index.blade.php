@@ -101,7 +101,7 @@
     x-cloak
 >
     <div
-        class="fixed inset-0 bg-black/50 dark:bg-black/70"
+        class="fixed inset-0 bg-surface-overlay"
         @if($closeOnBackdrop) x-on:click="close()" @endif
     ></div>
 
@@ -109,7 +109,7 @@
         <div
             x-on:click.stop
             @if($customMaxWidth) style="max-width: {{ $customMaxWidth }};" @endif
-            class="relative bg-white dark:bg-neutral-900 rounded-lg shadow-xl w-full {{ $maxWidthClass }} border border-neutral-200 dark:border-neutral-800"
+            class="relative bg-surface-raised backdrop-blur-xl rounded-lg shadow-xl w-full {{ $maxWidthClass }} border border-edge"
             x-transition:enter="ease-out duration-300"
             x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"

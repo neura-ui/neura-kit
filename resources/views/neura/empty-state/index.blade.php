@@ -39,18 +39,18 @@
     };
 
     $variantClasses = match($variant) {
-        'bordered' => 'border border-dashed border-neutral-300 dark:border-neutral-700 rounded-xl bg-neutral-50/50 dark:bg-neutral-900/50',
-        'card' => 'border border-neutral-200 dark:border-neutral-800 rounded-xl bg-white dark:bg-neutral-950 shadow-sm',
+        'bordered' => 'border border-dashed border-edge rounded-xl bg-surface-inset',
+        'card' => 'border border-edge rounded-xl bg-surface shadow-sm',
         'ghost' => 'bg-transparent',
         default => '',
     };
 
     $iconBgClass = match($variant) {
-        'bordered', 'card' => 'bg-neutral-100 dark:bg-neutral-800',
-        default => 'bg-neutral-100 dark:bg-neutral-800/60',
+        'bordered', 'card' => 'bg-surface-inset',
+        default => 'bg-surface-inset',
     };
 
-    $iconColorClass = 'text-neutral-400 dark:text-neutral-500';
+    $iconColorClass = 'text-fg-disabled';
 @endphp
 
 <div {{ $attributes->class([
@@ -86,7 +86,7 @@
     <div class="space-y-2">
         @if($title)
             <h3 @class([
-                'font-semibold text-neutral-900 dark:text-neutral-100',
+                'font-semibold text-fg',
                 $sizeClasses['title'],
             ])>
                 {{ $title }}
@@ -95,7 +95,7 @@
 
         @if($description)
             <p @class([
-                'text-neutral-500 dark:text-neutral-400 max-w-sm mx-auto',
+                'text-fg-muted max-w-sm mx-auto',
                 $sizeClasses['description'],
             ])>
                 {{ $description }}
@@ -104,7 +104,7 @@
 
         {{-- Default slot for custom content --}}
         @if($slot->isNotEmpty())
-            <div class="text-neutral-500 dark:text-neutral-400">
+            <div class="text-fg-muted">
                 {{ $slot }}
             </div>
         @endif
@@ -120,7 +120,7 @@
     {{-- Footer --}}
     @if(isset($footer))
         <div @class([
-            'text-neutral-400 dark:text-neutral-500',
+            'text-fg-disabled',
             $sizeClasses['description'],
         ])>
             {{ $footer }}

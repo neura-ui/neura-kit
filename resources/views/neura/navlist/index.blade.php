@@ -1,17 +1,22 @@
 @props([
-    'size' => 'md'
+    'size' => 'md',
+    'variant' => 'default',
+    'label' => null,
 ])
 
 @php
     $classes = [
-        'flex flex-col w-full [:has([data-collapsed]_&)_&]:items-center gap-y-1',
+        'flex flex-col w-full [:has([data-collapsed]_&)_&]:items-center gap-y-0.5',
         'py-1 px-2'
     ];
 @endphp
 
-<div
+<nav
     {{ $attributes->class($classes) }}
     data-slot="navlist"
+    aria-label="{{ $label ?? 'Navigation' }}"
 >
-    {{ $slot }}
-</div>
+    <ul role="list" class="flex flex-col w-full gap-y-0.5">
+        {{ $slot }}
+    </ul>
+</nav>

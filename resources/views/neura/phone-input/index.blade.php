@@ -71,10 +71,10 @@
             x-on:click="toggleDropdown()"
             :disabled="isDisabled"
             @class([
-                'flex items-center gap-1.5 px-3 border border-r-0 bg-neutral-50 dark:bg-neutral-900',
-                'hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors duration-150',
+                'flex items-center gap-1.5 px-3 border border-r-0 bg-surface',
+                'hover:bg-hover transition-colors duration-150',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0',
-                'disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-neutral-50 dark:disabled:bg-neutral-900',
+                'disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-neutral-50 dark:disabled:bg-neutral-900/60',
                 $inputColors['border'] => !$invalid,
                 $inputColors['focus'] => !$invalid,
                 $inputColors['invalid'] => $invalid,
@@ -122,10 +122,10 @@
             autocomplete="tel"
             @class([
                 'z-10',
-                'flex-1 inline-block border w-full text-neutral-900 disabled:text-neutral-500',
-                'placeholder-neutral-400 disabled:placeholder-neutral-400/70 dark:text-neutral-100 dark:disabled:text-neutral-500',
+                'flex-1 inline-block border w-full text-fg disabled:text-fg-muted',
+                'placeholder-neutral-400 disabled:placeholder-neutral-400/70',
                 'dark:placeholder-neutral-500 dark:disabled:placeholder-neutral-600',
-                'bg-white dark:bg-neutral-950 disabled:bg-neutral-50 dark:disabled:bg-neutral-900',
+                'bg-surface disabled:bg-neutral-50 dark:disabled:bg-neutral-900/60',
                 'disabled:cursor-not-allowed transition-colors duration-150',
                 'shadow-sm disabled:shadow-none',
                 'focus:ring-offset-0 focus:outline-none',
@@ -170,11 +170,11 @@
         x-transition:leave-start="opacity-100 scale-100"
         x-transition:leave-end="opacity-0 scale-95"
         x-cloak
-        class="absolute z-50 mt-1 w-72 max-h-80 overflow-hidden bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-lg"
+        class="absolute z-50 mt-1 w-72 max-h-80 overflow-hidden bg-surface border border-edge rounded-lg shadow-lg"
     >
         {{-- Search input --}}
         @if($searchable)
-            <div class="p-2 border-b border-neutral-200 dark:border-neutral-800">
+            <div class="p-2 border-b border-separator">
                 <input
                     type="text"
                     x-ref="searchInput"
@@ -183,7 +183,7 @@
                     x-on:keydown.arrow-down.prevent="focusNext()"
                     x-on:keydown.arrow-up.prevent="focusPrev()"
                     x-on:keydown.enter.prevent="selectFocused()"
-                    class="w-full px-3 py-2 text-sm bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-500"
+                    class="w-full px-3 py-2 text-sm bg-surface-inset border border-edge rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 text-fg placeholder-neutral-400 dark:placeholder-neutral-500"
                     placeholder="{{ $searchPlaceholder ?? __('Search countries...') }}"
                 />
             </div>
@@ -203,14 +203,14 @@
                                 'bg-primary-50 dark:bg-primary-950': focusedIndex === getCountryIndex(country.code),
                                 'bg-primary-100 dark:bg-primary-900': selectedCountry?.code === country.code
                             }"
-                            class="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors duration-150"
+                            class="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-hover transition-colors duration-150"
                         >
                             <span class="text-lg" x-text="country.flag"></span>
-                            <span class="flex-1 text-sm text-neutral-900 dark:text-neutral-100" x-text="country.name"></span>
-                            <span class="text-sm text-neutral-500 dark:text-neutral-400" x-text="'+' + country.dialCode"></span>
+                            <span class="flex-1 text-sm text-fg" x-text="country.name"></span>
+                            <span class="text-sm text-fg-muted" x-text="'+' + country.dialCode"></span>
                         </button>
                     </template>
-                    <div class="border-b border-neutral-200 dark:border-neutral-800 my-1"></div>
+                    <div class="border-b border-separator my-1"></div>
                 </div>
             </template>
 
@@ -224,18 +224,18 @@
                         'bg-primary-50 dark:bg-primary-950': focusedIndex === index + (search ? 0 : preferredCountriesList.length),
                         'bg-primary-100 dark:bg-primary-900': selectedCountry?.code === country.code
                     }"
-                    class="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors duration-150"
+                    class="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-hover transition-colors duration-150"
                 >
                     <span class="text-lg" x-text="country.flag"></span>
-                    <span class="flex-1 text-sm text-neutral-900 dark:text-neutral-100" x-text="country.name"></span>
-                    <span class="text-sm text-neutral-500 dark:text-neutral-400" x-text="'+' + country.dialCode"></span>
+                    <span class="flex-1 text-sm text-fg" x-text="country.name"></span>
+                    <span class="text-sm text-fg-muted" x-text="'+' + country.dialCode"></span>
                 </button>
             </template>
 
             {{-- No results --}}
             <div
                 x-show="filteredCountries.length === 0"
-                class="px-3 py-4 text-center text-sm text-neutral-500 dark:text-neutral-400"
+                class="px-3 py-4 text-center text-sm text-fg-muted"
             >
                 {{ __('No countries found') }}
             </div>

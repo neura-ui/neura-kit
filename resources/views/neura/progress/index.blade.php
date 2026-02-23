@@ -51,10 +51,10 @@
 
     // Background track color
     $trackColorClasses = match ($variant) {
-        'default' => 'bg-neutral-200 dark:bg-neutral-800',
-        'soft' => 'bg-neutral-100 dark:bg-neutral-900',
-        'bordered' => 'bg-transparent border border-neutral-300 dark:border-neutral-700',
-        default => 'bg-neutral-200 dark:bg-neutral-800',
+        'default' => 'bg-surface-inset',
+        'soft' => 'bg-surface-inset',
+        'bordered' => 'bg-transparent border border-edge',
+        default => 'bg-surface-inset',
     };
 
     // Progress bar color
@@ -76,7 +76,7 @@
     // Text color for value
     $textColorClasses = match ($color) {
         'primary' => 'text-primary-600 dark:text-primary-400',
-        'secondary' => 'text-neutral-600 dark:text-neutral-400',
+        'secondary' => 'text-fg-secondary',
         'success' => 'text-green-600 dark:text-green-400',
         'danger' => 'text-red-600 dark:text-red-400',
         'warning' => 'text-yellow-600 dark:text-yellow-400',
@@ -100,7 +100,7 @@
     @if ($label || ($showValue && $valuePosition === 'top'))
         <div class="flex justify-between items-center mb-1.5">
             @if ($label)
-                <span class="{{ $textSizeClasses }} font-medium text-neutral-700 dark:text-neutral-300">{{ $label }}</span>
+                <span class="{{ $textSizeClasses }} font-medium text-fg-secondary">{{ $label }}</span>
             @endif
             @if ($showValue && $valuePosition === 'top')
                 <span class="{{ $textSizeClasses }} font-medium {{ $textColorClasses }}">

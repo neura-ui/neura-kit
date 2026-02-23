@@ -23,7 +23,7 @@
              @click.stop=""
              @contextmenu.prevent="" 
              @keydown.escape.window="close"
-             class="fixed z-50 min-w-[180px] bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-lg py-1 overflow-hidden"
+             class="fixed z-50 min-w-[180px] bg-surface-raised backdrop-blur-xl border border-edge rounded-lg shadow-lg py-1 overflow-hidden"
              :style="`top: ${y}px; left: ${x}px`"
              style="display: none;">
             

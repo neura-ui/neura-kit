@@ -11,6 +11,7 @@
     'autoCenter' => true,
     'toolbarClasses' => 'bottom left',
     'backgroundClasses' => 'dots',
+    'connectable' => true,
 ])
 
 @php
@@ -28,7 +29,78 @@
     }, $nodes, array_keys($nodes));
 @endphp
 
-<div {{ $attributes->class('w-full') }}>
+<div
+    {{ $attributes->class('w-full') }}
+    @if($connectable)
+        x-data="{
+            _connState: 'idle',
+            _connSource: null,
+
+            _getNodeId(el) {
+                const node = el.closest('.flow__node');
+                if (!node) return null;
+                return node.id.replace('flow__node_id-', '');
+            },
+
+            _getEditor() {
+                const editorEl = this.$el.querySelector('[x-data*=flowEditor]');
+                return editorEl ? Alpine.$data(editorEl) : null;
+            },
+
+            handleClick(e) {
+                const handle = e.target.closest('[data-handle]');
+                if (!handle) {
+                    if (this._connState === 'connecting') this.cancelConnection();
+                    return;
+                }
+                e.stopPropagation();
+
+                const nodeId = this._getNodeId(handle);
+                if (!nodeId) return;
+                const type = handle.dataset.handle;
+
+                if (this._connState === 'idle' && type === 'source') {
+                    this.startConnection(nodeId);
+                } else if (this._connState === 'connecting' && type === 'target' && nodeId !== this._connSource) {
+                    this.completeConnection(nodeId);
+                } else if (this._connState === 'connecting') {
+                    this.cancelConnection();
+                }
+            },
+
+            startConnection(nodeId) {
+                this._connSource = nodeId;
+                this._connState = 'connecting';
+                this.$el.classList.add('nk-flow--connecting');
+                const srcNode = this.$el.querySelector('#flow__node_id-' + CSS.escape(nodeId));
+                srcNode?.classList.add('nk-flow-node--source-active');
+            },
+
+            completeConnection(targetId) {
+                const editor = this._getEditor();
+                if (editor) {
+                    const sourceId = this._connSource;
+                    editor.enqueueTransformation(state => {
+                        const exists = state.edges.some(e => e.source === sourceId && e.target === targetId);
+                        if (!exists) {
+                            state.edges.push(editor.createEdge({ source: sourceId, target: targetId }));
+                        }
+                    });
+                }
+                this.cancelConnection();
+            },
+
+            cancelConnection() {
+                this.$el.querySelector('.nk-flow-node--source-active')?.classList.remove('nk-flow-node--source-active');
+                this.$el.classList.remove('nk-flow--connecting');
+                this._connSource = null;
+                this._connState = 'idle';
+            }
+        }"
+        @click="handleClick($event)"
+        @keydown.escape.window="if (_connState === 'connecting') cancelConnection()"
+    @endif
+>
     @if(isset($nodeDefinitions))
         <div style="display: none;" aria-hidden="true">
             {{ $nodeDefinitions }}
@@ -41,9 +113,19 @@
             aria-hidden="true"
         >
             <div x-ignore>
-                <div class="rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-sm px-4 py-3 min-w-[160px]">
-                    <p class="font-medium text-neutral-900 dark:text-neutral-100" x-text="props.label || 'Step'"></p>
-                    <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5" x-text="props.description || ''"></p>
+                <div class="nk-flow-card relative">
+                    @if($connectable)
+                        <div data-handle="target" class="nk-flow-handle nk-flow-handle--target"></div>
+                    @endif
+
+                    <div class="rounded-lg border border-edge bg-surface shadow-sm px-4 py-3 min-w-[160px]">
+                        <p class="font-medium text-fg" x-text="props.label || 'Step'"></p>
+                        <p class="text-xs text-fg-muted mt-0.5" x-text="props.description || ''"></p>
+                    </div>
+
+                    @if($connectable)
+                        <div data-handle="source" class="nk-flow-handle nk-flow-handle--source"></div>
+                    @endif
                 </div>
             </div>
         </div>

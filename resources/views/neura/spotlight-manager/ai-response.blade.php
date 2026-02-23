@@ -37,7 +37,7 @@
                     prose-headings:text-neutral-900 dark:prose-headings:text-neutral-100 prose-headings:font-semibold
                     prose-strong:text-neutral-900 dark:prose-strong:text-neutral-100 prose-strong:font-semibold
                     prose-code:text-primary-700 dark:prose-code:text-primary-300 prose-code:bg-primary-50 dark:prose-code:bg-primary-950/50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono prose-code:text-xs
-                    prose-pre:bg-neutral-100 dark:prose-pre:bg-neutral-950 prose-pre:text-neutral-900 dark:prose-pre:text-neutral-100 prose-pre:border prose-pre:border-neutral-200 dark:prose-pre:border-neutral-800 prose-pre:shadow-sm
+                    prose-pre:bg-neutral-100 dark:prose-pre:bg-neutral-950 prose-pre:text-neutral-900 dark:prose-pre:text-neutral-100 prose-pre:border prose-pre:border-neutral-200 dark:prose-pre:border-white/10 prose-pre:shadow-sm
                     prose-a:text-primary-600 dark:prose-a:text-primary-400 prose-a:no-underline hover:prose-a:underline
                     prose-ul:text-neutral-800 dark:prose-ul:text-neutral-200
                     prose-ol:text-neutral-800 dark:prose-ol:text-neutral-200

@@ -19,7 +19,7 @@
 @endphp
 
 <div class="flex items-center">
-    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+    <span class="inline-flex items-center px-1.5 py-0.5 rounded-md text-xs font-medium tabular-nums bg-neutral-100 dark:bg-white/[0.06] text-neutral-600 dark:text-neutral-400">
         {{ $count }}
     </span>
 </div>

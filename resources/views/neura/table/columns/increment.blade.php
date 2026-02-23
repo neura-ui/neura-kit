@@ -18,6 +18,6 @@
     $counters[$key]++;
 @endphp
 
-<div class="font-mono text-sm text-neutral-600 dark:text-neutral-400">
-    #{{ $displayValue }}
+<div class="text-[13px] text-neutral-400 dark:text-neutral-500 tabular-nums">
+    {{ $displayValue }}
 </div>

@@ -57,7 +57,6 @@
         return $wireClick . '(' . $formattedParams . ')';
     };
 
-    // Pre-build action data to keep template clean
     $renderedActions = [];
     foreach ($actions as $action) {
         if (!$resolve($action['visible'] ?? true)) continue;
@@ -100,23 +99,22 @@
 @endphp
 
 @php
-    $btnClass = 'inline-flex items-center justify-center rounded-md transition-colors size-7 text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800';
-    $disabledClass = 'pointer-events-none opacity-40';
+    $btnClass = 'inline-flex items-center justify-center rounded-md transition-colors duration-100 size-7 text-neutral-400 dark:text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-white/[0.06]';
+    $disabledClass = 'pointer-events-none opacity-30';
 @endphp
 
-<div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+<div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-100">
     @foreach($renderedActions as $a)
         @php
             $classes = $btnClass . ($a['disabled'] ? ' ' . $disabledClass : '');
         @endphp
 
-        {{-- Build the button/link --}}
         @if($a['route'] || $a['href'] || $a['url'])
             @if($a['tooltip'])
                 <neura::popover :onHover="true" variant="tooltip" size="xs">
                     <neura::popover.trigger>
                         <a href="{{ $a['route'] ?? $a['href'] ?? $a['url'] }}" class="{{ $classes }}">
-                            @if($a['icon']) <neura::icon name="{{ $a['icon'] }}" class="size-4" /> @endif
+                            @if($a['icon']) <neura::icon name="{{ $a['icon'] }}" class="size-3.5" /> @endif
                         </a>
                     </neura::popover.trigger>
                     <neura::popover.overlay class="whitespace-nowrap">
@@ -125,7 +123,7 @@
                 </neura::popover>
             @else
                 <a href="{{ $a['route'] ?? $a['href'] ?? $a['url'] }}" class="{{ $classes }}">
-                    @if($a['icon']) <neura::icon name="{{ $a['icon'] }}" class="size-4" /> @endif
+                    @if($a['icon']) <neura::icon name="{{ $a['icon'] }}" class="size-3.5" /> @endif
                 </a>
             @endif
         @elseif($a['wireClick'])
