@@ -6,6 +6,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.2] - 2026-02-23
+
+### Fixed
+- **Table**: Columns no longer overflow the container when there are many columns
+  - Wrapper uses `overflow-x-auto` for horizontal scrolling
+  - Table uses `min-w-max` so column widths are preserved and scrollbar appears when needed
+
 ## [1.1.1] - 2026-02-23
 
 ### Improved

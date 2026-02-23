@@ -134,8 +134,8 @@
     @endif
 
     {{-- Table --}}
-    <div>
-        <table class="w-full text-sm">
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm min-w-max">
             {{-- Header --}}
             <thead class="sticky top-0 z-10">
                 <tr class="border-b border-neutral-200 dark:border-white/[0.08]">
