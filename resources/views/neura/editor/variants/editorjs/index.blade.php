@@ -15,6 +15,7 @@
 @endphp
 
 <div
+    data-nk-editor
     @if($entangle)
         x-data="editorjsEditor({
             state: @entangle($entangle).live,

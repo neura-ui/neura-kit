@@ -14,6 +14,7 @@
 @endphp
 
 <div
+    data-nk-editor
     @if($entangle)
         x-data="tiptapEditor({
             state: @entangle($entangle).live,

@@ -21,6 +21,7 @@
 @endphp
 
 <div
+    data-nk-lottie
     x-data="lottieAnimation()"
     data-lottie-animation="{{ asset($animation) }}"
     data-lottie-delay="{{ $delay }}"

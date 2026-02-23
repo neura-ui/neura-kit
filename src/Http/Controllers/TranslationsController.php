@@ -16,9 +16,17 @@ class TranslationsController extends Controller
             return response()->json([], 404);
         }
 
+        $body = json_encode($translations, JSON_UNESCAPED_UNICODE);
+        $etag = '"'.md5($body).'"';
+
+        if (request()->header('If-None-Match') === $etag) {
+            return response()->json(null, 304);
+        }
+
         return response()->json($translations, 200, [
             'Content-Type' => 'application/json; charset=utf-8',
-            'Cache-Control' => 'public, max-age=3600',
+            'Cache-Control' => 'public, max-age=86400, stale-while-revalidate=604800',
+            'ETag' => $etag,
         ]);
     }
 

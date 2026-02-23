@@ -89,6 +89,7 @@
 @endphp
 
 <div
+    data-nk-chart
     x-data="chartComponent('{{ $chartId }}', {{ json_encode($type) }}, {{ json_encode($data) }}, {{ json_encode($mergedOptions) }})"
     class="relative {{ $variantClasses }}"
     style="height: {{ $height }};"

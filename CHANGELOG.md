@@ -6,6 +6,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.4] - 2026-02-23
+
+### Improved
+- **Translations API**: Efficient cache lifetimes and ETag support
+  - `Cache-Control: public, max-age=86400, stale-while-revalidate=604800` (1 day cache, 7 days revalidate)
+  - ETag header for conditional requests; responds with `304 Not Modified` when unchanged (saves bandwidth)
+- **Build**: Vendor chunk splitting for better browser caching
+  - Separate chunks for TipTap, EditorJS, Chart.js, Lottie, Flow, Highlight.js (smaller main bundle, cacheable vendors)
+  - `data-nk-*` markers on component views (chart, flow, editor, dropzone, color-picker, phone-input, tree, lottie) for future optimizations
+
 ## [1.1.3] - 2026-02-23
 
 ### Improved

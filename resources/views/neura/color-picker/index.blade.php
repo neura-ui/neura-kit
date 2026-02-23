@@ -99,6 +99,7 @@
 @endphp
 
 <div class="w-full {{ $class }}"
+    data-nk-color-picker
     x-data="neuraColorPicker({ palette: @js($palette), initialValue: @js($value), disabled: @js($disabled), wireProperty: @js($wireModel) })">
 
     <div class="relative">

@@ -35,6 +35,7 @@
 @endphp
 
 <div
+    data-nk-phone-input
     x-data="neuraPhoneInput({
         defaultCountry: @js($defaultCountry),
         preferredCountries: @js($preferredCountries),

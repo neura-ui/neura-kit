@@ -73,6 +73,7 @@
 @endphp
 
 <div 
+    data-nk-tree
     id="{{ $componentId }}"
     x-data="neuraTree({
         items: {{ json_encode($items) }},

@@ -13,6 +13,28 @@ const OPTIONAL_DEPS = [
   '@tiptap/extension-highlight',
 ] as const;
 
+const VENDOR_CHUNKS: Record<string, string[]> = {
+  'vendor-editor-tiptap': [
+    '@tiptap/core',
+    '@tiptap/starter-kit',
+    '@tiptap/extension-link',
+    '@tiptap/extension-image',
+    '@tiptap/extension-placeholder',
+    '@tiptap/extension-text-align',
+    '@tiptap/extension-underline',
+    '@tiptap/extension-highlight',
+    '@tiptap/pm',
+    'prosemirror-',
+  ],
+  'vendor-editor-editorjs': [
+    '@editorjs/',
+  ],
+  'vendor-chart': ['chart.js'],
+  'vendor-lottie': ['lottie-web'],
+  'vendor-highlight': ['highlight.js'],
+  'vendor-flow': ['@copyfactory/alpine-flow', 'elkjs'],
+};
+
 type ManualChunksFunction = (id: string) => string | undefined;
 
 export function configureOptimizeDeps(config: UserConfig): void {
@@ -32,25 +54,29 @@ export function configureOptimizeDeps(config: UserConfig): void {
       ? config.build.rollupOptions.output
       : {};
 
-  outputOptions.manualChunks ??= undefined;
-
   const existing = outputOptions.manualChunks as
     | ManualChunksFunction
     | Record<string, string[]>
     | undefined;
 
   outputOptions.manualChunks = (id: string): string | undefined => {
-    if (!id.includes('node_modules')) return undefined;
+    if (id.includes('node_modules')) {
+      if (typeof existing === 'function') {
+        const result = existing(id);
+        if (result) return result;
+      }
 
-    if (typeof existing === 'function') {
-      const result = existing(id);
-      if (result) return result;
-    }
+      if (existing && typeof existing === 'object') {
+        for (const [name, modules] of Object.entries(existing)) {
+          if (Array.isArray(modules) && modules.some((m) => id.includes(m))) {
+            return name;
+          }
+        }
+      }
 
-    if (existing && typeof existing === 'object') {
-      for (const [name, modules] of Object.entries(existing)) {
-        if (Array.isArray(modules) && modules.some((m) => id.includes(m))) {
-          return name;
+      for (const [chunkName, patterns] of Object.entries(VENDOR_CHUNKS)) {
+        if (patterns.some((p) => id.includes(p))) {
+          return chunkName;
         }
       }
     }

@@ -38,6 +38,7 @@
 @endphp
 
 <div
+    data-nk-dropzone
     x-data="neuraDropzone({
         accept: @js($accept),
         maxSizeBytes: @js($maxSizeBytes),

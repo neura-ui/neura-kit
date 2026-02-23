@@ -30,6 +30,7 @@
 @endphp
 
 <div
+    data-nk-flow
     {{ $attributes->class('w-full') }}
     @if($connectable)
         x-data="{
