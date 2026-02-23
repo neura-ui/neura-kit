@@ -12,15 +12,15 @@
     $isForm = $as === 'form';
 
     $variantClasses = match ($variant) {
-        'soft' => 'hover:bg-neutral-100 focus:bg-neutral-100 dark:hover:bg-white/5 dark:focus:bg-white/5',
-        'danger' => 'hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-400/20 dark:hover:text-red-400 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-400/20 dark:focus:text-red-400',
+        'soft' => 'hover:bg-hover focus:bg-hover',
+        'danger' => 'hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 dark:hover:text-red-400 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-500/10 dark:focus:text-red-400',
     };
 
     $iconClasses = [
-        'inline-flex shrink-0 mr-2',
+        'inline-flex shrink-0 mr-2 text-fg-muted',
         match ($variant) {
             'soft' => '',
-            'danger' => 'hover:text-red-500 dark:hover:text-red-400 focus:text-red-500 dark:focus:text-red-400',
+            'danger' => 'group-hover:text-red-500 dark:group-hover:text-red-400',
         },
     ];
 
@@ -28,11 +28,11 @@
         ->class($iconClasses);
 
     $classes = [
-        'flex items-center gap-2',
-        'w-full px-3 py-1.5 text-sm transition-colors duration-200 text-start',
-        'text-neutral-800 dark:text-white',
+        'group flex items-center gap-2',
+        'w-full px-2.5 py-1.5 text-[13px] leading-snug transition-colors duration-100 text-start',
+        'text-fg',
         'rounded-[calc(var(--dropdown-radius)-var(--dropdown-padding))]',
-        'opacity-50 cursor-not-allowed text-neutral-500 dark:text-neutral-400' => $disabled,
+        'opacity-40 cursor-not-allowed text-fg-disabled' => $disabled,
         $variantClasses . ' cursor-pointer' => !$disabled,
     ];
 

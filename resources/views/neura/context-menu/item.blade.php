@@ -7,16 +7,16 @@
 ])
 
 @php
-    $baseClasses = "w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left transition-colors cursor-pointer select-none";
+    $baseClasses = "w-full flex items-center gap-2 px-2.5 py-1.5 text-[13px] leading-snug text-left rounded-md transition-colors duration-100 cursor-pointer select-none";
     
     $variantClasses = match($variant) {
         'danger' => 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10',
         'primary' => 'text-primary hover:bg-primary/10',
-        default => 'text-neutral-700 dark:text-neutral-200 hover:bg-hover',
+        default => 'text-fg hover:bg-hover',
     };
 
     if ($disabled) {
-        $variantClasses = 'text-fg-disabled cursor-not-allowed opacity-50';
+        $variantClasses = 'text-fg-disabled cursor-not-allowed opacity-40';
     }
 @endphp
 

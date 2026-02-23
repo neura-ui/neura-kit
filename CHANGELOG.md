@@ -6,6 +6,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.3] - 2026-02-23
+
+### Improved
+- **Dropdown**: Panel and items aligned with neura-kit design system
+  - Panel: subtle borders (`border-black/[0.06]` / `dark:border-white/[0.08]`), compound shadows, increased padding and min-width
+  - Items: semantic colors (`text-fg`, `hover:bg-hover`), smaller text (`text-[13px] leading-snug`), `text-fg-muted` for icons
+  - Separator uses opacity-based neutrals for consistency
+- **Dropdown submenu**: Same styling as main dropdown; trigger and chevron use design tokens
+- **Context menu**: Matching panel borders/shadows, item text size and colors, separator styling
+
 ## [1.1.2] - 2026-02-23
 
 ### Fixed

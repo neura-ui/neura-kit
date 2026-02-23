@@ -12,15 +12,16 @@
         'z-[60]',
         'grid',
         '[:where(&)]:max-w-96',
-        '[:where(&)]:min-w-40',
+        '[:where(&)]:min-w-44',
         'text-start',
         'bg-surface-raised',
-        'border border-edge',
-        'shadow-lg',
+        'border border-black/[0.06] dark:border-white/[0.08]',
+        'ring-1 ring-black/[0.02] dark:ring-white/[0.03]',
+        'shadow-[0_4px_16px_-2px_rgb(0_0_0/0.08),0_2px_6px_-1px_rgb(0_0_0/0.04)] dark:shadow-[0_4px_16px_-2px_rgb(0_0_0/0.4),0_2px_6px_-1px_rgb(0_0_0/0.25)]',
         'rounded-(--dropdown-radius)',
         'p-(--dropdown-padding)',
         '[--dropdown-radius:var(--radius-box)]',
-        '[--dropdown-padding:--spacing(.75)]',
+        '[--dropdown-padding:--spacing(1)]',
     ];
 @endphp
 
@@ -59,7 +60,7 @@
                 if (el) $focus.focus($focus.within(el).getFirst());
             });
         "
-        {{ $attributes->only(['class'])->merge(['class' => 'flex items-center justify-between gap-2 w-full px-3 py-1.5 text-sm transition-colors duration-200 text-start text-neutral-800 dark:text-white rounded-[calc(var(--dropdown-radius)-var(--dropdown-padding))] cursor-pointer ' . ($disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-hover focus:bg-hover')]) }}
+        {{ $attributes->only(['class'])->merge(['class' => 'flex items-center justify-between gap-2 w-full px-2.5 py-1.5 text-[13px] leading-snug transition-colors duration-100 text-start text-fg rounded-[calc(var(--dropdown-radius)-var(--dropdown-padding))] cursor-pointer ' . ($disabled ? 'opacity-40 cursor-not-allowed' : 'hover:bg-hover focus:bg-hover')]) }}
         tabindex="{{ $disabled ? '-1' : '0' }}"
         role="menuitem"
         aria-haspopup="true"
@@ -73,9 +74,7 @@
         </span>
         
         {{-- Chevron Arrow --}}
-        <svg class="size-4 shrink-0 text-neutral-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
-        </svg>
+        <neura::icon name="chevron-down" class="size-3.5 shrink-0 text-fg-muted" />
     </div>
 
     {{-- Submenu Panel --}}

@@ -12,15 +12,16 @@
         'z-50',
         'grid',
         '[:where(&)]:max-w-96',
-        '[:where(&)]:min-w-40',
+        '[:where(&)]:min-w-44',
         'text-start',
         'bg-surface-raised',
-        'border border-edge',
-        'shadow-lg',
+        'border border-black/[0.06] dark:border-white/[0.08]',
+        'ring-1 ring-black/[0.02] dark:ring-white/[0.03]',
+        'shadow-[0_4px_16px_-2px_rgb(0_0_0/0.08),0_2px_6px_-1px_rgb(0_0_0/0.04)] dark:shadow-[0_4px_16px_-2px_rgb(0_0_0/0.4),0_2px_6px_-1px_rgb(0_0_0/0.25)]',
         'rounded-(--dropdown-radius)',
         'p-(--dropdown-padding)',
         '[--dropdown-radius:var(--radius-box)]',
-        '[--dropdown-padding:--spacing(.75)]',
+        '[--dropdown-padding:--spacing(1)]',
     ];
 @endphp
 

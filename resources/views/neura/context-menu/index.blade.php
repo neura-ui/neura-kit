@@ -23,7 +23,7 @@
              @click.stop=""
              @contextmenu.prevent="" 
              @keydown.escape.window="close"
-             class="fixed z-50 min-w-[180px] bg-surface-raised backdrop-blur-xl border border-edge rounded-lg shadow-lg py-1 overflow-hidden"
+             class="fixed z-50 min-w-[180px] bg-surface-raised backdrop-blur-xl border border-black/[0.06] dark:border-white/[0.08] ring-1 ring-black/[0.02] dark:ring-white/[0.03] rounded-lg shadow-[0_4px_16px_-2px_rgb(0_0_0/0.08),0_2px_6px_-1px_rgb(0_0_0/0.04)] dark:shadow-[0_4px_16px_-2px_rgb(0_0_0/0.4),0_2px_6px_-1px_rgb(0_0_0/0.25)] p-1 overflow-hidden"
              :style="`top: ${y}px; left: ${x}px`"
              style="display: none;">
             
