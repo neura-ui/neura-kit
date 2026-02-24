@@ -586,6 +586,7 @@ abstract class Table extends Component
             'shadow' => $shadows[$s] ?? '',
             'density' => $densities[$d] ?? $densities['normal'],
             'hoverable' => $this->hoverable(),
+            'bordered' => $this->bordered(),
         ];
     }
 

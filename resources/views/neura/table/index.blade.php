@@ -13,10 +13,12 @@
     $r = $styles['rounded'];
     $s = $styles['shadow'];
     $d = $styles['density'];
+    $isBordered = $styles['bordered'];
 
     $wrapperClass = Arr::toCssClasses([
         'w-full overflow-hidden',
         $v['wrapper'],
+        !$isBordered ? '!border-transparent !ring-0' : '',
         $r['wrapper'],
         $s,
     ]);
@@ -25,6 +27,7 @@
         'flex flex-wrap items-center justify-between gap-2',
         $d['toolbar'],
         $v['toolbar'],
+        !$isBordered ? '!border-transparent' : '',
         $r['toolbar'],
     ]);
 
@@ -33,11 +36,13 @@
     $rowClass = Arr::toCssClasses([
         'group last:border-b-0 transition-colors duration-75',
         $v['row'],
+        !$isBordered ? '!border-transparent' : '',
     ]);
 
     $footerClass = Arr::toCssClasses([
         $d['footer'],
         $v['footer'],
+        !$isBordered ? '!border-transparent' : '',
         $r['footer'],
     ]);
 
