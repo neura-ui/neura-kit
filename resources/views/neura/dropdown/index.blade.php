@@ -56,12 +56,13 @@
             },
 
             handleFocusInOut(event) {
-                if (this.disabled) return;
+                if (this.disabled || !this.open) return;
 
                 const panel = this.$refs.panel;
                 const button = this.$refs.button;
-                const target = event.target;
+                if (!panel || !button) return;
 
+                const target = event.target;
                 if (panel.contains(target) || button.contains(target)) return;
 
                 const lastFocused = document.activeElement;

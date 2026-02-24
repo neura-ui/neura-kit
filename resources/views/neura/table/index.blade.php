@@ -16,7 +16,7 @@
     $isBordered = $styles['bordered'];
 
     $wrapperClass = Arr::toCssClasses([
-        'w-full overflow-hidden',
+        'w-full',
         $v['wrapper'],
         !$isBordered ? '!border-transparent !ring-0' : '',
         $r['wrapper'],
@@ -24,7 +24,7 @@
     ]);
 
     $toolbarClass = Arr::toCssClasses([
-        'flex flex-wrap items-center justify-between gap-2',
+        'relative z-20 flex flex-wrap items-center justify-between gap-2',
         $d['toolbar'],
         $v['toolbar'],
         !$isBordered ? '!border-transparent' : '',
@@ -61,7 +61,7 @@
 
     <neura::table.parts.bulk-banner />
 
-    <div class="overflow-x-auto">
+    <div class="overflow-x-auto overflow-y-visible">
         <table class="w-full {{ $textSize }} min-w-max">
 
             <neura::table.parts.header
