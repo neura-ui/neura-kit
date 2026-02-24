@@ -563,6 +563,11 @@ abstract class Table extends Component
         return true;
     }
 
+    public function fullHeight(): bool
+    {
+        return false;
+    }
+
     protected function resolvePackValue(string|\BackedEnum $value): string
     {
         return $value instanceof \BackedEnum ? $value->value : $value;
@@ -587,6 +592,7 @@ abstract class Table extends Component
             'density' => $densities[$d] ?? $densities['normal'],
             'hoverable' => $this->hoverable(),
             'bordered' => $this->bordered(),
+            'fullHeight' => $this->fullHeight(),
         ];
     }
 

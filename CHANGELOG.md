@@ -6,6 +6,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.8] - 2026-02-24
+
+### Fixed
+- **Table**: Dark mode backgrounds now opaque
+  - Variant pack (default, striped, flat, bordered, elevated) uses solid `dark:bg-neutral-900` for wrapper/toolbar/footer and `dark:bg-neutral-800/60` for thead instead of transparent `dark:bg-white/[0.02]`
+
+### Added
+- **Table**: Full-height mode via `fullHeight()` method
+  - Override `fullHeight()` to return `true` so the table fills available height without exceeding the viewport
+  - Wrapper uses `flex flex-col h-full`; table body uses `flex-1 overflow-auto` for internal scroll (toolbar and footer stay fixed)
+  - Parent container must have a defined height (e.g. `h-screen`, `min-h-0` in a flex layout)
+
 ## [1.1.7] - 2026-02-24
 
 ### Fixed

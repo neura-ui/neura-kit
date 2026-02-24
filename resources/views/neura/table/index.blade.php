@@ -14,9 +14,11 @@
     $s = $styles['shadow'];
     $d = $styles['density'];
     $isBordered = $styles['bordered'];
+    $isFullHeight = $styles['fullHeight'];
 
     $wrapperClass = Arr::toCssClasses([
         'w-full',
+        $isFullHeight ? 'flex flex-col h-full' : '',
         $v['wrapper'],
         !$isBordered ? '!border-transparent !ring-0' : '',
         $r['wrapper'],
@@ -61,7 +63,7 @@
 
     <neura::table.parts.bulk-banner />
 
-    <div class="overflow-x-auto overflow-y-visible">
+    <div class="{{ $isFullHeight ? 'flex-1 overflow-auto' : 'overflow-x-auto overflow-y-visible' }}">
         <table class="w-full {{ $textSize }} min-w-max">
 
             <neura::table.parts.header
