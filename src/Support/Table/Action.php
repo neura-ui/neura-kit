@@ -160,7 +160,7 @@ class Action
 
     public function toView(): View
     {
-        return view('neura::table.action', $this->toArray());
+        return view('neura::table.parts.action', $this->toArray());
     }
 
     public function render(): string

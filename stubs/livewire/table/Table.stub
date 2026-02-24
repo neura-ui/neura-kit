@@ -44,7 +44,7 @@ class [class] extends BaseTable
         return [
             // Add action buttons here
             // Example:
-            // view('neura::table.action', [
+            // view('neura::table.parts.action', [
             //     'label' => 'New Item',
             //     'icon' => 'plus',
             //     'wireClick' => 'create',

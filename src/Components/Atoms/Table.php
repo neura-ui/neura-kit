@@ -11,6 +11,14 @@ use Illuminate\Support\Str;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Neura\Kit\Enum\Table\Density as DensityEnum;
+use Neura\Kit\Enum\Table\Rounded as RoundedEnum;
+use Neura\Kit\Enum\Table\Shadow as ShadowEnum;
+use Neura\Kit\Enum\Table\Variant as VariantEnum;
+use Neura\Kit\Packs\Table\Density;
+use Neura\Kit\Packs\Table\Rounded;
+use Neura\Kit\Packs\Table\Shadow;
+use Neura\Kit\Packs\Table\Variant;
 use Neura\Kit\Support\Table\Action;
 use Neura\Kit\Support\Table\EmptyState;
 
@@ -519,6 +527,66 @@ abstract class Table extends Component
     public function emptyState(): string|View|Htmlable|EmptyState|null
     {
         return null;
+    }
+
+    /* -----------------------------------------------------------------
+     | Style packs
+     |----------------------------------------------------------------- */
+
+    public function variant(): string|VariantEnum
+    {
+        return VariantEnum::DEFAULT;
+    }
+
+    public function rounded(): string|RoundedEnum
+    {
+        return RoundedEnum::XL;
+    }
+
+    public function shadow(): string|ShadowEnum
+    {
+        return ShadowEnum::SM;
+    }
+
+    public function density(): string|DensityEnum
+    {
+        return DensityEnum::NORMAL;
+    }
+
+    public function bordered(): bool
+    {
+        return true;
+    }
+
+    public function hoverable(): bool
+    {
+        return true;
+    }
+
+    protected function resolvePackValue(string|\BackedEnum $value): string
+    {
+        return $value instanceof \BackedEnum ? $value->value : $value;
+    }
+
+    public function getTableStyles(): array
+    {
+        $variants = Variant::all();
+        $rounds = Rounded::all();
+        $shadows = Shadow::all();
+        $densities = Density::all();
+
+        $v = $this->resolvePackValue($this->variant());
+        $r = $this->resolvePackValue($this->rounded());
+        $s = $this->resolvePackValue($this->shadow());
+        $d = $this->resolvePackValue($this->density());
+
+        return [
+            'variant' => $variants[$v] ?? $variants['default'],
+            'rounded' => $rounds[$r] ?? $rounds['xl'],
+            'shadow' => $shadows[$s] ?? '',
+            'density' => $densities[$d] ?? $densities['normal'],
+            'hoverable' => $this->hoverable(),
+        ];
     }
 
     public function render(): View

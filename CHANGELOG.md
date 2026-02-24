@@ -6,6 +6,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.5] - 2026-02-23
+
+### Added
+- **Table Style Packs**: Composable design tokens for table appearance
+  - `Variant` pack: default, striped, minimal, flat, bordered, elevated
+  - `Rounded` pack: none, sm, md, lg, xl, 2xl
+  - `Shadow` pack: none, xs, sm, md, lg, xl
+  - `Density` pack: compact, normal, comfortable (padding and text size)
+  - Override `variant()`, `rounded()`, `shadow()`, `density()` in your table class
+- **Table Enums**: Type-safe style configuration via `Neura\Kit\Enum\Table\*`
+  - `Variant`, `Rounded`, `Shadow`, `Density` enums for IDE autocompletion
+  - Methods accept `string|Enum`; plain strings still supported for backward compatibility
+
+### Improved
+- **Table Structure**: Modular sub-components in `table/parts/`
+  - `toolbar`, `header`, `row`, `cell`, `bulk-banner`, `empty`, `pagination`, `filter-input`, `action`
+  - Main `index.blade.php` acts as orchestrator; cleaner separation of concerns
+  - References updated: `neura::table.toolbar` → `neura::table.parts.toolbar`, etc.
+
 ## [1.1.4] - 2026-02-23
 
 ### Improved
