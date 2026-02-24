@@ -2,12 +2,12 @@
 
 /* ── Layout ────────────────────────────────────────────────────────── */
 
-.flow__nodes {
-  @apply pointer-events-none;
+.flow__node {
+  cursor: grab;
 }
 
-.flow__nodes .flow__node {
-  @apply pointer-events-auto;
+.flow__node:active {
+  cursor: grabbing;
 }
 
 /* ── Background dots ───────────────────────────────────────────────── */
@@ -85,6 +85,18 @@
 
 .dark .flow__node:hover {
   --nk-edge: oklch(0.38 0 0);
+}
+
+/* ── Node selection ────────────────────────────────────────────────── */
+
+.flow__node.selected .nk-flow-card > div:not([data-handle]) {
+  border-color: oklch(0.6 0.15 250);
+  box-shadow: 0 0 0 2px oklch(0.6 0.15 250 / 0.12);
+}
+
+.dark .flow__node.selected .nk-flow-card > div:not([data-handle]) {
+  border-color: oklch(0.55 0.15 250);
+  box-shadow: 0 0 0 2px oklch(0.55 0.15 250 / 0.18);
 }
 
 /* ── Connection handles ────────────────────────────────────────────── */

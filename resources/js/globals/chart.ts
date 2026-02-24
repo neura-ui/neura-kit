@@ -96,41 +96,58 @@ if (typeof document !== 'undefined') {
         return chartInstance;
       },
 
-      colors(): {
-        text: string;
-        muted: string;
-        grid: string;
-      } {
-        const dark = document.documentElement.classList.contains('dark');
+      isDark(): boolean {
+        return document.documentElement.classList.contains('dark');
+      },
+
+      colors() {
+        const dark = this.isDark();
         return {
-          text: dark ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)',
-          muted: dark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
-          grid: dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+          text:       dark ? 'rgba(255,255,255,0.85)' : 'rgba(0,0,0,0.8)',
+          muted:      dark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.45)',
+          grid:       dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+          tooltipBg:  dark ? 'rgba(24,24,27,0.95)'    : 'rgba(255,255,255,0.97)',
+          tooltipText:dark ? 'rgba(255,255,255,0.9)'   : 'rgba(0,0,0,0.85)',
+          tooltipBorder: dark ? 'rgba(255,255,255,0.1)': 'rgba(0,0,0,0.08)',
+          arcBorder:  dark ? 'rgba(24,24,27,1)'        : 'rgba(255,255,255,1)',
         };
       },
 
-      applyTheme(opts: ChartConfiguration): ChartConfiguration {
+      applyTheme(opts: Record<string, any>): Record<string, any> {
         const c = this.colors();
-        opts.scales = opts.scales || {};
-        opts.scales.x = {
-          ...opts.scales.x,
-          ticks: { color: c.muted },
-          grid: { color: c.grid },
-        } as never;
-        opts.scales.y = {
-          ...opts.scales.y,
-          ticks: { color: c.muted },
-          grid: { color: c.grid },
-        } as never;
+
+        if (opts.scales) {
+          if (opts.scales.x) {
+            opts.scales.x.ticks = { ...(opts.scales.x.ticks || {}), color: c.muted };
+            opts.scales.x.grid = { ...(opts.scales.x.grid || {}), color: c.grid };
+          }
+          if (opts.scales.y) {
+            opts.scales.y.ticks = { ...(opts.scales.y.ticks || {}), color: c.muted };
+            opts.scales.y.grid = { ...(opts.scales.y.grid || {}), color: c.grid };
+          }
+        }
+
         opts.plugins = opts.plugins || {};
-        opts.plugins.legend = {
-          ...opts.plugins.legend,
-          labels: { color: c.text },
-        } as never;
-        opts.plugins.tooltip = {
-          ...opts.plugins.tooltip,
-          backgroundColor: 'rgba(0,0,0,0.9)',
-        } as never;
+        if (opts.plugins.legend) {
+          opts.plugins.legend.labels = {
+            ...(opts.plugins.legend.labels || {}),
+            color: c.muted,
+          };
+        }
+        if (opts.plugins.tooltip !== false) {
+          opts.plugins.tooltip = {
+            ...(opts.plugins.tooltip || {}),
+            backgroundColor: c.tooltipBg,
+            titleColor: c.tooltipText,
+            bodyColor: c.tooltipText,
+            borderColor: c.tooltipBorder,
+          };
+        }
+
+        if (opts.elements?.arc) {
+          opts.elements.arc.borderColor = c.arcBorder;
+        }
+
         return opts;
       },
 
@@ -139,24 +156,25 @@ if (typeof document !== 'undefined') {
         const canvas = (this as any).$refs.chartCanvas as HTMLCanvasElement | null;
         if (!canvas) return;
 
+        const themedOpts = this.applyTheme(structuredClone(options) as Record<string, any>);
         chartInstance = new Chart(canvas.getContext('2d') as CanvasRenderingContext2D, {
           type,
           data: data as never,
-          options: this.applyTheme(structuredClone(options) as ChartConfiguration),
+          options: themedOpts as never,
         });
 
         new MutationObserver(() => {
           if (chartInstance) {
             Object.assign(
               chartInstance.options,
-              this.applyTheme(structuredClone(options) as ChartConfiguration)
+              this.applyTheme(structuredClone(options) as Record<string, any>)
             );
             chartInstance.update('none');
           }
         }).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
       },
 
-      update(newData: unknown, newOptions?: ChartConfiguration): void {
+      update(newData: unknown, newOptions?: Record<string, any>): void {
         if (!chartInstance) return;
         chartInstance.data = newData as never;
         if (newOptions) {

@@ -6,6 +6,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.6] - 2026-02-23
+
+### Improved
+- **Chart**: Modern UI aligned with neura-kit design system
+  - Tooltip: glass-style background (light/dark), subtle border, rounded corners, theme-aware text colors
+  - Legend: point-style circles, Inter font, improved spacing and alignment
+  - Axes: no axis borders, subtle grid (Y only), tick colors follow theme
+  - Points: hidden by default, appear on hover with larger hit area; line charts use smooth curves
+  - Bar/arc: rounded corners, arc border and hover offset for pie/doughnut
+  - Variant styling: compound shadows and borders consistent with Card component
+- **Flow**: Node drag-to-move and edge recalculation
+  - Nodes can be dragged to reposition; pointer capture bypasses library’s event stop
+  - Drag is zoom-aware (delta divided by zoom level for correct placement)
+  - Edge paths (Bézier) recalculate in real time while dragging
+  - Cursor: grab / grabbing; selected nodes show subtle outline
+  - Flow CSS: removed `pointer-events-none` on nodes container; added grab cursor and node selection styles
+
 ## [1.1.5] - 2026-02-23
 
 ### Added
