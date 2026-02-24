@@ -25,21 +25,25 @@
   --nk-fg-muted: oklch(0.556 0 0);
   --nk-fg-disabled: oklch(0.652 0 0);
   --nk-fg-on-emphasis: oklch(1 0 0);
+
+  --nk-accent-surface: oklch(0.97 0.012 260);
+  --nk-accent-surface-dark: oklch(0.16 0.025 260);
+  --nk-accent-separator: oklch(0.90 0.02 260);
 }
 
 .dark {
-  --nk-surface: oklch(0.145 0 0 / 0.80);
-  --nk-surface-raised: oklch(0.145 0 0 / 0.90);
-  --nk-surface-inset: oklch(1 0 0 / 0.03);
-  --nk-overlay: oklch(0 0 0 / 0.60);
+  --nk-surface: oklch(0.13 0 0);
+  --nk-surface-raised: oklch(0.16 0 0);
+  --nk-surface-inset: oklch(0.11 0 0);
+  --nk-overlay: oklch(0 0 0 / 0.65);
 
-  --nk-hover: oklch(1 0 0 / 0.04);
+  --nk-hover: oklch(1 0 0 / 0.05);
   --nk-active: oklch(1 0 0 / 0.08);
 
-  --nk-edge: oklch(1 0 0 / 0.06);
-  --nk-edge-hover: oklch(1 0 0 / 0.10);
-  --nk-edge-focus: oklch(1 0 0 / 0.15);
-  --nk-separator: oklch(1 0 0 / 0.04);
+  --nk-edge: oklch(1 0 0 / 0.08);
+  --nk-edge-hover: oklch(1 0 0 / 0.12);
+  --nk-edge-focus: oklch(1 0 0 / 0.18);
+  --nk-separator: oklch(1 0 0 / 0.06);
 
   --nk-fg: oklch(0.93 0 0);
   --nk-fg-secondary: oklch(0.652 0 0);
@@ -225,6 +229,95 @@
   .subgrid-rows {
     grid-template-rows: subgrid;
   }
+}
+
+/**
+ * ============================================================================
+ * Layout Theme Variants
+ * ============================================================================
+ */
+
+/*
+ * Layout Theme Overrides
+ *
+ * Must override --color-* tokens directly (not just --nk-*) because
+ * @theme defines --color-surface: var(--nk-surface) on :root, and CSS
+ * resolves var() at computed-value time. Inherited --color-* values
+ * carry the resolved :root value, not the token reference. Overriding
+ * --nk-* on descendants therefore has no effect on inherited --color-*.
+ */
+
+/* Contrast: dark sidebar & header, neutral main */
+.nk-layout--contrast [data-slot="sidebar"],
+.nk-layout--contrast [data-slot="header"] {
+  --color-surface: oklch(0.16 0 0);
+  --color-hover: oklch(1 0 0 / 0.06);
+  --color-active: oklch(1 0 0 / 0.10);
+  --color-separator: oklch(1 0 0 / 0.06);
+  --color-edge: oklch(1 0 0 / 0.08);
+  --color-fg: oklch(0.93 0 0);
+  --color-fg-secondary: oklch(0.65 0 0);
+  --color-fg-muted: oklch(0.50 0 0);
+  color-scheme: dark;
+  color: oklch(0.93 0 0);
+}
+
+.dark .nk-layout--contrast [data-slot="sidebar"],
+.dark .nk-layout--contrast [data-slot="header"] {
+  --color-surface: oklch(0.10 0 0);
+  --color-hover: oklch(1 0 0 / 0.05);
+  --color-separator: oklch(1 0 0 / 0.05);
+  --color-edge: oklch(1 0 0 / 0.06);
+}
+
+/* Muted: light sidebar & header frame, darker main content well */
+.nk-layout--muted [data-slot="sidebar"] {
+  --color-separator: oklch(0.93 0 0);
+}
+
+.nk-layout--muted [data-slot="header"] {
+  --color-separator: oklch(0.93 0 0);
+}
+
+.nk-layout--muted [data-slot="main"] {
+  --color-surface: oklch(0.965 0 0);
+  --color-surface-inset: oklch(0.945 0 0);
+  --color-separator: oklch(0.91 0 0);
+}
+
+.dark .nk-layout--muted [data-slot="sidebar"] {
+  --color-surface: oklch(0.16 0 0);
+  --color-separator: oklch(1 0 0 / 0.06);
+}
+
+.dark .nk-layout--muted [data-slot="header"] {
+  --color-surface: oklch(0.16 0 0);
+  --color-separator: oklch(1 0 0 / 0.06);
+}
+
+.dark .nk-layout--muted [data-slot="main"] {
+  --color-surface: oklch(0.11 0 0);
+  --color-surface-inset: oklch(0.09 0 0);
+  --color-separator: oklch(1 0 0 / 0.05);
+}
+
+/* Accent: light tinted sidebar & header in light mode, dark tinted in dark mode */
+.nk-layout--accent [data-slot="sidebar"],
+.nk-layout--accent [data-slot="header"] {
+  --color-surface: var(--nk-accent-surface);
+  --color-hover: oklch(0 0 0 / 0.04);
+  --color-active: oklch(0 0 0 / 0.07);
+  --color-separator: var(--nk-accent-separator);
+  --color-edge: oklch(0 0 0 / 0.08);
+}
+
+.dark .nk-layout--accent [data-slot="sidebar"],
+.dark .nk-layout--accent [data-slot="header"] {
+  --color-surface: var(--nk-accent-surface-dark);
+  --color-hover: oklch(1 0 0 / 0.06);
+  --color-active: oklch(1 0 0 / 0.10);
+  --color-separator: oklch(1 0 0 / 0.06);
+  --color-edge: oklch(1 0 0 / 0.08);
 }
 
 /**

@@ -6,6 +6,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.9] - 2026-02-24
+
+### Added
+- **Layout**: Theme variants via `theme` prop
+  - `default` — global design tokens
+  - `contrast` — dark sidebar & header, light main (strong separation)
+  - `muted` — light sidebar & header frame, darker main content well (inset effect)
+  - `accent` — colored sidebar & header with customizable tint via `accentColor` prop
+  - CSS variables overridden on `[data-slot="sidebar"]`, `[data-slot="header"]`, and `[data-slot="main"]` for each theme
+- **Layout**: Accent color customization via `accentColor` prop
+  - Supports: `blue`, `indigo`, `purple`, `rose`, `red`, `orange`, `green`, `teal`, `cyan`
+  - Light mode: sidebar & header use light tinted backgrounds (`oklch(0.97 0.012 hue)`)
+  - Dark mode: sidebar & header use dark tinted backgrounds (`oklch(0.16 0.025 hue)`)
+  - Dynamically injects `--nk-accent-surface`, `--nk-accent-surface-dark`, `--nk-accent-separator` CSS variables
+
+### Improved
+- **Design tokens**: Dark mode darker and opaque
+  - `--nk-surface`, `--nk-surface-raised`, `--nk-surface-inset` use solid oklch values (no transparency)
+  - Edge and separator opacities slightly increased for better visibility
+- **Table**: Variant pack uses semantic design tokens
+  - All variants (default, striped, minimal, flat, bordered, elevated) use `bg-surface`, `border-edge`, `border-separator`, `bg-surface-inset`, `bg-hover`, `bg-active` instead of hardcoded colors
+  - Ensures table styling follows theme and dark mode automatically
+- **Layout**: Main content area uses `bg-surface` for consistent theming
+- **Layout**: Header adapts to all themes (contrast, muted, accent)
+  - Contrast theme: header uses same dark background as sidebar
+  - Muted theme: header uses same light background as sidebar
+  - Accent theme: header uses same tinted background as sidebar in both light and dark modes
+- **Layout**: Simplified accent color system
+  - Reduced from 5 CSS variables to 3 (`--nk-accent-surface`, `--nk-accent-surface-dark`, `--nk-accent-separator`)
+  - Header and sidebar now share the same accent color values for visual consistency
+
+### Fixed
+- **Layout**: CSS cascade issue with theme token overrides
+  - Theme CSS rules now directly override `--color-*` tokens instead of `--nk-*` tokens
+  - Prevents eager resolution of `var()` references that broke descendant theme overrides
+- **Layout**: Muted theme dark mode text colors
+  - Added explicit `--color-fg`, `--color-fg-secondary`, `--color-fg-muted` overrides for light text on dark sidebar/header backgrounds
+
 ## [1.1.8] - 2026-02-24
 
 ### Fixed
