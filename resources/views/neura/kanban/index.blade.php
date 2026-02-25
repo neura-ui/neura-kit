@@ -4,6 +4,7 @@
     'draggable' => true,
     'draggableColumns' => true,
     'onCardMove' => null,
+    'onCardClick' => null,
     'showCount' => true,
     'variant' => 'default',
 ])
@@ -59,6 +60,7 @@
         dragOverColumn: null,
         draggedColumnIndex: null,
         dragOverColumnIndex: null,
+        justDragged: false,
         
         init() {
             this.$nextTick(() => {
@@ -168,6 +170,8 @@
             this.draggedFromColumn = null;
             this.draggedFromIndex = null;
             this.dragOverColumn = null;
+            this.justDragged = true;
+            this.$nextTick(() => { this.justDragged = false; });
         },
         
         handleCardDrop(columnIndex, cardIndex, event) {
@@ -223,6 +227,8 @@
             this.draggedFromColumn = null;
             this.draggedFromIndex = null;
             this.dragOverColumn = null;
+            this.justDragged = true;
+            this.$nextTick(() => { this.justDragged = false; });
         },
         
         handleColumnDragStart(columnIndex, event) {
@@ -341,12 +347,13 @@
                                     x-on:dragstart="handleDragStart(columnIndex, cardIndex, $event)"
                                     x-on:dragover.prevent=""
                                     x-on:drop="handleCardDrop(columnIndex, cardIndex, $event)"
+                                    x-on:click.stop="if (@js($onCardClick) && !justDragged) { if (typeof $wire !== 'undefined' && $wire) { $wire.call(@js($onCardClick), card, columnIndex, cardIndex) } else { $dispatch('kanban-card-clicked', { card, columnIndex, cardIndex }) } }"
                                     :class="[
                                         'flex flex-col gap-2 {{ $v['card'] }} transition',
                                         draggedFromColumn === columnIndex && draggedFromIndex === cardIndex 
                                             ? 'opacity-50 border-blue-500 dark:border-blue-400' 
                                             : 'border-edge hover:border-edge-hover',
-                                        @js($draggable) ? 'cursor-move' : ''
+                                        @js($draggable) ? 'cursor-move' : (@js($onCardClick) ? 'cursor-pointer' : '')
                                     ]"
                                 >
                                     <div class="flex items-start justify-between gap-3">
