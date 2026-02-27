@@ -12,7 +12,7 @@
 @endphp
 
 @if($label)
-    <div {{ $attributes->class('relative flex items-center') }}>
+    <div {{ $attributes->merge(['class' => 'relative flex items-center']) }}>
         <div class="flex-1 border-t border-edge"></div>
         <span class="px-3 text-xs font-medium text-fg-secondary bg-surface">
             {{ $label }}
@@ -20,5 +20,5 @@
         <div class="flex-1 border-t border-edge"></div>
     </div>
 @else
-    <div {{ $attributes->class($classes) }} data-slot="divider" role="separator"></div>
+    <div {{ $attributes->merge(['class' => $classes]) }} data-slot="divider" role="separator"></div>
 @endif

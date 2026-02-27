@@ -53,13 +53,7 @@
     $iconColorClass = 'text-fg-disabled';
 @endphp
 
-<div {{ $attributes->class([
-    'flex flex-col items-center justify-center text-center',
-    $sizeClasses['container'],
-    $sizeClasses['gap'],
-    $variantClasses,
-    'max-w-md mx-auto' => !$compact,
-]) }}>
+<div {{ $attributes->merge(['class' => 'flex flex-col items-center justify-center text-center ' . $sizeClasses['container'] . ' ' . $sizeClasses['gap'] . ' ' . $variantClasses . (!$compact ? ' max-w-md mx-auto' : '')]) }}>
     {{-- Icon or Image --}}
     @if($image)
         <div class="shrink-0">

@@ -28,7 +28,7 @@
 
 @endphp
 
-<neura::button.abstract {{ $attributes->class(Arr::toCssClasses($classes)) }} data-slot="badge">
+<neura::button.abstract {{ $attributes->merge(['class' => Arr::toCssClasses($classes)]) }} data-slot="badge">
 
     @if (is_string($icon) && $icon !== '')
         <neura::icon :name="$icon" :variant="$iconVariant" class="{{ Arr::toCssClasses($iconClasses) }}"

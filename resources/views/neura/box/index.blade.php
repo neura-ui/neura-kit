@@ -98,6 +98,6 @@
         $gapClasses,
     ]);
 @endphp
-<div {{ $attributes->class($classes) }} data-slot="box">
+<div {{ $attributes->merge(['class' => implode(' ', $classes)]) }} data-slot="box">
     {{ $slot }}
 </div>

@@ -27,12 +27,7 @@
 @endphp
 
 <div
-    {{ $attributes->class([
-        'rounded-box border p-4',
-        $variantClasses,
-        'flex items-start gap-3' => $inline,
-        'space-y-3' => !$inline,
-    ]) }}
+    {{ $attributes->merge(['class' => 'rounded-box border p-4 ' . $variantClasses . ($inline ? ' flex items-start gap-3' : ' space-y-3')]) }}
 >
     @if($icon && !$inline)
         <div class="flex gap-3">

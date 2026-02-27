@@ -11,7 +11,7 @@
 @endphp
 
 <div
-    {{ $attributes->class('flex flex-col') }}
+    {{ $attributes->merge(['class' => 'flex flex-col']) }}
     data-slot="navlist-group"
     role="group"
     aria-labelledby="{{ $groupId }}"

@@ -85,7 +85,7 @@
         wireModel: {{ $wireModel ? "'" . $wireModel . "'" : 'null' }},
     })"
     x-init="init()"
-    {{ $attributes->class(['w-full select-none']) }}
+    {{ $attributes->merge(['class' => 'w-full select-none']) }}
     role="tree"
     aria-label="File tree"
 >

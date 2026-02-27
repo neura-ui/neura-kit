@@ -73,7 +73,7 @@
     tabindex="{{ $disabled ? '-1' : '0' }}" type="button" role="checkbox"
     @if ($disabled) disabled
         aria-disabled="true" @endif data-slot="checkbox-indicator"
-    {{ $attributes->class($buttonClasses) }}>
+    {{ $attributes->merge(['class' => Arr::toCssClasses($buttonClasses)]) }}>
 
     <neura::icon name="check" :variant="$iconVariant" @class($iconClasses) x-show="_checked && !_indeterminate"
         x-transition:enter="transition-all duration-150"

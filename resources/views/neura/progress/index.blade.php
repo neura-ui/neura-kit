@@ -96,7 +96,7 @@
     $stripedClasses = $striped ? 'bg-stripes' : '';
 @endphp
 
-<div {{ $attributes->class(['w-full']) }}>
+<div {{ $attributes->merge(['class' => 'w-full']) }}>
     @if ($label || ($showValue && $valuePosition === 'top'))
         <div class="flex justify-between items-center mb-1.5">
             @if ($label)

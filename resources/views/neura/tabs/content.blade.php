@@ -12,7 +12,7 @@
     x-transition:leave-end="opacity-0"
     role="tabpanel"
     :aria-hidden="activeTab !== @js($value)"
-    {{ $attributes->class('mt-6') }}
+    {{ $attributes->merge(['class' => 'mt-6']) }}
     data-slot="tab-content"
 >
     {{ $slot }}

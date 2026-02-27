@@ -64,7 +64,7 @@
     ];
 @endphp
 
-<div {{ $attributes->class(Arr::toCssClasses($wrapperClasses)) }} x-data="{
+<div {{ $attributes->merge(['class' => Arr::toCssClasses($wrapperClasses)]) }} x-data="{
     checked: @js($checked),
     toggle() {
         if (@js($disabled)) return;

@@ -10,11 +10,6 @@
     };
 @endphp
 
-<li {{ $attributes->class([
-    $sizeClasses,
-    'font-medium uppercase tracking-wider',
-    'text-fg-muted',
-    'select-none',
-]) }}>
+<li {{ $attributes->merge(['class' => $sizeClasses . ' font-medium uppercase tracking-wider text-fg-muted select-none']) }}>
     {{ $slot }}
 </li>

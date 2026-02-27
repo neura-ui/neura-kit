@@ -17,10 +17,7 @@
 
 <a 
     href="{{ $href }}"
-    {{ $attributes->class([
-        'hover:underline font-medium',
-        $linkColorClass,
-    ]) }}
+    {{ $attributes->merge(['class' => 'hover:underline font-medium ' . $linkColorClass]) }}
 >
     {{ $slot }}
 </a>

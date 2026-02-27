@@ -90,21 +90,17 @@
         ],
     };
 
-    $classes = [
+    $itemClassParts = [
         'cursor-pointer',
         'relative isolate flex items-center gap-x-2',
         'w-full px-3 py-1.5',
         'rounded-md transition-colors duration-150',
-
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 focus-visible:ring-offset-1',
-
-        '[&_[data-slot=icon]]:text-fg-muted' => !$isColored,
-        'data-active-link:[&_[data-slot=icon]]:text-fg' => !$isColored,
-
+        (!$isColored ? '[&_[data-slot=icon]]:text-fg-muted data-active-link:[&_[data-slot=icon]]:text-fg' : ''),
         '[:has([data-collapsed]_&)_&]:justify-center',
-
-        ...$isColored ? $colorClasses : $variantClasses,
+        ...($isColored ? $colorClasses : $variantClasses),
     ];
+    $itemClasses = implode(' ', array_filter($itemClassParts));
 @endphp
 <li>
     <a
@@ -112,7 +108,7 @@
         data-slot="navlist-item"
         aria-label="{{ $label }}{{ $badge ? ' (' . $badge . ')' : '' }}"
         @if ($active) data-active-link aria-current="page" @endif
-        {{ $attributes->class($classes) }}
+        {{ $attributes->merge(['class' => $itemClasses]) }}
     >
         @if ($icon)
             <neura::navlist.has-tooltip :tooltip="$label" :condition="$collapsible">

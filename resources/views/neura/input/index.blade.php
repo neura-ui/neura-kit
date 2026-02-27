@@ -48,7 +48,7 @@
     $inputAttributes = $attributes->except(['class']);
 @endphp
 
-<div {{ $attributes->class(Arr::toCssClasses($classes)) }}>
+<div {{ $attributes->merge(['class' => Arr::toCssClasses($classes)]) }}>
 
     @if (filled($prefix) || filled($prefixIcon))
         <neura::input.extra-slot data-slot="input-prefix">

@@ -31,7 +31,7 @@
 
 <div
     data-nk-flow
-    {{ $attributes->class('w-full') }}
+    {{ $attributes->merge(['class' => 'w-full']) }}
     x-data="{
         {{-- Connection state --}}
         _connState: 'idle',

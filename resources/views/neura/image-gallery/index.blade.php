@@ -62,7 +62,7 @@
         @keyup.right.window="imageGalleryNext()"
         @keyup.left.window="imageGalleryPrev()"
     @endif
-    {{ $attributes->class(['w-full select-none']) }}
+    {{ $attributes->merge(['class' => 'w-full select-none']) }}
 >
     @if($galleryImages->isEmpty())
         <div class="rounded-lg border border-dashed border-edge px-6 py-12 text-center text-sm text-fg-muted">

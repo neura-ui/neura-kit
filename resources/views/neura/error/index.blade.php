@@ -30,7 +30,7 @@
     <div
         aria-live="polite"
         role="alert"
-        {{ $attributes->class(Arr::toCssClasses($classes)) }}
+        {{ $attributes->merge(['class' => Arr::toCssClasses($classes)]) }}
         data-slot="error"
     >
         <neura::icon name="exclamation-circle" class="w-4 h-4 mt-0.5" />

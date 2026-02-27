@@ -17,7 +17,7 @@
     x-data="{
         state: @entangle($attributes->wire('model')).live
     }"
-    {{ $attributes->class($classes) }}
+    {{ $attributes->merge(['class' => is_array($classes) ? Arr::toCssClasses($classes) : $classes]) }}
     data-slot="checkbox-group"
 >
     {{ $slot }}

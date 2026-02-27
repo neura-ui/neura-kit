@@ -45,6 +45,6 @@
     }
 @endphp
 
-<div {{ $attributes->class(Arr::toCssClasses($classes)) }} data-slot="container">
+<div {{ $attributes->merge(['class' => Arr::toCssClasses($classes)]) }} data-slot="container">
     {{ $slot }}
 </div>

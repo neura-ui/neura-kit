@@ -301,10 +301,7 @@
             });
         }
     }"
-    {{ $attributes->class([
-        'select-none',
-        'opacity-50 cursor-not-allowed' => $disabled,
-    ]) }}
+    {{ $attributes->merge(['class' => 'select-none' . ($disabled ? ' opacity-50 cursor-not-allowed' : '')]) }}
 >
     @if ($name)
         <input

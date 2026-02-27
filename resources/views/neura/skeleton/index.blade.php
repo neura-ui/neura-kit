@@ -89,7 +89,7 @@
 @endphp
 
 <div 
-    {{ $attributes->class(Arr::toCssClasses(array_filter($classes))) }}
+    {{ $attributes->merge(['class' => Arr::toCssClasses(array_filter($classes))]) }}
     style="@if($width && !in_array($width, ['full', '3/4', '1/2', '1/3', '1/4', 'xs', 'sm', 'md', 'lg', 'xl'])) width: {{ $width }}; @endif @if($height && !in_array($height, ['xs', 'sm', 'md', 'lg', 'xl', '2xl'])) height: {{ $height }}; @endif"
 >
     {{ $slot }}

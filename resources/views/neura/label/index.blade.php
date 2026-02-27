@@ -4,14 +4,8 @@
     'text' => null
 ])
 
-@php
-    $classes = [
-        'text-sm [:where(&)]:text-start font-base select-none',
-        '[:where(&)]:text-neutral-900 [:where(&)]:dark:text-white',
-    ];
-@endphp
 
-<div {{ $attributes->class($classes) }} data-slot="label">
+<div {{ $attributes->merge(['class' => 'text-sm [:where(&)]:text-start font-base select-none [:where(&)]:text-neutral-900 [:where(&)]:dark:text-white']) }} data-slot="label">
     @if ($slot->isNotEmpty())
         {{ $slot }}
     @else

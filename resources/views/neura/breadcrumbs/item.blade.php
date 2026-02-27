@@ -23,7 +23,7 @@
 
 <div class="{{ Arr::toCssClasses($classes) }}">
     @if ($href)
-        <a href="{{ $href }}" {{ $attributes->class(Arr::toCssClasses($linkClasses)) }}>
+        <a href="{{ $href }}" {{ $attributes->merge(['class' => Arr::toCssClasses($linkClasses)]) }}>
             @if ($icon)
                 <neura::icon name="{{ $icon }}" variant="{{ $iconVariant }}"
                     class="{{ Arr::toCssClasses($iconClasses) }}" />
@@ -31,7 +31,7 @@
             {{ $slot }}
         </a>
     @else
-        <div {{ $attributes->class(Arr::toCssClasses($staticTextClasses)) }}>
+        <div {{ $attributes->merge(['class' => Arr::toCssClasses($staticTextClasses)]) }}>
             @if ($icon)
                 <neura::icon name="{{ $icon }}" variant="{{ $iconVariant }}"
                     class="{{ Arr::toCssClasses($iconClasses) }}" />

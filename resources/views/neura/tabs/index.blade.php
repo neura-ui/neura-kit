@@ -16,7 +16,7 @@
             });
         }
     }"
-    {{ $attributes->class('w-full') }}
+    {{ $attributes->merge(['class' => 'w-full']) }}
     data-slot="tabs"
 >
     {{ $slot }}

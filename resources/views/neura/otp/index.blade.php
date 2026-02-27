@@ -151,9 +151,9 @@
         this.state = this.inputs.map(input => input.value || '').join('');
     },
 
-}" {{ $attributes->class('contents') }}>
+}" {{ $attributes->merge(['class' => 'contents']) }}>
     <div x-ref="inputsWrapper" role="group" x-bind:aria-label="window.t('oneTimePasswordInput')"
-        {{ $attributes->class('text-start') }}>
+        {{ $attributes->merge(['class' => 'text-start']) }}>
         <div @class([
             'flex items-center -space-x-px',
             '[:where(&>[data-slot=otp-input]:has(+[data-slot=separator]))]:rounded-r-box',

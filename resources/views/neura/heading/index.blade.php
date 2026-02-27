@@ -39,7 +39,7 @@
 @endphp
 
 <{{ $tag }}
-    {{ $attributes->class(Arr::toCssClasses($classes)) }}
+    {{ $attributes->merge(['class' => Arr::toCssClasses($classes)]) }}
     data-slot="heading"
 >
     {{ $slot }}

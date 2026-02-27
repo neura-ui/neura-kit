@@ -14,7 +14,7 @@
 @endphp
 <fieldset
     {{
-        $attributes->class(Arr::toCssClasses($classes))
+        $attributes->merge(['class' => Arr::toCssClasses($classes)])
     }}
 >
     @if (filled($label))

@@ -26,7 +26,7 @@
 @endphp
 
 <a
-    {{ $attributes->class(Arr::toCssClasses($classes)) }}
+    {{ $attributes->merge(['class' => Arr::toCssClasses($classes)]) }}
     data-slot="link"
     @if ($openInNewTab) target="_blank" rel="noopener noreferrer" @endif
 >

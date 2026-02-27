@@ -25,7 +25,7 @@
     };
 
     if ($isPhosphorSet && ! str($attributes->get('class'))->contains(['size-', 'w-', 'h-'])) {
-        $attributes = $attributes->class('size-6');
+        $attributes = $attributes->merge(['class' => 'size-6']);
     }
 @endphp
 

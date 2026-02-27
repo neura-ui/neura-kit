@@ -65,12 +65,12 @@
 @endphp
 
 @if ($label)
-    <div {{ $attributes->class([$containerClasses]) }}>
+    <div {{ $attributes->merge(['class' => $containerClasses]) }}>
 @endif
 
 @if ($variant === 'default')
     {{-- Classic circular spinner --}}
-    <svg {{ $attributes->unless($label)->class([$sizeClasses, $colorClasses, $speedClasses, 'shrink-0']) }}
+    <svg {{ $attributes->unless($label)->merge(['class' => "$sizeClasses $colorClasses $speedClasses shrink-0"]) }}
         @if($label) class="{{ $sizeClasses }} {{ $colorClasses }} {{ $speedClasses }} shrink-0" @endif
         xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -81,7 +81,7 @@
 
 @elseif ($variant === 'dots')
     {{-- Bouncing dots --}}
-    <div {{ $attributes->unless($label)->class(['flex items-center gap-1', $colorClasses]) }}
+    <div {{ $attributes->unless($label)->merge(['class' => "flex items-center gap-1 $colorClasses"]) }}
         @if($label) class="flex items-center gap-1 {{ $colorClasses }}" @endif>
         @php
             $dotSize = match ($size) {
@@ -102,7 +102,7 @@
 
 @elseif ($variant === 'pulse')
     {{-- Pulsing circle --}}
-    <div {{ $attributes->unless($label)->class([$sizeClasses, $colorClasses, 'relative shrink-0']) }}
+    <div {{ $attributes->unless($label)->merge(['class' => "$sizeClasses $colorClasses relative shrink-0"]) }}
         @if($label) class="{{ $sizeClasses }} {{ $colorClasses }} relative shrink-0" @endif>
         <span class="absolute inset-0 rounded-full bg-current opacity-75 animate-ping"></span>
         <span class="relative block rounded-full bg-current {{ $sizeClasses }}"></span>
@@ -110,7 +110,7 @@
 
 @elseif ($variant === 'bars')
     {{-- Vertical bars --}}
-    <div {{ $attributes->unless($label)->class(['flex items-end gap-0.5', $colorClasses]) }}
+    <div {{ $attributes->unless($label)->merge(['class' => "flex items-end gap-0.5 $colorClasses"]) }}
         @if($label) class="flex items-end gap-0.5 {{ $colorClasses }}" @endif>
         @php
             $barWidth = match ($size) {
@@ -142,13 +142,13 @@
 
 @elseif ($variant === 'ring')
     {{-- Ring spinner --}}
-    <div {{ $attributes->unless($label)->class([$sizeClasses, $colorClasses, $speedClasses, 'shrink-0 rounded-full border-2 border-current border-t-transparent']) }}
+    <div {{ $attributes->unless($label)->merge(['class' => "$sizeClasses $colorClasses $speedClasses shrink-0 rounded-full border-2 border-current border-t-transparent"]) }}
         @if($label) class="{{ $sizeClasses }} {{ $colorClasses }} {{ $speedClasses }} shrink-0 rounded-full border-2 border-current border-t-transparent" @endif>
     </div>
 
 @elseif ($variant === 'dual-ring')
     {{-- Dual ring spinner --}}
-    <div {{ $attributes->unless($label)->class([$sizeClasses, 'relative shrink-0']) }}
+    <div {{ $attributes->unless($label)->merge(['class' => "$sizeClasses relative shrink-0"]) }}
         @if($label) class="{{ $sizeClasses }} relative shrink-0" @endif>
         <div class="absolute inset-0 rounded-full border-2 border-current border-t-transparent {{ $colorClasses }} {{ $speedClasses }}"></div>
         <div class="absolute inset-1 rounded-full border-2 border-current border-b-transparent {{ $colorClasses }} animate-[spin_0.8s_linear_infinite_reverse]"></div>
@@ -156,13 +156,13 @@
 
 @elseif ($variant === 'square')
     {{-- Rotating square --}}
-    <div {{ $attributes->unless($label)->class([$sizeClasses, $colorClasses, 'shrink-0 bg-current animate-[spin_1.2s_ease-in-out_infinite] rounded-sm']) }}
+    <div {{ $attributes->unless($label)->merge(['class' => "$sizeClasses $colorClasses shrink-0 bg-current animate-[spin_1.2s_ease-in-out_infinite] rounded-sm"]) }}
         @if($label) class="{{ $sizeClasses }} {{ $colorClasses }} shrink-0 bg-current animate-[spin_1.2s_ease-in-out_infinite] rounded-sm" @endif>
     </div>
 
 @else
     {{-- Fallback to default --}}
-    <svg {{ $attributes->unless($label)->class([$sizeClasses, $colorClasses, $speedClasses, 'shrink-0']) }}
+    <svg {{ $attributes->unless($label)->merge(['class' => "$sizeClasses $colorClasses $speedClasses shrink-0"]) }}
         @if($label) class="{{ $sizeClasses }} {{ $colorClasses }} {{ $speedClasses }} shrink-0" @endif
         xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>

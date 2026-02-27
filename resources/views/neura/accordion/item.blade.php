@@ -25,12 +25,12 @@
         this.active = value ? this.id : null
     },
 }"
-    {{ $attributes->class(
-        Arr::toCssClasses([
+    {{ $attributes->merge([
+        'class' => Arr::toCssClasses([
             'text-fg not-last:border-b border-edge text-start',
             'opacity-50' => $disabled,
         ]),
-    ) }}>
+    ]) }}>
 
     @if ($trigger)
         <neura::accordion.item.trigger>{{ $trigger }}</neura::accordion.item.trigger>

@@ -32,7 +32,7 @@
 @endphp
 
 <div
-    {{ $attributes->class($classes) }}
+    {{ $attributes->merge(['class' => Arr::toCssClasses($classes)]) }}
     role="group"
     data-slot="button-group"
 >

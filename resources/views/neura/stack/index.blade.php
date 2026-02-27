@@ -11,6 +11,8 @@
     'position' => null,
 ])
 @php
+    use Illuminate\Support\Arr;
+
     $incomingClass = $attributes->get('class', '');
 
     $hasGap = str_contains($incomingClass, 'gap-');
@@ -145,6 +147,6 @@
     ]);
 @endphp
 
-<div {{ $attributes->class($classes) }} data-slot="stack">
+<div {{ $attributes->merge(['class' => Arr::toCssClasses($classes)]) }} data-slot="stack">
     {{ $slot }}
 </div>

@@ -6,6 +6,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.11] - 2026-02-27
+
+### Improved
+- **Blade components**: All neura view components now use `$attributes->merge(['class' => '...'])` instead of `$attributes->class([...])`
+  - Enables proper class merging: parent `class` passed to components (e.g. `<neura::sideover.header class="custom">`) is merged with default classes for easier style overrides
+  - Affects sideover (header, body, footer), modal parts, and all other neura Blade components (accordion, badge, box, button, callout, calendar, checkbox, command, container, divider, empty-state, field, grid, heading, icon, input, label, layout, link, navlist, navbar, sidebar, tabs, tree, wizard, etc.)
+
 ## [1.1.10] - 2026-02-24
 
 ### Added

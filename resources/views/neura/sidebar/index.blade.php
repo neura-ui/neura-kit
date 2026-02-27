@@ -12,19 +12,11 @@
 ])
 
 @php
-    $classes = [
-        'isolate',
-        '[grid-area:sidebar]',
-        'z-40 bg-surface backdrop-blur-xl lg:block',
-        'border-r border-separator',
-        'transition-[width] duration-500',
-        'overflow-x-visible',
-        '!overflow-y-auto' => $scrollable,
-    ];
+    $sidebarClasses = 'isolate [grid-area:sidebar] z-40 bg-surface backdrop-blur-xl lg:block border-r border-separator transition-[width] duration-500 overflow-x-visible' . ($scrollable ? ' !overflow-y-auto' : '');
 @endphp
 
 <div
-    {{ $attributes->class($classes) }}
+    {{ $attributes->merge(['class' => $sidebarClasses]) }}
     data-slot="sidebar"
     @if ($collapsable || $scrollToActive)
         x-data="{

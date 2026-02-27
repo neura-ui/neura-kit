@@ -164,7 +164,7 @@
      * Merge with user-provided classes from $attributes
      * This allows: <x-grid cols="6" class="bg-gray-100 p-4">
      */
-    $mergedAttributes = $attributes->class($gridClasses);
+    $mergedAttributes = $attributes->merge(['class' => implode(' ', $gridClasses)]);
 @endphp
 
 <div {{ $mergedAttributes }} data-slot="grid">

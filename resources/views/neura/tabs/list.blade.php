@@ -11,7 +11,7 @@
 @endphp
 
 <div
-    {{ $attributes->class($classes) }}
+    {{ $attributes->merge(['class' => $classes]) }}
     role="tablist"
     data-slot="tab-list"
 >

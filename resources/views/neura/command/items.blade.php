@@ -3,9 +3,7 @@
 <div
     x-show="showItems && (visibleCount > 0 || !search.trim())"
     class="overflow-y-auto max-h-96 mt-2"
-    {{ $attributes->class([
-        'space-y-1',
-    ]) }}
+    {{ $attributes->merge(['class' => 'space-y-1']) }}
 >
     {{ $slot }}
 </div>

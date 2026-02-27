@@ -80,7 +80,7 @@
 
         observer.observe(this.$el);
     "
-    {{ $attributes->class(Arr::toCssClasses($classes)) }}
+    {{ $attributes->merge(['class' => Arr::toCssClasses($classes)]) }}
     @disabled($disabled)
     @if ($invalid) aria-invalid="true" data-slot="invalid" @endif
     data-slot="textarea"

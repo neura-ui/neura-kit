@@ -1,6 +1,6 @@
 @props([])
 
-<div {{ $attributes->class(['text-sm text-neutral-700 dark:text-neutral-300']) }}>
+<div {{ $attributes->merge(['class' => 'text-sm text-fg-secondary']) }}>
     {{ $slot }}
 </div>
 

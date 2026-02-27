@@ -15,7 +15,7 @@
     };
 @endphp
 
-<div {{ $attributes->class(['flex items-center gap-2']) }}>
+<div {{ $attributes->merge(['class' => 'flex items-center gap-2']) }}>
     @if($icon)
         <neura::icon :name="$icon" :class="'size-5 shrink-0 ' . $iconColorClass" />
     @endif

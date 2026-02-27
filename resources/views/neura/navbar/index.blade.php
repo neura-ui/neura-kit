@@ -1,12 +1,9 @@
 @php
-$classes = [
-    'flex items-center gap-x-2',
-    'py-1 px-2'
-];
+$navbarClasses = 'flex items-center gap-x-2 py-1 px-2';
 @endphp
 
 <div
-    {{ $attributes->class($classes) }}
+    {{ $attributes->merge(['class' => $navbarClasses]) }}
     data-slot="navbar"
 >
     {{ $slot }}

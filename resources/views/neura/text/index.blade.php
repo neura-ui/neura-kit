@@ -33,7 +33,7 @@
 @endphp
 
 <div
-    {{ $attributes->class(Arr::toCssClasses($classes)) }}
+    {{ $attributes->merge(['class' => Arr::toCssClasses($classes)]) }}
     data-slot="text"
 >
     {{ $slot }}

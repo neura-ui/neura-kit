@@ -20,7 +20,7 @@
     :data-state="activeTab === @js($value) ? 'active' : 'inactive'"
     :aria-selected="activeTab === @js($value)"
     data-tab-trigger="{{ $value }}"
-    {{ $attributes->class([$baseClasses, $variantClasses]) }}
+    {{ $attributes->merge(['class' => $baseClasses . ' ' . $variantClasses]) }}
 >
     {{ $slot }}
 </button>

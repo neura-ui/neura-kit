@@ -2,10 +2,7 @@
     'closeable' => true,
 ])
 
-<div {{ $attributes->class([
-    'shrink-0 flex items-center justify-between gap-4 px-5 h-16',
-    'border-b border-separator bg-surface backdrop-blur-xl',
-]) }}>
+<div {{ $attributes->merge(['class' => 'shrink-0 flex items-center justify-between gap-4 px-5 h-16 border-b border-separator bg-surface backdrop-blur-xl']) }}>
     <div class="flex-1 min-w-0">
         {{ $slot }}
     </div>

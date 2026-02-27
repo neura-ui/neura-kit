@@ -16,17 +16,7 @@
     x-ref="selectTrigger"
     data-slot="trigger"
     role="combobox"
-    {{ $attributes->class([
-        'relative grid place-items-center grid-cols-[40px_1fr_26px_35px]',
-
-        '[&>[data-slot=icon]+[data-slot=select-control]]:pl-10',
-
-        '[&:has([data-slot=select-control]+[data-slot=icon])>[data-slot=select-control]]:pr-7',
-
-        '[&:has([data-slot=select-control]+[data-slot=icon]+[data-slot=select-clear])>[data-slot=select-control]]:pr-14',
-
-        '[&_[data-slot=icon]]:opacity-40 [&_[data-slot=icon]]:cursor-auto' => $disabled,
-    ]) }}
+    {{ $attributes->merge(['class' => 'relative grid place-items-center grid-cols-[40px_1fr_26px_35px] [&>[data-slot=icon]+[data-slot=select-control]]:pl-10 [&:has([data-slot=select-control]+[data-slot=icon])>[data-slot=select-control]]:pr-7 [&:has([data-slot=select-control]+[data-slot=icon]+[data-slot=select-clear])>[data-slot=select-control]]:pr-14' . ($disabled ? ' [&_[data-slot=icon]]:opacity-40 [&_[data-slot=icon]]:cursor-auto' : '')]) }}
 >
     @if (filled($icon))
         <neura::icon
@@ -41,20 +31,7 @@
         type="button"
         aria-haspopup="listbox"
         data-slot="select-control"
-        {{ $attributes->class([
-            'border bg-surface truncate text-sm text-fg disabled:text-fg-muted',
-            'disabled:bg-neutral-50 dark:disabled:bg-neutral-900/60',
-            'shadow-sm disabled:shadow-none rounded-lg px-3 py-2 text-start',
-            'transition-colors duration-150',
-            'col-span-4 col-start-1 row-start-1 justify-self-stretch',
-            'disabled:opacity-50 disabled:cursor-not-allowed flex cursor-pointer',
-            'overflow-hidden whitespace-nowrap',
-            'focus:ring-offset-0 focus:outline-none',
-            $selectColors['border'] => !$invalid,
-            $selectColors['focus'] => !$invalid,
-            $selectColors['invalid'] => $invalid,
-            $triggerClass,
-        ]) }}
+        {{ $attributes->merge(['class' => 'border bg-surface truncate text-sm text-fg disabled:text-fg-muted disabled:bg-neutral-50 dark:disabled:bg-neutral-900/60 shadow-sm disabled:shadow-none rounded-lg px-3 py-2 text-start transition-colors duration-150 col-span-4 col-start-1 row-start-1 justify-self-stretch disabled:opacity-50 disabled:cursor-not-allowed flex cursor-pointer overflow-hidden whitespace-nowrap focus:ring-offset-0 focus:outline-none' . (!$invalid ? ' ' . $selectColors['border'] . ' ' . $selectColors['focus'] : ' ' . $selectColors['invalid']) . ' ' . $triggerClass]) }}
 
         x-bind:aria-activedescendant="!isSearchable && activeIndex !== null ? 'option-' + activeIndex : null"
         @disabled($disabled)

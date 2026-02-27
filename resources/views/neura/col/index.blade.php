@@ -58,7 +58,7 @@
      * Merge with user-provided classes from $attributes
      * This allows: <x-col span="4" class="bg-red-500 p-4">
      */
-    $mergedAttributes = $attributes->class($staticClasses);
+    $mergedAttributes = $attributes->merge(['class' => implode(' ', $staticClasses)]);
 @endphp
 
 <div

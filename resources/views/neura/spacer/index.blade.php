@@ -14,4 +14,4 @@
     };
 @endphp
 
-<div {{ $attributes->class($classes) }} data-slot="spacer"></div>
+<div {{ $attributes->merge(['class' => $classes]) }} data-slot="spacer"></div>

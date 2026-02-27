@@ -418,7 +418,7 @@
     x-modelable="state"
     class="contents"
 >
-    <div {{ $attributes->class('rounded-box w-full transition duration-75') }}>
+    <div {{ $attributes->merge(['class' => 'rounded-box w-full transition duration-75']) }}>
 
         @if($showCounter || $showClearAll)
             <div class="flex items-center justify-between p-2 ">
