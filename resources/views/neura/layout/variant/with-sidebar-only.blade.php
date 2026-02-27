@@ -3,11 +3,40 @@
 ])
 
 @php
-    $layoutClasses = '[--sidebar-width:16rem] data-[collapsed]:[--sidebar-width:4rem] [--header-height:4rem] grid items-start h-screen overflow-hidden min-h-screen text-fg grid-cols-1 grid-rows-[1fr] [grid-template-areas:\'main\'] [&_[data-slot=sidebar]]:fixed [&_[data-slot=sidebar]]:inset-y-0 [&_[data-slot=sidebar]]:left-0 [&_[data-slot=sidebar]]:z-50 [&_[data-slot=sidebar]]:w-[var(--sidebar-width)] [&_[data-slot=sidebar]]:transition-transform [&_[data-slot=sidebar]]:duration-300 [&_[data-slot=sidebar]]:ease-in-out [&_[data-slot=sidebar]]:-translate-x-full data-[sidebar-open]:[&_[data-slot=sidebar]]:translate-x-0 md:grid-cols-[var(--sidebar-width)_1fr] md:data-[collapsed]:grid-cols-[var(--sidebar-width)_1fr] md:[grid-template-areas:\'sidebar_main\'] md:[&_[data-slot=sidebar]]:relative md:[&_[data-slot=sidebar]]:translate-x-0 md:[&_[data-slot=sidebar]]:z-auto md:[&_[data-slot=sidebar]]:overflow-visible md:data-[collapsed]:[&_[data-slot=sidebar]]:w-[var(--sidebar-width)] lg:grid-cols-[var(--sidebar-width)_1fr] lg:grid-rows-1 lg:[grid-template-areas:\'sidebar_main\'] lg:[&_[data-slot=sidebar]]:w-auto lg:grid-cols-[var(--sidebar-width)_1fr] data-[collapsed]:lg:grid-cols-[var(--sidebar-width)_1fr] data-[collapsed]:lg:[grid-template-areas:\'sidebar_main\'] data-[collapsed]:[&_[data-slot=sidebar]]:lg:w-[var(--sidebar-width)] data-[collapsed]:[&_[data-slot=sidebar]]:lg:overflow-visible';
+    $classes = [
+        '[--sidebar-width:16rem]',
+        'data-[collapsed]:[--sidebar-width:4rem]',
+        '[--header-height:4rem]',
+
+        'grid items-start h-screen overflow-hidden min-h-screen text-fg',
+        'grid-cols-1 grid-rows-[1fr]',
+        "[grid-template-areas:'main']",
+
+        '[&_[data-slot=sidebar]]:fixed [&_[data-slot=sidebar]]:inset-y-0 [&_[data-slot=sidebar]]:left-0',
+        '[&_[data-slot=sidebar]]:z-50 [&_[data-slot=sidebar]]:w-[var(--sidebar-width)]',
+        '[&_[data-slot=sidebar]]:transition-transform [&_[data-slot=sidebar]]:duration-300 [&_[data-slot=sidebar]]:ease-in-out',
+        '[&_[data-slot=sidebar]]:-translate-x-full',
+        'data-[sidebar-open]:[&_[data-slot=sidebar]]:translate-x-0',
+
+        'md:grid-cols-[var(--sidebar-width)_1fr]',
+        'md:data-[collapsed]:grid-cols-[var(--sidebar-width)_1fr]',
+        "md:[grid-template-areas:'sidebar_main']",
+        'md:[&_[data-slot=sidebar]]:relative md:[&_[data-slot=sidebar]]:translate-x-0',
+        'md:[&_[data-slot=sidebar]]:z-auto md:[&_[data-slot=sidebar]]:overflow-visible',
+        'md:data-[collapsed]:[&_[data-slot=sidebar]]:w-[var(--sidebar-width)]',
+
+        'lg:grid-cols-[var(--sidebar-width)_1fr] lg:grid-rows-1',
+        "lg:[grid-template-areas:'sidebar_main']",
+        'lg:[&_[data-slot=sidebar]]:w-auto lg:grid-cols-[var(--sidebar-width)_1fr]',
+        'data-[collapsed]:lg:grid-cols-[var(--sidebar-width)_1fr]',
+        "data-[collapsed]:lg:[grid-template-areas:'sidebar_main']",
+        'data-[collapsed]:[&_[data-slot=sidebar]]:lg:w-[var(--sidebar-width)]',
+        'data-[collapsed]:[&_[data-slot=sidebar]]:lg:overflow-visible',
+    ];
 @endphp
 
 <div
-    {{ $attributes->merge(['class' => $layoutClasses]) }}
+    {{ $attributes->class($classes) }}
     x-data="{
         collapsedSidebar: $persist(false),
         sidebarOpen: false,

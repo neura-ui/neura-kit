@@ -6,6 +6,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.12] - 2026-02-27
+
+### Improved
+- **Layout**: Header, main, and layout variants now use array-based class binding with `$attributes->class()`
+  - Header: sticky and backdrop classes are conditional via `'sticky top-0 bg-surface backdrop-blur-xl' => $sticky` for correct merging with consumer classes
+  - Main: class list split into array for consistency
+  - Layout index: theme classes applied via `$attributes->class($themeClasses)` before merging style
+  - Variants (`with-sidebar-header`, `with-sidebar-only`, `without-sidebar`): long class strings refactored into multi-line arrays for readability and easier maintenance; same behavior, cleaner templates
+
 ## [1.1.11] - 2026-02-27
 
 ### Improved

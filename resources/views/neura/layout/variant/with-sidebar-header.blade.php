@@ -3,11 +3,42 @@
 ])
 
 @php
-    $layoutClasses = '[--sidebar-width:16rem] data-[collapsed]:[--sidebar-width:4rem] [--header-height:4rem] grid h-screen overflow-hidden min-h-screen text-fg grid-cols-1 grid-rows-[var(--header-height)_1fr] [grid-template-areas:\'header\'_\'main\'] [&_[data-slot=header]]:sticky [&_[data-slot=header]]:top-0 [&_[data-slot=header]]:z-50 [&_[data-slot=header]]:h-[var(--header-height)] [&_[data-slot=sidebar]]:fixed [&_[data-slot=sidebar]]:inset-y-0 [&_[data-slot=sidebar]]:left-0 [&_[data-slot=sidebar]]:top-[var(--header-height)] [&_[data-slot=sidebar]]:h-[calc(100vh-var(--header-height))] [&_[data-slot=sidebar]]:z-40 [&_[data-slot=sidebar]]:w-[var(--sidebar-width)] [&_[data-slot=sidebar]]:transition-transform [&_[data-slot=sidebar]]:duration-300 [&_[data-slot=sidebar]]:ease-in-out [&_[data-slot=sidebar]]:-translate-x-full data-[sidebar-open]:[&_[data-slot=sidebar]]:translate-x-0 md:grid-cols-[var(--sidebar-width)_1fr] md:grid-rows-[var(--header-height)_1fr] md:[grid-template-areas:\'header_header\'_\'sidebar_main\'] md:[&_[data-slot=header]]:col-span-2 md:[&_[data-slot=sidebar]]:relative md:[&_[data-slot=sidebar]]:translate-x-0 md:[&_[data-slot=sidebar]]:z-auto md:[&_[data-slot=sidebar]]:h-auto md:[&_[data-slot=sidebar]]:top-0 md:[&_[data-slot=sidebar]]:inset-y-auto md:[&_[data-slot=sidebar]]:overflow-visible lg:grid-cols-[var(--sidebar-width)_1fr] lg:grid-rows-[var(--header-height)_1fr] lg:[grid-template-areas:\'header_header\'_\'sidebar_main\'] data-[collapsed]:lg:grid-cols-[var(--sidebar-width)_1fr] lg:[&_[data-slot=header]]:col-span-2 lg:[&_[data-slot=sidebar]]:overflow-visible';
+    $classes = [
+        '[--sidebar-width:16rem]',
+        'data-[collapsed]:[--sidebar-width:4rem]',
+        '[--header-height:4rem]',
+
+        'grid h-screen overflow-hidden min-h-screen text-fg',
+        'grid-cols-1 grid-rows-[var(--header-height)_1fr]',
+        "[grid-template-areas:'header'_'main']",
+
+        '[&_[data-slot=header]]:sticky [&_[data-slot=header]]:top-0 [&_[data-slot=header]]:z-50 [&_[data-slot=header]]:h-[var(--header-height)]',
+
+        '[&_[data-slot=sidebar]]:fixed [&_[data-slot=sidebar]]:inset-y-0 [&_[data-slot=sidebar]]:left-0',
+        '[&_[data-slot=sidebar]]:top-[var(--header-height)] [&_[data-slot=sidebar]]:h-[calc(100vh-var(--header-height))]',
+        '[&_[data-slot=sidebar]]:z-40 [&_[data-slot=sidebar]]:w-[var(--sidebar-width)]',
+        '[&_[data-slot=sidebar]]:transition-transform [&_[data-slot=sidebar]]:duration-300 [&_[data-slot=sidebar]]:ease-in-out',
+        '[&_[data-slot=sidebar]]:-translate-x-full',
+        'data-[sidebar-open]:[&_[data-slot=sidebar]]:translate-x-0',
+
+        'md:grid-cols-[var(--sidebar-width)_1fr] md:grid-rows-[var(--header-height)_1fr]',
+        "md:[grid-template-areas:'header_header'_'sidebar_main']",
+        'md:[&_[data-slot=header]]:col-span-2',
+        'md:[&_[data-slot=sidebar]]:relative md:[&_[data-slot=sidebar]]:translate-x-0',
+        'md:[&_[data-slot=sidebar]]:z-auto md:[&_[data-slot=sidebar]]:h-auto',
+        'md:[&_[data-slot=sidebar]]:top-0 md:[&_[data-slot=sidebar]]:inset-y-auto',
+        'md:[&_[data-slot=sidebar]]:overflow-visible',
+
+        'lg:grid-cols-[var(--sidebar-width)_1fr] lg:grid-rows-[var(--header-height)_1fr]',
+        "lg:[grid-template-areas:'header_header'_'sidebar_main']",
+        'data-[collapsed]:lg:grid-cols-[var(--sidebar-width)_1fr]',
+        'lg:[&_[data-slot=header]]:col-span-2',
+        'lg:[&_[data-slot=sidebar]]:overflow-visible',
+    ];
 @endphp
 
 <div
-    {{ $attributes->merge(['class' => $layoutClasses]) }}
+    {{ $attributes->class($classes) }}
     @if($collapsable)
         x-data="{
             collapsedSidebar: $persist(false),

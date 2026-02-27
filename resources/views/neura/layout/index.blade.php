@@ -43,7 +43,7 @@
 <x-dynamic-component
     :component="$variantPath"
     :collapsable="$collapsable"
-    :attributes="$attributes->merge(['class' => $themeClasses, 'style' => $accentStyle])"
+    :attributes="$attributes->class($themeClasses)->merge(['style' => $accentStyle])"
 >
     {{ $slot }}
 </x-dynamic-component>

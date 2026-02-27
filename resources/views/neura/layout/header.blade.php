@@ -10,7 +10,13 @@
 ])
 
 @php
-    $headerClasses = '[grid-area:header] z-40 min-h-[var(--header-height)] border-b flex items-center border-separator' . ($sticky ? ' sticky top-0 bg-surface backdrop-blur-xl' : '');
+    $headerClasses = [
+        '[grid-area:header]',
+        'z-40 min-h-[var(--header-height)]',
+        'border-b flex items-center',
+        'border-separator',
+        'sticky top-0 bg-surface backdrop-blur-xl' => $sticky,
+    ];
 
     $sizeClasses = match ($size) {
         'xs' => 'max-w-xl',
@@ -44,7 +50,7 @@
     ]);
 @endphp
 
-<div {{ $attributes->merge(['class' => $headerClasses]) }} data-slot="header">
+<div {{ $attributes->class($headerClasses) }} data-slot="header">
     <div class="{{ $containerClasses }}">
         @if($withSidebarToggle)
             <div class="md:hidden -ml-2">
