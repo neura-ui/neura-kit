@@ -5,9 +5,9 @@
 
 @php
     $classes = match($orientation) {
-        'vertical' => 'h-full w-px bg-surface-inset',
-        'horizontal' => 'w-full h-px bg-surface-inset',
-        default => 'w-full h-px bg-surface-inset',
+        'vertical' => 'h-full w-px bg-edge',
+        'horizontal' => 'w-full h-px bg-edge',
+        default => 'w-full h-px bg-edge',
     };
 @endphp
 

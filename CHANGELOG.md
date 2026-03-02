@@ -6,6 +6,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.13] - 2026-03-01
+
+### Improved
+- **Design tokens**: Coherent semantic color system
+  - Documented logic in `resources/css/app.css`: surface (base), surface-inset (recessed, always darker than surface), surface-raised (elevated), edge/separator (borders and soft dividers), hover/active (interactive states)
+  - Light mode: aligned luminance scale (surface 1 → separator 0.96 → hover 0.97 → active 0.95 → surface-inset 0.94 → edge 0.88)
+  - Dark mode: surface 0.13, surface-inset 0.10 (recessed), surface-raised 0.17, edge/separator as opacity steps
+- **Divider**: Uses `bg-edge` instead of `bg-surface-inset` for horizontal/vertical lines so divider color matches navlist timeline
+- **Timeline**: Vertical and horizontal variants use `bg-edge` instead of `bg-surface-inset` for consistent line color with navlist and divider
+- **Editor (Tiptap toolbar)**: Vertical separators between icon groups use `bg-edge` instead of `bg-surface-inset` for visual consistency
+
 ## [1.1.12] - 2026-02-27
 
 ### Improved

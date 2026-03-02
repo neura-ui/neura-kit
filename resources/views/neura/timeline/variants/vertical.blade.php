@@ -1,7 +1,7 @@
 @props(['variant' => 'vertical'])
 
 <div {{ $attributes->merge(['class' => 'relative']) }}>
-    <div class="absolute left-5 top-0 bottom-0 w-0.5 bg-surface-inset"></div>
+    <div class="absolute left-5 top-0 bottom-0 w-0.5 bg-edge"></div>
     
     <div class="space-y-8" x-data="{ variant: '{{ $variant }}' }">
         {{ $slot }}

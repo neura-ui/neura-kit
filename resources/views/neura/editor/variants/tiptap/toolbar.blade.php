@@ -20,7 +20,7 @@
         </button>
     </div>
 
-    <div class="w-px h-5 bg-surface-inset mx-1"></div>
+    <div class="w-px h-5 bg-edge mx-1"></div>
 
     <button
         type="button"
@@ -68,7 +68,7 @@
         <span class="sr-only">Code</span>
     </button>
 
-    <div class="w-px h-5 bg-surface-inset mx-1"></div>
+    <div class="w-px h-5 bg-edge mx-1"></div>
 
     <button
         type="button"
@@ -98,7 +98,7 @@
         <span class="sr-only">Heading 3</span>
     </button>
 
-    <div class="w-px h-5 bg-surface-inset mx-1"></div>
+    <div class="w-px h-5 bg-edge mx-1"></div>
 
     <button
         type="button"
@@ -119,7 +119,7 @@
         <span class="sr-only">Ordered List</span>
     </button>
 
-    <div class="w-px h-5 bg-surface-inset mx-1"></div>
+    <div class="w-px h-5 bg-edge mx-1"></div>
 
     <button
         type="button"
@@ -139,7 +139,7 @@
         <span class="sr-only">Horizontal Rule</span>
     </button>
 
-    <div class="w-px h-5 bg-surface-inset mx-1"></div>
+    <div class="w-px h-5 bg-edge mx-1"></div>
 
     <button
         type="button"
@@ -169,7 +169,7 @@
         <span class="sr-only">Align Right</span>
     </button>
 
-    <div class="w-px h-5 bg-surface-inset mx-1"></div>
+    <div class="w-px h-5 bg-edge mx-1"></div>
 
     <button
         type="button"

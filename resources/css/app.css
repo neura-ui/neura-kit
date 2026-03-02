@@ -5,20 +5,26 @@
  * ============================================================================
  * Design Tokens - Semantic Color System
  * ============================================================================
+ * Logique cohérente :
+ * - surface       = fond de base
+ * - surface-inset = zones en creux (toujours plus sombre que surface)
+ * - surface-raised= zones élevées (plus clair que surface en dark)
+ * - edge/separator= bordures et séparations (échelle entre surface et fg)
+ * - hover/active  = états interactifs dérivés du surface
  */
 :root {
   --nk-surface: oklch(1 0 0);
-  --nk-surface-raised: oklch(1 0 0);
-  --nk-surface-inset: oklch(0.967 0 0);
+  --nk-surface-raised: oklch(0.99 0 0);
+  --nk-surface-inset: oklch(0.94 0 0);
   --nk-overlay: oklch(0 0 0 / 0.40);
 
-  --nk-hover: oklch(0.955 0 0);
-  --nk-active: oklch(0.922 0 0);
+  --nk-hover: oklch(0.97 0 0);
+  --nk-active: oklch(0.95 0 0);
 
-  --nk-edge: oklch(0.87 0 0);
-  --nk-edge-hover: oklch(0.80 0 0);
+  --nk-edge: oklch(0.88 0 0);
+  --nk-edge-hover: oklch(0.82 0 0);
   --nk-edge-focus: oklch(0.70 0 0);
-  --nk-separator: oklch(0.955 0 0);
+  --nk-separator: oklch(0.96 0 0);
 
   --nk-fg: oklch(0.145 0 0);
   --nk-fg-secondary: oklch(0.44 0 0);
@@ -33,15 +39,15 @@
 
 .dark {
   --nk-surface: oklch(0.13 0 0);
-  --nk-surface-raised: oklch(0.16 0 0);
-  --nk-surface-inset: oklch(0.11 0 0);
+  --nk-surface-raised: oklch(0.17 0 0);
+  --nk-surface-inset: oklch(0.10 0 0);
   --nk-overlay: oklch(0 0 0 / 0.65);
 
-  --nk-hover: oklch(1 0 0 / 0.05);
-  --nk-active: oklch(1 0 0 / 0.08);
+  --nk-hover: oklch(1 0 0 / 0.06);
+  --nk-active: oklch(1 0 0 / 0.09);
 
-  --nk-edge: oklch(1 0 0 / 0.08);
-  --nk-edge-hover: oklch(1 0 0 / 0.12);
+  --nk-edge: oklch(1 0 0 / 0.09);
+  --nk-edge-hover: oklch(1 0 0 / 0.13);
   --nk-edge-focus: oklch(1 0 0 / 0.18);
   --nk-separator: oklch(1 0 0 / 0.06);
 
