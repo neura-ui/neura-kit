@@ -6,6 +6,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.14] - 2026-03-01
+
+### Fixed
+- **Table**: Bulk actions dropdown and bulk selection banner now react correctly to row selection
+  - Toolbar: use `$this->selected` instead of `$selected` so the bulk actions button is enabled when rows are selected
+  - Bulk banner: use `$this->selected`, `$this->selectAll`, `$this->selectPage` so the selection banner and "Select all" link display correctly
+
 ## [1.1.13] - 2026-03-01
 
 ### Improved

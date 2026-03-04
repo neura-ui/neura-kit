@@ -30,11 +30,11 @@
 
     <div class="flex items-center gap-0.5 shrink-0">
         @if ($this->hasBulkActions())
-            <neura::dropdown position="bottom-end" :disabled="empty($selected)">
+            <neura::dropdown position="bottom-end" :disabled="empty($this->selected)">
                 <x-slot:button>
                     <button
                         class="inline-flex items-center justify-center size-7 rounded-md text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-white/[0.06] transition-colors duration-100 disabled:opacity-30 disabled:pointer-events-none"
-                        @if(empty($selected)) disabled @endif
+                        @if(empty($this->selected)) disabled @endif
                     >
                         <neura::icon name="squares-plus" class="size-4" />
                     </button>

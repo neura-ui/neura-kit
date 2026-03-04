@@ -1,4 +1,4 @@
-@if ($this->hasBulkActions() && !empty($selected))
+@if ($this->hasBulkActions() && !empty($this->selected))
     <div class="bg-primary-50/60 dark:bg-primary-500/[0.04] border-b border-primary-100 dark:border-primary-500/10 px-3 py-1.5">
         <div class="flex items-center justify-between gap-3">
             <div class="flex items-center gap-3">
@@ -9,14 +9,14 @@
                     </span>
                 </div>
 
-                @if (!$selectAll && $this->selectedCount < $this->totalRows && $selectPage)
+                @if (!$this->selectAll && $this->selectedCount < $this->totalRows && $this->selectPage)
                     <button wire:click="selectAllRows"
                         class="text-xs text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-200 font-medium underline underline-offset-2">
                         {{ neura_trans('selectAllRows', ['count' => $this->totalRows]) }}
                     </button>
                 @endif
 
-                @if ($selectAll)
+                @if ($this->selectAll)
                     <span class="text-xs text-primary-500 dark:text-primary-400">
                         {{ neura_trans('allRowsSelected', ['count' => $this->totalRows]) }}
                     </span>
