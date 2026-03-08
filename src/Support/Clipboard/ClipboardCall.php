@@ -15,7 +15,10 @@ final class ClipboardCall
     ) {}
 
     /**
-     * Copier le texte dans le presse-papier via JS
+     * Copy text to the clipboard via injected JS.
+     *
+     * Works in all contexts: pages, modals, sideovers.
+     * The JS module handles focus-trap-aware fallbacks automatically.
      *
      * @throws JsonException
      */
@@ -27,14 +30,13 @@ final class ClipboardCall
             return;
         }
 
-        $this->caller->js(sprintf(
-            'window.Clipboard?.copy(%s)',
-            json_encode($textToCopy, JSON_THROW_ON_ERROR)
-        ));
+        $encoded = json_encode($textToCopy, JSON_THROW_ON_ERROR);
+
+        $this->caller->js("window.Clipboard?.copy({$encoded})");
     }
 
     /**
-     * Copier avec callback
+     * Copy text then call a Livewire method on success.
      *
      * @throws JsonException
      */
@@ -46,40 +48,44 @@ final class ClipboardCall
             return;
         }
 
-        $paramsJson = empty($params) ? '' : ', '.json_encode($params, JSON_THROW_ON_ERROR);
+        $encoded = json_encode($textToCopy, JSON_THROW_ON_ERROR);
+        $paramsJson = empty($params) ? '' : ', ' . json_encode($params, JSON_THROW_ON_ERROR);
 
-        $this->caller->js(sprintf(
-            "window.Clipboard?.copy(%s).then(() => { \$wire.call('%s'%s) })",
-            json_encode($textToCopy, JSON_THROW_ON_ERROR),
-            $method,
-            $paramsJson
-        ));
+        $this->caller->js(
+            "window.Clipboard?.copy({$encoded}).then(() => { \$wire.call('{$method}'{$paramsJson}) })"
+        );
     }
 
     /**
-     * Copier avec gestion des erreurs
+     * Copy text with explicit success/error Livewire callbacks.
      *
      * @throws JsonException
      */
-    public function copyWithErrorHandling(?string $text = null, ?string $successMethod = null, ?string $errorMethod = null, mixed ...$params): void
-    {
+    public function copyWithErrorHandling(
+        ?string $text = null,
+        ?string $successMethod = null,
+        ?string $errorMethod = null,
+        mixed ...$params
+    ): void {
         $textToCopy = $text ?? $this->text;
 
         if ($textToCopy === null || $textToCopy === '') {
             return;
         }
 
-        $paramsJson = empty($params) ? '' : ', '.json_encode($params, JSON_THROW_ON_ERROR);
+        $encoded = json_encode($textToCopy, JSON_THROW_ON_ERROR);
+        $paramsJson = empty($params) ? '' : ', ' . json_encode($params, JSON_THROW_ON_ERROR);
 
-        $jsSuccess = $successMethod ? sprintf("\$wire.call('%s'%s);", $successMethod, $paramsJson) : '';
+        $jsSuccess = $successMethod
+            ? "\$wire.call('{$successMethod}'{$paramsJson});"
+            : '';
 
-        $jsError = $errorMethod ? sprintf("\$wire.call('%s'%s);", $errorMethod, $paramsJson) : 'console.error("Clipboard copy failed:", err);';
+        $jsError = $errorMethod
+            ? "\$wire.call('{$errorMethod}'{$paramsJson});"
+            : 'console.error("Clipboard copy failed:", err);';
 
-        $this->caller->js(sprintf(
-            'window.Clipboard?.copy(%s).then(() => { %s }).catch((err) => { %s })',
-            json_encode($textToCopy, JSON_THROW_ON_ERROR),
-            $jsSuccess,
-            $jsError
-        ));
+        $this->caller->js(
+            "window.Clipboard?.copy({$encoded}).then(() => { {$jsSuccess} }).catch((err) => { {$jsError} })"
+        );
     }
 }

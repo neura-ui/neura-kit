@@ -5,16 +5,19 @@ export {};
 /* =========================================================================
  | Clipboard Module
  |
- | Provides a unified clipboard API that works across browsers:
+ | Unified clipboard API that works across browsers, focus traps (modals,
+ | sideovers) and secure/insecure contexts:
+ |
  |   - window.Clipboard.copy(text)   → copy to clipboard
  |   - window.Clipboard.read()       → read from clipboard
  |   - window.copyToClipboard(text)  → shorthand
  |   - $clipboard('text')            → Alpine magic
  |   - x-clipboard="expr"            → Alpine directive (copies on click)
  |   - Livewire clipboard:copy event → server-driven copy
+ |   - Livewire $this->js() driven  → works inside sideovers/modals
  |
  | Events dispatched on `document`:
- |   clipboard:copied  { text }     → after a successful copy
+ |   clipboard:copied  { text }        → after a successful copy
  |   clipboard:error   { text, error } → after a failed copy
  |========================================================================= */
 
@@ -24,13 +27,10 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
      | Core
      |===================================================================== */
 
-    /**
-     * Copy text to the clipboard using the best available method.
-     *
-     * 1. Modern Clipboard API (most browsers)
-     * 2. Textarea + execCommand fallback (Safari / older browsers / iOS)
-     */
     async function copyToClipboard(text: string): Promise<boolean> {
+        if (!text && text !== '') return false;
+
+        // 1 — Modern Clipboard API (secure contexts, most browsers)
         try {
             if (navigator?.clipboard?.writeText) {
                 await navigator.clipboard.writeText(text);
@@ -38,24 +38,29 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
                 return true;
             }
         } catch {
-            // Clipboard API failed — fall through to fallback
+            // Clipboard API denied — fall through to fallback
         }
 
-        const ok = fallbackCopy(text);
-
-        if (ok) {
+        // 2 — execCommand fallback inside the active focus-trapped container
+        //     so the focus trap does not steal focus away from the textarea
+        const container = getActiveContainer();
+        if (execCopyInContainer(text, container)) {
             onCopySuccess(text);
-        } else {
-            onCopyError(text);
+            return true;
         }
 
-        return ok;
+        // 3 — Retry in document.body if container was a dialog
+        if (container !== document.body) {
+            if (execCopyInContainer(text, document.body)) {
+                onCopySuccess(text);
+                return true;
+            }
+        }
+
+        onCopyError(text);
+        return false;
     }
 
-    /**
-     * Read text from the clipboard (requires user permission).
-     * Returns `null` when the operation is denied or unavailable.
-     */
     async function readFromClipboard(): Promise<string | null> {
         try {
             if (navigator?.clipboard?.readText) {
@@ -69,38 +74,58 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
     }
 
     /* =====================================================================
-     | Feedback helpers
+     | Focus-trap-aware container detection
      |===================================================================== */
 
-    function onCopySuccess(text: string): void {
-        document.dispatchEvent(
-            new CustomEvent('clipboard:copied', { detail: { text } }),
+    function getActiveContainer(): Element {
+        // Sideover / modal panels that are currently visible and have focus
+        const candidates = document.querySelectorAll(
+            '[role="dialog"][aria-modal="true"]',
         );
-    }
 
-    function onCopyError(text: string, error?: unknown): void {
-        document.dispatchEvent(
-            new CustomEvent('clipboard:error', { detail: { text, error } }),
-        );
+        for (let i = candidates.length - 1; i >= 0; i--) {
+            const el = candidates[i] as HTMLElement;
+
+            // Skip hidden panels (x-show=false, display:none, etc.)
+            if (el.offsetParent === null && getComputedStyle(el).position !== 'fixed') continue;
+            if (el.style.display === 'none') continue;
+            if (el.hasAttribute('x-cloak')) continue;
+
+            // Visible dialog found — use it so the textarea stays inside
+            // the focus trap boundary
+            return el;
+        }
+
+        return document.body;
     }
 
     /* =====================================================================
-     | Fallback (Safari / iOS / older browsers)
+     | execCommand fallback (works in focus traps)
      |===================================================================== */
 
-    function fallbackCopy(text: string): boolean {
+    function execCopyInContainer(text: string, container: Element): boolean {
         const textarea = document.createElement('textarea');
         textarea.value = text;
-        textarea.style.cssText =
-            'position:fixed;top:0;left:0;width:2em;height:2em;' +
-            'padding:0;border:none;outline:none;box-shadow:none;' +
-            'background:transparent;opacity:0;z-index:-1;';
-
-        // Required for iOS
+        textarea.setAttribute('readonly', '');
         textarea.contentEditable = 'true';
-        textarea.readOnly = false;
 
-        document.body.appendChild(textarea);
+        textarea.style.cssText = [
+            'position:fixed',
+            'top:0',
+            'left:0',
+            'width:2em',
+            'height:2em',
+            'padding:0',
+            'border:none',
+            'outline:none',
+            'box-shadow:none',
+            'background:transparent',
+            'opacity:0',
+            'z-index:2147483647',
+            'pointer-events:none',
+        ].join(';');
+
+        container.appendChild(textarea);
 
         let success = false;
 
@@ -116,7 +141,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
                 }
                 textarea.setSelectionRange(0, text.length);
             } else {
-                textarea.focus();
+                textarea.focus({ preventScroll: true });
                 textarea.select();
                 textarea.setSelectionRange(0, text.length);
             }
@@ -126,7 +151,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
             success = false;
         }
 
-        document.body.removeChild(textarea);
+        textarea.remove();
 
         return success;
     }
@@ -135,6 +160,22 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
         return (
             /iPad|iPhone|iPod/.test(navigator.userAgent) ||
             (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+        );
+    }
+
+    /* =====================================================================
+     | Feedback helpers
+     |===================================================================== */
+
+    function onCopySuccess(text: string): void {
+        document.dispatchEvent(
+            new CustomEvent('clipboard:copied', { detail: { text } }),
+        );
+    }
+
+    function onCopyError(text: string, error?: unknown): void {
+        document.dispatchEvent(
+            new CustomEvent('clipboard:error', { detail: { text, error } }),
         );
     }
 
@@ -159,10 +200,8 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
         if (alpineRegistered) return;
         alpineRegistered = true;
 
-        // Magic: $clipboard('text to copy')
         Alpine.magic('clipboard', () => copyToClipboard);
 
-        // Directive: <button x-clipboard="expression">Copy</button>
         Alpine.directive(
             'clipboard',
             (el: HTMLElement, { expression }: any, { evaluate }: any) => {
@@ -176,12 +215,10 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
         );
     }
 
-    // Alpine already loaded
     if ((window as any).Alpine) {
         registerAlpineClipboard((window as any).Alpine);
     }
 
-    // Deferred Alpine loading
     document.addEventListener('alpine:init', () => {
         if ((window as any).Alpine) {
             registerAlpineClipboard((window as any).Alpine);

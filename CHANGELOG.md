@@ -6,6 +6,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.15] - 2026-03-06
+
+### Improved
+- **Clipboard**: Focus-trap-aware fallback so copy works inside sideovers and modals
+  - `copyToClipboard()` now detects the active dialog (`[role="dialog"][aria-modal="true"]`) and appends the fallback textarea inside it so the focus trap does not steal focus; falls back to `document.body` if needed
+  - Fallback uses `execCopyInContainer(text, container)` with high z-index and `pointer-events:none` for reliable `execCommand('copy')` in all contexts
+  - iOS handling preserved (range/selection); same success/error events (`clipboard:copied`, `clipboard:error`)
+- **ClipboardCall (PHP)**: Single uniform API for all copy use cases
+  - `$this->clipboard()->copy($text)` works from pages, modals, and sideovers via injected `window.Clipboard?.copy()`; JS module handles context automatically
+  - DocBlocks and code cleanup for `copy()`, `copyWithCallback()`, `copyWithErrorHandling()`
+
+### Fixed
+- **Clipboard**: Copy in sideovers no longer fails when Clipboard API is unavailable or user activation has expired — fallback now runs inside the dialog container so focus trap allows the copy to succeed
+
 ## [1.1.14] - 2026-03-01
 
 ### Fixed
