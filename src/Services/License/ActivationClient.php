@@ -87,7 +87,7 @@ final class ActivationClient
      */
     private function resolveBearerToken(): ?string
     {
-        if ($token = getenv('NEURA_LICENSE_TOKEN')) {
+        if ($token = env('NEURA_LICENSE_TOKEN') ?: getenv('NEURA_LICENSE_TOKEN')) {
             return $token;
         }
 
@@ -99,12 +99,12 @@ final class ActivationClient
             return $token;
         }
 
-        $composerHome = getenv('COMPOSER_HOME') ?: getenv('HOME') . '/.composer';
+        $composerHome = env('COMPOSER_HOME') ?: getenv('COMPOSER_HOME') ?: (env('HOME') ?: getenv('HOME')) . '/.composer';
         if ($token = $this->getTokenFromAuthJson($composerHome . '/auth.json')) {
             return $token;
         }
 
-        if ($composerAuth = getenv('COMPOSER_AUTH')) {
+        if ($composerAuth = env('COMPOSER_AUTH') ?: getenv('COMPOSER_AUTH')) {
             $data = json_decode($composerAuth, true);
             if (is_array($data)) {
                 return $this->extractTokenFromAuthData($data);

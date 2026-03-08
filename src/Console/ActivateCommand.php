@@ -17,7 +17,7 @@ class ActivateCommand extends Command
 
     public function handle(LicenseService $licenseService): int
     {
-        $licenseKey = getenv('NEURA_KIT_LICENSE_KEY');
+        $licenseKey = env('NEURA_KIT_LICENSE_KEY') ?: getenv('NEURA_KIT_LICENSE_KEY');
 
         if (empty($licenseKey)) {
             $this->error('NEURA_KIT_LICENSE_KEY environment variable is not set.');

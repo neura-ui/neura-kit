@@ -84,7 +84,7 @@ final class DomainDetector
             $configDomains = array_filter(array_map('trim', explode(',', $configDomains)));
         }
 
-        $envDomains = getenv('NEURA_KIT_DOMAINS');
+        $envDomains = env('NEURA_KIT_DOMAINS') ?: getenv('NEURA_KIT_DOMAINS');
         if (! empty($envDomains)) {
             $envDomainsArray = array_filter(array_map('trim', explode(',', $envDomains)));
             $configDomains = array_merge($configDomains, $envDomainsArray);
