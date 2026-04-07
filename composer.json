@@ -19,8 +19,8 @@
     ],
     "require": {
         "php": "^8.2",
-        "illuminate/support": "^11.0|^12.0",
-        "illuminate/view": "^11.0|^12.0",
+        "illuminate/support": "^11.0|^12.0|^13.0",
+        "illuminate/view": "^11.0|^12.0|^13.0",
         "livewire/livewire": "^3.0|^4.0",
         "wireui/heroicons": "^2.0",
         "lorisleiva/laravel-actions": "^2.9"
@@ -30,7 +30,7 @@
         "wireui/heroicons": "^2.0 Required for icon components"
     },
     "require-dev": {
-        "orchestra/testbench": "^9.0|^10.0",
+        "orchestra/testbench": "^9.0|^10.0|^11.0",
         "phpunit/phpunit": "^11.0"
     },
     "autoload": {

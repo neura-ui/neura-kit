@@ -6,6 +6,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.17] - 2026-04-07
+
+### Added
+- **Laravel 13 support**: Added `^13.0` constraint for `illuminate/support` and `illuminate/view`
+- **orchestra/testbench**: Added `^11.0` constraint for Laravel 13 compatibility
+
 ## [1.1.16] - 2026-03-06
 
 ### Fixed
