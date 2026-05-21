@@ -1,4 +1,5 @@
 import type { OutputData, EditorConfig } from '@editorjs/editorjs';
+import { patchEditorNotifier } from '../notifier-bridge';
 import '../../types';
 
 // Type for Editor.js instance
@@ -146,11 +147,13 @@ if (typeof window !== 'undefined') {
             method: 'POST',
             headers: {
               'X-CSRF-TOKEN': csrfToken || '',
+              'X-Requested-With': 'XMLHttpRequest',
               'Accept': 'application/json',
               // Don't set Content-Type, let browser set it with boundary for FormData
               ...headers,
             },
             body: formData,
+            credentials: 'same-origin',
             signal: controller.signal,
             cache: 'no-store', // Prevent caching
           });
@@ -231,29 +234,61 @@ if (typeof window !== 'undefined') {
           return editor;
         },
 
-        normalize(v: unknown): OutputData {
-          if (!v) {
-            return {
-              time: Date.now(),
-              blocks: [],
-              version: '2.28.0',
-            };
+        sanitizeImageBlocks(blocks: unknown[]): unknown[] {
+          if (!Array.isArray(blocks)) {
+            return [];
           }
+
+          return blocks.filter((block) => {
+            if (!block || typeof block !== 'object') {
+              return false;
+            }
+
+            const typed = block as { type?: string; data?: Record<string, unknown> };
+
+            if (typed.type !== 'image') {
+              return true;
+            }
+
+            const file = typed.data?.file;
+
+            if (file && typeof file === 'object' && file !== null) {
+              const url = (file as { url?: unknown }).url;
+              return typeof url === 'string' && url.trim() !== '';
+            }
+
+            const legacyUrl = typed.data?.url;
+            return typeof legacyUrl === 'string' && legacyUrl.trim() !== '';
+          });
+        },
+
+        normalize(v: unknown): OutputData {
+          const empty = this.getEmptyData();
+
+          if (!v) {
+            return empty;
+          }
+
+          let candidate: unknown = v;
 
           if (typeof v === 'string') {
             try {
-              const parsed = JSON.parse(v);
-              return this.isValidOutputData(parsed) ? parsed : this.getEmptyData();
+              candidate = JSON.parse(v);
             } catch {
-              return this.getEmptyData();
+              return empty;
             }
           }
 
-          if (typeof v === 'object' && v !== null) {
-            return this.isValidOutputData(v) ? (v as OutputData) : this.getEmptyData();
+          if (!this.isValidOutputData(candidate)) {
+            return empty;
           }
 
-          return this.getEmptyData();
+          const data = candidate as OutputData;
+
+          return {
+            ...data,
+            blocks: this.sanitizeImageBlocks(data.blocks) as OutputData['blocks'],
+          };
         },
 
         getEmptyData(): OutputData {
@@ -508,6 +543,8 @@ if (typeof window !== 'undefined') {
             });
 
             await editor.isReady;
+
+            patchEditorNotifier(editor);
 
             // Sync incoming changes (Livewire -> editor)
             (this as unknown as AlpineThis).$watch('state', async (next: unknown) => {

@@ -14,7 +14,7 @@
 
     $rawLabel = $label ?? (filled($slot->__toString()) ? $slot->__toString() : $value);
 
-    $displayLabel = is_string($rawLabel) ? html_entity_decode($rawLabel, ENT_QUOTES, 'UTF-8') : $rawLabel;
+    $displayLabel = is_string($rawLabel) ? $rawLabel : (string) $rawLabel;
     $slotContent = filled($slot->__toString()) ? $slot->__toString() : $displayLabel;
 @endphp
 
@@ -56,5 +56,5 @@
         <span class="w-5"></span>
     @endif
 
-    <span class="text-start text-fg truncate min-w-0">{!! $displayLabel !!}</span>
+    <span class="text-start text-fg truncate min-w-0">{{ $displayLabel }}</span>
 </li>

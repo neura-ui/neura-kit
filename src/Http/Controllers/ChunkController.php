@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Neura\Kit\Services\Upload\ChunkAssemblerService;
 use Neura\Kit\Services\Upload\FileNameSanitizerService;
+use Neura\Kit\Support\Security\UploadMimeValidator;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -20,6 +21,7 @@ class ChunkController extends Controller
     public function __construct(
         private readonly ChunkAssemblerService $assembler,
         private readonly FileNameSanitizerService $sanitizer,
+        private readonly UploadMimeValidator $mimeValidator,
         private readonly LoggerInterface $logger
     ) {}
 
@@ -30,7 +32,9 @@ class ChunkController extends Controller
     {
         try {
             $validated = $this->validateRequest($request);
-            
+
+            $this->mimeValidator->assertAllowed($validated['chunk']);
+
             // Validate file size
             $this->validateFileSize($validated['fileSize']);
             
@@ -149,6 +153,9 @@ class ChunkController extends Controller
                 $totalChunks,
                 $uuid
             );
+
+            $assembledPath = Storage::disk($tmpDisk)->path($result['path']);
+            $this->mimeValidator->assertAllowed($assembledPath);
 
             return [
                 'success' => true,

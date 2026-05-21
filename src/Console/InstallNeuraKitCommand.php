@@ -3,7 +3,6 @@
 namespace Neura\Kit\Console;
 
 use Illuminate\Console\Command;
-use Neura\Kit\Services\License\LicenseService;
 
 class InstallNeuraKitCommand extends Command
 {
@@ -11,14 +10,8 @@ class InstallNeuraKitCommand extends Command
 
     protected $description = 'Install Neura Kit assets automatically in Vite configuration';
 
-    public function handle(LicenseService $licenseService): int
+    public function handle(): int
     {
-        if (! $licenseService->isActivated()) {
-            $this->error('Neura Kit is not activated. Please run: php artisan neura-kit:activate');
-
-            return self::FAILURE;
-        }
-
         $viteConfigPath = base_path('vite.config.js');
 
         if (! file_exists($viteConfigPath)) {

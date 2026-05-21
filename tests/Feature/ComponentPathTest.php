@@ -10,7 +10,7 @@ class ComponentPathTest extends TestCase
 {
     protected function tearDown(): void
     {
-        $publishedPath = resource_path('views/atoms');
+        $publishedPath = resource_path('views/neura');
 
         if (File::exists($publishedPath)) {
             File::deleteDirectory($publishedPath);
@@ -21,15 +21,15 @@ class ComponentPathTest extends TestCase
 
     public function test_components_work_with_package_views()
     {
-        $html = Blade::render('<x-atoms.button>Test</x-atoms.button>');
+        $html = Blade::render('<x-neura::button>Test</x-neura::button>');
 
         $this->assertStringContainsString('Test', $html);
     }
 
     public function test_components_work_with_published_views()
     {
-        $packagePath = realpath(__DIR__.'/../../resources/views/atoms');
-        $publishedPath = resource_path('views/atoms');
+        $packagePath = realpath(__DIR__.'/../../resources/views/neura');
+        $publishedPath = resource_path('views/neura');
 
         if ($packagePath && ! File::exists($publishedPath)) {
             File::makeDirectory($publishedPath, 0755, true);
@@ -38,7 +38,7 @@ class ComponentPathTest extends TestCase
 
         $this->refreshApplication();
 
-        $html = Blade::render('<x-atoms.button>Published Test</x-atoms.button>');
+        $html = Blade::render('<x-neura::button>Published Test</x-neura::button>');
 
         $this->assertStringContainsString('Published Test', $html);
     }
@@ -53,12 +53,12 @@ class ComponentPathTest extends TestCase
         );
 
         $this->assertTrue(
-            is_dir($packageViewsPath.'/atoms'),
-            'Atoms directory should exist'
+            is_dir($packageViewsPath.'/neura'),
+            'Neura components directory should exist'
         );
 
         $this->assertTrue(
-            is_file($packageViewsPath.'/atoms/button/index.blade.php'),
+            is_file($packageViewsPath.'/neura/button/index.blade.php'),
             'Button component should exist'
         );
     }
@@ -87,7 +87,7 @@ class ComponentPathTest extends TestCase
 
             try {
                 $data = $component === 'input' ? ['errors' => new \Illuminate\Support\ViewErrorBag] : [];
-                $html = Blade::render("<x-atoms.{$component} />", $data);
+                $html = Blade::render("<x-neura::{$component} />", $data);
                 $this->assertNotEmpty($html, "Component {$component} should render");
             } catch (\Exception $e) {
                 if ($requiresHeroicons && str_contains($e->getMessage(), 'heroicons')) {

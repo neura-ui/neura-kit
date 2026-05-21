@@ -1,10 +1,10 @@
 <?php
 
-namespace Tests\Unit\Services;
+namespace Neura\Kit\Tests\Unit\Services;
 
 use Illuminate\Support\Facades\Session;
 use Neura\Kit\Services\ToastService;
-use Orchestra\Testbench\TestCase;
+use Neura\Kit\Tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
 
 class ToastServiceTest extends TestCase

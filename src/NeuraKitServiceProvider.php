@@ -2,61 +2,18 @@
 
 namespace Neura\Kit;
 
-use Exception;
 use Illuminate\Contracts\Foundation\CachesRoutes;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
-use InvalidArgumentException;
 use Livewire\Livewire;
-use Neura\Kit\Contracts\LicenseVerifier;
-use Neura\Kit\Services\License\ActivationClient;
-use Neura\Kit\Services\License\DomainDetector;
-use Neura\Kit\Services\License\EnvironmentDetector;
-use Neura\Kit\Services\License\LicenseCache;
-use Neura\Kit\Services\License\LicenseService;
-use Neura\Kit\Services\License\LicenseValidator;
 
 class NeuraKitServiceProvider extends ServiceProvider
 {
-    private ?bool $licenseActivatedCache = null;
-
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/neura-kit.php', 'neura-kit');
 
-        $this->app->singleton(ActivationClient::class, function () {
-            $serverUrl = config('neura-kit.license_api_url') ?: getenv('NEURA_KIT_LICENSE_API_URL');
-
-            if (empty($serverUrl)) {
-                throw new InvalidArgumentException(
-                    'LICENSE_SERVER_URL is not configured. ' .
-                    'Add LICENSE_SERVER_URL=https://your-license-server.com to your .env'
-                );
-            }
-
-            return new ActivationClient($serverUrl);
-        });
-
-        $this->app->singleton(LicenseCache::class);
-        $this->app->singleton(LicenseValidator::class);
-        $this->app->singleton(LicenseVerifier::class, LicenseValidator::class);
-
-        $this->app->singleton(EnvironmentDetector::class);
-        $this->app->singleton(DomainDetector::class);
-
-        $this->app->singleton(LicenseService::class, function ($app) {
-            return new LicenseService(
-                client: $app->make(ActivationClient::class),
-                cache: $app->make(LicenseCache::class),
-                environmentDetector: $app->make(EnvironmentDetector::class),
-                domainDetector: $app->make(DomainDetector::class),
-            );
-        });
-
-        $this->app->alias(LicenseService::class, 'neura.license');
-
-        // Register compiler as singleton to ensure it's only created once
         $this->app->singleton('neura.compiler', function ($app) {
             return new NeuraTagCompiler(
                 $app['blade.compiler']->getClassComponentAliases(),
@@ -68,35 +25,6 @@ class NeuraKitServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        if ($this->isFirstPartyPlatform()) {
-            $this->bootFullFeatures();
-            return;
-        }
-
-        $this->registerActivateCommand();
-
-        if (!$this->isLicenseActivated()) {
-            $this->configureUnlicensedState();
-            return;
-        }
-
-        $this->bootFullFeatures();
-    }
-
-    protected function isFirstPartyPlatform(): bool
-    {
-        $basePackagePath = base_path('neura-kit');
-        $vendorPackagePath = base_path('vendor/neura-ui/neura-kit');
-
-        if (file_exists($basePackagePath) && is_link($vendorPackagePath)) {
-            return true;
-        }
-
-        return false;
-    }
-
-    protected function bootFullFeatures(): void
-    {
         $this->configurePublishing();
         $this->registerHelpers();
         $this->bootComponentPath();
@@ -104,11 +32,6 @@ class NeuraKitServiceProvider extends ServiceProvider
         $this->configureComponents();
         $this->registerRoutes();
         $this->loadTranslations();
-
-        // Clear view cache in development when license status changes
-        if ($this->app->environment('local') && config('app.debug')) {
-            $this->clearViewCacheIfNeeded();
-        }
     }
 
     protected function loadTranslations(): void
@@ -118,12 +41,11 @@ class NeuraKitServiceProvider extends ServiceProvider
 
     protected function configurePublishing(): void
     {
-        if (!$this->app->runningInConsole()) {
+        if (! $this->app->runningInConsole()) {
             return;
         }
 
         $this->commands([
-            Console\LicenseStatusCommand::class,
             Console\InstallNeuraKitCommand::class,
             Console\InstallDependenciesCommand::class,
             Console\MakeModalCommand::class,
@@ -151,7 +73,7 @@ class NeuraKitServiceProvider extends ServiceProvider
 
     protected function registerHelpers(): void
     {
-        if (!function_exists('neura_trans')) {
+        if (! function_exists('neura_trans')) {
             require_once __DIR__.'/Helpers.php';
         }
     }
@@ -179,12 +101,9 @@ class NeuraKitServiceProvider extends ServiceProvider
 
     protected function bootTagCompiler(): void
     {
-        // Get the compiler instance
         $compiler = $this->app->make('neura.compiler');
 
-        // Register the precompiler with higher priority
         app('blade.compiler')->precompiler(function ($string) use ($compiler) {
-            // Only process if string contains neura tags
             if (stripos($string, '<neura::') === false) {
                 return $string;
             }
@@ -216,94 +135,43 @@ class NeuraKitServiceProvider extends ServiceProvider
 
         Route::get('/neura-kit/lang/{locale}.json', Http\Controllers\TranslationsController::class)
             ->name('neura-kit.translations');
-        
-        Route::middleware(['web'])->prefix('neura-kit')->group(function () {
+
+        $middleware = $this->routeMiddleware();
+
+        Route::middleware($middleware)->prefix('neura-kit')->group(function () {
             Route::post('/upload/chunks', [Http\Controllers\ChunkController::class, 'upload'])
                 ->name('neura-kit.upload.chunks');
-            
+
             Route::get('/upload/file/{uuid}', [Http\Controllers\ChunkController::class, 'getFile'])
                 ->name('neura-kit.upload.file');
-            
+
             Route::post('/editor/upload-image', [Http\Controllers\EditorImageController::class, 'uploadImage'])
                 ->name('neura-kit.editor.upload-image');
-            
+
             Route::post('/editor/fetch-url', [Http\Controllers\EditorImageController::class, 'fetchUrl'])
                 ->name('neura-kit.editor.fetch-url');
         });
     }
 
-    protected function registerActivateCommand(): void
+    /**
+     * @return list<string>
+     */
+    protected function routeMiddleware(): array
     {
-        if (!$this->app->runningInConsole()) {
-            return;
+        $configured = config('neura-kit.routes.middleware', ['web']);
+
+        if (is_string($configured)) {
+            $configured = array_filter(array_map('trim', explode(',', $configured)));
         }
 
-        $this->commands([
-            Console\ActivateCommand::class,
-        ]);
-    }
+        $middleware = array_values(array_filter((array) $configured));
 
-    protected function isLicenseActivated(): bool
-    {
-        if ($this->licenseActivatedCache !== null) {
-            return $this->licenseActivatedCache;
+        $throttle = config('neura-kit.routes.throttle');
+
+        if (filled($throttle) && ! in_array('throttle:'.$throttle, $middleware, true)) {
+            $middleware[] = 'throttle:'.$throttle;
         }
 
-        try {
-            $licenseService = $this->app->make(LicenseService::class);
-
-            // Use the new shouldWork() method that handles license vs token logic
-            $this->licenseActivatedCache = $licenseService->shouldWork();
-
-            if (!$this->licenseActivatedCache) {
-                if ($licenseService->isLicenseExpired()) {
-                    \Log::error('Neura Kit license has expired');
-                } elseif (!$licenseService->isActivated()) {
-                    \Log::warning('Neura Kit is not activated');
-                }
-            }
-
-            return $this->licenseActivatedCache;
-
-        } catch (Exception $e) {
-            \Log::error('License check failed: ' . $e->getMessage());
-            $this->licenseActivatedCache = false;
-            return false;
-        }
-    }
-
-    protected function configureUnlicensedState(): void
-    {
-        Blade::directive('neuraKit', function () {
-            return '';
-        });
-
-        if ($this->app->environment('local') && config('app.debug')) {
-            \Log::warning('Neura Kit is running in unlicensed state. Run: php artisan neura-kit:activate');
-        }
-    }
-
-    protected function clearViewCacheIfNeeded(): void
-    {
-        $cacheKey = 'neura-kit.last-license-state';
-        $currentState = $this->licenseActivatedCache ? 'active' : 'inactive';
-        $lastState = cache($cacheKey);
-
-        if ($lastState !== $currentState) {
-            try {
-                $viewPath = storage_path('framework/views');
-                if (is_dir($viewPath)) {
-                    $files = glob($viewPath . '/*');
-                    foreach ($files as $file) {
-                        if (is_file($file)) {
-                            @unlink($file);
-                        }
-                    }
-                }
-
-                cache([$cacheKey => $currentState], now()->addDay());
-            } catch (Exception $e) {
-            }
-        }
+        return $middleware ?: ['web'];
     }
 }

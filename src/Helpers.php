@@ -1,6 +1,5 @@
 <?php
 
-use Neura\Kit\Services\License\LicenseService;
 use Neura\Kit\Support\PackResolver;
 
 if (! function_exists('neura_trans')) {
@@ -135,20 +134,3 @@ if (! function_exists('neura_config')) {
     }
 }
 
-if (! function_exists('neura_license')) {
-    function neura_license(): LicenseService
-    {
-        return app(LicenseService::class);
-    }
-}
-
-if (! function_exists('neura_is_activated')) {
-    function neura_is_activated(): bool
-    {
-        try {
-            return neura_license()->isActivated();
-        } catch (\Exception $e) {
-            return false;
-        }
-    }
-}

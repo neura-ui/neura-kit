@@ -22,14 +22,14 @@ class NeuraKitServiceProviderTest extends TestCase
     public function test_components_are_registered()
     {
         $this->assertTrue(
-            View::exists('atoms.button.index'),
+            View::exists('neura::button.index'),
             'Button component should be registered'
         );
     }
 
     public function test_button_component_can_be_rendered()
     {
-        $html = Blade::render('<x-atoms.button>Test Button</x-atoms.button>');
+        $html = Blade::render('<x-neura::button>Test Button</x-neura::button>');
 
         $this->assertStringContainsString('Test Button', $html);
         $this->assertStringContainsString('data-slot="button"', $html);
@@ -37,7 +37,7 @@ class NeuraKitServiceProviderTest extends TestCase
 
     public function test_button_component_with_variant()
     {
-        $html = Blade::render('<x-atoms.button variant="primary">Primary</x-atoms.button>');
+        $html = Blade::render('<x-neura::button variant="primary">Primary</x-neura::button>');
 
         $this->assertStringContainsString('Primary', $html);
     }
@@ -51,7 +51,7 @@ class NeuraKitServiceProviderTest extends TestCase
         }
 
         try {
-            $html = Blade::render('<x-atoms.icon name="check" />');
+            $html = Blade::render('<x-neura::icon name="check" />');
             $this->assertNotEmpty($html);
         } catch (\Exception $e) {
             if (str_contains($e->getMessage(), 'heroicons')) {
@@ -64,14 +64,14 @@ class NeuraKitServiceProviderTest extends TestCase
 
     public function test_input_component_can_be_rendered()
     {
-        $html = Blade::render('<x-atoms.input name="test" />');
+        $html = Blade::render('<x-neura::input name="test" />');
 
         $this->assertStringContainsString('name="test"', $html);
     }
 
     public function test_nested_components_work()
     {
-        $html = Blade::render('<x-atoms.button.abstract>Test</x-atoms.button.abstract>');
+        $html = Blade::render('<x-neura::button.abstract>Test</x-neura::button.abstract>');
 
         $this->assertStringContainsString('Test', $html);
     }

@@ -4,14 +4,14 @@ namespace Neura\Kit\Tests\Integration;
 
 use Illuminate\Support\Facades\Blade;
 use Neura\Kit\Support\Table\Column;
-use Neura\Kit\Support\Toasts\Toast;
+use Neura\Kit\Services\ToastService;
 use Neura\Kit\Tests\TestCase;
 
 class FullIntegrationTest extends TestCase
 {
     public function test_blade_components_work()
     {
-        $html = Blade::render('<x-atoms.button>Test</x-atoms.button>');
+        $html = Blade::render('<x-neura::button>Test</x-neura::button>');
 
         $this->assertStringContainsString('Test', $html);
         $this->assertStringContainsString('button', $html);
@@ -35,41 +35,43 @@ class FullIntegrationTest extends TestCase
     {
         $textColumn = Column::text('title', 'Title');
         $this->assertEquals('title', $textColumn->key);
-        $this->assertEquals('atoms.table.columns.column', $textColumn->component);
+        $this->assertEquals('neura::table.columns.column', $textColumn->component);
 
         $dateColumn = Column::date('created_at', 'Created At');
         $this->assertEquals('created_at', $dateColumn->key);
-        $this->assertEquals('atoms.table.columns.date', $dateColumn->component);
+        $this->assertEquals('neura::table.columns.date', $dateColumn->component);
 
         $booleanColumn = Column::boolean('active', 'Active');
         $this->assertEquals('active', $booleanColumn->key);
-        $this->assertEquals('atoms.table.columns.boolean', $booleanColumn->component);
+        $this->assertEquals('neura::table.columns.boolean', $booleanColumn->component);
     }
 
     public function test_toast_helper_works()
     {
-        Toast::success('Test success');
-        Toast::error('Test error');
-        Toast::warning('Test warning');
-        Toast::info('Test info');
+        $toast = app(ToastService::class);
+
+        $toast->success('Test success');
+        $toast->error('Test error');
+        $toast->warning('Test warning');
+        $toast->info('Test info');
 
         $this->assertTrue(
-            method_exists(Toast::class, 'success'),
-            'Toast::success should exist'
+            method_exists(ToastService::class, 'success'),
+            'ToastService::success should exist'
         );
     }
 
     public function test_modal_manager_view_renders()
     {
-        $html = Blade::render('<x-atoms.modal-manager :components="[]" />');
+        $html = Blade::render('<x-neura::modal-manager :components="[]" />');
 
         $this->assertStringContainsString('modalManager', $html);
-        $this->assertStringContainsString('x-data="modalManager"', $html);
+        $this->assertStringContainsString('x-data="modalManager()"', $html);
     }
 
     public function test_nested_components_work()
     {
-        $html = Blade::render('<x-atoms.button.abstract>Nested</x-atoms.button.abstract>');
+        $html = Blade::render('<x-neura::button.abstract>Nested</x-neura::button.abstract>');
 
         $this->assertStringContainsString('Nested', $html);
     }
@@ -77,7 +79,7 @@ class FullIntegrationTest extends TestCase
     public function test_component_with_attributes()
     {
         $html = Blade::render(
-            '<x-atoms.button variant="primary" size="lg" class="custom">Click</x-atoms.button>'
+            '<x-neura::button variant="primary" size="lg" class="custom">Click</x-neura::button>'
         );
 
         $this->assertStringContainsString('Click', $html);
@@ -86,7 +88,7 @@ class FullIntegrationTest extends TestCase
 
     public function test_input_component_works()
     {
-        $html = Blade::render('<x-atoms.input name="email" type="email" />');
+        $html = Blade::render('<x-neura::input name="email" type="email" />');
 
         $this->assertStringContainsString('name="email"', $html);
         $this->assertStringContainsString('type="email"', $html);
@@ -94,7 +96,7 @@ class FullIntegrationTest extends TestCase
 
     public function test_textarea_component_works()
     {
-        $html = Blade::render('<x-atoms.textarea name="message" />');
+        $html = Blade::render('<x-neura::textarea name="message" />');
 
         $this->assertNotEmpty($html);
         $this->assertStringContainsString('textarea', $html);

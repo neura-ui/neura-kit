@@ -22,8 +22,8 @@ class ClassLoadingTest extends TestCase
         );
 
         $this->assertTrue(
-            class_exists(\Neura\Kit\Support\Toasts\Toast::class),
-            'Toast class should be loadable'
+            class_exists(\Neura\Kit\Services\ToastService::class),
+            'ToastService class should be loadable'
         );
 
         $this->assertTrue(
@@ -78,26 +78,26 @@ class ClassLoadingTest extends TestCase
         $this->assertEquals('Test', $column->label);
     }
 
-    public function test_toast_class_has_static_methods()
+    public function test_toast_service_has_helper_methods()
     {
         $this->assertTrue(
-            method_exists(\Neura\Kit\Support\Toasts\Toast::class, 'success'),
-            'Toast should have success method'
+            method_exists(\Neura\Kit\Services\ToastService::class, 'success'),
+            'ToastService should have success method'
         );
 
         $this->assertTrue(
-            method_exists(\Neura\Kit\Support\Toasts\Toast::class, 'error'),
-            'Toast should have error method'
+            method_exists(\Neura\Kit\Services\ToastService::class, 'error'),
+            'ToastService should have error method'
         );
 
         $this->assertTrue(
-            method_exists(\Neura\Kit\Support\Toasts\Toast::class, 'warning'),
-            'Toast should have warning method'
+            method_exists(\Neura\Kit\Services\ToastService::class, 'warning'),
+            'ToastService should have warning method'
         );
 
         $this->assertTrue(
-            method_exists(\Neura\Kit\Support\Toasts\Toast::class, 'info'),
-            'Toast should have info method'
+            method_exists(\Neura\Kit\Services\ToastService::class, 'info'),
+            'ToastService should have info method'
         );
     }
 }

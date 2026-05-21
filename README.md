@@ -1,6 +1,6 @@
-# NeuraKit
+# Neura Kit
 
-A beautiful, modern UI component library for Laravel + Livewire + Alpine.js applications.
+Open-source UI component library for Laravel, Livewire, and Alpine.js.
 
 ## Requirements
 
@@ -13,7 +13,7 @@ A beautiful, modern UI component library for Laravel + Livewire + Alpine.js appl
 ## Installation
 
 ```bash
-composer require neura/neura-kit
+composer require neura-ui/neura-kit
 ```
 
 ### Vite Configuration
@@ -65,14 +65,14 @@ Add `@neuraKit` to your layout before `</body>`:
 ### Usage
 
 ```blade
-<x-atoms.button>Click me</x-atoms.button>
+<neura::button>Click me</neura::button>
 
-<x-atoms.input label="Email" type="email" wire:model="email" />
+<neura::input type="email" wire:model="email" placeholder="Email" />
 
-<x-atoms.card>
-    <x-atoms.heading>Title</x-atoms.heading>
-    <x-atoms.text>Content here</x-atoms.text>
-</x-atoms.card>
+<neura::card>
+    <neura::heading>Title</neura::heading>
+    <neura::text>Content here</neura::text>
+</neura::card>
 ```
 
 ## Modals
@@ -121,7 +121,7 @@ class UserEdit extends ModalComponent
 ```php
 use Neura\Kit\Concerns\InteractsWithNeuraKit;
 
-class Dashboard extends Component
+class UsersIndex extends Component
 {
     use InteractsWithNeuraKit;
     
@@ -245,7 +245,7 @@ php artisan vendor:publish --tag=neura-kit-config
 ```php
 // config/neura-kit.php
 return [
-    'component_prefix' => 'atoms',
+    'component_prefix' => 'neura',
 
     'modal' => [
         'component_defaults' => [

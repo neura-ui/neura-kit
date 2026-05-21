@@ -2,8 +2,10 @@
 
 namespace Neura\Kit\Components\Atoms\Editor\Variants;
 
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
+use Neura\Kit\Support\Security\SafeUrlValidator;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 
@@ -96,26 +98,45 @@ class EditorJS extends Component
 
     public function loadImageFromUrl(string $url): string
     {
-        $name = basename(parse_url($url, PHP_URL_PATH));
-
-        if (empty($name) || !preg_match('/\.(jpg|jpeg|png|gif|webp)$/i', $name)) {
-            $name = 'image_'.time().'.jpg';
+        if (! config('neura-kit.editor.allow_remote_image_download', false)) {
+            return $url;
         }
 
         try {
-            $content = file_get_contents($url);
+            app(SafeUrlValidator::class)->assertFetchable($url);
 
-            if ($content === false) {
+            $maxBytes = (int) config('neura-kit.editor.remote_image_max_bytes', 10_485_760);
+
+            $response = Http::timeout(15)
+                ->withOptions(['allow_redirects' => ['max' => 3]])
+                ->get($url);
+
+            if (! $response->successful()) {
                 return $url;
+            }
+
+            $contentType = strtolower((string) $response->header('Content-Type'));
+            if ($contentType !== '' && ! str_starts_with($contentType, 'image/')) {
+                return $url;
+            }
+
+            $body = $response->body();
+            if (strlen($body) === 0 || strlen($body) > $maxBytes) {
+                return $url;
+            }
+
+            $name = basename((string) parse_url($url, PHP_URL_PATH));
+            if ($name === '' || ! preg_match('/\.(jpg|jpeg|png|gif|webp)$/i', $name)) {
+                $name = 'image_'.time().'.jpg';
             }
 
             $downloadDisk = $this->downloadDisk ?? 'public';
             $imagesPath = $this->imagesPath ?? 'editor-images';
 
-            Storage::disk($downloadDisk)->put($imagesPath.'/'.$name, $content);
+            Storage::disk($downloadDisk)->put($imagesPath.'/'.$name, $body);
 
             return Storage::disk($downloadDisk)->url($imagesPath.'/'.$name);
-        } catch (\Exception $e) {
+        } catch (\Throwable) {
             return $url;
         }
     }

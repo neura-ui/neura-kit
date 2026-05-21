@@ -1,20 +1,14 @@
 <?php
 
-namespace Tests\Unit\Console;
+namespace Neura\Kit\Tests\Unit\Console;
 
 use Illuminate\Filesystem\Filesystem;
 use Mockery;
-use Neura\Kit\NeuraKitServiceProvider;
-use Orchestra\Testbench\TestCase;
+use Neura\Kit\Tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
 
 class MakeModalCommandTest extends TestCase
 {
-    protected function getPackageProviders($app)
-    {
-        return [NeuraKitServiceProvider::class];
-    }
-
     protected function tearDown(): void
     {
         Mockery::close();
@@ -46,7 +40,7 @@ class MakeModalCommandTest extends TestCase
         $files->shouldReceive('put')
             ->with(
                 Mockery::on(fn ($path) => str_contains($path, 'test-modal.blade.php')),
-                Mockery::on(fn ($content) => str_contains($content, '<x-atoms.modal.header>'))
+                Mockery::on(fn ($content) => str_contains($content, '<neura::modal.header'))
             )
             ->once();
 

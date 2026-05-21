@@ -16,21 +16,21 @@ class LivewireComponentsTest extends TestCase
             ],
         ];
 
-        $html = Blade::render('<x-atoms.modal-manager :components="$components" />', [
+        $html = Blade::render('<x-neura::modal-manager :components="$components" />', [
             'components' => $components,
         ]);
 
         $this->assertStringContainsString('modalManager', $html);
-        $this->assertStringContainsString('x-data="modalManager"', $html);
+        $this->assertStringContainsString('x-data="modalManager()"', $html);
         $this->assertStringContainsString('test-modal', $html);
     }
 
     public function test_modal_manager_with_empty_components()
     {
-        $html = Blade::render('<x-atoms.modal-manager :components="[]" />');
+        $html = Blade::render('<x-neura::modal-manager :components="[]" />');
 
         $this->assertStringContainsString('modalManager', $html);
-        $this->assertStringContainsString('x-data="modalManager"', $html);
+        $this->assertStringContainsString('x-data="modalManager()"', $html);
     }
 
     public function test_table_livewire_column_with_component()
@@ -41,7 +41,7 @@ class LivewireComponentsTest extends TestCase
         ];
 
         $html = Blade::render(
-            '<x-atoms.table.columns.livewire :value="\'test-value\'" :row="null" :column="null" :extraAttributes="$extraAttributes" />',
+            '<x-neura::table.columns.livewire :value="\'test-value\'" :row="null" :column="null" :extraAttributes="$extraAttributes" />',
             [
                 'extraAttributes' => $extraAttributes,
             ]
@@ -53,7 +53,7 @@ class LivewireComponentsTest extends TestCase
     public function test_table_livewire_column_without_component()
     {
         $html = Blade::render(
-            '<x-atoms.table.columns.livewire :value="\'test-value\'" :row="null" :column="null" :extraAttributes="[]" />'
+            '<x-neura::table.columns.livewire :value="\'test-value\'" :row="null" :column="null" :extraAttributes="[]" />'
         );
 
         $this->assertIsString($html);
@@ -68,7 +68,7 @@ class LivewireComponentsTest extends TestCase
             ],
         ];
 
-        $html = Blade::render('<x-atoms.modal-manager :components="$components" />', [
+        $html = Blade::render('<x-neura::modal-manager :components="$components" />', [
             'components' => $components,
         ]);
 
@@ -84,7 +84,7 @@ class LivewireComponentsTest extends TestCase
             ],
         ];
 
-        $html = Blade::render('<x-atoms.modal-manager :components="$components" />', [
+        $html = Blade::render('<x-neura::modal-manager :components="$components" />', [
             'components' => $components,
         ]);
 

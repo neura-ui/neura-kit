@@ -431,7 +431,7 @@
                         @if(empty($suffix))
                             {{ neura_trans('tags') }}
                         @else
-                            {!! $suffix !!}
+                            {{ $suffix }}
                         @endif
                     </span>
                 @endif

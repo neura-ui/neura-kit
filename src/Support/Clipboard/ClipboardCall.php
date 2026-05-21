@@ -6,6 +6,7 @@ namespace Neura\Kit\Support\Clipboard;
 
 use JsonException;
 use Livewire\Component;
+use Neura\Kit\Support\Security\LivewireMethodName;
 
 final class ClipboardCall
 {
@@ -48,6 +49,8 @@ final class ClipboardCall
             return;
         }
 
+        LivewireMethodName::assertValid($method);
+
         $encoded = json_encode($textToCopy, JSON_THROW_ON_ERROR);
         $paramsJson = empty($params) ? '' : ', ' . json_encode($params, JSON_THROW_ON_ERROR);
 
@@ -71,6 +74,14 @@ final class ClipboardCall
 
         if ($textToCopy === null || $textToCopy === '') {
             return;
+        }
+
+        if ($successMethod !== null) {
+            LivewireMethodName::assertValid($successMethod);
+        }
+
+        if ($errorMethod !== null) {
+            LivewireMethodName::assertValid($errorMethod);
         }
 
         $encoded = json_encode($textToCopy, JSON_THROW_ON_ERROR);

@@ -6,6 +6,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [2.0.0] - 2026-05-21
+
+**Open source release.** Neura Kit is now distributed under the [MIT license](LICENSE). No license key, activation command, or vendor dashboard is required — install via Composer and use all components out of the box.
+
+### Removed
+
+- **License system**: Removed activation flow, license API client, `neura-kit:activate`, `neura-kit:license:status`, and related helpers (`neura_license`, `neura_is_activated`)
+- **Dependencies**: Removed unused `lorisleiva/laravel-actions` requirement
+
+### Changed
+
+- **Distribution**: Package is open source (MIT); `composer.json` license aligned with `LICENSE`
+- **Boot**: Neura Kit always boots fully without license checks or first-party bypass
+- **Install**: `neura-kit:install` and `neura-kit:install-dependencies` no longer require or mention license activation
+
+### Added
+
+- `Neura\Kit\Support\Security\SafeUrlValidator`, `UploadMimeValidator`, `LivewireMethodName`
+- Editor.js toast bridge (`notifier-bridge.ts`) routing notifications to `NeuraKitToast`
+
+### Fixed
+
+- **Editor.js**: Upload/error notifications now use Neura Kit toasts instead of native Editor.js notifier styling
+- **Editor.js**: Fixed 401 on image upload when used on public pages (docs) — route middleware defaults to `web` instead of `web,auth`; fetch sends session cookies (`credentials: 'same-origin'`)
+- **Editor.js**: Invalid image blocks from failed uploads are stripped on load to prevent "Block image skipped" errors
+
+### Security
+
+- **Routes**: Upload and editor utility routes use configurable middleware + throttle (`NEURA_KIT_ROUTE_MIDDLEWARE`, default `web`; set `web,auth` when routes must require authentication)
+- **Editor.js**: Remote image download disabled by default (`NEURA_KIT_EDITOR_ALLOW_REMOTE_IMAGES`); SSRF protections via `SafeUrlValidator` and HTTP client when enabled
+- **Chunk uploads**: Optional server-side MIME allowlist (`NEURA_KIT_UPLOAD_ALLOWED_MIMES`) validated per chunk and on assembled files
+- **XSS**: Select option labels and tags-input suffix now escaped; Spotlight AI markdown output sanitized (HTML escape + safe link URLs)
+- **Clipboard**: Livewire callback method names validated before JS injection
+- **Image storage**: Filename extension derived from detected MIME instead of client extension only
+
 ## [1.1.17] - 2026-04-07
 
 ### Added

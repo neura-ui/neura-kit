@@ -54,16 +54,15 @@ class ChunkedTemporaryFileTest extends TestCase
     }
 
     /** @test */
-    public function it_returns_null_when_metadata_is_missing()
+    public function it_creates_temporary_file_when_only_raw_chunk_exists()
     {
         $uuid = \Illuminate\Support\Str::uuid()->toString();
 
-        // Crée le fichier mais pas les métadonnées
         Storage::disk('local')->put("livewire-tmp/{$uuid}", 'file content');
 
         $file = ChunkedTemporaryFile::createFromChunkUpload($uuid);
 
-        $this->assertNull($file);
+        $this->assertInstanceOf(TemporaryUploadedFile::class, $file);
     }
 
     /** @test */

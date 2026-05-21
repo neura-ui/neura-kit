@@ -1,9 +1,9 @@
 <?php
 
-namespace Tests\Unit\Services;
+namespace Neura\Kit\Tests\Unit\Services;
 
 use Neura\Kit\Services\NeuraKitService;
-use Orchestra\Testbench\TestCase;
+use Neura\Kit\Tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
 
 class NeuraKitServiceTest extends TestCase

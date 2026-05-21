@@ -31,8 +31,10 @@ abstract class TestCase extends OrchestraTestCase
             resource_path('views'),
         ]);
 
-        // Set app key for encryption
         $app['config']->set('app.key', 'base64:'.base64_encode(random_bytes(32)));
+
+        $app['config']->set('neura-kit.routes.middleware', ['web']);
+        $app['config']->set('neura-kit.routes.throttle', null);
 
         view()->share('errors', new \Illuminate\Support\ViewErrorBag);
     }
@@ -41,7 +43,6 @@ abstract class TestCase extends OrchestraTestCase
     {
         parent::setUp();
 
-        // Force route loading for tests
         $this->loadRoutesFrom();
 
         if (class_exists(\BladeUI\Icons\Factory::class) && $this->app->bound(\BladeUI\Icons\Factory::class)) {
@@ -53,24 +54,24 @@ abstract class TestCase extends OrchestraTestCase
         }
     }
 
-    /**
-     * Force routes to be loaded in tests
-     */
     protected function loadRoutesFrom(): void
     {
-        // Simulate route registration from service provider
         \Illuminate\Support\Facades\Route::get('/neura-kit/lang/{locale}.json', \Neura\Kit\Http\Controllers\TranslationsController::class)
             ->name('neura-kit.translations');
 
-        \Illuminate\Support\Facades\Route::middleware(['web'])->prefix('neura-kit')->group(function () {
-            // Chunk upload routes
+        $middleware = config('neura-kit.routes.middleware', ['web']);
+        $throttle = config('neura-kit.routes.throttle');
+        if (filled($throttle)) {
+            $middleware[] = 'throttle:'.$throttle;
+        }
+
+        \Illuminate\Support\Facades\Route::middleware($middleware)->prefix('neura-kit')->group(function () {
             \Illuminate\Support\Facades\Route::post('/upload/chunks', [\Neura\Kit\Http\Controllers\ChunkController::class, 'upload'])
                 ->name('neura-kit.upload.chunks');
 
             \Illuminate\Support\Facades\Route::get('/upload/file/{uuid}', [\Neura\Kit\Http\Controllers\ChunkController::class, 'getFile'])
                 ->name('neura-kit.upload.file');
 
-            // Editor routes
             \Illuminate\Support\Facades\Route::post('/editor/upload-image', [\Neura\Kit\Http\Controllers\EditorImageController::class, 'uploadImage'])
                 ->name('neura-kit.editor.upload-image');
 

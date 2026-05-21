@@ -110,6 +110,123 @@ const iconMap: Record<string, string> = {
 };
 
 /* =========================================================================
+ | Markdown / XSS helpers
+ |========================================================================= */
+
+function escapeHtml(text: string): string {
+    return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function isSafeHref(href: string): boolean {
+    const value = href.trim();
+
+    if (!value || value.startsWith('//')) {
+        return false;
+    }
+
+    if (/^(javascript|data|vbscript|file):/i.test(value)) {
+        return false;
+    }
+
+    if (value.startsWith('/') || value.startsWith('#')) {
+        return !value.includes(':');
+    }
+
+    try {
+        const url = new URL(value);
+
+        return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch {
+        return false;
+    }
+}
+
+function formatAiResponseSafe(text: string): string {
+    if (!text) {
+        return '';
+    }
+
+    let formatted = text;
+
+    formatted = formatted.replace(
+        /```(\w*)\n([\s\S]*?)```/g,
+        (_match, lang: string, code: string) =>
+            `<pre class="not-prose bg-neutral-100 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 border border-neutral-200 dark:border-neutral-800 p-4 rounded-lg overflow-x-auto my-3 text-xs font-mono leading-relaxed shadow-sm"><code class="language-${escapeHtml(lang)}">${escapeHtml(code)}</code></pre>`
+    );
+
+    formatted = formatted.replace(
+        /`([^`]+)`/g,
+        (_match, code: string) => `<code class="not-prose">${escapeHtml(code)}</code>`
+    );
+
+    formatted = formatted.replace(
+        /\*\*([^*]+)\*\*/g,
+        (_match, value: string) => `<strong>${escapeHtml(value)}</strong>`
+    );
+
+    formatted = formatted.replace(
+        /\*([^*]+)\*/g,
+        (_match, value: string) => `<em>${escapeHtml(value)}</em>`
+    );
+
+    formatted = formatted.replace(
+        /\[([^\]]+)\]\(([^)]+)\)/g,
+        (_match, label: string, href: string) => {
+            if (!isSafeHref(href)) {
+                return escapeHtml(label);
+            }
+
+            return `<a href="${encodeURI(href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`;
+        }
+    );
+
+    formatted = formatted.replace(
+        /^### (.+)$/gm,
+        (_match, value: string) => `<h3 class="text-base font-semibold mt-3 mb-2">${escapeHtml(value)}</h3>`
+    );
+    formatted = formatted.replace(
+        /^## (.+)$/gm,
+        (_match, value: string) => `<h2 class="text-lg font-semibold mt-4 mb-2">${escapeHtml(value)}</h2>`
+    );
+    formatted = formatted.replace(
+        /^# (.+)$/gm,
+        (_match, value: string) => `<h1 class="text-xl font-bold mt-4 mb-3">${escapeHtml(value)}</h1>`
+    );
+
+    formatted = formatted.replace(
+        /^- (.+)$/gm,
+        (_match, value: string) => `<li class="ml-4">${escapeHtml(value)}</li>`
+    );
+    formatted = formatted.replace(
+        /(<li class="ml-4">.*<\/li>\n?)+/g,
+        (match) => `<ul class="list-disc list-outside my-2 space-y-1">${match}</ul>`
+    );
+
+    const parts = formatted.split(/\n\n+/);
+    formatted = parts
+        .map((part) => {
+            if (part.match(/^<(h[1-3]|ul|ol|pre|div)/)) {
+                return part;
+            }
+
+            const withBreaks = escapeHtml(part).replace(/\n/g, '<br>');
+
+            return `<p class="my-2 leading-relaxed">${withBreaks}</p>`;
+        })
+        .join('');
+
+    formatted = formatted.replace(/<p class="my-2 leading-relaxed"><\/p>/g, '');
+    formatted = formatted.replace(/<p class="my-2 leading-relaxed">\s*<\/p>/g, '');
+
+    return formatted;
+}
+
+/* =========================================================================
  | Mode Config
  |========================================================================= */
 
@@ -211,63 +328,7 @@ if (typeof window !== 'undefined') {
             },
 
             formatAiResponse(text: string): string {
-                if (!text) return '';
-                
-                let formatted = text;
-                
-                // Code blocks with syntax highlighting class
-                formatted = formatted.replace(
-                    /```(\w*)\n([\s\S]*?)```/g, 
-                    '<pre class="not-prose bg-neutral-100 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 border border-neutral-200 dark:border-neutral-800 p-4 rounded-lg overflow-x-auto my-3 text-xs font-mono leading-relaxed shadow-sm"><code class="language-$1">$2</code></pre>'
-                );
-                
-                // Inline code
-                formatted = formatted.replace(
-                    /`([^`]+)`/g, 
-                    '<code class="not-prose">$1</code>'
-                );
-                
-                // Bold text
-                formatted = formatted.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-                
-                // Italic text
-                formatted = formatted.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-                
-                // Links
-                formatted = formatted.replace(
-                    /\[([^\]]+)\]\(([^)]+)\)/g, 
-                    '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
-                );
-                
-                // Headings (must be before paragraph processing)
-                formatted = formatted.replace(/^### (.+)$/gm, '<h3 class="text-base font-semibold mt-3 mb-2">$1</h3>');
-                formatted = formatted.replace(/^## (.+)$/gm, '<h2 class="text-lg font-semibold mt-4 mb-2">$1</h2>');
-                formatted = formatted.replace(/^# (.+)$/gm, '<h1 class="text-xl font-bold mt-4 mb-3">$1</h1>');
-                
-                // Lists (before paragraph processing)
-                // Unordered lists
-                formatted = formatted.replace(/^- (.+)$/gm, '<li class="ml-4">$1</li>');
-                formatted = formatted.replace(/(<li class="ml-4">.*<\/li>\n?)+/g, '<ul class="list-disc list-outside my-2 space-y-1">$&</ul>');
-                
-                // Split into paragraphs by double newlines
-                const parts = formatted.split(/\n\n+/);
-                formatted = parts
-                    .map(part => {
-                        // Don't wrap headings, lists, or code blocks in p tags
-                        if (part.match(/^<(h[1-3]|ul|ol|pre|div)/)) {
-                            return part;
-                        }
-                        // Replace single newlines with br in paragraphs
-                        const withBreaks = part.replace(/\n/g, '<br>');
-                        return `<p class="my-2 leading-relaxed">${withBreaks}</p>`;
-                    })
-                    .join('');
-                
-                // Clean up
-                formatted = formatted.replace(/<p class="my-2 leading-relaxed"><\/p>/g, '');
-                formatted = formatted.replace(/<p class="my-2 leading-relaxed">\s*<\/p>/g, '');
-                
-                return formatted;
+                return formatAiResponseSafe(text);
             },
 
             // Navigation

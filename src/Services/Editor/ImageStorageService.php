@@ -74,7 +74,8 @@ class ImageStorageService
      */
     protected function generateUniqueFilename(UploadedFile $file): string
     {
-        $extension = $file->getClientOriginalExtension();
+        $extension = $file->guessExtension() ?: $file->getClientOriginalExtension();
+        $extension = preg_replace('/[^a-z0-9]/i', '', (string) $extension) ?: 'bin';
         $basename = Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME));
         $timestamp = now()->format('YmdHis');
         $random = Str::random(8);
