@@ -113,4 +113,34 @@ class ComponentRenderingTest extends TestCase
         $this->assertNotEmpty($html);
         $this->assertStringContainsString('textarea', $html);
     }
+
+    public function test_error_component_renders_slot_content_with_error_styles()
+    {
+        if (! class_exists(\BladeUI\Heroicons\BladeHeroiconsServiceProvider::class)) {
+            $this->markTestSkipped('Heroicons package is not installed');
+
+            return;
+        }
+
+        $html = Blade::render('<x-neura::error>Please enter a valid email address</x-neura::error>');
+
+        $this->assertStringContainsString('Please enter a valid email address', $html);
+        $this->assertStringContainsString('data-slot="error"', $html);
+        $this->assertStringContainsString('text-red-600', $html);
+        $this->assertStringContainsString('role="alert"', $html);
+    }
+
+    public function test_error_component_renders_messages_prop()
+    {
+        if (! class_exists(\BladeUI\Heroicons\BladeHeroiconsServiceProvider::class)) {
+            $this->markTestSkipped('Heroicons package is not installed');
+
+            return;
+        }
+
+        $html = Blade::render('<x-neura::error :messages="[\'Invalid value\']" />');
+
+        $this->assertStringContainsString('Invalid value', $html);
+        $this->assertStringContainsString('text-red-600', $html);
+    }
 }

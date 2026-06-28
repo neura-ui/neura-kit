@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-06-28
+
+### Fixed
+
+- **Error component**: Slot content (e.g. `<neura::error>Message</neura::error>`) now renders inside the error wrapper with red styling and `data-slot="error"` — previously only `name` and `messages` props triggered display, so field documentation examples showed no styled error text
+
 ## [2.0.0] - 2026-05-21
 
 **Open source release.** Neura Kit is now distributed under the [MIT license](LICENSE). No license key, activation command, or vendor dashboard is required — install via Composer and use all components out of the box.
