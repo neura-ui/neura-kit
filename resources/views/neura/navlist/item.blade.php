@@ -8,26 +8,19 @@
     'href' => '#',
     'active' => null,
     'size' => null,
-    'variant' => 'default',
-    'color' => 'neutral',
+    'variant' => null,
+    'color' => null,
     'activePattern' => null,
 ])@php
-    $size = $size ?? $attributes->get('size') ?? 'md';
+    use Neura\Kit\Support\PackResolver;
 
-    $textSize = match ($size) {
-        'xs' => 'text-xs',
-        'sm' => 'text-sm',
-        'lg' => 'text-lg',
-        'xl' => 'text-xl',
-        default => 'text-base',
-    };
+    $size = $size ?? $attributes->get('size') ?? neura_config('navlist', 'size');
+    $variant = $variant ?? neura_config('navlist', 'variant');
+    $color = $color ?? neura_config('navlist', 'color');
 
-    $iconSize = match ($size) {
-        'xs','sm' => 'size-4',
-        'lg' => 'size-6',
-        'xl' => 'size-7',
-        default => 'size-5',
-    };
+    $sizeConfig = PackResolver::navlistSize($size);
+    $textSize = $sizeConfig['text'];
+    $iconSize = $sizeConfig['icon'];
 
     if ($active === null) {
         $currentUrl = url()->current();
@@ -44,57 +37,16 @@
         }
     }
 
-    $colorClasses = match ($color) {
-        'danger' => [
-            'text-red-600 dark:text-red-400',
-            'hover:bg-red-50 dark:hover:bg-red-500/10',
-            'hover:text-red-700 dark:hover:text-red-300',
-            '[&_[data-slot=icon]]:text-red-500 dark:[&_[data-slot=icon]]:text-red-400',
-        ],
-        'warning' => [
-            'text-amber-600 dark:text-amber-400',
-            'hover:bg-amber-50 dark:hover:bg-amber-500/10',
-            'hover:text-amber-700 dark:hover:text-amber-300',
-            '[&_[data-slot=icon]]:text-amber-500 dark:[&_[data-slot=icon]]:text-amber-400',
-        ],
-        'success' => [
-            'text-emerald-600 dark:text-emerald-400',
-            'hover:bg-emerald-50 dark:hover:bg-emerald-500/10',
-            'hover:text-emerald-700 dark:hover:text-emerald-300',
-            '[&_[data-slot=icon]]:text-emerald-500 dark:[&_[data-slot=icon]]:text-emerald-400',
-        ],
-        'primary' => [
-            'text-primary-600 dark:text-primary-400',
-            'hover:bg-primary-50 dark:hover:bg-primary-500/10',
-            'hover:text-primary-700 dark:hover:text-primary-300',
-            '[&_[data-slot=icon]]:text-primary-500 dark:[&_[data-slot=icon]]:text-primary-400',
-        ],
-        default => [],
-    };
-
+    $colorClasses = PackResolver::navlistColor($color);
     $isColored = $color !== 'neutral';
-
-    $variantClasses = match ($variant) {
-        'ghost' => [
-            'text-fg-secondary',
-            '[&:not([data-active-link])]:hover:text-fg',
-            'data-active-link:text-fg data-active-link:font-medium',
-        ],
-        default => [
-            'text-fg-secondary',
-            '[&:not([data-active-link])]:hover:bg-hover',
-            '[&:not([data-active-link])]:hover:text-fg',
-            'data-active-link:bg-active',
-            'data-active-link:text-fg',
-            'data-active-link:font-medium',
-        ],
-    };
+    $variantClasses = PackResolver::navlistVariant($variant);
 
     $itemClassParts = [
         'cursor-pointer',
         'relative isolate flex items-center gap-x-2',
         'w-full px-3 py-1.5',
-        'rounded-md transition-colors duration-150',
+        PackResolver::rounded(neura_config('navlist', 'rounded')),
+        'transition-colors duration-150',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 focus-visible:ring-offset-1',
         (!$isColored ? '[&_[data-slot=icon]]:text-fg-muted data-active-link:[&_[data-slot=icon]]:text-fg' : ''),
         '[:has([data-collapsed]_&)_&]:justify-center',

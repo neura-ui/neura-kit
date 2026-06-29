@@ -71,6 +71,20 @@ return [
 
     'toggle' => Config::toggle(),
 
+    'navlist' => Config::navlist(),
+
+    'navbar' => Config::navbar(),
+
+    'tabs' => Config::tabs(),
+
+    'link' => Config::link(),
+
+    'callout' => Config::callout(),
+
+    'table' => Config::table(),
+
+    'wizard' => Config::wizard(),
+
     /*
     |--------------------------------------------------------------------------
     | HTTP Routes (uploads, editor)

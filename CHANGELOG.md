@@ -8,6 +8,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.2] - 2026-06-29
+
+### Added
+
+- **Dynamic style packs** for components previously hardcoded outside `config/neura-kit.php`:
+  - **Navlist**: `sizes`, `colors`, `variants`, and `rounders` packs with config defaults
+  - **Navbar**: `items` pack for active/hover/icon styling
+  - **Tabs**: `variants` pack (`line`, `pills`)
+  - **Link**: `variants` pack (`default`, `ghost`, `soft`)
+  - **Callout**: `colors` pack aligned with semantic variants
+  - **Table** and **Wizard**: packs registered in config; table reads packs from config via `PackResolver`
+- **`PackResolver` helpers**: `navlistSize`, `navlistColor`, `navlistVariant`, `navbarItem`, `tabsVariant`, `linkVariant`, `calloutColor`, `tablePack`
+- **Global helpers**: `neura_navlist_size`, `neura_navlist_color`, `neura_tabs_variant`, `neura_callout_color`
+
+### Changed
+
+- **Navlist**, **navbar**, **tabs**, **link**, and **callout** Blade views now resolve styles from config packs and `neura_config()` defaults
+- **Wizard** step colors default from `neura-kit.wizard` config
+
 ## [2.0.1] - 2026-06-28
 
 ### Fixed

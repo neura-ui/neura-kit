@@ -19,6 +19,7 @@ use Neura\Kit\Packs\Table\Density;
 use Neura\Kit\Packs\Table\Rounded;
 use Neura\Kit\Packs\Table\Shadow;
 use Neura\Kit\Packs\Table\Variant;
+use Neura\Kit\Support\PackResolver;
 use Neura\Kit\Support\Table\Action;
 use Neura\Kit\Support\Table\EmptyState;
 
@@ -575,10 +576,10 @@ abstract class Table extends Component
 
     public function getTableStyles(): array
     {
-        $variants = Variant::all();
-        $rounds = Rounded::all();
-        $shadows = Shadow::all();
-        $densities = Density::all();
+        $variants = PackResolver::tablePack('variants') ?: Variant::all();
+        $rounds = PackResolver::tablePack('rounders') ?: Rounded::all();
+        $shadows = PackResolver::tablePack('shadows') ?: Shadow::all();
+        $densities = PackResolver::tablePack('densities') ?: Density::all();
 
         $v = $this->resolvePackValue($this->variant());
         $r = $this->resolvePackValue($this->rounded());

@@ -9,7 +9,7 @@
 ])
 @php
     use Neura\Kit\Support\PackResolver;
-    $wizardColors = PackResolver::wizardColor($color ?? 'neutral');
+    $wizardColors = PackResolver::wizardColor($color ?? neura_config('wizard', 'color'));
     
     $sizeConfig = match($size) {
         'sm' => [

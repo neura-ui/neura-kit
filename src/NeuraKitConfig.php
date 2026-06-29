@@ -203,6 +203,104 @@ class NeuraKitConfig
         ], $options);
     }
 
+    public static function navlist(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'size' => Size::MD->value,
+                'variant' => 'default',
+                'color' => 'neutral',
+                'rounded' => Rounded::MD->value,
+            ],
+            'packs' => [
+                'sizes' => Packs\Navlist\Size::class,
+                'colors' => Packs\Navlist\Color::class,
+                'variants' => Packs\Navlist\Variant::class,
+                'rounders' => Packs\Rounded::class,
+            ],
+        ], $options);
+    }
+
+    public static function navbar(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'variant' => 'default',
+            ],
+            'packs' => [
+                'items' => Packs\Navbar\Item::class,
+            ],
+        ], $options);
+    }
+
+    public static function tabs(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'variant' => 'line',
+            ],
+            'packs' => [
+                'variants' => Packs\Tabs\Variant::class,
+            ],
+        ], $options);
+    }
+
+    public static function link(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'variant' => 'default',
+                'primary' => true,
+            ],
+            'packs' => [
+                'variants' => Packs\Link\Variant::class,
+            ],
+        ], $options);
+    }
+
+    public static function callout(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'variant' => Color::PRIMARY->value,
+            ],
+            'packs' => [
+                'colors' => Packs\Callout\Color::class,
+                'rounders' => Packs\Rounded::class,
+            ],
+        ], $options);
+    }
+
+    public static function table(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'variant' => 'default',
+                'rounded' => Rounded::XL->value,
+                'shadow' => Shadow::NONE->value,
+                'density' => 'normal',
+            ],
+            'packs' => [
+                'variants' => Packs\Table\Variant::class,
+                'rounders' => Packs\Table\Rounded::class,
+                'shadows' => Packs\Table\Shadow::class,
+                'densities' => Packs\Table\Density::class,
+            ],
+        ], $options);
+    }
+
+    public static function wizard(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'color' => 'neutral',
+            ],
+            'packs' => [
+                'colors' => Packs\Wizard\Color::class,
+            ],
+        ], $options);
+    }
+
     protected static function mix(array $default, array $options): array
     {
         foreach ($options as $key => $value) {

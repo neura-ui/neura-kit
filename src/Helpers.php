@@ -134,3 +134,31 @@ if (! function_exists('neura_config')) {
     }
 }
 
+if (! function_exists('neura_navlist_size')) {
+    function neura_navlist_size(?string $size = null): array
+    {
+        return PackResolver::navlistSize($size);
+    }
+}
+
+if (! function_exists('neura_navlist_color')) {
+    function neura_navlist_color(?string $color = null): array
+    {
+        return PackResolver::navlistColor($color);
+    }
+}
+
+if (! function_exists('neura_tabs_variant')) {
+    function neura_tabs_variant(?string $variant = null): string
+    {
+        return PackResolver::tabsVariant($variant);
+    }
+}
+
+if (! function_exists('neura_callout_color')) {
+    function neura_callout_color(?string $variant = null): array
+    {
+        return PackResolver::calloutColor($variant);
+    }
+}
+

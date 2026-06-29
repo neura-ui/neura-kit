@@ -1,29 +1,18 @@
 @props([
     'icon' => null,
-    'variant' => 'primary',
+    'variant' => null,
     'inline' => false,
 ])
 
 @php
-    $inline = filled($inline) && $inline;
-    
-    $variantClasses = match($variant) {
-        'secondary' => 'bg-secondary-50 dark:bg-secondary-900/50 border-secondary-200 dark:border-secondary-700/60',
-        'success' => 'bg-success-50 dark:bg-success-950/60 border-success-300 dark:border-success-700/60',
-        'warning' => 'bg-warning-50 dark:bg-warning-950/60 border-warning-300 dark:border-warning-600/60',
-        'danger' => 'bg-danger-50 dark:bg-danger-950/60 border-danger-300 dark:border-danger-700/60',
-        'info' => 'bg-info-50 dark:bg-info-950/60 border-info-300 dark:border-info-700/60',
-        default => 'bg-primary-50 dark:bg-primary-950/60 border-primary-200 dark:border-primary-700/60',
-    };
+    use Neura\Kit\Support\PackResolver;
 
-    $iconColorClass = match($variant) {
-        'secondary' => 'text-secondary-600 dark:text-secondary-400',
-        'success' => 'text-success-600 dark:text-success-400',
-        'warning' => 'text-warning-600 dark:text-warning-400',
-        'danger' => 'text-danger-600 dark:text-danger-400',
-        'info' => 'text-info-600 dark:text-info-400',
-        default => 'text-primary-600 dark:text-primary-400',
-    };
+    $inline = filled($inline) && $inline;
+    $variant = $variant ?? neura_config('callout', 'variant');
+    $colorConfig = PackResolver::calloutColor($variant);
+
+    $variantClasses = $colorConfig['container'] ?? '';
+    $iconColorClass = $colorConfig['icon'] ?? '';
 @endphp
 
 <div
@@ -82,5 +71,3 @@
         @endif
     @endif
 </div>
-
-

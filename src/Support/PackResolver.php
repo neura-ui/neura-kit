@@ -8,8 +8,13 @@ use Neura\Kit\Packs\Avatar;
 use Neura\Kit\Packs\Badge;
 use Neura\Kit\Packs\Button;
 use Neura\Kit\Packs\Input;
+use Neura\Kit\Packs\Callout;
+use Neura\Kit\Packs\Link;
+use Neura\Kit\Packs\Navlist;
+use Neura\Kit\Packs\Navbar;
 use Neura\Kit\Packs\Rounded;
 use Neura\Kit\Packs\Shadow;
+use Neura\Kit\Packs\Tabs;
 use Neura\Kit\Packs\Wizard;
 
 class PackResolver
@@ -178,9 +183,76 @@ class PackResolver
 
     public static function wizardColor(?string $color): array
     {
-        $color = $color ?: 'neutral';
-        $colors = Wizard\Color::all();
+        $color = $color ?: self::componentDefault('wizard', 'color') ?: 'neutral';
+        $colors = self::packAll('wizard', 'colors') ?: Wizard\Color::all();
 
         return $colors[$color] ?? $colors['neutral'];
+    }
+
+    public static function navlistSize(?string $size): array
+    {
+        $size = $size ?: self::componentDefault('navlist', 'size') ?: 'md';
+        $sizes = self::packAll('navlist', 'sizes') ?: Navlist\Size::all();
+
+        return $sizes[$size] ?? $sizes['md'];
+    }
+
+    public static function navlistColor(?string $color): array
+    {
+        $color = $color ?: self::componentDefault('navlist', 'color') ?: 'neutral';
+        $colors = self::packAll('navlist', 'colors') ?: Navlist\Color::all();
+
+        return $colors[$color] ?? $colors['neutral'] ?? [];
+    }
+
+    public static function navlistVariant(?string $variant): array
+    {
+        $variant = $variant ?: self::componentDefault('navlist', 'variant') ?: 'default';
+        $variants = self::packAll('navlist', 'variants') ?: Navlist\Variant::all();
+
+        return $variants[$variant] ?? $variants['default'];
+    }
+
+    public static function navbarItem(?string $variant = null): array
+    {
+        $variant = $variant ?: self::componentDefault('navbar', 'variant') ?: 'default';
+        $items = self::packAll('navbar', 'items') ?: Navbar\Item::all();
+
+        return $items[$variant] ?? $items['default'];
+    }
+
+    public static function tabsVariant(?string $variant): string
+    {
+        $variant = $variant ?: self::componentDefault('tabs', 'variant') ?: 'line';
+        $variants = self::packAll('tabs', 'variants') ?: Tabs\Variant::all();
+
+        return $variants[$variant] ?? $variants['line'];
+    }
+
+    public static function linkVariant(?string $variant, bool $primary = true): array
+    {
+        $variant = $variant ?: self::componentDefault('link', 'variant') ?: 'default';
+        $variants = self::packAll('link', 'variants') ?: Link\Variant::all();
+        $config = $variants[$variant] ?? $variants['default'];
+
+        $tone = $primary ? 'primary' : 'secondary';
+
+        return [
+            'decoration' => $config['decoration'] ?? 'underline',
+            'color' => $config[$tone] ?? $config['primary'] ?? '',
+        ];
+    }
+
+    public static function calloutColor(?string $variant): array
+    {
+        $variant = $variant ?: self::componentDefault('callout', 'variant') ?: 'primary';
+        $colors = self::packAll('callout', 'colors') ?: Callout\Color::all();
+
+        return $colors[$variant] ?? $colors['primary'];
+    }
+
+    public static function tablePack(string $pack): array
+    {
+        return self::packAll('table', $pack);
     }
 }
