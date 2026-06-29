@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.3] - 2026-06-29
+
+### Fixed
+
+- **Table (Livewire)**: `variant()`, `rounded()`, `shadow()`, and `density()` now read defaults from `config/neura-kit.php` via `PackResolver::componentDefault()` — previously hardcoded to `default` / `xl` / `sm` / `normal`, so global table config (e.g. `variant => minimal`) was ignored
+
 ## [2.0.2] - 2026-06-29
 
 ### Added

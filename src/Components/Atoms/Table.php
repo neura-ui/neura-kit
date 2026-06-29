@@ -534,24 +534,43 @@ abstract class Table extends Component
      | Style packs
      |----------------------------------------------------------------- */
 
+    protected function tableConfig(string $property, string $fallback): string
+    {
+        $value = PackResolver::componentDefault('table', $property);
+
+        if ($value instanceof \BackedEnum) {
+            return $value->value;
+        }
+
+        return filled($value) ? (string) $value : $fallback;
+    }
+
     public function variant(): string|VariantEnum
     {
-        return VariantEnum::DEFAULT;
+        $value = $this->tableConfig('variant', VariantEnum::DEFAULT->value);
+
+        return VariantEnum::tryFrom($value) ?? $value;
     }
 
     public function rounded(): string|RoundedEnum
     {
-        return RoundedEnum::XL;
+        $value = $this->tableConfig('rounded', RoundedEnum::XL->value);
+
+        return RoundedEnum::tryFrom($value) ?? $value;
     }
 
     public function shadow(): string|ShadowEnum
     {
-        return ShadowEnum::SM;
+        $value = $this->tableConfig('shadow', ShadowEnum::SM->value);
+
+        return ShadowEnum::tryFrom($value) ?? $value;
     }
 
     public function density(): string|DensityEnum
     {
-        return DensityEnum::NORMAL;
+        $value = $this->tableConfig('density', DensityEnum::NORMAL->value);
+
+        return DensityEnum::tryFrom($value) ?? $value;
     }
 
     public function bordered(): bool
