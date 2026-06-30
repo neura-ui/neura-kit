@@ -11,7 +11,16 @@
     'showCompleteButton' => true,
     'completeLabel' => null,
     'completeUrl' => null,
+    'cancelVariant' => 'ghost',
+    'previousVariant' => 'outline',
+    'nextVariant' => 'primary',
+    'finishVariant' => 'primary',
+    'completeVariant' => null,
 ])
+
+@php
+    $completeVariant ??= $finishVariant;
+@endphp
 
 <div
     wire:ignore
@@ -31,7 +40,7 @@
     <div class="flex items-center gap-3">
         @if($showCancel && $cancelUrl)
             <neura::button
-                variant="ghost"
+                variant="{{ $cancelVariant }}"
                 as="a"
                 href="{{ $cancelUrl }}"
             >
@@ -41,7 +50,7 @@
 
         <neura::button
             type="button"
-            variant="outline"
+            variant="{{ $previousVariant }}"
             wire:click="previous"
             icon="chevron-left"
             x-show="currentStep > 1 && @js($showPrevious)"
@@ -54,7 +63,7 @@
     <div>
         <neura::button
             type="button"
-            variant="primary"
+            variant="{{ $nextVariant }}"
             wire:click="next"
             icon-after="chevron-right"
             x-show="currentStep < totalSteps && @js($showNext)"
@@ -65,7 +74,7 @@
 
         <neura::button
             type="button"
-            variant="primary"
+            variant="{{ $finishVariant }}"
             wire:click="complete"
             wire:loading.attr="disabled"
             wire:target="complete"
@@ -82,7 +91,7 @@
 
         @if($completeUrl)
             <neura::button
-                variant="primary"
+                variant="{{ $completeVariant }}"
                 as="a"
                 href="{{ $completeUrl }}"
                 x-show="currentStep > totalSteps && @js($showCompleteButton)"
@@ -93,7 +102,7 @@
         @else
             <neura::button
                 type="button"
-                variant="primary"
+                variant="{{ $completeVariant }}"
                 wire:click="restart"
                 x-show="currentStep > totalSteps && @js($showCompleteButton)"
                 x-cloak

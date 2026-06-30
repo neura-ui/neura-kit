@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.5] - 2026-06-28
+
+### Added
+
+- **Wizard navigation**: `cancelVariant`, `previousVariant`, `nextVariant`, `finishVariant`, and `completeVariant` props to customize button styles (`ghost`, `soft`, `outline`, `primary`, `primary-soft`, etc.)
+
 ## [2.0.4] - 2026-06-29
 
 ### Fixed
