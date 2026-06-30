@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.4] - 2026-06-29
+
+### Fixed
+
+- **Wizard**: Replaced Alpine `x-if` with `x-show` on `wizard.steps` and `wizard.navigation`, and added `wire:ignore` — prevents duplicated back buttons and step checkmarks after Livewire re-renders (e.g. clicking Continue)
+
 ## [2.0.3] - 2026-06-29
 
 ### Fixed
