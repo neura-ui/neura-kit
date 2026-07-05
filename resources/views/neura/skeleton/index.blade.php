@@ -8,19 +8,27 @@
 
 @php
     use Illuminate\Support\Arr;
+    use Neura\Kit\Support\PackResolver;
 
     $variantClasses = match ($variant) {
         'text' => 'h-4',
         'heading' => 'h-6',
         'title' => 'h-8',
         'paragraph' => 'h-3',
-        'avatar' => 'rounded-full',
-        'circle' => 'rounded-full',
-        'button' => 'rounded-lg h-10',
-        'card' => 'rounded-lg',
-        'image' => 'rounded-lg',
-        'badge' => 'rounded-full h-6',
+        'avatar' => '',
+        'circle' => '',
+        'button' => 'h-10',
+        'card' => '',
+        'image' => '',
+        'badge' => 'h-6',
         default => 'h-4',
+    };
+
+    $roundedClass = match (true) {
+        filled($rounded) => PackResolver::rounded($rounded),
+        in_array($variant, ['avatar', 'circle', 'badge'], true) => 'rounded-full',
+        in_array($variant, ['button', 'card', 'image'], true) => PackResolver::rounded(neura_config('skeleton', 'rounded')),
+        default => null,
     };
 
     $widthClasses = match ($width) {
@@ -47,16 +55,6 @@
         default => null,
     };
 
-    $roundedClasses = match ($rounded) {
-        'none' => 'rounded-none',
-        'sm' => 'rounded-sm',
-        'md' => 'rounded-md',
-        'lg' => 'rounded-lg',
-        'xl' => 'rounded-xl',
-        'full' => 'rounded-full',
-        default => null,
-    };
-
     $sizeClasses = match ($variant) {
         'avatar' => match ($height) {
             'xs' => 'w-8 h-8',
@@ -80,9 +78,9 @@
     $classes = [
         'bg-surface-inset',
         $variantClasses,
+        $roundedClass,
         $widthClasses,
         $heightClasses,
-        $roundedClasses,
         $sizeClasses,
         $animate ? 'animate-pulse' : '',
     ];
@@ -94,4 +92,3 @@
 >
     {{ $slot }}
 </div>
-

@@ -8,8 +8,10 @@
 
 @php
     use Illuminate\Support\Arr;
+    use Neura\Kit\Support\PackResolver;
 
     $galleryImages = collect($images ?? []);
+    $galleryRoundedClass = PackResolver::rounded(neura_config('image-gallery', 'rounded'));
     $columnClasses = match($columns) {
         2 => 'grid-cols-2',
         3 => 'grid-cols-3',
@@ -65,7 +67,7 @@
     {{ $attributes->merge(['class' => 'w-full select-none']) }}
 >
     @if($galleryImages->isEmpty())
-        <div class="rounded-lg border border-dashed border-edge px-6 py-12 text-center text-sm text-fg-muted">
+        <div @class(['border border-dashed border-edge px-6 py-12 text-center text-sm text-fg-muted', $galleryRoundedClass])>
             No images available
         </div>
     @else
@@ -78,7 +80,11 @@
                             :src="image.photo || image.url || image.src" 
                             :alt="image.alt || image.caption || ''" 
                             :data-index="index + 1" 
-                            class="object-cover select-none w-full h-auto bg-surface-inset rounded-lg cursor-zoom-in transition-transform hover:scale-105 {{ $aspectRatio }}"
+                            @class([
+                                'object-cover select-none w-full h-auto bg-surface-inset cursor-zoom-in transition-transform hover:scale-105',
+                                $galleryRoundedClass,
+                                $aspectRatio,
+                            ])
                         />
                     </li>
                 </template>

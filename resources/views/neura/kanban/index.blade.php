@@ -11,38 +11,42 @@
 
 @php
     use Illuminate\Support\Arr;
+    use Neura\Kit\Support\PackResolver;
 
     $boardColumns = collect($columns ?? []);
     $emptyStateLabel = $emptyState ?? neura_trans('noCardsYet');
 
+    $kanbanRoundedClass = PackResolver::rounded(neura_config('kanban', 'rounded'));
+    $kanbanShadowClass = PackResolver::shadow(neura_config('kanban', 'shadow'));
+
     $variants = [
         'default' => [
-            'column' => 'rounded-[24px] bg-surface-raised backdrop-blur-xl border shadow-sm min-w-[18rem] max-w-xs px-4 py-4',
-            'card' => 'rounded-2xl border bg-surface p-4 shadow-sm',
+            'column' => "{$kanbanRoundedClass} bg-surface-raised backdrop-blur-xl border {$kanbanShadowClass} min-w-[18rem] max-w-xs px-4 py-4",
+            'card' => "{$kanbanRoundedClass} border bg-surface p-4 {$kanbanShadowClass}",
             'gap' => 'gap-4',
             'cardGap' => 'gap-3',
         ],
         'compact' => [
-            'column' => 'rounded-xl bg-surface-raised backdrop-blur-xl border shadow-sm min-w-[15rem] max-w-[17rem] px-3 py-3',
-            'card' => 'rounded-lg border bg-surface p-3 shadow-xs',
+            'column' => "{$kanbanRoundedClass} bg-surface-raised backdrop-blur-xl border {$kanbanShadowClass} min-w-[15rem] max-w-[17rem] px-3 py-3",
+            'card' => "{$kanbanRoundedClass} border bg-surface p-3 {$kanbanShadowClass}",
             'gap' => 'gap-3',
             'cardGap' => 'gap-2',
         ],
         'flat' => [
-            'column' => 'rounded-xl bg-surface-inset min-w-[18rem] max-w-xs px-4 py-4',
-            'card' => 'rounded-xl bg-surface-raised border border-edge p-4',
+            'column' => "{$kanbanRoundedClass} bg-surface-inset min-w-[18rem] max-w-xs px-4 py-4",
+            'card' => "{$kanbanRoundedClass} bg-surface-raised border border-edge p-4",
             'gap' => 'gap-4',
             'cardGap' => 'gap-2',
         ],
         'outlined' => [
-            'column' => 'rounded-xl border-2 border-edge border-dashed bg-transparent min-w-[18rem] max-w-xs px-4 py-4',
-            'card' => 'rounded-xl border border-edge bg-surface p-4 shadow-sm',
+            'column' => "{$kanbanRoundedClass} border-2 border-edge border-dashed bg-transparent min-w-[18rem] max-w-xs px-4 py-4",
+            'card' => "{$kanbanRoundedClass} border border-edge bg-surface p-4 {$kanbanShadowClass}",
             'gap' => 'gap-4',
             'cardGap' => 'gap-3',
         ],
         'colorful' => [
-            'column' => 'rounded-[24px] bg-surface-raised backdrop-blur-xl border shadow-sm min-w-[18rem] max-w-xs px-4 pt-0 pb-4 overflow-hidden',
-            'card' => 'rounded-2xl border bg-surface p-4 shadow-sm',
+            'column' => "{$kanbanRoundedClass} bg-surface-raised backdrop-blur-xl border {$kanbanShadowClass} min-w-[18rem] max-w-xs px-4 pt-0 pb-4 overflow-hidden",
+            'card' => "{$kanbanRoundedClass} border bg-surface p-4 {$kanbanShadowClass}",
             'gap' => 'gap-4',
             'cardGap' => 'gap-3',
         ],
@@ -290,7 +294,7 @@
     {{ $attributes->merge(['class' => 'w-full']) }}
 >
     @if($boardColumns->isEmpty())
-        <div class="rounded-[28px] border border-dashed border-edge px-6 py-12 text-center text-sm text-fg-muted">
+        <div @class(['border border-dashed border-edge px-6 py-12 text-center text-sm text-fg-muted', $kanbanRoundedClass])>
             {{ $emptyStateLabel }}
         </div>
     @else

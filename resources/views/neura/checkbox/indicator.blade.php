@@ -16,6 +16,7 @@
     use Neura\Kit\Support\PackResolver;
 
     $checkboxColors = PackResolver::inputColor('checkbox');
+    $roundedClass = PackResolver::rounded(neura_config('checkbox', 'rounded'));
 
     $sizeClasses = match ($size) {
         'xs' => 'size-4',
@@ -52,7 +53,7 @@
         'shadow-none disabled:shadow-none',
         'focus:ring-offset-0 focus:outline-none',
         $sizeClasses,
-        'rounded-[5px]',
+        $roundedClass,
         $checkboxColors['border'] => !$invalid,
         $checkboxColors['focus'] => !$invalid,
         $checkboxColors['invalid'] => $invalid,

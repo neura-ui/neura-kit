@@ -4,9 +4,12 @@
     use Neura\Kit\Support\PackResolver;
 
     $colors = PackResolver::inputColor('base');
+    $roundedToken = neura_config('otp', 'rounded');
+    $shadowClass = PackResolver::shadow(neura_config('otp', 'shadow'));
 
     $classes = [
-        '[:where(&:first-child)]:rounded-l-box [:where(&:last-child)]:rounded-r-box',
+        "[&:where(&:first-child)]:rounded-l-{$roundedToken}",
+        "[&:where(&:last-child)]:rounded-r-{$roundedToken}",
         'text-center text-base max-w-12 w-full h-12',
         'bg-surface',
         'text-fg placeholder:text-neutral-400 dark:placeholder:text-neutral-500',
@@ -15,7 +18,8 @@
         $colors['invalid'] => $invalid,
         'focus:outline-none',
         'transition-all duration-200',
-        'shadow-sm disabled:shadow-none disabled:opacity-50 disabled:cursor-not-allowed',
+        $shadowClass,
+        'disabled:shadow-none disabled:opacity-50 disabled:cursor-not-allowed',
         'border focus:z-10',
     ];
 @endphp

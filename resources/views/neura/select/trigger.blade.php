@@ -11,6 +11,8 @@
 @php
     use Neura\Kit\Support\PackResolver;
     $selectColors = PackResolver::inputColor('select');
+    $roundedClass = PackResolver::rounded(neura_config('select', 'rounded'));
+    $shadowClass = PackResolver::shadow(neura_config('select', 'shadow'));
 @endphp
 <div
     x-ref="selectTrigger"
@@ -31,7 +33,7 @@
         type="button"
         aria-haspopup="listbox"
         data-slot="select-control"
-        {{ $attributes->merge(['class' => 'border bg-surface truncate text-sm text-fg disabled:text-fg-muted disabled:bg-neutral-50 dark:disabled:bg-neutral-900/60 shadow-sm disabled:shadow-none rounded-lg px-3 py-2 text-start transition-colors duration-150 col-span-4 col-start-1 row-start-1 justify-self-stretch disabled:opacity-50 disabled:cursor-not-allowed flex cursor-pointer overflow-hidden whitespace-nowrap focus:ring-offset-0 focus:outline-none' . (!$invalid ? ' ' . $selectColors['border'] . ' ' . $selectColors['focus'] : ' ' . $selectColors['invalid']) . ' ' . $triggerClass]) }}
+        {{ $attributes->merge(['class' => 'border bg-surface truncate text-sm text-fg disabled:text-fg-muted disabled:bg-neutral-50 dark:disabled:bg-neutral-900/60 disabled:shadow-none px-3 py-2 text-start transition-colors duration-150 col-span-4 col-start-1 row-start-1 justify-self-stretch disabled:opacity-50 disabled:cursor-not-allowed flex cursor-pointer overflow-hidden whitespace-nowrap focus:ring-offset-0 focus:outline-none ' . $shadowClass . ' ' . $roundedClass . (!$invalid ? ' ' . $selectColors['border'] . ' ' . $selectColors['focus'] : ' ' . $selectColors['invalid']) . ' ' . $triggerClass]) }}
 
         x-bind:aria-activedescendant="!isSearchable && activeIndex !== null ? 'option-' + activeIndex : null"
         @disabled($disabled)

@@ -9,6 +9,8 @@
     use Neura\Kit\Support\PackResolver;
 
     $inputColors = PackResolver::inputColor('base');
+    $roundedClass = PackResolver::rounded(neura_config('textarea', 'rounded'));
+    $shadowClass = PackResolver::shadow(neura_config('textarea', 'shadow'));
     $rows ??= 3;
 
     $initialHeight = (($rows) * 1.5) + 0.75;
@@ -17,7 +19,9 @@
         'inline-block px-3 py-2 w-full text-sm text-fg disabled:text-fg-muted placeholder-neutral-400 disabled:placeholder-neutral-400/70 dark:placeholder-neutral-500 dark:disabled:placeholder-neutral-600',
         'bg-surface disabled:bg-neutral-50 dark:disabled:bg-neutral-900',
         'disabled:cursor-not-allowed transition-colors duration-150',
-        'shadow-sm disabled:shadow-none border rounded-lg',
+        $shadowClass,
+        'disabled:shadow-none border',
+        $roundedClass,
         'focus:ring-offset-0 focus:outline-none',
         $inputColors['border'] => !$invalid,
         $inputColors['focus'] => !$invalid,

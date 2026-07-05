@@ -23,6 +23,7 @@
     $id = $name ?? (string) Str::uuid();
 
     $colors = PackResolver::inputColor('switch');
+    $thumbShadowClass = PackResolver::shadow(neura_config('toggle', 'shadow'));
 
     $sizeConfig = match ($size) {
         'sm' => [
@@ -58,7 +59,8 @@
     ];
 
     $thumbBaseClasses = [
-        'pointer-events-none inline-flex items-center justify-center transform rounded-full shadow-sm ring-0 transition duration-200 ease-in-out',
+        'pointer-events-none inline-flex items-center justify-center transform rounded-full ring-0 transition duration-200 ease-in-out',
+        $thumbShadowClass,
         $sizeConfig['thumb'],
         $thumbClass,
     ];

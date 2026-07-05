@@ -2,6 +2,14 @@
     'progressBarAlignment' => 'bottom',
     'progressBarVariant' => 'full',
 ])
+
+@php
+    use Neura\Kit\Support\PackResolver;
+
+    $toastRoundedClass = PackResolver::rounded(neura_config('toast', 'rounded'));
+    $toastShadowClass = PackResolver::shadow(neura_config('toast', 'shadow'));
+@endphp
+
 <div
     x-data="{
         visible: false,
@@ -100,8 +108,8 @@
     x-transition:leave="transition ease-in duration-200"
     x-transition:leave-start="opacity-100 transform translate-y-0 scale-100"
     x-transition:leave-end="opacity-0 transform translate-y-2 scale-95"
+    class="pointer-events-auto relative w-full max-w-sm border py-2 pl-4 pr-2 dark:border-white/15 border-neutral-200 overflow-hidden {{ $toastRoundedClass }} {{ $toastShadowClass }}"
     x-bind:class="[
-        'pointer-events-auto relative w-full max-w-sm rounded-xl border py-2 pl-4 pr-2 shadow-lg  dark:border-white/15 border-neutral-200 overflow-hidden',
         '[--alpha(var(--color-green-500) / 50%)]',
         getToastClasses(toast.type)
     ]"

@@ -6,6 +6,7 @@
     'size' => null,
     'color' => null,
     'rounded' => null,
+    'shadow' => null,
     'loading' => false,
     'loadingDisabled' => false,
     'variant' => null,
@@ -23,7 +24,8 @@
     use Neura\Kit\Support\PackResolver;
 
     $size = $size ?? neura_config('button', 'size') ?? 'sm';
-    $rounded = $rounded ?? neura_config('button', 'rounded') ?? 'lg';
+    $rounded = $rounded ?? neura_config('button', 'rounded');
+    $shadow = $shadow ?? neura_config('button', 'shadow');
     $variant = $variant ?? neura_config('button', 'variant') ?? 'primary';
 
     $semanticColors = ['primary', 'secondary', 'danger', 'success', 'warning', 'info'];
@@ -66,8 +68,15 @@
     $iconVariant ??= IconSize::variant()[$size] ?? 'mini';
 
     $colorConfig = PackResolver::buttonColor($color, $style);
+
+    $stripShadow = static fn (?string $classes): string => trim((string) preg_replace('/\s*shadow-[^\s]+/', '', $classes ?? ''));
+
+    $shadowClass = in_array($style, ['ghost', 'soft'], true)
+        ? 'shadow-none'
+        : PackResolver::shadow($shadow);
+
     $colorClasses = [
-        $colorConfig['base'] ?? '',
+        $stripShadow($colorConfig['base'] ?? ''),
         $colorConfig['hover'] ?? '',
     ];
 
@@ -84,6 +93,7 @@
         'relative inline-flex items-center font-medium justify-center gap-x-2 whitespace-nowrap transition-all duration-150',
         'disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none cursor-pointer',
         $roundedClass,
+        $shadowClass,
         '[&>[data-loading=true]:first-child]:flex',
         '[&>[data-loading=true]:first-child~*]:opacity-0',
         '[&_[data-slot=left-icon]]:shrink-0',

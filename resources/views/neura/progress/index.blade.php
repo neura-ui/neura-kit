@@ -7,15 +7,19 @@
     'showValue' => false,
     'valuePosition' => 'right',
     'label' => null,
-    'rounded' => 'full',
+    'rounded' => null,
     'animated' => false,
     'striped' => false,
     'indeterminate' => false,
 ])
 
 @php
+    use Neura\Kit\Support\PackResolver;
+
     // Calculate percentage
     $percentage = $max > 0 ? min(100, max(0, ($value / $max) * 100)) : 0;
+
+    $rounded = $rounded ?? neura_config('progress', 'rounded');
 
     // Size classes (height)
     $sizeClasses = match ($size) {

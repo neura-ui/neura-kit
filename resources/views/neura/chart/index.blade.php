@@ -7,6 +7,8 @@
 ])
 
 @php
+    use Neura\Kit\Support\PackResolver;
+
     $chartId = 'chart-' . uniqid();
     $data = is_array($data) ? $data : json_decode($data, true) ?? [];
     $options = is_array($options) ? $options : json_decode($options, true) ?? [];
@@ -123,10 +125,14 @@
 
     $mergedOptions = array_replace_recursive($defaultOptions, $options);
 
+    $chartRoundedClass = PackResolver::rounded(neura_config('chart', 'rounded'));
+    $chartShadowClass = PackResolver::shadow(neura_config('chart', 'shadow'));
+    $chartContainerClass = "{$chartRoundedClass} border border-black/[0.06] dark:border-white/[0.08] bg-surface p-5 ring-1 ring-black/[0.02] dark:ring-white/[0.02] {$chartShadowClass}";
+
     $variantClasses = match($variant) {
-        'card' => 'rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-surface p-5 ring-1 ring-black/[0.02] dark:ring-white/[0.02] shadow-[0_1px_3px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.02)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.3),0_1px_2px_rgba(0,0,0,0.15)]',
+        'card' => $chartContainerClass,
         'minimal' => 'bg-transparent',
-        default => 'rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-surface p-5 ring-1 ring-black/[0.02] dark:ring-white/[0.02] shadow-[0_1px_3px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.02)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.3),0_1px_2px_rgba(0,0,0,0.15)]',
+        default => $chartContainerClass,
     };
 @endphp
 

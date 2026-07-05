@@ -8,9 +8,13 @@
 ])
 
 @php
+    use Neura\Kit\Support\PackResolver;
+
     $wireModel = $attributes->wire('model');
     $entangle = $wireModel->value();
     $initialValue = $mode === 'json' && is_array($value) ? json_encode($value) : $value;
+    $editorRoundedClass = PackResolver::rounded(neura_config('rich-editor', 'rounded'));
+    $editorShadowClass = PackResolver::shadow(neura_config('rich-editor', 'shadow'));
 @endphp
 
 <div
@@ -34,7 +38,11 @@
     @endif
     x-init="init()"
     {{ $attributes->whereDoesntStartWith(['wire:model', 'class']) }}
-    class="relative w-full border border-edge bg-surface rounded-lg shadow-sm overflow-hidden"
+    @class([
+        'relative w-full border border-edge bg-surface overflow-hidden',
+        $editorRoundedClass,
+        $editorShadowClass,
+    ])
     wire:ignore
 >
     <style>

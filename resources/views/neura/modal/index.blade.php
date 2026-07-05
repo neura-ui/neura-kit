@@ -12,6 +12,8 @@
 ])
 
 @php
+    use Neura\Kit\Support\PackResolver;
+
     // Map predefined sizes to Tailwind classes
     $widthMap = [
         'xs' => 'max-w-xs',
@@ -44,6 +46,9 @@
         $maxWidthClass = $widthMap[$size] ?? 'max-w-md';
         $customMaxWidth = null;
     }
+
+    $modalRoundedClass = PackResolver::rounded(neura_config('modal', 'rounded'));
+    $modalShadowClass = PackResolver::shadow(neura_config('modal', 'shadow'));
 
     $isOpen = $entangle
         ? $entangle
@@ -109,7 +114,7 @@
         <div
             x-on:click.stop
             @if($customMaxWidth) style="max-width: {{ $customMaxWidth }};" @endif
-            class="relative bg-surface-raised backdrop-blur-xl rounded-lg shadow-xl w-full {{ $maxWidthClass }} border border-edge"
+            class="relative bg-surface-raised backdrop-blur-xl w-full {{ $maxWidthClass }} border border-edge {{ $modalRoundedClass }} {{ $modalShadowClass }}"
             x-transition:enter="ease-out duration-300"
             x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"

@@ -29,6 +29,9 @@
     'allowCustom' => true,
     'sortTags' => false,
     'sortDirection' => 'asc',
+    'size' => neura_config('input', 'size'),
+    'rounded' => neura_config('input', 'rounded'),
+    'shadow' => neura_config('input', 'shadow'),
 ])
 
 @php
@@ -37,7 +40,10 @@
 
     $inputColors = PackResolver::inputColor('base');
     $sizeClasses = PackResolver::inputSize($size ?? 'md');
-    $roundedClass = PackResolver::rounded($rounded ?? 'lg');
+    $roundedClass = PackResolver::rounded($rounded ?? neura_config('input', 'rounded'));
+    $shadowClass = PackResolver::shadow($shadow ?? neura_config('input', 'shadow'));
+    $popupRoundedClass = PackResolver::rounded(neura_config('popup', 'rounded'));
+    $popupShadowClass = PackResolver::shadow(neura_config('popup', 'shadow'));
 
     $invalid ??= $name && $errors->has($name);
 
@@ -46,7 +52,8 @@
         'inline-block border w-full text-fg disabled:text-fg-muted placeholder-neutral-400 disabled:placeholder-neutral-400/70 dark:placeholder-neutral-500 dark:disabled:placeholder-neutral-600',
         'bg-surface disabled:bg-neutral-50 dark:disabled:bg-neutral-900/60',
         'disabled:cursor-not-allowed transition-colors duration-150',
-        'shadow-sm disabled:shadow-none',
+        $shadowClass,
+        'disabled:shadow-none',
         'focus:ring-offset-0 focus:outline-none',
         $roundedClass,
         $inputColors['border'] => !$invalid,
@@ -473,7 +480,11 @@
             x-transition
             x-ref="suggestions"
             x-anchor.bottom-start="$refs.input"
-            class="absolute z-10 max-w-40 mt-1 bg-surface border border-edge rounded-md shadow-lg"
+            @class([
+                'absolute z-10 max-w-40 mt-1 bg-surface border border-edge overflow-hidden',
+                $popupRoundedClass,
+                $popupShadowClass,
+            ])
         >
             <template x-for="(suggestion, index) in filteredSuggestions" x-bind:key="index">
                 <div

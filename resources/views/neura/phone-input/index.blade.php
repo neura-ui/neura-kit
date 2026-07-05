@@ -11,8 +11,9 @@
     'searchPlaceholder' => null,
     'disabled' => false,
     'invalid' => null,
-    'size' => 'md',
-    'rounded' => 'lg',
+    'size' => neura_config('input', 'size'),
+    'rounded' => neura_config('input', 'rounded'),
+    'shadow' => neura_config('input', 'shadow'),
     'autoFormat' => true,
     'validateOnBlur' => true,
 ])
@@ -22,7 +23,12 @@
     
     $invalid ??= $name && $errors->has($name);
     $sizeClasses = PackResolver::inputSize($size ?? 'md');
-    $roundedClass = PackResolver::rounded($rounded ?? 'lg');
+    $roundedClass = PackResolver::rounded($rounded ?? neura_config('input', 'rounded'));
+    $shadowClass = PackResolver::shadow($shadow ?? neura_config('input', 'shadow'));
+    $roundedStart = str_replace('rounded-', 'rounded-l-', $roundedClass);
+    $roundedEnd = str_replace('rounded-', 'rounded-r-', $roundedClass);
+    $popupRoundedClass = PackResolver::rounded(neura_config('popup', 'rounded'));
+    $popupShadowClass = PackResolver::shadow(neura_config('popup', 'shadow'));
     $inputColors = PackResolver::inputColor('base');
     
     $wireModel = null;
@@ -63,7 +69,7 @@
 
     {{-- Main input container --}}
     <div @class([
-        'isolate relative flex items-stretch w-full shadow-xs disabled:shadow-none transition-colors duration-200',
+        'isolate relative flex items-stretch w-full disabled:shadow-none transition-colors duration-200',
         $roundedClass,
     ])>
         {{-- Country selector button --}}
@@ -79,15 +85,7 @@
                 $inputColors['border'] => !$invalid,
                 $inputColors['focus'] => !$invalid,
                 $inputColors['invalid'] => $invalid,
-                match($rounded) {
-                    'none' => 'rounded-l-none',
-                    'sm' => 'rounded-l-sm',
-                    'md' => 'rounded-l-md',
-                    'lg' => 'rounded-l-lg',
-                    'xl' => 'rounded-l-xl',
-                    'full' => 'rounded-l-full',
-                    default => 'rounded-l-lg',
-                },
+                $roundedStart,
             ])
         >
             @if($showFlags)
@@ -128,21 +126,14 @@
                 'dark:placeholder-neutral-500 dark:disabled:placeholder-neutral-600',
                 'bg-surface disabled:bg-neutral-50 dark:disabled:bg-neutral-900/60',
                 'disabled:cursor-not-allowed transition-colors duration-150',
-                'shadow-sm disabled:shadow-none',
+                $shadowClass,
+                'disabled:shadow-none',
                 'focus:ring-offset-0 focus:outline-none',
                 $inputColors['border'] => !$invalid,
                 $inputColors['focus'] => !$invalid,
                 $inputColors['invalid'] => $invalid,
                 $sizeClasses,
-                match($rounded) {
-                    'none' => 'rounded-r-none',
-                    'sm' => 'rounded-r-sm',
-                    'md' => 'rounded-r-md',
-                    'lg' => 'rounded-r-lg',
-                    'xl' => 'rounded-r-xl',
-                    'full' => 'rounded-r-full',
-                    default => 'rounded-r-lg',
-                },
+                $roundedEnd,
             ])
             {{ $attributes->except(['class', 'wire:model', 'wire:model.live', 'wire:model.blur', 'wire:model.lazy']) }}
             placeholder="{{ $placeholder ?? __('Phone number') }}"
@@ -171,7 +162,11 @@
         x-transition:leave-start="opacity-100 scale-100"
         x-transition:leave-end="opacity-0 scale-95"
         x-cloak
-        class="absolute z-50 mt-1 w-72 max-h-80 overflow-hidden bg-surface border border-edge rounded-lg shadow-lg"
+        @class([
+            'absolute z-50 mt-1 w-72 max-h-80 overflow-hidden bg-surface border border-edge',
+            $popupRoundedClass,
+            $popupShadowClass,
+        ])
     >
         {{-- Search input --}}
         @if($searchable)
@@ -184,7 +179,10 @@
                     x-on:keydown.arrow-down.prevent="focusNext()"
                     x-on:keydown.arrow-up.prevent="focusPrev()"
                     x-on:keydown.enter.prevent="selectFocused()"
-                    class="w-full px-3 py-2 text-sm bg-surface-inset border border-edge rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 text-fg placeholder-neutral-400 dark:placeholder-neutral-500"
+                    @class([
+                        'w-full px-3 py-2 text-sm bg-surface-inset border border-edge focus:outline-none focus:ring-2 focus:ring-primary-500 text-fg placeholder-neutral-400 dark:placeholder-neutral-500',
+                        PackResolver::rounded(neura_config('input', 'rounded')),
+                    ])
                     placeholder="{{ $searchPlaceholder ?? __('Search countries...') }}"
                 />
             </div>

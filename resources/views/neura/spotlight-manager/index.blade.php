@@ -1,4 +1,11 @@
 {{-- Spotlight Component - Single Source of Truth Architecture --}}
+@php
+    use Neura\Kit\Support\PackResolver;
+
+    $spotlightRoundedClass = PackResolver::rounded(neura_config('spotlight', 'rounded'));
+    $spotlightShadowClass = PackResolver::shadow(neura_config('spotlight', 'shadow'));
+    $spotlightItemRoundedClass = PackResolver::rounded(neura_config('spotlight', 'rounded'));
+@endphp
 <div
     wire:key="neura-spotlight-manager"
     wire:ignore.self
@@ -54,7 +61,11 @@
     >
         <div
             @click.stop
-            class="w-full max-w-2xl bg-surface-raised backdrop-blur-xl rounded-xl shadow-2xl shadow-neutral-900/20 dark:shadow-black/50 ring-1 ring-edge overflow-hidden"
+            @class([
+                'w-full max-w-2xl bg-surface-raised backdrop-blur-xl ring-1 ring-edge overflow-hidden',
+                $spotlightRoundedClass,
+                $spotlightShadowClass,
+            ])
         >
             {{-- Header --}}
             <div class="flex items-center gap-3 px-4 py-3 border-b border-separator">
@@ -209,10 +220,13 @@
                         <li
                             @click.stop="$wire.handleResult(result)"
                             @mouseenter="selectResult(index)"
+                            @class([
+                                'flex items-center gap-3 mx-2 px-3 py-2.5 cursor-pointer transition-colors group',
+                                $spotlightItemRoundedClass,
+                            ])
                             :class="selectedIndex === index 
                                 ? 'bg-primary-50 dark:bg-primary-500/10' 
                                 : 'hover:bg-hover'"
-                            class="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg cursor-pointer transition-colors group"
                             role="option"
                             :aria-selected="selectedIndex === index"
                         >
@@ -221,7 +235,10 @@
                                 :class="selectedIndex === index 
                                     ? 'bg-primary-100 dark:bg-primary-500/20 text-primary-600 dark:text-primary-400' 
                                     : 'bg-surface-inset text-fg-muted group-hover:bg-hover'"
-                                class="shrink-0 size-9 flex items-center justify-center rounded-lg transition-colors"
+                                @class([
+                                    'shrink-0 size-9 flex items-center justify-center transition-colors',
+                                    $spotlightItemRoundedClass,
+                                ])
                             >
                                 <template x-if="result.icon">
                                     <span x-html="getIconSvg(result.icon)" class="size-4"></span>

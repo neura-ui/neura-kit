@@ -10,13 +10,15 @@
     $inline = filled($inline) && $inline;
     $variant = $variant ?? neura_config('callout', 'variant');
     $colorConfig = PackResolver::calloutColor($variant);
+    $roundedClass = PackResolver::rounded(neura_config('callout', 'rounded'));
+    $shadowClass = PackResolver::shadow(neura_config('callout', 'shadow'));
 
     $variantClasses = $colorConfig['container'] ?? '';
     $iconColorClass = $colorConfig['icon'] ?? '';
 @endphp
 
 <div
-    {{ $attributes->merge(['class' => 'rounded-box border p-4 ' . $variantClasses . ($inline ? ' flex items-start gap-3' : ' space-y-3')]) }}
+    {{ $attributes->merge(['class' => 'border p-4 ' . $roundedClass . ' ' . $shadowClass . ' ' . $variantClasses . ($inline ? ' flex items-start gap-3' : ' space-y-3')]) }}
 >
     @if($icon && !$inline)
         <div class="flex gap-3">

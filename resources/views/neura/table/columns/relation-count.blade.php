@@ -6,11 +6,16 @@
 ])
 
 @php
+    use Neura\Kit\Support\PackResolver;
+
     $relation = $extraAttributes['relation'] ?? null;
     $showPopover = $extraAttributes['showPopover'] ?? false;
     $popoverAttribute = $extraAttributes['popoverAttribute'] ?? 'name';
     $count = 0;
     $relatedItems = collect();
+
+    $popoverRoundedClass = PackResolver::rounded(neura_config('popup', 'rounded'));
+    $popoverShadowClass = PackResolver::shadow(neura_config('popup', 'shadow'));
 
     if ($relation && $row) {
         $related = $row->{$relation} ?? null;
@@ -63,7 +68,11 @@
                 x-transition:leave-start="opacity-100 scale-100"
                 x-transition:leave-end="opacity-0 scale-95"
                 style="display:none; z-index: 9999;"
-                class="absolute bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-white/[0.1] rounded-lg shadow-lg min-w-48 max-w-64 max-h-[calc(100vh-2rem)]"
+                @class([
+                    'absolute bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-white/[0.1] min-w-48 max-w-64 max-h-[calc(100vh-2rem)]',
+                    $popoverRoundedClass,
+                    $popoverShadowClass,
+                ])
             >
                 <div class="p-1.5">
                     <div class="text-[11px] font-medium text-neutral-500 dark:text-neutral-400 px-2 py-1 border-b border-neutral-100 dark:border-white/[0.06] mb-1">

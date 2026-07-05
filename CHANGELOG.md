@@ -8,6 +8,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.6] - 2026-07-05
+
+### Fixed
+
+- **Select / Input / Textarea**: `rounded` and `shadow` now read from `config/neura-kit.php` via `PackResolver` — previously hardcoded so global `style.rounded` / `style.shadow` were ignored
+- **Card / Dropdown / Modal**: same fix for `rounded` and `shadow` defaults (`card`, `dropdown`, `modal-manager` included)
+- **Tags input / Phone input / Color picker / Checkbox**: form controls now inherit `input` or component config for `rounded` and `shadow`
+- **Avatar / Popup / OTP**: `rounded` and `shadow` now read from component config (`avatar`, `popup`, `otp`)
+- **Button**: `shadow` now reads from config (`global` by default); ghost/soft variants stay flat
+- **Select options**: tighter checkbox-to-label spacing (2-column layout, smaller checkbox, reduced padding/gap)
+- **Autocomplete / Calendar / Rich Editor / Dropzone / Fieldset**: `rounded` and `shadow` now read from config (`popup`, `rich-editor`, `dropzone`, `fieldset`, or `input` aliases)
+- **Phone / Tags / Color picker popups**, **Input prefix/suffix**, **Switch thumb**, **Radio cards/segmented**: wired to `popup`, `input`, or `toggle` config
+- **Alert / Callout / Toast / Dialog / Empty State / Sideover**: `rounded` and `shadow` now read from component config; **Popover** uses `popup` config; **Progress** bar radius reads from `progress` config (default `full`)
+- **Skeleton / Lottie**: skeleton `rounded` reads from config for `button`, `card`, and `image` variants (circles stay `full`); lottie SVG drop-shadow reads from `lottie` config
+- **Table / Chart / Tree / Flow / Kanban / Image Gallery / Tabs**: `rounded` and `shadow` now read from component config; table defaults inherit global style; table relation-count popover uses `popup` config
+- **Badge**: removed hardcoded `md` fallback — uses config default (`global`)
+- **Command / Spotlight / Composer / Context Menu**: `rounded` and `shadow` now read from component config; **Context Menu** aliases `dropdown` config; **Button** hardcoded `lg` rounded fallback removed
+- **Badge / Alert / Navlist / Avatar config**: default `rounded` (and `shadow` for avatar) is now `global` instead of a fixed size
+- **Input / Card / Dropdown config**: default `shadow` is now `global` (inherits `style.shadow`) instead of a fixed value
+
 ## [2.0.5] - 2026-06-28
 
 ### Added

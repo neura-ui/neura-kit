@@ -15,8 +15,13 @@
 ])
 
 @php
+    use Neura\Kit\Support\PackResolver;
+
     $nodes = is_array($nodes) ? $nodes : [];
     $edges = is_array($edges) ? $edges : [];
+
+    $flowRoundedClass = PackResolver::rounded(neura_config('flow', 'rounded'));
+    $flowShadowClass = PackResolver::shadow(neura_config('flow', 'shadow'));
 
     $nodes = array_map(function ($node, $index) {
         if (!isset($node['position'])) {
@@ -241,7 +246,7 @@
                         <div data-handle="target" class="nk-flow-handle nk-flow-handle--target"></div>
                     @endif
 
-                    <div class="rounded-lg border border-edge bg-surface shadow-sm px-4 py-3 min-w-[160px]">
+                    <div @class(['border border-edge bg-surface px-4 py-3 min-w-[160px]', $flowRoundedClass, $flowShadowClass])>
                         <p class="font-medium text-fg" x-text="props.label || 'Step'"></p>
                         <p class="text-xs text-fg-muted mt-0.5" x-text="props.description || ''"></p>
                     </div>

@@ -103,6 +103,22 @@ class PackResolver
         return Shadow::get($value) ?? 'shadow-sm';
     }
 
+    public static function dropShadow(?string $value): string
+    {
+        $value = $value ?: self::globalStyle('shadow');
+
+        return match ($value) {
+            'none' => 'drop-shadow-none',
+            'sm' => 'drop-shadow-sm',
+            'base' => 'drop-shadow',
+            'md' => 'drop-shadow-md',
+            'lg' => 'drop-shadow-lg',
+            'xl' => 'drop-shadow-xl',
+            '2xl' => 'drop-shadow-2xl',
+            default => 'drop-shadow-lg',
+        };
+    }
+
     public static function buttonSize(?string $size): array
     {
         $size = $size ?: 'sm';

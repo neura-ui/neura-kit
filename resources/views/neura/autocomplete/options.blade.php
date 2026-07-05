@@ -1,8 +1,16 @@
+@php
+    use Neura\Kit\Support\PackResolver;
+
+    $popupRoundedClass = PackResolver::rounded(neura_config('popup', 'rounded'));
+    $popupShadowClass = PackResolver::shadow(neura_config('popup', 'shadow'));
+    $optionRoundedClass = PackResolver::rounded(neura_config('popup', 'rounded'));
+@endphp
+
 <div>
     {{ $slot }}
 </div>
 
-<neura::popup x-show="open" class="w-full! rounded-lg" x-on:keydown.escape="open = false"
+<neura::popup x-show="open" class="w-full!" x-on:keydown.escape="open = false"
     x-anchor.offset.6="$refs.autocompleteInput">
 
     <template x-if="filteredOptions.length > 0">
@@ -15,7 +23,7 @@
                         'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300': isFocused(index),
                         'bg-transparent hover:bg-neutral-50 dark:hover:bg-neutral-800/50': !isFocused(index)
                     }"
-                    class="px-3.5 py-2.5 rounded-lg cursor-pointer transition-all duration-150 text-sm font-medium text-neutral-700 dark:text-neutral-200 group"
+                    class="px-3 py-2 {{ $optionRoundedClass }} cursor-pointer transition-all duration-150 text-sm font-medium text-neutral-700 dark:text-neutral-200 group"
                     role="option" :aria-selected="isFocused(index)">
                     <div class="flex items-center justify-between gap-2">
                         <span x-text="option.label" class="truncate flex-1"></span>

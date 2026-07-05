@@ -2,6 +2,10 @@
     'components' => [],
 ])
 @php
+    use Neura\Kit\Support\PackResolver;
+
+    $sideoverShadowClass = PackResolver::shadow(neura_config('sideover', 'shadow'));
+
     $widthMap = [
         'xs' => 'w-full sm:w-72 max-w-full',
         'sm' => 'w-full sm:w-80 max-w-full',
@@ -73,7 +77,12 @@
             x-transition:leave="transition-transform ease-in duration-200" x-transition:leave-start="{{ $translateEnd }}"
             x-transition:leave-end="{{ $translateEnter }}"
             @if ($customStyle) style="{{ $customStyle }}" @endif
-            class="pointer-events-auto fixed inset-y-0 {{ $isRight ? 'right-0' : 'left-0' }} flex flex-col {{ $widthClass }} bg-surface backdrop-blur-xl {{ $isRight ? 'sm:border-l' : 'sm:border-r' }} border-separator shadow-2xl sm:shadow-lg"
+            @class([
+                'pointer-events-auto fixed inset-y-0 flex flex-col bg-surface backdrop-blur-xl border-separator',
+                $isRight ? 'right-0 sm:border-l' : 'left-0 sm:border-r',
+                $widthClass,
+                $sideoverShadowClass,
+            ])
             role="dialog" aria-modal="true" tabindex="-1" x-trap.noscroll="show && showActiveComponent && activeComponent === '{{ $id }}'">
             @livewire($component['name'], $component['arguments'], key($id))
         </div>

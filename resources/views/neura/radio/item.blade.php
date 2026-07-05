@@ -20,6 +20,7 @@
     use Neura\Kit\Support\PackResolver;
 
     $colors = PackResolver::inputColor('radio');
+    $radioRoundedClass = PackResolver::rounded(neura_config('input', 'rounded'));
 
     $isSegmented = $variant === 'segmented';
     $isCards = $variant === 'cards';
@@ -39,14 +40,15 @@
         'peer-checked:[&_[data-slot=radio-item-indicator]]:after:opacity-100 peer-checked:[&_[data-slot=radio-item-indicator]]:after:scale-100',
         'peer-checked:[&_[data-slot=radio-item-indicator]]:shadow-sm',
 
-        'text-fg-muted hover:text-fg p-2 rounded-field peer-checked:shadow-xs peer-checked:bg-white dark:peer-checked:bg-white/[0.08] hover:bg-neutral-50 dark:hover:bg-white/[0.06]' => $isSegmented,
+        'text-fg-muted hover:text-fg p-2 peer-checked:bg-white dark:peer-checked:bg-white/[0.08] hover:bg-neutral-50 dark:hover:bg-white/[0.06]' => $isSegmented,
+        $radioRoundedClass => $isSegmented,
 
         'px-3 py-1.5 rounded-full border border-neutral-200 dark:border-white/[0.12] bg-transparent text-fg-secondary hover:bg-neutral-50 dark:hover:bg-white/[0.04] hover:border-neutral-300 dark:hover:border-white/[0.18] peer-checked:bg-primary-50 dark:peer-checked:bg-primary-500/[0.12] peer-checked:text-primary-700 dark:peer-checked:text-primary-300 peer-checked:border-primary-200 dark:peer-checked:border-primary-500/25 focus-within:ring-2 focus-within:ring-primary-500/25' => $isPills,
     ];
 
     $containerClasses = [
         'relative isolate transition-all duration-200 flex items-center w-full',
-        'group border rounded-xl bg-transparent border-neutral-200 dark:border-white/[0.10] border-l-[3px] border-l-transparent p-4 hover:bg-neutral-50/60 dark:hover:bg-white/[0.03] hover:border-neutral-300 dark:hover:border-white/[0.15] has-[:checked]:border-l-primary-500 dark:has-[:checked]:border-l-primary-400 has-[:checked]:bg-primary-50/40 dark:has-[:checked]:bg-primary-500/[0.05] has-[:checked]:border-primary-200 dark:has-[:checked]:border-white/[0.10] focus-within:ring-2 focus-within:ring-primary-500/25 focus-within:ring-offset-1 dark:focus-within:ring-offset-neutral-950' => $isCards,
+        "group border {$radioRoundedClass} bg-transparent border-neutral-200 dark:border-white/[0.10] border-l-[3px] border-l-transparent p-4 hover:bg-neutral-50/60 dark:hover:bg-white/[0.03] hover:border-neutral-300 dark:hover:border-white/[0.15] has-[:checked]:border-l-primary-500 dark:has-[:checked]:border-l-primary-400 has-[:checked]:bg-primary-50/40 dark:has-[:checked]:bg-primary-500/[0.05] has-[:checked]:border-primary-200 dark:has-[:checked]:border-white/[0.10] focus-within:ring-2 focus-within:ring-primary-500/25 focus-within:ring-offset-1 dark:focus-within:ring-offset-neutral-950" => $isCards,
         'opacity-50 cursor-not-allowed pointer-events-none' => $disabled,
     ];
 

@@ -4,8 +4,13 @@
 ])
 
 @php
+    use Neura\Kit\Support\PackResolver;
+
+    $fieldsetRoundedClass = PackResolver::rounded(neura_config('fieldset', 'rounded'));
+
     $classes = [
-        'rounded-box border border-edge p-5 text-start',
+        'border border-edge p-5 text-start',
+        $fieldsetRoundedClass,
 
         '[&>[data-slot=field]]:my-0
         [&>[data-slot=field]:not(:first-of-type)]:my-2

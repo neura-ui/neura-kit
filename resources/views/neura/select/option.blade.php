@@ -32,7 +32,7 @@
     role="option" data-slot="option"
     class="
         rounded-[calc(var(--popup-round)-var(--popup-padding))] col-span-full grid grid-cols-subgrid items-center
-        focus:bg-active px-3 py-1.5 w-full text-[1rem]
+        focus:bg-active px-2.5 py-1 w-full text-sm
         self-center cursor-pointer hover:bg-hover transition-colors
     ">
     <div x-data="{
@@ -45,16 +45,17 @@
             });
         }
     }" x-on:click.stop="select(@js($value))">
-        <neura::checkbox.indicator size="sm" :checked="false" :disabled="true" class="shrink-0" />
+        <neura::checkbox.indicator size="xs" :checked="false" :disabled="true" class="shrink-0 pointer-events-none" />
     </div>
-    @if (filled($icon))
-        <neura::icon :name="$icon" variant="{{ $iconVariant }}" @class([
-            'z-10 size-5 text-fg-muted flex-shrink-0',
-            $iconClass,
-        ]) />
-    @else
-        <span class="w-5"></span>
-    @endif
 
-    <span class="text-start text-fg truncate min-w-0">{{ $displayLabel }}</span>
+    <div class="flex items-center gap-1.5 min-w-0">
+        @if (filled($icon))
+            <neura::icon :name="$icon" variant="{{ $iconVariant }}" @class([
+                'size-4 text-fg-muted shrink-0',
+                $iconClass,
+            ]) />
+        @endif
+
+        <span class="text-start text-fg truncate min-w-0">{{ $displayLabel }}</span>
+    </div>
 </li>

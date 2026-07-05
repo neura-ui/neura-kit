@@ -5,7 +5,11 @@
 ])
 
 @php
+    use Neura\Kit\Support\PackResolver;
+
     $disabled = $attributes->has('disabled') && !in_array($attributes->get('disabled'), [false, 0, '0', 'false', ''], true);
+    $roundedClass = PackResolver::rounded(neura_config('dropdown', 'rounded'));
+    $shadowClass = PackResolver::shadow(neura_config('dropdown', 'shadow'));
 
     $defaultPanelClasses = [
         'isolate',
@@ -17,10 +21,9 @@
         'bg-surface-raised',
         'border border-black/[0.06] dark:border-white/[0.08]',
         'ring-1 ring-black/[0.02] dark:ring-white/[0.03]',
-        'shadow-[0_4px_16px_-2px_rgb(0_0_0/0.08),0_2px_6px_-1px_rgb(0_0_0/0.04)] dark:shadow-[0_4px_16px_-2px_rgb(0_0_0/0.4),0_2px_6px_-1px_rgb(0_0_0/0.25)]',
-        'rounded-(--dropdown-radius)',
+        $shadowClass,
+        $roundedClass,
         'p-(--dropdown-padding)',
-        '[--dropdown-radius:var(--radius-box)]',
         '[--dropdown-padding:--spacing(1)]',
     ];
 @endphp

@@ -7,6 +7,11 @@
 ])
 
 @php
+    use Neura\Kit\Support\PackResolver;
+
+    $roundedClass = PackResolver::rounded(neura_config('dropdown', 'rounded'));
+    $shadowClass = PackResolver::shadow(neura_config('dropdown', 'shadow'));
+
     $panelClasses = [
         'isolate',
         'z-[60]',
@@ -17,10 +22,9 @@
         'bg-surface-raised',
         'border border-black/[0.06] dark:border-white/[0.08]',
         'ring-1 ring-black/[0.02] dark:ring-white/[0.03]',
-        'shadow-[0_4px_16px_-2px_rgb(0_0_0/0.08),0_2px_6px_-1px_rgb(0_0_0/0.04)] dark:shadow-[0_4px_16px_-2px_rgb(0_0_0/0.4),0_2px_6px_-1px_rgb(0_0_0/0.25)]',
-        'rounded-(--dropdown-radius)',
+        $shadowClass,
+        $roundedClass,
         'p-(--dropdown-padding)',
-        '[--dropdown-radius:var(--radius-box)]',
         '[--dropdown-padding:--spacing(1)]',
     ];
 @endphp
@@ -60,7 +64,7 @@
                 if (el) $focus.focus($focus.within(el).getFirst());
             });
         "
-        {{ $attributes->only(['class'])->merge(['class' => 'flex items-center justify-between gap-2 w-full px-2.5 py-1.5 text-[13px] leading-snug transition-colors duration-100 text-start text-fg rounded-[calc(var(--dropdown-radius)-var(--dropdown-padding))] cursor-pointer ' . ($disabled ? 'opacity-40 cursor-not-allowed' : 'hover:bg-hover focus:bg-hover')]) }}
+        {{ $attributes->only(['class'])->merge(['class' => 'flex items-center justify-between gap-2 w-full px-2.5 py-1.5 text-[13px] leading-snug transition-colors duration-100 text-start text-fg rounded-md cursor-pointer ' . ($disabled ? 'opacity-40 cursor-not-allowed' : 'hover:bg-hover focus:bg-hover')]) }}
         tabindex="{{ $disabled ? '-1' : '0' }}"
         role="menuitem"
         aria-haspopup="true"

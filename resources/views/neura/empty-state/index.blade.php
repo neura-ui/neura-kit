@@ -10,6 +10,10 @@
 
 @php
     use Illuminate\Support\Arr;
+    use Neura\Kit\Support\PackResolver;
+
+    $emptyRoundedClass = PackResolver::rounded(neura_config('empty-state', 'rounded'));
+    $emptyShadowClass = PackResolver::shadow(neura_config('empty-state', 'shadow'));
 
     $sizeClasses = match($size) {
         'sm' => [
@@ -39,8 +43,8 @@
     };
 
     $variantClasses = match($variant) {
-        'bordered' => 'border border-dashed border-edge rounded-xl bg-surface-inset',
-        'card' => 'border border-edge rounded-xl bg-surface shadow-sm',
+        'bordered' => 'border border-dashed border-edge bg-surface-inset ' . $emptyRoundedClass,
+        'card' => 'border border-edge bg-surface ' . $emptyRoundedClass . ' ' . $emptyShadowClass,
         'ghost' => 'bg-transparent',
         default => '',
     };

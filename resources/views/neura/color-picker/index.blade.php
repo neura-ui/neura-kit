@@ -8,6 +8,7 @@
     'placeholder' => null,
     'size' => neura_config('input', 'size'),
     'rounded' => neura_config('input', 'rounded'),
+    'shadow' => neura_config('input', 'shadow'),
     'popupVariant' => 'default',
     'popupSize' => 'md',
     'popupAlign' => 'left',
@@ -61,7 +62,8 @@
     $palette = count($colors) ? $colors : $tailwind;
 
     $sizeClasses = PackResolver::inputSize($size ?? 'md');
-    $roundedClass = PackResolver::rounded($rounded ?? 'lg');
+    $roundedClass = PackResolver::rounded($rounded ?? neura_config('input', 'rounded'));
+    $shadowClass = PackResolver::shadow($shadow ?? neura_config('input', 'shadow'));
     $inputColors = PackResolver::inputColor('base');
 
     // Placeholder dynamique
@@ -76,10 +78,12 @@
         'lg' => ['padding' => 'p-2',   'text' => 'text-base','minWidth' => 'min-w-64', 'maxHeight' => 'max-h-96'],
     ];
     $popupVariants = [
-        'menu' => ['radius' => 'rounded-md', 'shadow' => 'shadow-sm', 'border' => 'border border-edge', 'bg' => 'bg-surface-raised backdrop-blur-xl'],
-        'compact' => ['radius' => 'rounded-lg', 'shadow' => 'shadow-md', 'border' => 'border border-edge', 'bg' => 'bg-surface-raised backdrop-blur-xl'],
-        'default' => ['radius' => 'rounded-lg', 'shadow' => 'shadow-lg shadow-black/5', 'border' => 'border border-edge', 'bg' => 'bg-surface-raised backdrop-blur-xl'],
+        'menu' => ['border' => 'border border-edge', 'bg' => 'bg-surface-raised backdrop-blur-xl'],
+        'compact' => ['border' => 'border border-edge', 'bg' => 'bg-surface-raised backdrop-blur-xl'],
+        'default' => ['border' => 'border border-edge', 'bg' => 'bg-surface-raised backdrop-blur-xl'],
     ];
+    $popupRoundedClass = PackResolver::rounded(neura_config('popup', 'rounded'));
+    $popupShadowClass = PackResolver::shadow(neura_config('popup', 'shadow'));
     $pv = $popupVariants[$popupVariant] ?? $popupVariants['default'];
     $ps = $popupSizes[$popupSize] ?? $popupSizes['md'];
 
@@ -90,7 +94,7 @@
         $ps['minWidth'],
         $ps['maxHeight'],
         'overflow-y-auto',
-        $pv['bg'], $pv['radius'], $pv['border'], $pv['shadow'],
+        $pv['bg'], $popupRoundedClass, $pv['border'], $popupShadowClass,
         $ps['text'],
         'text-neutral-950 dark:text-neutral-50',
         'scrollbar-thin scrollbar-thumb-neutral-300 dark:scrollbar-thumb-neutral-700',
@@ -127,7 +131,7 @@
 
         <div @class([
             'isolate',
-            'relative flex items-stretch w-full shadow-xs disabled:shadow-none transition-colors duration-200',
+            'relative flex items-stretch w-full disabled:shadow-none transition-colors duration-200',
             $roundedClass,
         ])>
             <div
@@ -178,7 +182,8 @@
                         'inline-block border w-full text-fg disabled:text-fg-muted placeholder-neutral-400 disabled:placeholder-neutral-400/70 dark:placeholder-neutral-500 dark:disabled:placeholder-neutral-600',
                         'bg-surface disabled:bg-neutral-50 dark:disabled:bg-neutral-900/60',
                         'disabled:cursor-not-allowed transition-colors duration-150',
-                        'shadow-sm disabled:shadow-none',
+                        $shadowClass,
+                        'disabled:shadow-none',
                         $roundedClass,
                         'focus:ring-offset-0 focus:outline-none',
                         $inputColors['border'],
@@ -232,7 +237,7 @@
             <div class="mb-2 pb-2 border-b border-separator">
                 <div @class([
                     'isolate',
-                    'relative flex items-stretch w-full shadow-xs transition-colors duration-200',
+                    'relative flex items-stretch w-full transition-colors duration-200',
                     $roundedClass,
                 ])>
                     <input
@@ -247,7 +252,7 @@
                             'inline-block border w-full text-fg placeholder-neutral-400 dark:placeholder-neutral-500',
                             'bg-surface',
                             'transition-colors duration-150',
-                            'shadow-sm',
+                            $shadowClass,
                             $roundedClass,
                             'focus:ring-offset-0 focus:outline-none',
                             $inputColors['border'],

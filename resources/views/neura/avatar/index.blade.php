@@ -3,6 +3,8 @@
     'initials' => null,
     'circle' => null,
     'color' => neura_config('avatar', 'color'),
+    'rounded' => neura_config('avatar', 'rounded'),
+    'shadow' => neura_config('avatar', 'shadow'),
     'badge' => null,
     'name' => null,
     'icon' => null,
@@ -53,19 +55,21 @@
     // Size configuration
     $sizeConfig = PackResolver::avatarSize($size ?? 'md');
 
-    $avatarRadius = $circle
-        ? '[--avatar-radius:calc(infinity*1px)]'
-        : $sizeConfig['radius'] ?? '[--avatar-radius:var(--radius-lg)]';
+    $roundedClass = $circle
+        ? 'rounded-full'
+        : PackResolver::rounded($rounded ?? neura_config('avatar', 'rounded'));
+    $shadowClass = PackResolver::shadow($shadow ?? neura_config('avatar', 'shadow'));
 
     $avatarSize = $sizeConfig['container'] ?? '[:where(&)]:size-10 [:where(&)]:text-sm';
     $avatarColor = PackResolver::avatarColor($color ?? 'neutral');
 
     $containerClasses = Arr::toCssClasses([
-        'relative flex items-center justify-center rounded-(--avatar-radius) overflow-hidden',
-        'shadow-sm transition-all duration-200',
+        'relative flex items-center justify-center overflow-hidden',
+        $roundedClass,
+        $shadowClass,
+        'transition-all duration-200',
         'ring-1 ring-black/5 dark:ring-white/10',
         'hover:shadow-md hover:ring-black/10 dark:hover:ring-white/15' => $href,
-        $avatarRadius,
         $avatarSize,
         $avatarColor,
         $attributes->get('class'),

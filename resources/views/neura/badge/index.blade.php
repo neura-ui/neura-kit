@@ -13,7 +13,7 @@
 
     $colorClasses = PackResolver::badgeColor($color ?? 'secondary', $variant);
     $sizeClasses = PackResolver::badgeSize($size ?? 'sm', $pill);
-    $roundedClass = $pill ? 'rounded-full' : PackResolver::rounded($rounded ?? 'md');
+    $roundedClass = $pill ? 'rounded-full' : PackResolver::rounded($rounded);
 
     $classes = [
         'inline-flex items-center font-semibold whitespace-nowrap gap-x-0.5',

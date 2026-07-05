@@ -57,6 +57,18 @@ return [
 
     'select' => Config::input(),
 
+    'otp' => Config::input(),
+
+    'autocomplete' => Config::input(),
+
+    'rich-editor' => Config::input(),
+
+    'dropzone' => Config::dropzone(),
+
+    'fieldset' => Config::fieldset(),
+
+    'popup' => Config::popup(),
+
     'modal' => Config::modal(),
 
     'sideover' => Config::sideover(),
@@ -64,6 +76,14 @@ return [
     'card' => Config::card(),
 
     'dropdown' => Config::dropdown(),
+
+    'context-menu' => Config::dropdown(),
+
+    'command' => Config::command(),
+
+    'spotlight' => Config::spotlight(),
+
+    'composer' => Config::composer(),
 
     'checkbox' => Config::checkbox(),
 
@@ -80,6 +100,30 @@ return [
     'link' => Config::link(),
 
     'callout' => Config::callout(),
+
+    'dialog' => Config::dialog(),
+
+    'toast' => Config::toast(),
+
+    'empty-state' => Config::emptyState(),
+
+    'progress' => Config::progress(),
+
+    'skeleton' => Config::skeleton(),
+
+    'lottie' => Config::lottie(),
+
+    'chart' => Config::chart(),
+
+    'tree' => Config::tree(),
+
+    'flow' => Config::flow(),
+
+    'kanban' => Config::kanban(),
+
+    'image-gallery' => Config::imageGallery(),
+
+    'popover' => Config::popup(),
 
     'table' => Config::table(),
 

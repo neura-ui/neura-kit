@@ -3,11 +3,14 @@
     'variant' => 'default',
     'color' => null,
     'padding' => 'normal',
-    'shadow' => 'sm',
-    'rounded' => 'lg',
+    'shadow' => null,
+    'rounded' => null,
 ])
 
 @php
+    $rounded = $rounded ?? neura_config('card', 'rounded');
+    $shadow = $shadow ?? neura_config('card', 'shadow');
+
     // Size classes
     $sizeClasses = match ($size) {
         'xs' => 'max-w-xs',

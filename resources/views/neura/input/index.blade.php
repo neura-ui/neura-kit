@@ -14,6 +14,7 @@
     'mask' => null,
     'size' => neura_config('input', 'size'),
     'rounded' => neura_config('input', 'rounded'),
+    'shadow' => neura_config('input', 'shadow'),
     'kbd' => null,
     'as' => null,
     'bindScopeToParent' => false
@@ -27,12 +28,13 @@
 
     $sizeClasses = PackResolver::inputSize($size ?? 'md');
     $roundedClass = PackResolver::rounded($rounded ?? 'lg');
+    $shadowClass = PackResolver::shadow($shadow ?? 'sm');
 
     $classes = [
 
         'isolate',
 
-        'relative flex items-stretch w-full shadow-xs disabled:shadow-none transition-colors duration-200',
+        'relative flex items-stretch w-full disabled:shadow-none transition-colors duration-200',
 
         $roundedClass,
 
@@ -126,7 +128,8 @@
                 'inline-block border w-full text-fg disabled:text-fg-muted placeholder-neutral-400 disabled:placeholder-neutral-400/70 dark:placeholder-neutral-500 dark:disabled:placeholder-neutral-600',
                 'bg-surface disabled:bg-neutral-50 dark:disabled:bg-neutral-900/60',
                 'disabled:cursor-not-allowed transition-colors duration-150',
-                'shadow-sm disabled:shadow-none',
+                $shadowClass,
+                'disabled:shadow-none',
                 $roundedClass,
                 'focus:ring-offset-0 focus:outline-none',
                 $inputColors['border'] => !$invalid,

@@ -8,6 +8,11 @@
 @php
     use Illuminate\Support\Str;
     use Illuminate\Support\Facades\Blade;
+    use Neura\Kit\Support\PackResolver;
+
+    $commandRoundedClass = PackResolver::rounded(neura_config('command', 'rounded'));
+    $commandShadowClass = PackResolver::shadow(neura_config('command', 'shadow'));
+    $commandItemRoundedClass = PackResolver::rounded(neura_config('command', 'rounded'));
 
     $iconCache = [];
 
@@ -58,7 +63,11 @@
     <div
         x-show="isOpen"
         x-transition.scale.origin.top
-        class="relative w-full max-w-[640px] rounded-xl overflow-hidden bg-surface-raised backdrop-blur-xl border border-edge shadow-2xl">
+        @class([
+            'relative w-full max-w-[640px] overflow-hidden bg-surface-raised backdrop-blur-xl border border-edge',
+            $commandRoundedClass,
+            $commandShadowClass,
+        ])>
         <div class="px-4 py-3 border-b border-separator">
             <neura::input
                 x-ref="input"
@@ -78,11 +87,14 @@
                     type="button"
                     @click="go(item[0].item.id)"
                     @mousemove="activeIndex = i"
+                    @class([
+                        'w-full flex items-center gap-3 px-4 py-2.5 mb-1 text-left text-sm transition',
+                        $commandItemRoundedClass,
+                    ])
                     :class="{
                         'bg-active': activeIndex === i,
                         'hover:bg-hover': activeIndex !== i
-                    }"
-                    class="w-full flex items-center gap-3 px-4 py-2.5 mb-1 rounded-md text-left text-sm transition">
+                    }">
                     <template x-if="item[0].item.iconHtml">
                         <span
                             class="text-fg-muted"

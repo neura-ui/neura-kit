@@ -12,14 +12,18 @@
 ])
 
 @php
+    use Neura\Kit\Support\PackResolver;
+
     $componentId = $id ?? 'radio-group-' . uniqid();
+    $groupRoundedClass = PackResolver::rounded(neura_config('input', 'rounded'));
 
     $labelClasses = ['text-fg font-semibold mb-4 inline-block', $labelClass];
 
     $variantClass = [
         'space-y-2' => $direction === 'vertical' && !str_contains($wrapperClass, 'grid'),
         'flex gap-1 items-stretch' => $direction === 'horizontal',
-        'bg-neutral-100 dark:bg-white/[0.04] rounded-box w-fit p-1' => $variant === 'segmented',
+        'bg-neutral-100 dark:bg-white/[0.04] w-fit p-1' => $variant === 'segmented',
+        $groupRoundedClass => $variant === 'segmented',
         $wrapperClass,
     ];
 @endphp

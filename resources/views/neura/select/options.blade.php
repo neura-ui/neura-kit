@@ -52,7 +52,7 @@
         x-on:keydown.enter.prevent.stop="select($focus.focused().dataset.value)"
         x-on:keydown.up.prevent.stop="$focus.wrap().prev()"
         x-on:keydown.down.prevent.stop="$focus.wrap().next()"
-        class="grid grid-cols-[auto_auto_1fr] gap-y-1 gap-x-2 overflow-y-auto max-h-60"
+        class="grid grid-cols-[auto_1fr] gap-y-0.5 gap-x-1.5 overflow-y-auto max-h-60"
     >
         {{ $slot }}
     </ul>

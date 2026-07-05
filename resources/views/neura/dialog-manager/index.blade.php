@@ -1,3 +1,11 @@
+@php
+    use Neura\Kit\Support\PackResolver;
+
+    $dialogRoundedClass = PackResolver::rounded(neura_config('dialog', 'rounded'));
+    $dialogShadowClass = PackResolver::shadow(neura_config('dialog', 'shadow'));
+    $dialogInputRoundedClass = PackResolver::rounded(neura_config('input', 'rounded'));
+@endphp
+
 <div
     x-data="{
         dialogs: [],
@@ -146,7 +154,11 @@
 
             <div class="flex min-h-full items-center justify-center p-4">
                 <div
-                    class="relative bg-surface-raised backdrop-blur-xl rounded-lg shadow-xl w-full border border-edge overflow-hidden"
+                    @class([
+                        'relative bg-surface-raised backdrop-blur-xl w-full border border-edge overflow-hidden',
+                        $dialogRoundedClass,
+                        $dialogShadowClass,
+                    ])
                     :class="getSizeClass(dialog.size)"
                     x-on:click.stop
                     x-on:keydown.escape.window="cancel(dialog.id)"
@@ -193,7 +205,10 @@
                                         type="text"
                                         x-model="dialog.inputValue"
                                         :placeholder="dialog.inputPlaceholder"
-                                        class="w-full px-3 py-2 text-sm bg-surface-raised border border-edge-hover rounded-lg text-fg placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-transparent"
+                                        @class([
+                                            'w-full px-3 py-2 text-sm bg-surface-raised border border-edge-hover text-fg placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-transparent',
+                                            $dialogInputRoundedClass,
+                                        ])
                                         x-on:keydown.enter="confirm(dialog.id)"
                                         :disabled="loading[dialog.id]"
                                     />

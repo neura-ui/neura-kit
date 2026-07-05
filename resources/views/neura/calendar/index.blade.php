@@ -13,6 +13,8 @@
 ])
 
 @php
+    use Neura\Kit\Support\PackResolver;
+
     $disabled = filled($disabled) && $disabled;
     $multiple = filled($multiple) && $multiple;
     $range = filled($range) && $range;
@@ -24,6 +26,9 @@
     } else {
         $value = $value ?? '';
     }
+
+    $calendarRoundedClass = PackResolver::rounded(neura_config('popup', 'rounded'));
+    $calendarShadowClass = PackResolver::shadow(neura_config('popup', 'shadow'));
 @endphp
 
 <div
@@ -311,7 +316,11 @@
         />
     @endif
 
-    <div class="bg-surface-raised backdrop-blur-xl rounded-box shadow-lg p-4 w-full max-w-sm">
+    <div @class([
+        'bg-surface-raised backdrop-blur-xl p-4 w-full max-w-sm',
+        $calendarRoundedClass,
+        $calendarShadowClass,
+    ])>
         <div class="flex items-center justify-between mb-4">
             <neura::button
                 variant="ghost"

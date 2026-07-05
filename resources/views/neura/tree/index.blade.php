@@ -12,8 +12,10 @@
 
 @php
     use Illuminate\Support\Str;
+    use Neura\Kit\Support\PackResolver;
     
     $componentId = 'tree-' . Str::random(8);
+    $treeItemRoundedClass = PackResolver::rounded(neura_config('tree', 'rounded'));
     
     // Clean, modern sizes
     $sizeConfig = match ($size) {
@@ -50,7 +52,7 @@
     // Minimal, clean variants (shadcn/Notion style)
     $variantConfig = match ($variant) {
         'default' => [
-            'item' => 'hover:bg-hover rounded-md transition-colors',
+            'item' => "hover:bg-hover {$treeItemRoundedClass} transition-colors",
             'selected' => 'bg-active text-fg',
             'chevron' => 'text-fg-disabled hover:text-fg-secondary',
         ],
@@ -65,7 +67,7 @@
             'chevron' => 'text-fg-disabled hover:text-fg-secondary',
         ],
         default => [
-            'item' => 'hover:bg-hover rounded-md transition-colors',
+            'item' => "hover:bg-hover {$treeItemRoundedClass} transition-colors",
             'selected' => 'bg-active text-fg',
             'chevron' => 'text-fg-disabled hover:text-fg-secondary',
         ],
@@ -211,7 +213,7 @@
             {{-- Drop zone for folders --}}
             <div 
                 x-show="dragState.dropTarget === item.id && dragState.dropPosition === 'inside'"
-                class="absolute inset-0 bg-primary-500/10 border-2 border-primary-500 border-dashed rounded-md pointer-events-none"
+                class="absolute inset-0 bg-primary-500/10 border-2 border-primary-500 border-dashed {{ $treeItemRoundedClass }} pointer-events-none"
                 x-transition
             ></div>
         </div>

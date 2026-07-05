@@ -15,8 +15,13 @@
 ])
 
 @php
+    use Neura\Kit\Support\PackResolver;
+
     $maxSizeBytes = $maxSize * 1024 * 1024;
     $chunkSizeBytes = $chunkSize * 1024 * 1024;
+
+    $dropzoneRoundedClass = PackResolver::rounded(neura_config('dropzone', 'rounded'));
+    $dropzoneShadowClass = PackResolver::shadow(neura_config('dropzone', 'shadow'));
 
     $wireModelValue = $attributes->whereStartsWith('wire:model')->first();
     $hasWireModel = $wireModelValue !== null;
@@ -72,7 +77,9 @@
         x-on:keydown.enter.prevent="triggerFileInput()"
         tabindex="0"
         @class([
-            'relative rounded-xl p-8 transition-all duration-200 cursor-pointer group focus:outline-none border-2 border-dashed',
+            'relative p-8 transition-all duration-200 cursor-pointer group focus:outline-none border-2 border-dashed',
+            $dropzoneRoundedClass,
+            $dropzoneShadowClass,
             'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-950/40 ring-4 ring-red-100 dark:ring-red-900/30' => $isInvalid,
             'border-edge hover:border-edge-hover hover:bg-hover' => !$isInvalid,
         ])

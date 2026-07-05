@@ -2,6 +2,8 @@
     'components' => [],
 ])
 @php
+    use Neura\Kit\Support\PackResolver;
+
     $widthMap = [
         'xs' => 'max-w-xs',
         'sm' => 'max-w-sm',
@@ -16,6 +18,9 @@
         '7xl' => 'max-w-7xl',
         'full' => 'max-w-full',
     ];
+
+    $modalRoundedClass = PackResolver::rounded(neura_config('modal', 'rounded'));
+    $modalShadowClass = PackResolver::shadow(neura_config('modal', 'shadow'));
 @endphp
 <div x-data="modalManager()" x-show="show" x-cloak class="fixed inset-0 z-[9999] overflow-y-auto"
     @modal-close.window="setShow(false)" @keydown.escape.window="show && closeModalOnEscape()">
@@ -23,7 +28,7 @@
 
     <div class="flex min-h-full items-center justify-center p-4">
         <div x-show="isLoading" class="relative flex w-fit justify-center">
-            <div class="bg-surface-raised backdrop-blur-xl rounded-lg shadow-xl p-8">
+            <div class="bg-surface-raised backdrop-blur-xl p-8 {{ $modalRoundedClass }} {{ $modalShadowClass }}">
                 <neura::icon.loading data-slot="loading-indicator" class="text-fg-secondary" />
             </div>
         </div>
@@ -62,7 +67,7 @@
                         w-full
                         {{ $widthClass }}
                         bg-surface-raised backdrop-blur-xl
-                        rounded-lg shadow-xl
+                        {{ $modalRoundedClass }} {{ $modalShadowClass }}
                         border border-edge
                     ">
                     @livewire($component['name'], $component['arguments'], key($id))

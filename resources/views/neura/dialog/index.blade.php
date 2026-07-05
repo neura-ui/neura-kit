@@ -5,6 +5,13 @@
     'entangle' => null,
 ])
 
+@php
+    use Neura\Kit\Support\PackResolver;
+
+    $dialogRoundedClass = PackResolver::rounded(neura_config('dialog', 'rounded'));
+    $dialogShadowClass = PackResolver::shadow(neura_config('dialog', 'shadow'));
+@endphp
+
 <div
     x-data="{
         open: @if($entangle) @entangle($entangle).live @else @js($open) @endif,
@@ -28,7 +35,11 @@
     <div class="flex min-h-full items-center justify-center p-4">
         <div
             x-on:click.stop
-            class="relative bg-surface-raised backdrop-blur-xl rounded-lg shadow-xl max-w-md w-full p-6 border border-edge"
+            @class([
+                'relative bg-surface-raised backdrop-blur-xl max-w-md w-full p-6 border border-edge',
+                $dialogRoundedClass,
+                $dialogShadowClass,
+            ])
             x-transition:enter="ease-out duration-300"
             x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"

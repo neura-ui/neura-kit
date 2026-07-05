@@ -2,6 +2,7 @@
     'type' => neura_config('alert', 'type'),
     'color' => null,
     'rounded' => neura_config('alert', 'rounded'),
+    'shadow' => neura_config('alert', 'shadow'),
     'icon' => true,
     'iconName' => null,
     'iconClass' => null,
@@ -16,10 +17,12 @@
     $iconName ??= $colorConfig['iconName'] ?? 'information-circle';
     $iconColor = $colorConfig['icon'] ?? 'text-blue-500';
     $roundedClass = PackResolver::rounded($rounded ?? 'md');
+    $shadowClass = PackResolver::shadow($shadow ?? 'none');
 
     $containerClass = [
         'border px-4 py-2 text-neutral-900 dark:text-neutral-100',
         $roundedClass,
+        $shadowClass,
         $colorConfig['container'] ?? '',
         '[&:has([data-slot=alert-heading]+[data-slot=alert-content])>[data-slot=alert-heading]]:mb-2',
         '[&:has([data-slot=alert-content]+[data-slot=alert-actions])>[data-slot=alert-content]]:mb-2',

@@ -9,7 +9,12 @@
 ])
 
 @php
-    $baseClasses = "w-full relative flex flex-col bg-surface-raised backdrop-blur-xl border border-edge rounded-xl shadow-sm transition-colors focus-within:border-edge-hover focus-within:ring-2 focus-within:ring-neutral-100 dark:focus-within:ring-white/5";
+    use Neura\Kit\Support\PackResolver;
+
+    $composerRoundedClass = PackResolver::rounded(neura_config('composer', 'rounded'));
+    $composerShadowClass = PackResolver::shadow(neura_config('composer', 'shadow'));
+
+    $baseClasses = "w-full relative flex flex-col bg-surface-raised backdrop-blur-xl border border-edge {$composerRoundedClass} {$composerShadowClass} transition-colors focus-within:border-edge-hover focus-within:ring-2 focus-within:ring-neutral-100 dark:focus-within:ring-white/5";
     
     if ($disabled) {
         $baseClasses .= " opacity-60 cursor-not-allowed pointer-events-none";

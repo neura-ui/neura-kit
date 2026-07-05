@@ -18,11 +18,13 @@ class NeuraKitConfig
             'default' => [
                 'color' => self::GLOBAL,
                 'rounded' => self::GLOBAL,
+                'shadow' => self::GLOBAL,
                 'size' => Size::SM->value,
                 'variant' => Variant::DARK->value,
             ],
             'packs' => [
                 'rounders' => Packs\Rounded::class,
+                'shadows' => Packs\Shadow::class,
                 'colors' => Packs\Button\Color::class,
                 'sizes' => Packs\Button\Size::class,
                 'icon-sizes' => Packs\Button\IconSize::class,
@@ -35,7 +37,7 @@ class NeuraKitConfig
         return self::mix([
             'default' => [
                 'color' => self::GLOBAL,
-                'rounded' => Rounded::MD->value,
+                'rounded' => self::GLOBAL,
                 'size' => Size::SM->value,
                 'variant' => Variant::SOLID->value,
             ],
@@ -52,10 +54,12 @@ class NeuraKitConfig
         return self::mix([
             'default' => [
                 'type' => Color::INFO->value,
-                'rounded' => Rounded::MD->value,
+                'rounded' => self::GLOBAL,
+                'shadow' => self::GLOBAL,
             ],
             'packs' => [
                 'rounders' => Packs\Rounded::class,
+                'shadows' => Packs\Shadow::class,
                 'colors' => Packs\Alert\Color::class,
             ],
         ], $options);
@@ -66,11 +70,13 @@ class NeuraKitConfig
         return self::mix([
             'default' => [
                 'size' => Size::MD->value,
-                'rounded' => Rounded::LG->value,
+                'rounded' => self::GLOBAL,
+                'shadow' => self::GLOBAL,
                 'color' => null,
             ],
             'packs' => [
                 'rounders' => Packs\Rounded::class,
+                'shadows' => Packs\Shadow::class,
                 'sizes' => Packs\Avatar\Size::class,
                 'colors' => Packs\Avatar\Color::class,
             ],
@@ -82,7 +88,7 @@ class NeuraKitConfig
         return self::mix([
             'default' => [
                 'color' => self::GLOBAL,
-                'shadow' => Shadow::SM->value,
+                'shadow' => self::GLOBAL,
                 'rounded' => self::GLOBAL,
                 'size' => Size::MD->value,
             ],
@@ -102,9 +108,12 @@ class NeuraKitConfig
                 'max-width' => 'xl',
                 'close-on-click-away' => true,
                 'close-on-escape' => true,
+                'rounded' => self::GLOBAL,
+                'shadow' => self::GLOBAL,
             ],
             'packs' => [
                 'rounders' => Packs\Rounded::class,
+                'shadows' => Packs\Shadow::class,
             ],
             'component_defaults' => [
                 'modal_max_width' => 'xl',
@@ -125,9 +134,11 @@ class NeuraKitConfig
                 'width' => 'md',
                 'close-on-click-away' => true,
                 'close-on-escape' => true,
+                'shadow' => self::GLOBAL,
             ],
             'packs' => [
                 'rounders' => Packs\Rounded::class,
+                'shadows' => Packs\Shadow::class,
             ],
             'component_defaults' => [
                 'sideover_side' => 'right',
@@ -146,7 +157,7 @@ class NeuraKitConfig
         return self::mix([
             'default' => [
                 'rounded' => self::GLOBAL,
-                'shadow' => Shadow::SM->value,
+                'shadow' => self::GLOBAL,
             ],
             'packs' => [
                 'shadows' => Packs\Shadow::class,
@@ -159,8 +170,22 @@ class NeuraKitConfig
     {
         return self::mix([
             'default' => [
-                'rounded' => Rounded::LG->value,
-                'shadow' => Shadow::LG->value,
+                'rounded' => self::GLOBAL,
+                'shadow' => self::GLOBAL,
+            ],
+            'packs' => [
+                'shadows' => Packs\Shadow::class,
+                'rounders' => Packs\Rounded::class,
+            ],
+        ], $options);
+    }
+
+    public static function popup(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'rounded' => self::GLOBAL,
+                'shadow' => self::GLOBAL,
             ],
             'packs' => [
                 'shadows' => Packs\Shadow::class,
@@ -199,6 +224,10 @@ class NeuraKitConfig
             'default' => [
                 'color' => self::GLOBAL,
                 'size' => Size::SM->value,
+                'shadow' => self::GLOBAL,
+            ],
+            'packs' => [
+                'shadows' => Packs\Shadow::class,
             ],
         ], $options);
     }
@@ -210,7 +239,7 @@ class NeuraKitConfig
                 'size' => Size::MD->value,
                 'variant' => 'default',
                 'color' => 'neutral',
-                'rounded' => Rounded::MD->value,
+                'rounded' => self::GLOBAL,
             ],
             'packs' => [
                 'sizes' => Packs\Navlist\Size::class,
@@ -238,9 +267,11 @@ class NeuraKitConfig
         return self::mix([
             'default' => [
                 'variant' => 'line',
+                'rounded' => self::GLOBAL,
             ],
             'packs' => [
                 'variants' => Packs\Tabs\Variant::class,
+                'rounders' => Packs\Rounded::class,
             ],
         ], $options);
     }
@@ -263,10 +294,13 @@ class NeuraKitConfig
         return self::mix([
             'default' => [
                 'variant' => Color::PRIMARY->value,
+                'rounded' => self::GLOBAL,
+                'shadow' => self::GLOBAL,
             ],
             'packs' => [
                 'colors' => Packs\Callout\Color::class,
                 'rounders' => Packs\Rounded::class,
+                'shadows' => Packs\Shadow::class,
             ],
         ], $options);
     }
@@ -276,8 +310,8 @@ class NeuraKitConfig
         return self::mix([
             'default' => [
                 'variant' => 'default',
-                'rounded' => Rounded::XL->value,
-                'shadow' => Shadow::NONE->value,
+                'rounded' => self::GLOBAL,
+                'shadow' => self::GLOBAL,
                 'density' => 'normal',
             ],
             'packs' => [
@@ -297,6 +331,218 @@ class NeuraKitConfig
             ],
             'packs' => [
                 'colors' => Packs\Wizard\Color::class,
+            ],
+        ], $options);
+    }
+
+    public static function dropzone(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'rounded' => self::GLOBAL,
+                'shadow' => self::GLOBAL,
+            ],
+            'packs' => [
+                'shadows' => Packs\Shadow::class,
+                'rounders' => Packs\Rounded::class,
+            ],
+        ], $options);
+    }
+
+    public static function fieldset(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'rounded' => self::GLOBAL,
+            ],
+            'packs' => [
+                'rounders' => Packs\Rounded::class,
+            ],
+        ], $options);
+    }
+
+    public static function dialog(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'rounded' => self::GLOBAL,
+                'shadow' => self::GLOBAL,
+            ],
+            'packs' => [
+                'rounders' => Packs\Rounded::class,
+                'shadows' => Packs\Shadow::class,
+            ],
+        ], $options);
+    }
+
+    public static function toast(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'rounded' => self::GLOBAL,
+                'shadow' => self::GLOBAL,
+            ],
+            'packs' => [
+                'rounders' => Packs\Rounded::class,
+                'shadows' => Packs\Shadow::class,
+            ],
+        ], $options);
+    }
+
+    public static function emptyState(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'rounded' => self::GLOBAL,
+                'shadow' => self::GLOBAL,
+            ],
+            'packs' => [
+                'rounders' => Packs\Rounded::class,
+                'shadows' => Packs\Shadow::class,
+            ],
+        ], $options);
+    }
+
+    public static function progress(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'rounded' => 'full',
+            ],
+            'packs' => [
+                'rounders' => Packs\Rounded::class,
+            ],
+        ], $options);
+    }
+
+    public static function skeleton(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'rounded' => self::GLOBAL,
+            ],
+            'packs' => [
+                'rounders' => Packs\Rounded::class,
+            ],
+        ], $options);
+    }
+
+    public static function lottie(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'shadow' => self::GLOBAL,
+            ],
+            'packs' => [
+                'shadows' => Packs\Shadow::class,
+            ],
+        ], $options);
+    }
+
+    public static function chart(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'rounded' => self::GLOBAL,
+                'shadow' => self::GLOBAL,
+            ],
+            'packs' => [
+                'rounders' => Packs\Rounded::class,
+                'shadows' => Packs\Shadow::class,
+            ],
+        ], $options);
+    }
+
+    public static function tree(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'rounded' => self::GLOBAL,
+            ],
+            'packs' => [
+                'rounders' => Packs\Rounded::class,
+            ],
+        ], $options);
+    }
+
+    public static function flow(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'rounded' => self::GLOBAL,
+                'shadow' => self::GLOBAL,
+            ],
+            'packs' => [
+                'rounders' => Packs\Rounded::class,
+                'shadows' => Packs\Shadow::class,
+            ],
+        ], $options);
+    }
+
+    public static function kanban(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'rounded' => self::GLOBAL,
+                'shadow' => self::GLOBAL,
+            ],
+            'packs' => [
+                'rounders' => Packs\Rounded::class,
+                'shadows' => Packs\Shadow::class,
+            ],
+        ], $options);
+    }
+
+    public static function imageGallery(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'rounded' => self::GLOBAL,
+            ],
+            'packs' => [
+                'rounders' => Packs\Rounded::class,
+            ],
+        ], $options);
+    }
+
+    public static function command(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'rounded' => self::GLOBAL,
+                'shadow' => self::GLOBAL,
+            ],
+            'packs' => [
+                'rounders' => Packs\Rounded::class,
+                'shadows' => Packs\Shadow::class,
+            ],
+        ], $options);
+    }
+
+    public static function spotlight(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'rounded' => self::GLOBAL,
+                'shadow' => self::GLOBAL,
+            ],
+            'packs' => [
+                'rounders' => Packs\Rounded::class,
+                'shadows' => Packs\Shadow::class,
+            ],
+        ], $options);
+    }
+
+    public static function composer(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'rounded' => self::GLOBAL,
+                'shadow' => self::GLOBAL,
+            ],
+            'packs' => [
+                'rounders' => Packs\Rounded::class,
+                'shadows' => Packs\Shadow::class,
             ],
         ], $options);
     }

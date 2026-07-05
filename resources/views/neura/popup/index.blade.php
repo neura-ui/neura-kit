@@ -6,6 +6,8 @@
 ])
 
 @php
+    use Neura\Kit\Support\PackResolver;
+
     $sizes = [
         'xs' => [
             'padding' => 'p-1',
@@ -35,30 +37,25 @@
 
     $variants = [
         'tooltip' => [
-            'radius' => 'rounded-lg',
-            'shadow' => 'shadow-md shadow-black/10 dark:shadow-black/30',
             'border' => 'border border-edge',
             'bg' => 'bg-surface-raised backdrop-blur-xl',
         ],
         'menu' => [
-            'radius' => 'rounded-lg',
-            'shadow' => 'shadow-md shadow-black/8 dark:shadow-black/25',
             'border' => 'border border-edge',
             'bg' => 'bg-surface-raised backdrop-blur-xl',
         ],
         'compact' => [
-            'radius' => 'rounded-lg',
-            'shadow' => 'shadow-lg shadow-black/8 dark:shadow-black/30',
             'border' => 'border border-edge',
             'bg' => 'bg-surface-raised backdrop-blur-xl',
         ],
         'default' => [
-            'radius' => 'rounded-xl',
-            'shadow' => 'shadow-lg shadow-black/8 dark:shadow-black/30',
             'border' => 'border border-edge',
             'bg' => 'bg-surface-raised backdrop-blur-xl',
         ],
     ];
+
+    $roundedClass = PackResolver::rounded(neura_config('popup', 'rounded'));
+    $shadowClass = PackResolver::shadow(neura_config('popup', 'shadow'));
 
     $v = $variants[$variant] ?? $variants['default'];
     $s = $sizes[$size] ?? $sizes['md'];
@@ -73,9 +70,9 @@
         'overflow-y-auto overscroll-contain',
 
         $v['bg'],
-        $v['radius'],
+        $roundedClass,
         $v['border'],
-        $v['shadow'],
+        $shadowClass,
 
         $s['text'],
         'text-neutral-950 dark:text-neutral-50',
