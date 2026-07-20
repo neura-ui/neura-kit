@@ -4,6 +4,7 @@
     "select": "Select",
     "commands": "Commands",
     "ai": "AI",
+    "back": "Back",
     "close": "Close",
     "noResultsFor": "No results found for",
     "tryDifferentSearch": "Try a different search term",

@@ -33,6 +33,7 @@
     open: false,
     isTyping: false,
     activeIndex: null,
+    activePanel: null,
     options: [],
     filteredOptions: [],
     optionsVersion: 0,
@@ -213,15 +214,17 @@
     },
 
     select(value) {
-        this.isTyping = false;
-        this.search = '';
-
         if (!this.isMultiple) {
+            this.isTyping = false;
+            this.search = '';
             this.open = false;
+            this.activePanel = null;
             this.state = value; // Store the value directly
             return;
         }
 
+        // Keep the current search in multiple mode so the user can keep picking
+        // from the filtered list without retyping.
         const currentState = Array.isArray(this.state) ? [...this.state] : [];
         const itemIndex = currentState.findIndex(item => String(item) === String(value));
 
@@ -230,6 +233,64 @@
         } else {
             this.state = currentState.filter((_, index) => index !== itemIndex);
         }
+    },
+
+    openPanel(name) {
+        if (this.isDisabled) return;
+
+        this.open = true;
+        this.activePanel = name;
+        this.search = '';
+        this.isTyping = false;
+        this.activeIndex = null;
+
+        this.$nextTick(() => {
+            const panel = this.$el.querySelector(`[data-panel='${name}']`);
+            const focusable = panel?.querySelector(
+                'input:not([type=hidden]):not([disabled]), textarea:not([disabled]), select:not([disabled]), button:not([disabled]):not([data-slot=select-panel-back])'
+            );
+            focusable?.focus({ preventScroll: true });
+        });
+    },
+
+    backPanel() {
+        this.activePanel = null;
+
+        this.$nextTick(() => {
+            if (this.isSearchable) {
+                this.$refs.searchControl?.focus({ preventScroll: true });
+            }
+            this.scrollSelectionIntoView();
+        });
+    },
+
+    scrollSelectionIntoView() {
+        const selected = this.$el.querySelector('[data-slot=option][data-selected]');
+        selected?.scrollIntoView({ block: 'nearest' });
+    },
+
+    // Arrow-key navigation that jumps from option to option, skipping
+    // any focusable suffix actions inside the rows.
+    focusOption(direction, event) {
+        const items = Array
+            .from(this.$el.querySelectorAll('[data-slot=option]'))
+            .filter(el => el.offsetParent !== null);
+
+        if (!items.length) return;
+
+        const current = event.target.closest('[data-slot=option]');
+        const index = items.indexOf(current);
+
+        let next;
+        if (index === -1) {
+            next = direction > 0 ? items[0] : items[items.length - 1];
+        } else {
+            next = items[(index + direction + items.length) % items.length];
+        }
+
+        next.focus({ preventScroll: true });
+        next.scrollIntoView({ block: 'nearest' });
+        this.activeIndex = this.getFilteredIndex(next.dataset.value);
     },
 
     clear() {
@@ -258,14 +319,36 @@
         this.search = '';
         this.isTyping = false;
         this.activeIndex = null;
+        this.activePanel = null;
     },
 
     toggle() {
         if (this.isDisabled) return;
-        this.open = !this.open;
-        if ((this.open && !this.hasSelection) && this.isSearchable) {
-            this.activeIndex = 0
-        };
+
+        if (this.open) {
+            this.close();
+            return;
+        }
+
+        this.open = true;
+
+        if (!this.hasSelection && this.isSearchable) {
+            this.activeIndex = 0;
+        }
+
+        this.$nextTick(() => {
+            if (this.isSearchable) {
+                this.$refs.searchControl?.focus({ preventScroll: true });
+            }
+
+            // Start keyboard navigation from the current selection
+            if (!this.isMultiple && this.hasSelection) {
+                const index = this.getFilteredIndex(this.state);
+                if (index >= 0) this.activeIndex = index;
+            }
+
+            this.scrollSelectionIntoView();
+        });
     },
 
     handleKeydown(event) {
@@ -290,7 +373,7 @@
         if (event.key === 'Enter' && this.activeIndex !== null) {
             event.preventDefault();
             let option = this.filteredOptions[this.activeIndex];
-            this.select(option.value);
+            if (option) this.select(option.value);
         }
 
         if (event.key === 'Home') {
@@ -369,6 +452,7 @@
         return this.search && this.search.trim().length > 0;
     }
 }"
+    x-on:keydown.escape="open && (activePanel ? backPanel() : close())"
     {{ $attributes->whereDoesntStartWith(['wire:model', 'x-model', 'value', 'name', 'label', 'triggerLabel', 'placeholder', 'searchable', 'searchPlaceholder', 'multiple', 'clearable', 'disabled', 'icon', 'iconAfter', 'invalid', 'triggerClass'])->class([
         'relative [--popup-round:var(--radius-box)] [--popup-padding:--spacing(1)]',
         'dark:border-red-400! dark:shadow-red-400 text-red-400! placeholder:text-red-400!' => $invalid,
@@ -380,10 +464,26 @@
     @endif
 
     <div>
-        <neura::select.trigger />
+        @if (isset($action) && $action->isNotEmpty())
+            <div class="flex items-stretch gap-1.5">
+                <div class="relative flex-1 min-w-0">
+                    <neura::select.trigger />
+                </div>
+
+                <div data-slot="select-actions" {{ $action->attributes->merge(['class' => 'flex items-stretch gap-1.5 shrink-0']) }}>
+                    {{ $action }}
+                </div>
+            </div>
+        @else
+            <neura::select.trigger />
+        @endif
 
         <neura::select.options :searchPlaceholder="$searchPlaceholder">
             {{ $slot }}
+
+            @isset($panels)
+                <x-slot:panels>{{ $panels }}</x-slot:panels>
+            @endisset
         </neura::select.options>
     </div>
 </div>

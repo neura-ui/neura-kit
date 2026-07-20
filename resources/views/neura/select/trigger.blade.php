@@ -29,7 +29,11 @@
 
     <button
         x-on:click="toggle()"
+        x-on:keydown.down.prevent.stop="open ? handleKeydown($event) : toggle()"
+        x-on:keydown.up.prevent.stop="open ? handleKeydown($event) : toggle()"
+        x-on:keydown.enter.prevent.stop="open ? (activeIndex !== null ? handleKeydown($event) : close()) : toggle()"
         x-bind:aria-expanded="open"
+        x-bind:data-open="open ? true : null"
         type="button"
         aria-haspopup="listbox"
         data-slot="select-control"
