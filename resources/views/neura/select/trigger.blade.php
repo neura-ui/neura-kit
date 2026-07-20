@@ -7,12 +7,14 @@
     'triggerClass' => '',
     'invalid' => false,
     'trigger' => null,
+    'placeholder' => null,
 ])
 @php
     use Neura\Kit\Support\PackResolver;
     $selectColors = PackResolver::inputColor('select');
     $roundedClass = PackResolver::rounded(neura_config('select', 'rounded'));
     $shadowClass = PackResolver::shadow(neura_config('select', 'shadow'));
+    $ssrLabel = $placeholder ?? ucfirst(neura_trans('select'));
 @endphp
 <div
     x-ref="selectTrigger"
@@ -42,8 +44,11 @@
         x-bind:aria-activedescendant="!isSearchable && activeIndex !== null ? 'option-' + activeIndex : null"
         @disabled($disabled)
     >
-        <span class="truncate block w-full">
-            <span x-text="label"></span>
+        <span
+            class="truncate block w-full text-fg-muted"
+            x-bind:class="hasSelection ? 'text-fg' : 'text-fg-muted'"
+        >
+            <span x-text="label">{{ $ssrLabel }}</span>
         </span>
     </button>
 

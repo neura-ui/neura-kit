@@ -25,8 +25,6 @@
     $sizeClasses = PackResolver::inputSize($size ?? 'md');
     $roundedClass = PackResolver::rounded($rounded ?? neura_config('input', 'rounded'));
     $shadowClass = PackResolver::shadow($shadow ?? neura_config('input', 'shadow'));
-    $roundedStart = str_replace('rounded-', 'rounded-l-', $roundedClass);
-    $roundedEnd = str_replace('rounded-', 'rounded-r-', $roundedClass);
     $popupRoundedClass = PackResolver::rounded(neura_config('popup', 'rounded'));
     $popupShadowClass = PackResolver::shadow(neura_config('popup', 'shadow'));
     $inputColors = PackResolver::inputColor('base');
@@ -85,7 +83,8 @@
                 $inputColors['border'] => !$invalid,
                 $inputColors['focus'] => !$invalid,
                 $inputColors['invalid'] => $invalid,
-                $roundedStart,
+                $roundedClass,
+                'rounded-r-none',
             ])
         >
             @if($showFlags)
@@ -133,7 +132,8 @@
                 $inputColors['focus'] => !$invalid,
                 $inputColors['invalid'] => $invalid,
                 $sizeClasses,
-                $roundedEnd,
+                $roundedClass,
+                'rounded-l-none',
             ])
             {{ $attributes->except(['class', 'wire:model', 'wire:model.live', 'wire:model.blur', 'wire:model.lazy']) }}
             placeholder="{{ $placeholder ?? __('Phone number') }}"

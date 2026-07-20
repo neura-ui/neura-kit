@@ -78,10 +78,15 @@
         this.hasTyped = true;
         this.activeIndex = null;
 
-        // Open if there's text and meets minimum character requirement
-        this.open = this.search.length >= this.minChars;
-
         clearTimeout(this.debounceTimer);
+
+        // Close immediately when below min chars — never open with the unfiltered list
+        if (this.search.length < this.minChars) {
+            this.filteredOptions = this.options;
+            this.open = false;
+            return;
+        }
+
         this.debounceTimer = setTimeout(() => {
             this.filterOptions();
         }, @json($debounce));

@@ -111,5 +111,21 @@
     "complete": "Complete",
     "failed": "Failed",
     "pending": "Pending",
-    "invalidFileType": "Invalid file type: {fileName}"
+    "invalidFileType": "Invalid file type: {fileName}",
+    "today": "Today",
+    "reset": "Reset",
+    "is": "is",
+    "isNot": "is not",
+    "isAnyOf": "is any of",
+    "isNotAnyOf": "is not any of",
+    "includesAll": "includes all",
+    "excludesAll": "excludes all",
+    "contains": "contains",
+    "notContains": "does not contain",
+    "startsWith": "starts with",
+    "endsWith": "ends with",
+    "isEmpty": "is empty",
+    "isNotEmpty": "is not empty",
+    "clearAll": "Clear all",
+    "selectedCount": "selected"
 }

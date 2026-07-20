@@ -96,6 +96,112 @@ class PackResolver
         return Rounded::get($value) ?? 'rounded-lg';
     }
 
+    /**
+     * Resolve a rounded token (e.g. "lg") from a config value or class name.
+     */
+    public static function roundedToken(?string $value): string
+    {
+        $value = $value ?: self::globalStyle('rounded');
+
+        if ($value === 'global') {
+            $value = self::globalStyle('rounded');
+        }
+
+        if (str_starts_with($value, 'rounded-')) {
+            return substr($value, strlen('rounded-')) ?: 'lg';
+        }
+
+        return Rounded::get($value) ? $value : 'lg';
+    }
+
+    /**
+     * Leading / trailing rounded utilities.
+     * All branches return complete class literals so Tailwind can scan them.
+     *
+     * @return array{0: string, 1: string}
+     */
+    public static function roundedSides(?string $value): array
+    {
+        return match (self::roundedToken($value)) {
+            'none' => ['rounded-l-none', 'rounded-r-none'],
+            'sm' => ['rounded-l-sm', 'rounded-r-sm'],
+            'md' => ['rounded-l-md', 'rounded-r-md'],
+            'lg' => ['rounded-l-lg', 'rounded-r-lg'],
+            'xl' => ['rounded-l-xl', 'rounded-r-xl'],
+            '2xl' => ['rounded-l-2xl', 'rounded-r-2xl'],
+            '3xl' => ['rounded-l-3xl', 'rounded-r-3xl'],
+            'full' => ['rounded-l-full', 'rounded-r-full'],
+            default => ['rounded-l-lg', 'rounded-r-lg'],
+        };
+    }
+
+    /**
+     * OTP cell first/last rounded variant classes (complete literals for Tailwind).
+     *
+     * @return array{0: string, 1: string}
+     */
+    public static function otpInputRounded(?string $value): array
+    {
+        return match (self::roundedToken($value)) {
+            'none' => ['[&:where(&:first-child)]:rounded-l-none', '[&:where(&:last-child)]:rounded-r-none'],
+            'sm' => ['[&:where(&:first-child)]:rounded-l-sm', '[&:where(&:last-child)]:rounded-r-sm'],
+            'md' => ['[&:where(&:first-child)]:rounded-l-md', '[&:where(&:last-child)]:rounded-r-md'],
+            'lg' => ['[&:where(&:first-child)]:rounded-l-lg', '[&:where(&:last-child)]:rounded-r-lg'],
+            'xl' => ['[&:where(&:first-child)]:rounded-l-xl', '[&:where(&:last-child)]:rounded-r-xl'],
+            '2xl' => ['[&:where(&:first-child)]:rounded-l-2xl', '[&:where(&:last-child)]:rounded-r-2xl'],
+            '3xl' => ['[&:where(&:first-child)]:rounded-l-3xl', '[&:where(&:last-child)]:rounded-r-3xl'],
+            'full' => ['[&:where(&:first-child)]:rounded-l-full', '[&:where(&:last-child)]:rounded-r-full'],
+            default => ['[&:where(&:first-child)]:rounded-l-lg', '[&:where(&:last-child)]:rounded-r-lg'],
+        };
+    }
+
+    /**
+     * OTP group rounded classes around separators (complete literals for Tailwind).
+     *
+     * @return array{0: string, 1: string}
+     */
+    public static function otpGroupRounded(?string $value): array
+    {
+        return match (self::roundedToken($value)) {
+            'none' => [
+                '[&:where(&>[data-slot=otp-input]:has(+[data-slot=separator]))]:rounded-r-none',
+                '[&:where(&>[data-slot=separator]+[data-slot=otp-input])]:rounded-l-none',
+            ],
+            'sm' => [
+                '[&:where(&>[data-slot=otp-input]:has(+[data-slot=separator]))]:rounded-r-sm',
+                '[&:where(&>[data-slot=separator]+[data-slot=otp-input])]:rounded-l-sm',
+            ],
+            'md' => [
+                '[&:where(&>[data-slot=otp-input]:has(+[data-slot=separator]))]:rounded-r-md',
+                '[&:where(&>[data-slot=separator]+[data-slot=otp-input])]:rounded-l-md',
+            ],
+            'lg' => [
+                '[&:where(&>[data-slot=otp-input]:has(+[data-slot=separator]))]:rounded-r-lg',
+                '[&:where(&>[data-slot=separator]+[data-slot=otp-input])]:rounded-l-lg',
+            ],
+            'xl' => [
+                '[&:where(&>[data-slot=otp-input]:has(+[data-slot=separator]))]:rounded-r-xl',
+                '[&:where(&>[data-slot=separator]+[data-slot=otp-input])]:rounded-l-xl',
+            ],
+            '2xl' => [
+                '[&:where(&>[data-slot=otp-input]:has(+[data-slot=separator]))]:rounded-r-2xl',
+                '[&:where(&>[data-slot=separator]+[data-slot=otp-input])]:rounded-l-2xl',
+            ],
+            '3xl' => [
+                '[&:where(&>[data-slot=otp-input]:has(+[data-slot=separator]))]:rounded-r-3xl',
+                '[&:where(&>[data-slot=separator]+[data-slot=otp-input])]:rounded-l-3xl',
+            ],
+            'full' => [
+                '[&:where(&>[data-slot=otp-input]:has(+[data-slot=separator]))]:rounded-r-full',
+                '[&:where(&>[data-slot=separator]+[data-slot=otp-input])]:rounded-l-full',
+            ],
+            default => [
+                '[&:where(&>[data-slot=otp-input]:has(+[data-slot=separator]))]:rounded-r-lg',
+                '[&:where(&>[data-slot=separator]+[data-slot=otp-input])]:rounded-l-lg',
+            ],
+        };
+    }
+
     public static function shadow(?string $value): string
     {
         $value = $value ?: self::globalStyle('shadow');

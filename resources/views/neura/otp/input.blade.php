@@ -4,12 +4,12 @@
     use Neura\Kit\Support\PackResolver;
 
     $colors = PackResolver::inputColor('base');
-    $roundedToken = neura_config('otp', 'rounded');
     $shadowClass = PackResolver::shadow(neura_config('otp', 'shadow'));
+    [$roundedFirst, $roundedLast] = PackResolver::otpInputRounded(neura_config('otp', 'rounded'));
 
     $classes = [
-        "[&:where(&:first-child)]:rounded-l-{$roundedToken}",
-        "[&:where(&:last-child)]:rounded-r-{$roundedToken}",
+        $roundedFirst,
+        $roundedLast,
         'text-center text-base max-w-12 w-full h-12',
         'bg-surface',
         'text-fg placeholder:text-neutral-400 dark:placeholder:text-neutral-500',

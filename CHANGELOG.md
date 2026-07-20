@@ -8,6 +8,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.7] - 2026-07-20
+
+### Added
+
+- **Filters**: New `neura::filters` component for building multi-condition filter bars (select, multiselect, and text fields with operators, search, and clear-all)
+- **Select actions & panels**: `neura::select.action`, `neura::select.panel`, and `neura::select.option-action` for trigger actions, nested option panels, and per-option actions
+- **Select options**: Prefix / suffix slots on options for icons and inline actions
+- **Calendar**: Multi-month layout (`months`), caption dropdowns, date presets, per-day labels, event markers, and optional Today / Reset controls (`showToday`, `showReset`)
+- **Spotlight AI**: `SpotlightAiContext` helper for streaming replies, suggesting actions, and building chat messages from query history
+- **PackResolver**: `roundedToken()`, `roundedSides()`, `otpInputRounded()`, and `otpGroupRounded()` — complete Tailwind class literals for directional / OTP rounding
+- **i18n**: English and French strings for filter operators (`is`, `contains`, `startsWith`, …), `today`, `reset`, `clearAll`, and `selectedCount`
+
+### Improved
+
+- **Calendar**: Loading skeletons for presets and grid while data settles; clearer Today / Reset and preset affordances
+- **Select (multiple)**: Keeps the search query after each pick so users can continue filtering without retyping
+- **Select trigger**: Server-rendered placeholder text and muted styling until a value is selected (avoids empty flash before Alpine hydrates)
+
+### Fixed
+
+- **Autocomplete**: No longer opens with the full unfiltered list during the debounce window — filters (or closes) before showing results
+- **Input**: `wire:` / `x-` bindings stay on the inner `<input>` instead of being merged onto the wrapper
+- **OTP**: Rounded corners on first/last cells and separator neighbors resolve via PackResolver (Tailwind-scannable classes)
+- **Phone input**: Country selector and number field use full rounded token + `rounded-*-none` instead of brittle string replacement on the class name
+
 ## [2.0.6] - 2026-07-05
 
 ### Fixed

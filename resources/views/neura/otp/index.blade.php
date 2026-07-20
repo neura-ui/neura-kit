@@ -13,7 +13,7 @@
 
     $invalid ??= $name && $errors->has($name);
     $error ??= $name ? $errors->first($name) : null;
-    $roundedToken = neura_config('otp', 'rounded');
+    [$otpBeforeSepRounded, $otpAfterSepRounded] = PackResolver::otpGroupRounded(neura_config('otp', 'rounded'));
 @endphp
 
 <div x-data="{
@@ -159,8 +159,8 @@
         {{ $attributes->merge(['class' => 'text-start']) }}>
         <div @class([
             'flex items-center -space-x-px',
-            "[&:where(&>[data-slot=otp-input]:has(+[data-slot=separator]))]:rounded-r-{$roundedToken}",
-            "[&:where(&>[data-slot=separator]+[data-slot=otp-input])]:rounded-l-{$roundedToken}",
+            $otpBeforeSepRounded,
+            $otpAfterSepRounded,
         ])>
             @if ($slot->isNotEmpty())
 

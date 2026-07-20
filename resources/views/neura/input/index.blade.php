@@ -50,7 +50,8 @@
     $inputAttributes = $attributes->except(['class']);
 @endphp
 
-<div {{ $attributes->merge(['class' => Arr::toCssClasses($classes)]) }}>
+{{-- Only merge class onto the wrapper; wire:/x- bindings must stay on the <input> --}}
+<div {{ $attributes->only('class')->merge(['class' => Arr::toCssClasses($classes)]) }}>
 
     @if (filled($prefix) || filled($prefixIcon))
         <neura::input.extra-slot data-slot="input-prefix">

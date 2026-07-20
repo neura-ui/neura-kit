@@ -87,6 +87,7 @@
         weekDays: [],
         monthNames: [],
         yearOptions: [],
+        ready: false,
 
         init() {
             let anchor = this.parseDate(this.anchorDate()) ?? new Date();
@@ -106,6 +107,7 @@
             this.initMonthNames();
             this.initYearOptions();
             this.buildMonths();
+            this.ready = true;
 
             this.$watch('currentMonth', () => this.buildMonths());
             this.$watch('currentYear', () => this.buildMonths());
@@ -342,22 +344,22 @@
                     this.hoveredDate = null;
                 }
             } else if (this.isMultiple) {
-                const index = this.selectedDate.indexOf(dateStr);
-                if (index > -1) {
-                    this.selectedDate.splice(index, 1);
-                } else {
-                    this.selectedDate.push(dateStr);
-                }
-                this.selectedDate = [...this.selectedDate];
+                this.selectedDate = this.selectedDate.includes(dateStr)
+                    ? this.selectedDate.filter(d => d !== dateStr)
+                    : [...this.selectedDate, dateStr];
             } else {
                 this.selectedDate = dateStr;
             }
 
+            this.emitSelection();
+        },
+
+        emitSelection() {
             this.$dispatch('date-selected', {
-                date: this.isRange || this.isMultiple ? this.selectedDate : dateStr,
+                date: this.selectedDate,
                 dates: this.isRange
                     ? [this.selectedDate.start, this.selectedDate.end].filter(Boolean)
-                    : (this.isMultiple ? this.selectedDate : [dateStr]),
+                    : (this.isMultiple ? this.selectedDate : (this.selectedDate ? [this.selectedDate] : [])),
             });
         },
 
@@ -407,12 +409,7 @@
             const anchor = this.parseDate(anchorStr);
             if (anchor) this.showMonth(anchor.getFullYear(), anchor.getMonth());
 
-            this.$dispatch('date-selected', {
-                date: normalized,
-                dates: this.isRange
-                    ? [normalized.start, normalized.end].filter(Boolean)
-                    : (this.isMultiple ? normalized : [normalized]),
-            });
+            this.emitSelection();
         },
 
         isPresetActive(value) {
@@ -576,10 +573,7 @@
                 this.selectedDate = todayStr;
             }
 
-            this.$dispatch('date-selected', {
-                date: this.isMultiple ? this.selectedDate : todayStr,
-                dates: this.isMultiple ? this.selectedDate : [todayStr],
-            });
+            this.emitSelection();
         },
 
         reset() {
@@ -594,7 +588,7 @@
             }
 
             this.hoveredDate = null;
-            this.$dispatch('date-selected', { date: this.selectedDate, dates: [] });
+            this.emitSelection();
         }
     }"
     x-effect="syncFromModel()"
@@ -618,200 +612,271 @@
         $calendarRoundedClass,
         $calendarShadowClass,
     ])>
-        <div class="flex flex-col sm:flex-row">
-            @if ($hasPresets)
-                <div class="mb-3 flex gap-1 overflow-x-auto border-b border-separator pb-3 sm:mb-0 sm:me-3 sm:min-w-28 sm:flex-col sm:overflow-visible sm:border-b-0 sm:border-e sm:pb-0 sm:pe-3">
-                    <template x-for="(presetValue, presetLabel) in presets" :key="presetLabel">
-                        <button
-                            type="button"
-                            class="cursor-pointer rounded-md px-2.5 py-1.5 text-start text-sm whitespace-nowrap transition-colors duration-100 disabled:pointer-events-none disabled:opacity-50"
-                            x-bind:class="isPresetActive(presetValue)
-                                ? 'bg-active text-fg font-medium'
-                                : 'text-fg-secondary hover:bg-hover hover:text-fg'"
-                            x-bind:disabled="isDisabled"
-                            x-on:click="applyPreset(presetValue)"
-                            x-text="presetLabel"
-                        ></button>
-                    </template>
-                </div>
-            @endif
-
-            <div class="flex flex-col">
+        {{-- Skeleton: reserves the calendar frame before Alpine builds the grid --}}
         <div
-            class="relative flex flex-col gap-4 md:flex-row"
-            x-on:keydown="onKeydown"
-            x-on:mouseleave="hoveredDate = null"
+            x-show="!ready"
+            aria-hidden="true"
+            class="pointer-events-none"
         >
-            <div class="absolute left-0 top-0 z-10">
-                <neura::button
-                    variant="ghost"
-                    size="sm"
-                    icon="chevron-left"
-                    aria-label="Previous month"
-                    x-on:click="previousMonth"
-                    x-bind:disabled="isDisabled || !canGoPrevious"
-                />
-            </div>
+            <div class="flex flex-col sm:flex-row">
+                @if ($hasPresets)
+                    <div class="mb-3 flex gap-1.5 overflow-hidden border-b border-separator pb-3 sm:mb-0 sm:me-3 sm:min-w-28 sm:flex-col sm:border-b-0 sm:border-e sm:pb-0 sm:pe-3">
+                        @foreach (range(1, min(4, count((array) $presets) ?: 3)) as $presetSkeleton)
+                            <div class="h-8 w-full animate-pulse rounded-md bg-surface-inset"></div>
+                        @endforeach
+                    </div>
+                @endif
 
-            <div class="absolute right-0 top-0 z-10">
-                <neura::button
-                    variant="ghost"
-                    size="sm"
-                    icon="chevron-right"
-                    aria-label="Next month"
-                    x-on:click="nextMonth"
-                    x-bind:disabled="isDisabled || !canGoNext"
-                />
-            </div>
-
-            <template x-for="grid in monthGrids" :key="grid.year + '-' + grid.month">
-                <div class="flex w-fit flex-col gap-3">
-                    @if ($captionLayout === 'dropdown')
-                        <div class="flex h-8 items-center justify-center gap-1.5 px-9">
-                            <div class="relative rounded-md transition-colors hover:bg-hover">
-                                <div class="flex items-center gap-1 px-2 py-1 text-sm font-medium text-fg">
-                                    <span x-text="monthNames[currentMonth]"></span>
-                                    <neura::icon name="chevron-down" variant="micro" class="size-3.5 text-fg-muted" />
+                <div class="flex flex-col">
+                    <div class="relative flex flex-col gap-4 md:flex-row">
+                        @foreach (range(1, $monthsCount) as $monthSkeleton)
+                            <div class="flex w-fit flex-col gap-3">
+                                <div class="flex h-8 items-center justify-center gap-2 px-9">
+                                    <div class="h-5 w-20 animate-pulse rounded-md bg-surface-inset"></div>
+                                    @if ($captionLayout === 'dropdown')
+                                        <div class="h-5 w-12 animate-pulse rounded-md bg-surface-inset"></div>
+                                    @endif
                                 </div>
-                                <select
-                                    class="absolute inset-0 cursor-pointer opacity-0"
-                                    aria-label="Month"
-                                    x-model.number="currentMonth"
-                                    x-bind:disabled="isDisabled"
-                                >
-                                    <template x-for="(monthName, index) in monthNames" :key="index">
-                                        <option
-                                            x-bind:value="index"
-                                            x-bind:selected="index === currentMonth"
-                                            x-bind:disabled="isMonthOptionDisabled(index)"
-                                            x-text="monthName"
-                                        ></option>
-                                    </template>
-                                </select>
-                            </div>
 
-                            <div class="relative rounded-md transition-colors hover:bg-hover">
-                                <div class="flex items-center gap-1 px-2 py-1 text-sm font-medium text-fg">
-                                    <span x-text="currentYear"></span>
-                                    <neura::icon name="chevron-down" variant="micro" class="size-3.5 text-fg-muted" />
-                                </div>
-                                <select
-                                    class="absolute inset-0 cursor-pointer opacity-0"
-                                    aria-label="Year"
-                                    x-model.number="currentYear"
-                                    x-on:change="onYearSelected"
-                                    x-bind:disabled="isDisabled"
-                                >
-                                    <template x-for="year in yearOptions" :key="year">
-                                        <option
-                                            x-bind:value="year"
-                                            x-bind:selected="year === currentYear"
-                                            x-text="year"
-                                        ></option>
-                                    </template>
-                                </select>
-                            </div>
-                        </div>
-                    @else
-                        <div
-                            class="flex h-8 items-center justify-center px-9 text-sm font-medium text-fg"
-                            aria-live="polite"
-                            x-text="grid.label"
-                        ></div>
-                    @endif
-
-                    <div role="grid">
-                        <div class="flex" role="row">
-                            <template x-for="(weekDay, weekDayIndex) in weekDays" :key="weekDayIndex">
-                                <div
-                                    class="flex h-8 {{ $cellWidthClass }} items-center justify-center text-[0.8rem] font-normal text-fg-muted"
-                                    role="columnheader"
-                                    x-text="weekDay"
-                                ></div>
-                            </template>
-                        </div>
-
-                        <template x-for="(week, weekIndex) in grid.weeks" :key="weekIndex">
-                            <div class="mt-1 flex" role="row">
-                                <template x-for="(day, dayIndex) in week" :key="day.dateStr">
-                                    <div
-                                        class="relative p-0 text-center"
-                                        role="gridcell"
-                                        x-bind:aria-selected="day.isSelected && day.inMonth ? 'true' : 'false'"
-                                        x-bind:class="cellClasses(day, dayIndex)"
-                                    >
-                                        <button
-                                            type="button"
-                                            class="relative z-10 inline-flex {{ $cellSizeClass }} cursor-pointer items-center justify-center text-sm font-normal transition-colors duration-100 select-none focus-visible:relative focus-visible:z-20 focus-visible:ring-2 focus-visible:ring-edge-focus focus-visible:outline-none disabled:pointer-events-none"
-                                            x-bind:class="dayClasses(day)"
-                                            x-bind:disabled="isDisabled || day.isDisabled"
-                                            x-bind:tabindex="day.dateStr === focusableDate && day.inMonth ? 0 : -1"
-                                            x-bind:data-date="day.dateStr"
-                                            x-bind:data-outside="!day.inMonth ? '' : false"
-                                            x-bind:aria-label="day.label"
-                                            x-bind:aria-current="day.isToday ? 'date' : false"
-                                            x-on:click="selectDate(day)"
-                                            x-on:mouseenter="onDayHover(day)"
-                                        >
-                                            <span x-text="day.date"></span>
-
-                                            @if ($hasDayLabels)
-                                                <span
-                                                    class="text-[10px] leading-none font-normal opacity-70"
-                                                    x-text="dayLabels[day.dateStr] ?? ''"
-                                                ></span>
-                                            @endif
-
-                                            @if ($hasEvents)
-                                                <span
-                                                    class="absolute bottom-1 left-1/2 size-1 -translate-x-1/2 rounded-full"
-                                                    x-show="hasEventsOn(day.dateStr) && day.inMonth"
-                                                    x-bind:class="day.isSelected && day.inMonth ? 'bg-current' : 'bg-primary-600 dark:bg-primary-400'"
-                                                ></span>
-                                            @endif
-                                        </button>
+                                <div>
+                                    <div class="flex">
+                                        @foreach (range(1, 7) as $weekDaySkeleton)
+                                            <div class="flex h-8 {{ $cellWidthClass }} items-center justify-center">
+                                                <div class="h-3 w-5 animate-pulse rounded bg-surface-inset"></div>
+                                            </div>
+                                        @endforeach
                                     </div>
-                                </template>
+
+                                    @foreach (range(1, 6) as $weekSkeleton)
+                                        <div class="mt-1 flex">
+                                            @foreach (range(1, 7) as $daySkeleton)
+                                                <div class="flex {{ $cellWidthClass }} items-center justify-center p-0">
+                                                    <div @class([
+                                                        'animate-pulse rounded-md bg-surface-inset',
+                                                        $hasDayLabels ? 'size-12' : 'size-9',
+                                                    ])></div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    @if ($showToday || $showReset)
+                        <div class="mt-3 flex gap-2 border-t border-separator pt-3">
+                            @if ($showToday)
+                                <div class="h-8 flex-1 animate-pulse rounded-md bg-surface-inset"></div>
+                            @endif
+                            @if ($showReset)
+                                <div class="h-8 flex-1 animate-pulse rounded-md bg-surface-inset"></div>
+                            @endif
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        <div
+            x-show="ready"
+            style="display:none"
+        >
+            <div class="flex flex-col sm:flex-row">
+                @if ($hasPresets)
+                    <div class="mb-3 flex gap-1 overflow-x-auto border-b border-separator pb-3 sm:mb-0 sm:me-3 sm:min-w-28 sm:flex-col sm:overflow-visible sm:border-b-0 sm:border-e sm:pb-0 sm:pe-3">
+                        <template x-for="(presetValue, presetLabel) in presets" :key="presetLabel">
+                            <button
+                                type="button"
+                                class="cursor-pointer rounded-md px-2.5 py-1.5 text-start text-sm whitespace-nowrap transition-colors duration-100 disabled:pointer-events-none disabled:opacity-50"
+                                x-bind:class="isPresetActive(presetValue)
+                                    ? 'bg-active text-fg font-medium'
+                                    : 'text-fg-secondary hover:bg-hover hover:text-fg'"
+                                x-bind:disabled="isDisabled"
+                                x-on:click="applyPreset(presetValue)"
+                                x-text="presetLabel"
+                            ></button>
+                        </template>
+                    </div>
+                @endif
+
+                <div class="flex flex-col">
+                    <div
+                        class="relative flex flex-col gap-4 md:flex-row"
+                        x-on:keydown="onKeydown"
+                        x-on:mouseleave="hoveredDate = null"
+                    >
+                        <div class="absolute left-0 top-0 z-10">
+                            <neura::button
+                                variant="ghost"
+                                size="sm"
+                                icon="chevron-left"
+                                aria-label="Previous month"
+                                x-on:click="previousMonth"
+                                x-bind:disabled="isDisabled || !canGoPrevious"
+                            />
+                        </div>
+
+                        <div class="absolute right-0 top-0 z-10">
+                            <neura::button
+                                variant="ghost"
+                                size="sm"
+                                icon="chevron-right"
+                                aria-label="Next month"
+                                x-on:click="nextMonth"
+                                x-bind:disabled="isDisabled || !canGoNext"
+                            />
+                        </div>
+
+                        <template x-for="grid in monthGrids" :key="grid.year + '-' + grid.month">
+                            <div class="flex w-fit flex-col gap-3">
+                                @if ($captionLayout === 'dropdown')
+                                    <div class="flex h-8 items-center justify-center gap-1.5 px-9">
+                                        <div class="relative rounded-md transition-colors hover:bg-hover">
+                                            <div class="flex items-center gap-1 px-2 py-1 text-sm font-medium text-fg">
+                                                <span x-text="monthNames[currentMonth]"></span>
+                                                <neura::icon name="chevron-down" variant="micro" class="size-3.5 text-fg-muted" />
+                                            </div>
+                                            <select
+                                                class="absolute inset-0 cursor-pointer opacity-0"
+                                                aria-label="Month"
+                                                x-model.number="currentMonth"
+                                                x-bind:disabled="isDisabled"
+                                            >
+                                                <template x-for="(monthName, index) in monthNames" :key="index">
+                                                    <option
+                                                        x-bind:value="index"
+                                                        x-bind:selected="index === currentMonth"
+                                                        x-bind:disabled="isMonthOptionDisabled(index)"
+                                                        x-text="monthName"
+                                                    ></option>
+                                                </template>
+                                            </select>
+                                        </div>
+
+                                        <div class="relative rounded-md transition-colors hover:bg-hover">
+                                            <div class="flex items-center gap-1 px-2 py-1 text-sm font-medium text-fg">
+                                                <span x-text="currentYear"></span>
+                                                <neura::icon name="chevron-down" variant="micro" class="size-3.5 text-fg-muted" />
+                                            </div>
+                                            <select
+                                                class="absolute inset-0 cursor-pointer opacity-0"
+                                                aria-label="Year"
+                                                x-model.number="currentYear"
+                                                x-on:change="onYearSelected"
+                                                x-bind:disabled="isDisabled"
+                                            >
+                                                <template x-for="year in yearOptions" :key="year">
+                                                    <option
+                                                        x-bind:value="year"
+                                                        x-bind:selected="year === currentYear"
+                                                        x-text="year"
+                                                    ></option>
+                                                </template>
+                                            </select>
+                                        </div>
+                                    </div>
+                                @else
+                                    <div
+                                        class="flex h-8 items-center justify-center px-9 text-sm font-medium text-fg"
+                                        aria-live="polite"
+                                        x-text="grid.label"
+                                    ></div>
+                                @endif
+
+                                <div role="grid">
+                                    <div class="flex" role="row">
+                                        <template x-for="(weekDay, weekDayIndex) in weekDays" :key="weekDayIndex">
+                                            <div
+                                                class="flex h-8 {{ $cellWidthClass }} items-center justify-center text-[0.8rem] font-normal text-fg-muted"
+                                                role="columnheader"
+                                                x-text="weekDay"
+                                            ></div>
+                                        </template>
+                                    </div>
+
+                                    <template x-for="(week, weekIndex) in grid.weeks" :key="weekIndex">
+                                        <div class="mt-1 flex" role="row">
+                                            <template x-for="(day, dayIndex) in week" :key="day.dateStr">
+                                                <div
+                                                    class="relative p-0 text-center"
+                                                    role="gridcell"
+                                                    x-bind:aria-selected="day.isSelected && day.inMonth ? 'true' : 'false'"
+                                                    x-bind:class="cellClasses(day, dayIndex)"
+                                                >
+                                                    <button
+                                                        type="button"
+                                                        class="relative z-10 inline-flex {{ $cellSizeClass }} cursor-pointer items-center justify-center text-sm font-normal transition-colors duration-100 select-none focus-visible:relative focus-visible:z-20 focus-visible:ring-2 focus-visible:ring-edge-focus focus-visible:outline-none disabled:pointer-events-none"
+                                                        x-bind:class="dayClasses(day)"
+                                                        x-bind:disabled="isDisabled || day.isDisabled"
+                                                        x-bind:tabindex="day.dateStr === focusableDate && day.inMonth ? 0 : -1"
+                                                        x-bind:data-date="day.dateStr"
+                                                        x-bind:data-outside="!day.inMonth ? '' : false"
+                                                        x-bind:aria-label="day.label"
+                                                        x-bind:aria-current="day.isToday ? 'date' : false"
+                                                        x-on:click="selectDate(day)"
+                                                        x-on:mouseenter="onDayHover(day)"
+                                                    >
+                                                        <span x-text="day.date"></span>
+
+                                                        @if ($hasDayLabels)
+                                                            <span
+                                                                class="text-[10px] leading-none font-normal opacity-70"
+                                                                x-text="dayLabels[day.dateStr] ?? ''"
+                                                            ></span>
+                                                        @endif
+
+                                                        @if ($hasEvents)
+                                                            <span
+                                                                class="absolute bottom-1 left-1/2 size-1 -translate-x-1/2 rounded-full"
+                                                                x-show="hasEventsOn(day.dateStr) && day.inMonth"
+                                                                x-bind:class="day.isSelected && day.inMonth ? 'bg-current' : 'bg-primary-600 dark:bg-primary-400'"
+                                                            ></span>
+                                                        @endif
+                                                    </button>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
                             </div>
                         </template>
                     </div>
+
+                    @isset($footer)
+                        <div class="mt-3 border-t border-separator pt-3">
+                            {{ $footer }}
+                        </div>
+                    @endisset
+
+                    @if ($showToday || $showReset)
+                        <div class="mt-3 flex gap-2 border-t border-separator pt-3">
+                            @if ($showToday)
+                                <neura::button
+                                    variant="outline"
+                                    size="sm"
+                                    class="flex-1"
+                                    x-on:click="goToToday"
+                                    x-bind:disabled="isDisabled"
+                                >
+                                    {{ __('today') }}
+                                </neura::button>
+                            @endif
+
+                            @if ($showReset)
+                                <neura::button
+                                    variant="outline"
+                                    size="sm"
+                                    class="flex-1"
+                                    x-on:click="reset"
+                                    x-bind:disabled="isDisabled"
+                                >
+                                    {{ __('reset') }}
+                                </neura::button>
+                            @endif
+                        </div>
+                    @endif
                 </div>
-            </template>
-        </div>
-
-        @isset($footer)
-            <div class="mt-3 border-t border-separator pt-3">
-                {{ $footer }}
-            </div>
-        @endisset
-
-        @if ($showToday || $showReset)
-            <div class="mt-3 flex gap-2 border-t border-separator pt-3">
-                @if ($showToday)
-                    <neura::button
-                        variant="outline"
-                        size="sm"
-                        class="flex-1"
-                        x-on:click="goToToday"
-                        x-bind:disabled="isDisabled"
-                    >
-                        Today
-                    </neura::button>
-                @endif
-
-                @if ($showReset)
-                    <neura::button
-                        variant="outline"
-                        size="sm"
-                        class="flex-1"
-                        x-on:click="reset"
-                        x-bind:disabled="isDisabled"
-                    >
-                        Reset
-                    </neura::button>
-                @endif
-            </div>
-        @endif
             </div>
         </div>
     </div>
