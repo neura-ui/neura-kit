@@ -81,9 +81,9 @@
         }"
         x-effect="
             disabled = @js($disabled);
-            if (disabled && open) this.close();
+            if (disabled && open) close();
         "
-        x-on:keydown.escape.prevent.stop="this.close($refs.button)"
+        x-on:keydown.escape.prevent.stop="close($refs.button)"
         x-on:focusin.window="handleFocusInOut($event)"
         x-id="['dropdown-panel']"
         class="relative"
@@ -120,7 +120,7 @@
                     x-transition:leave="transition ease-in duration-75"
                     x-transition:leave-start="opacity-100 scale-100"
                     x-transition:leave-end="opacity-0 scale-95"
-                    x-on:click.away="this.close($refs.button)"
+                    x-on:click.away="close($refs.button)"
                     x-bind:id="$id('dropdown-panel')"
                     style="display: none; backdrop-filter: blur(64px); -webkit-backdrop-filter: blur(64px); z-index: 9999"
                     role="menu"
