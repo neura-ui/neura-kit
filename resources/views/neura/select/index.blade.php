@@ -34,6 +34,7 @@
     isTyping: false,
     activeIndex: null,
     activePanel: null,
+    anchorWidth: null,
     options: [],
     filteredOptions: [],
     optionsVersion: 0,
@@ -108,10 +109,17 @@
         };
         
         document.addEventListener('click', handleClickOutside, true);
-        
+
+        // Keep the popup width matched to the control (input + actions) while open
+        const handleResize = () => {
+            if (this.open) this.syncAnchorWidth();
+        };
+        window.addEventListener('resize', handleResize);
+
         // Store cleanup function
         this.__cleanup = () => {
             document.removeEventListener('click', handleClickOutside, true);
+            window.removeEventListener('resize', handleResize);
         };
         
         // Initial options build with a small delay to ensure DOM is ready
@@ -235,10 +243,17 @@
         }
     },
 
+    syncAnchorWidth() {
+        // Measure the whole control (input + action buttons) so the dropdown
+        // opens at exactly that width, aligned to both edges.
+        this.anchorWidth = this.$refs.selectAnchor?.offsetWidth ?? null;
+    },
+
     openPanel(name) {
         if (this.isDisabled) return;
 
         this.open = true;
+        this.syncAnchorWidth();
         this.activePanel = name;
         this.search = '';
         this.isTyping = false;
@@ -331,6 +346,7 @@
         }
 
         this.open = true;
+        this.syncAnchorWidth();
 
         if (!this.hasSelection && this.isSearchable) {
             this.activeIndex = 0;
@@ -453,6 +469,7 @@
     }
 }"
     x-on:keydown.escape="open && (activePanel ? backPanel() : close())"
+    x-bind:style="'--select-popup-w: ' + (anchorWidth ? anchorWidth + 'px' : '100%')"
     {{ $attributes->whereDoesntStartWith(['wire:model', 'x-model', 'value', 'name', 'label', 'triggerLabel', 'placeholder', 'searchable', 'searchPlaceholder', 'multiple', 'clearable', 'disabled', 'icon', 'iconAfter', 'invalid', 'triggerClass'])->class([
         'relative [--popup-round:var(--radius-box)] [--popup-padding:--spacing(1)]',
         'dark:border-red-400! dark:shadow-red-400 text-red-400! placeholder:text-red-400!' => $invalid,
@@ -464,19 +481,21 @@
     @endif
 
     <div>
-        @if (isset($action) && $action->isNotEmpty())
-            <div class="flex items-stretch gap-1.5">
-                <div class="relative flex-1 min-w-0">
-                    <neura::select.trigger />
-                </div>
+        <div class="relative" x-ref="selectAnchor">
+            @if (isset($action) && $action->isNotEmpty())
+                <div class="flex items-stretch gap-1.5">
+                    <div class="relative flex-1 min-w-0">
+                        <neura::select.trigger />
+                    </div>
 
-                <div data-slot="select-actions" {{ $action->attributes->merge(['class' => 'flex items-stretch gap-1.5 shrink-0']) }}>
-                    {{ $action }}
+                    <div data-slot="select-actions" {{ $action->attributes->merge(['class' => 'flex items-stretch gap-1.5 shrink-0']) }}>
+                        {{ $action }}
+                    </div>
                 </div>
-            </div>
-        @else
-            <neura::select.trigger />
-        @endif
+            @else
+                <neura::select.trigger />
+            @endif
+        </div>
 
         <neura::select.options :searchPlaceholder="$searchPlaceholder">
             {{ $slot }}

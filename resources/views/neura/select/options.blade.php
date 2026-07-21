@@ -11,10 +11,10 @@
 
 <neura::popup
     x-show="open"
-    class="w-full!"
+    class="min-w-0! w-[var(--select-popup-w)]!"
     x-on:click.away="close()"
     x-on:keydown.escape.stop="activePanel ? backPanel() : close()"
-    x-anchor.offset.3="$refs.selectTrigger"
+    x-anchor.offset.3="$refs.selectAnchor"
 >
     <div
         x-show="activePanel === null"
