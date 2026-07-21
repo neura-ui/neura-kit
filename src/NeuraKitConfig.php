@@ -101,6 +101,24 @@ class NeuraKitConfig
         ], $options);
     }
 
+    public static function filters(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'color' => self::GLOBAL,
+                'shadow' => self::GLOBAL,
+                'rounded' => self::GLOBAL,
+                'size' => Size::SM->value,
+            ],
+            'packs' => [
+                'shadows' => Packs\Shadow::class,
+                'rounders' => Packs\Rounded::class,
+                'sizes' => Packs\Filters\Size::class,
+                'colors' => Packs\Input\Color::class,
+            ],
+        ], $options);
+    }
+
     public static function modal(array $options = []): array
     {
         return self::mix([

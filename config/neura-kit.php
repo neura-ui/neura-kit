@@ -53,6 +53,8 @@ return [
 
     'input' => Config::input(),
 
+    'filters' => Config::filters(),
+
     'textarea' => Config::input(),
 
     'select' => Config::input(),

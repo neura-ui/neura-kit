@@ -7,11 +7,15 @@
     'allowMultiple' => true,
     'showClear' => true,
     'disabled' => false,
+    'size' => neura_config('filters', 'size'),
+    'rounded' => neura_config('filters', 'rounded'),
+    'shadow' => neura_config('filters', 'shadow'),
 ])
 
 @php
     use Illuminate\Support\Js;
     use Illuminate\Support\Str;
+    use Neura\Kit\Support\PackResolver;
 
     $disabled = filled($disabled) && $disabled;
     $showSearch = filled($showSearch) && $showSearch;
@@ -76,9 +80,31 @@
         'values' => array_values((array) ($filter['values'] ?? [])),
     ])->values();
 
-    $segmentClass = 'flex h-full items-center gap-1.5 px-2.5 text-sm whitespace-nowrap';
-    $panelClass = 'absolute start-0 top-full z-50 mt-1 min-w-44 rounded-md border border-edge bg-surface-raised p-1 shadow-lg';
-    $itemClass = 'flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-start text-sm text-fg transition-colors duration-100 hover:bg-hover';
+    // Design-system tokens resolved from config + packs (mirrors button / input).
+    $sizeConfig = PackResolver::filtersSize($size);
+    $roundedClass = PackResolver::rounded($rounded);
+    [$roundedStart, $roundedEnd] = PackResolver::roundedSidesLogical($rounded);
+    $shadowClass = PackResolver::shadow($shadow);
+
+    $roundedToken = PackResolver::roundedToken($rounded);
+    $roundedValue = match ($roundedToken) {
+        'none' => '0px',
+        'full' => '9999px',
+        default => "var(--radius-{$roundedToken})",
+    };
+
+    // Selection indicators share the checkbox pack used by inputs / selects.
+    $checkboxColors = PackResolver::inputColor('checkbox');
+    $checkboxRounded = PackResolver::rounded(neura_config('checkbox', 'rounded'));
+    $checkboxClass = 'flex size-4 shrink-0 items-center justify-center border transition-colors duration-100 '
+        . $checkboxRounded . ' ' . $checkboxColors['border'] . ' ' . $checkboxColors['checked'];
+
+    // Menu items round one step tighter than their panel, like dropdown / select.
+    $itemRadius = 'rounded-[calc(var(--nk-filter-round)-0.25rem)]';
+
+    $segmentClass = 'flex h-full items-center whitespace-nowrap ' . $sizeConfig['segment'];
+    $panelClass = 'absolute start-0 top-full z-50 mt-1 min-w-44 border border-edge bg-surface-raised backdrop-blur-xl ring-1 ring-black/[0.03] dark:ring-white/[0.04] p-1 ' . $roundedClass . ' ' . $shadowClass;
+    $itemClass = 'flex w-full cursor-pointer items-center gap-2 px-2.5 py-1.5 text-start text-[13px] leading-snug text-fg transition-colors duration-100 hover:bg-hover ' . $itemRadius;
     $panelSearchClass = 'mb-1 w-full border-0 border-b border-separator bg-transparent px-2 py-1.5 text-sm text-fg placeholder:text-fg-muted focus:outline-none';
 @endphp
 
@@ -290,7 +316,10 @@
     }"
     x-effect="syncFromModel()"
     x-on:keydown.escape="closeAll()"
-    {{ $attributes->merge(['class' => 'flex flex-wrap items-center gap-2' . ($disabled ? ' opacity-50' : '')]) }}
+    {{ $attributes->merge([
+        'class' => 'flex flex-wrap items-center gap-2' . ($disabled ? ' opacity-50' : ''),
+        'style' => '--nk-filter-round: ' . $roundedValue,
+    ]) }}
 >
     @if ($name)
         <input type="hidden" name="{{ $name }}" x-bind:value="JSON.stringify(filters)" />
@@ -298,13 +327,13 @@
 
     {{-- Active filter chips --}}
     <template x-for="filter in filters" :key="filter.id">
-        <div class="inline-flex h-8 items-stretch divide-x divide-edge rounded-md border border-edge bg-surface text-sm shadow-xs">
+        <div class="inline-flex {{ $sizeConfig['chip'] }} items-stretch divide-x divide-edge {{ $roundedClass }} border border-edge bg-surface {{ $shadowClass }}">
             {{-- Field label --}}
-            <div class="{{ $segmentClass }} rounded-s-md text-fg-secondary">
+            <div class="{{ $segmentClass }} {{ $roundedStart }} text-fg-secondary">
                 @foreach ($normalizedFields as $field)
                     @if ($field['icon'])
                         <span x-show="filter.field === '{{ $field['key'] }}'" x-cloak>
-                            <neura::icon :name="$field['icon']" variant="micro" class="size-3.5 text-fg-muted" />
+                            <neura::icon :name="$field['icon']" variant="micro" class="{{ $sizeConfig['icon'] }} text-fg-muted" />
                         </span>
                     @endif
                 @endforeach
@@ -348,7 +377,7 @@
                     <input
                         x-show="fieldConfigs[filter.field]?.type === 'text'"
                         type="text"
-                        class="{{ $segmentClass }} w-32 bg-transparent text-fg placeholder:text-fg-muted focus:outline-none"
+                        class="{{ $segmentClass }} {{ $sizeConfig['input'] }} bg-transparent text-fg placeholder:text-fg-muted focus:outline-none"
                         x-bind:data-filter-input="filter.id"
                         x-bind:placeholder="fieldConfigs[filter.field]?.placeholder ?? ''"
                         x-bind:disabled="isDisabled"
@@ -403,12 +432,10 @@
                                             >
                                                 @if ($field['type'] === 'multiselect')
                                                     <span
-                                                        class="flex size-4 shrink-0 items-center justify-center rounded border transition-colors duration-100"
-                                                        x-bind:class="filter.values.includes({{ Js::from($option['value']) }})
-                                                            ? 'border-primary-900 bg-primary-900 text-white dark:border-primary-100 dark:bg-primary-100 dark:text-primary-900'
-                                                            : 'border-edge'"
+                                                        class="{{ $checkboxClass }}"
+                                                        x-bind:data-checked="filter.values.includes({{ Js::from($option['value']) }}) ? true : null"
                                                     >
-                                                        <neura::icon name="check" variant="micro" class="size-3" x-show="filter.values.includes({{ Js::from($option['value']) }})" />
+                                                        <neura::icon name="check" variant="micro" class="size-2.5 text-white" x-show="filter.values.includes({{ Js::from($option['value']) }})" />
                                                     </span>
                                                 @endif
 
@@ -436,12 +463,12 @@
             {{-- Remove --}}
             <button
                 type="button"
-                class="flex cursor-pointer items-center rounded-e-md px-1.5 text-fg-muted transition-colors duration-100 hover:bg-hover hover:text-fg"
+                class="flex cursor-pointer items-center {{ $roundedEnd }} {{ $sizeConfig['remove'] }} text-fg-muted transition-colors duration-100 hover:bg-hover hover:text-fg"
                 x-bind:disabled="isDisabled"
                 x-bind:aria-label="'Remove ' + (fieldConfigs[filter.field]?.label ?? filter.field) + ' filter'"
                 x-on:click="removeFilter(filter.id)"
             >
-                <neura::icon name="x-mark" variant="micro" class="size-3.5" />
+                <neura::icon name="x-mark" variant="micro" class="{{ $sizeConfig['icon'] }}" />
             </button>
         </div>
     </template>
@@ -455,7 +482,8 @@
         @else
             <neura::button
                 variant="outline"
-                size="sm"
+                :size="$size"
+                :rounded="$rounded"
                 icon="funnel"
                 :disabled="$disabled"
                 x-on:click="toggleMenu()"
@@ -547,12 +575,10 @@
                                 >
                                     @if ($field['type'] === 'multiselect')
                                         <span
-                                            class="flex size-4 shrink-0 items-center justify-center rounded border transition-colors duration-100"
-                                            x-bind:class="menuOptionChecked('{{ $field['key'] }}', {{ Js::from($option['value']) }})
-                                                ? 'border-primary-900 bg-primary-900 text-white dark:border-primary-100 dark:bg-primary-100 dark:text-primary-900'
-                                                : 'border-edge'"
+                                            class="{{ $checkboxClass }}"
+                                            x-bind:data-checked="menuOptionChecked('{{ $field['key'] }}', {{ Js::from($option['value']) }}) ? true : null"
                                         >
-                                            <neura::icon name="check" variant="micro" class="size-3" x-show="menuOptionChecked('{{ $field['key'] }}', {{ Js::from($option['value']) }})" />
+                                            <neura::icon name="check" variant="micro" class="size-2.5 text-white" x-show="menuOptionChecked('{{ $field['key'] }}', {{ Js::from($option['value']) }})" />
                                         </span>
                                     @endif
 
@@ -576,7 +602,8 @@
     @if ($showClear)
         <neura::button
             variant="ghost"
-            size="sm"
+            :size="$size"
+            :rounded="$rounded"
             x-cloak
             x-show="filters.length > 0"
             x-bind:disabled="isDisabled"

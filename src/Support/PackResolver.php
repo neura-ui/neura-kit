@@ -7,6 +7,7 @@ use Neura\Kit\Packs\Alert;
 use Neura\Kit\Packs\Avatar;
 use Neura\Kit\Packs\Badge;
 use Neura\Kit\Packs\Button;
+use Neura\Kit\Packs\Filters;
 use Neura\Kit\Packs\Input;
 use Neura\Kit\Packs\Callout;
 use Neura\Kit\Packs\Link;
@@ -132,6 +133,27 @@ class PackResolver
             '3xl' => ['rounded-l-3xl', 'rounded-r-3xl'],
             'full' => ['rounded-l-full', 'rounded-r-full'],
             default => ['rounded-l-lg', 'rounded-r-lg'],
+        };
+    }
+
+    /**
+     * Logical (start / end) rounded utilities, RTL-aware.
+     * All branches return complete class literals so Tailwind can scan them.
+     *
+     * @return array{0: string, 1: string}
+     */
+    public static function roundedSidesLogical(?string $value): array
+    {
+        return match (self::roundedToken($value)) {
+            'none' => ['rounded-s-none', 'rounded-e-none'],
+            'sm' => ['rounded-s-sm', 'rounded-e-sm'],
+            'md' => ['rounded-s-md', 'rounded-e-md'],
+            'lg' => ['rounded-s-lg', 'rounded-e-lg'],
+            'xl' => ['rounded-s-xl', 'rounded-e-xl'],
+            '2xl' => ['rounded-s-2xl', 'rounded-e-2xl'],
+            '3xl' => ['rounded-s-3xl', 'rounded-e-3xl'],
+            'full' => ['rounded-s-full', 'rounded-e-full'],
+            default => ['rounded-s-lg', 'rounded-e-lg'],
         };
     }
 
@@ -293,6 +315,14 @@ class PackResolver
         $colors = Input\Color::default();
 
         return $colors[$element] ?? $colors['base'];
+    }
+
+    public static function filtersSize(?string $size): array
+    {
+        $size = $size ?: 'sm';
+        $sizes = Filters\Size::default();
+
+        return $sizes[$size] ?? $sizes['sm'];
     }
 
     public static function alertColor(?string $type): array

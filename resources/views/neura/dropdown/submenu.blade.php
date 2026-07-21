@@ -35,23 +35,23 @@
         openTimeout: null,
         closeTimeout: null,
         
-        open() {
+        openMenu() {
             clearTimeout(this.closeTimeout);
             this.openTimeout = setTimeout(() => { this.isOpen = true; }, 50);
         },
-        
-        close() {
+
+        closeMenu() {
             clearTimeout(this.openTimeout);
             this.closeTimeout = setTimeout(() => { this.isOpen = false; }, 100);
         },
-        
+
         keepOpen() {
             clearTimeout(this.closeTimeout);
         }
-    }" 
+    }"
     class="relative"
-    @mouseenter="open()"
-    @mouseleave="close()"
+    @mouseenter="openMenu()"
+    @mouseleave="closeMenu()"
 >
     {{-- Trigger Item --}}
     <div
