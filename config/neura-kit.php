@@ -51,6 +51,12 @@ return [
 
     'avatar' => Config::avatar(),
 
+    'icon-stack' => Config::iconStack(),
+
+    'icon' => Config::icon(),
+
+    'orb' => Config::orb(),
+
     'input' => Config::input(),
 
     'filters' => Config::filters(),
@@ -122,6 +128,8 @@ return [
     'flow' => Config::flow(),
 
     'kanban' => Config::kanban(),
+
+    'event-calendar' => Config::eventCalendar(),
 
     'image-gallery' => Config::imageGallery(),
 

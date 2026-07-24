@@ -16,5 +16,7 @@ import './globals/editor';
 import './globals/phone-input';
 import './globals/tree';
 import './globals/flow';
+import './globals/icons';
+import './globals/orb';
 import './components';
 

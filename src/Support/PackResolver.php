@@ -7,11 +7,15 @@ use Neura\Kit\Packs\Alert;
 use Neura\Kit\Packs\Avatar;
 use Neura\Kit\Packs\Badge;
 use Neura\Kit\Packs\Button;
+use Neura\Kit\Packs\EventCalendar;
 use Neura\Kit\Packs\Filters;
+use Neura\Kit\Packs\Icon;
+use Neura\Kit\Packs\IconStack;
 use Neura\Kit\Packs\Input;
 use Neura\Kit\Packs\Callout;
 use Neura\Kit\Packs\Link;
 use Neura\Kit\Packs\Navlist;
+use Neura\Kit\Packs\Orb;
 use Neura\Kit\Packs\Navbar;
 use Neura\Kit\Packs\Rounded;
 use Neura\Kit\Packs\Shadow;
@@ -302,6 +306,49 @@ class PackResolver
         return $colors[$color] ?? $colors['neutral'];
     }
 
+    public static function orbMode(?string $state): string
+    {
+        $state = $state ?: (self::componentDefault('orb', 'state') ?: 'searching');
+        $map = self::packAll('orb', 'states') ?: Orb\State::all();
+
+        return $map[$state] ?? 'globe';
+    }
+
+    public static function orbColor(?string $color): string
+    {
+        $color = $color ?: (self::componentDefault('orb', 'color') ?: 'foreground');
+        $colors = self::packAll('orb', 'colors') ?: Orb\Color::all();
+
+        return $colors[$color] ?? $colors['foreground'] ?? 'text-fg';
+    }
+
+    public static function iconAnimationTrigger(?string $animate): string
+    {
+        if (! $animate) {
+            return 'loop';
+        }
+
+        $map = self::packAll('icon', 'animations') ?: Icon\Animation::all();
+
+        return $map[$animate] ?? 'loop';
+    }
+
+    public static function iconStackSize(?string $size): array
+    {
+        $size = $size ?: self::componentDefault('icon-stack', 'size') ?: 'md';
+        $sizes = self::packAll('icon-stack', 'sizes') ?: IconStack\Size::all();
+
+        return $sizes[$size] ?? $sizes['md'];
+    }
+
+    public static function iconStackColor(?string $color): array
+    {
+        $color = $color ?: self::componentDefault('icon-stack', 'color') ?: 'foreground';
+        $colors = self::packAll('icon-stack', 'colors') ?: IconStack\Color::all();
+
+        return $colors[$color] ?? $colors['foreground'];
+    }
+
     public static function inputSize(?string $size): string
     {
         $size = $size ?: 'md';
@@ -323,6 +370,14 @@ class PackResolver
         $sizes = Filters\Size::default();
 
         return $sizes[$size] ?? $sizes['sm'];
+    }
+
+    public static function eventCalendarSize(?string $size): array
+    {
+        $size = $size ?: self::componentDefault('event-calendar', 'size') ?: 'md';
+        $sizes = self::packAll('event-calendar', 'sizes') ?: EventCalendar\Size::all();
+
+        return $sizes[$size] ?? $sizes['md'];
     }
 
     public static function alertColor(?string $type): array

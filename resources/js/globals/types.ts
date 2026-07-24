@@ -231,6 +231,8 @@ interface LivewireAPI {
 
     on(event: string, callback: (...args: any[]) => void): void;
 
+    hook?(event: string, callback: (...args: any[]) => void): void;
+
     navigate?(url: string): void;
 }
 
@@ -248,6 +250,7 @@ declare global {
         NeuraKitToast?: ToastAPI;
         NeuraKitModal?: ModalAPI;
         NeuraKitTranslations?: TranslationsAPI;
+        NeuraKitIcons?: { play: (el: Element) => void };
         neuraColorPicker?: (...args: any[]) => any;
         neuraDropzone?: (...args: any[]) => any;
 

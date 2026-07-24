@@ -1,0 +1,225 @@
+/**
+ * ============================================================================
+ * Neura Icons — modular, animatable icon set
+ * ============================================================================
+ * Each icon is authored as an <svg> made of named parts (`data-part="…"`) so
+ * individual pieces can be transformed independently. Animation is a pure-CSS
+ * layer driven by data-attributes set by <neura::icon>:
+ *   data-variant = line | duotone | solid
+ *   data-animate = spin | pulse | ring | float | blink | beat | bounce |
+ *                  nudge | open | wiggle | shake | pop | swing | draw
+ *   data-trigger = loop | hover | once
+ *   data-state   = close | minus | up | pause   (morphs)
+ * Timing is tokenised (--nk-icon-dur / --nk-icon-ease) and every animation is
+ * disabled under prefers-reduced-motion.
+ */
+
+@keyframes nk-spin { to { transform: rotate(360deg); } }
+@keyframes nk-ping { 0% { transform: scale(.55); opacity: .7; } 100% { transform: scale(1.9); opacity: 0; } }
+@keyframes nk-ring {
+  0% { transform: rotate(0); } 8% { transform: rotate(14deg); } 17% { transform: rotate(-11deg); }
+  26% { transform: rotate(8deg); } 35% { transform: rotate(-5deg); } 44%,100% { transform: rotate(0); }
+}
+@keyframes nk-clap {
+  0% { transform: translateX(0); } 8% { transform: translateX(1.6px); } 17% { transform: translateX(-1.3px); }
+  26% { transform: translateX(.9px); } 44%,100% { transform: translateX(0); }
+}
+@keyframes nk-beat { 0%,100% { transform: scale(1); } 22% { transform: scale(1.18); } 44% { transform: scale(.94); } 66% { transform: scale(1.08); } }
+@keyframes nk-bounce { 0%,100% { transform: translateY(0); } 42% { transform: translateY(2.5px); } 72% { transform: translateY(-1px); } }
+@keyframes nk-nudge { 0%,100% { transform: translateX(0); } 50% { transform: translateX(2px); } }
+@keyframes nk-float {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+@keyframes nk-blink {
+  0%,100% { opacity: 1; }
+  50% { opacity: .25; }
+}
+@keyframes nk-wiggle {
+  0%,100% { transform: rotate(0); }
+  20% { transform: rotate(-12deg); }
+  40% { transform: rotate(10deg); }
+  60% { transform: rotate(-6deg); }
+  80% { transform: rotate(4deg); }
+}
+@keyframes nk-shake {
+  0%,100% { transform: translateX(0); }
+  20% { transform: translateX(-2.5px); }
+  40% { transform: translateX(2.5px); }
+  60% { transform: translateX(-1.5px); }
+  80% { transform: translateX(1.5px); }
+}
+@keyframes nk-pop {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.22); }
+  60% { transform: scale(.92); }
+  100% { transform: scale(1); }
+}
+@keyframes nk-swing {
+  0%,100% { transform: rotate(0); }
+  20% { transform: rotate(14deg); }
+  40% { transform: rotate(-10deg); }
+  60% { transform: rotate(6deg); }
+  80% { transform: rotate(-3deg); }
+}
+@keyframes nk-wave-pulse {
+  0%,100% { opacity: .2; }
+  50% { opacity: 1; }
+}
+/* Initial offset is set on the element (var() is unreliable inside @keyframes). */
+@keyframes nk-draw { to { stroke-dashoffset: 0; } }
+
+@layer components {
+  [data-slot="icon"].nk-icon {
+    display: inline-block;
+    color: currentColor;
+    overflow: visible;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  .nk-icon [data-part] {
+    transform-box: view-box;
+    transform-origin: 12px 12px;
+    transition:
+      transform var(--nk-icon-dur, .45s) var(--nk-icon-ease, cubic-bezier(.34, 1.4, .5, 1)),
+      opacity var(--nk-icon-dur, .45s) var(--nk-icon-ease, cubic-bezier(.34, 1.4, .5, 1));
+  }
+  .nk-icon [data-part="body"] { transform-origin: 12px 4px; }
+  .nk-icon [data-part="lid"] { transform-origin: 5px 7px; }
+
+  /* Base stroke treatment (svg carries fill="none", so shapes are outlines) */
+  .nk-icon :where(path, line, polyline, circle, rect, ellipse) {
+    stroke: currentColor;
+    stroke-width: 1.75;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Variants */
+  .nk-icon .nk-i-solid { fill: currentColor; stroke: none; }
+  .nk-icon[data-variant="duotone"] .nk-i-fill { fill: color-mix(in oklch, currentColor 15%, transparent); }
+  .nk-icon[data-variant="solid"] .nk-i-fill { fill: currentColor; stroke: none; }
+
+  /* -------------------------------------------------------------------------- */
+  /* Ambient / loop presets                                                      */
+  /* -------------------------------------------------------------------------- */
+  .nk-icon[data-animate="spin"][data-trigger="loop"] :is([data-part="spinner"], [data-part="gear"]) {
+    animation: nk-spin calc(var(--nk-icon-dur, .45s) * 1.8) linear infinite;
+  }
+
+  .nk-icon[data-animate="pulse"][data-trigger="loop"] [data-part="wave"] {
+    animation: nk-wave-pulse calc(var(--nk-icon-dur, .45s) * 2.4) ease-in-out infinite;
+  }
+  .nk-icon[data-animate="pulse"][data-trigger="loop"] [data-part="wave"]:nth-child(2) {
+    animation-delay: .15s;
+  }
+  .nk-icon[data-animate="pulse"][data-trigger="loop"] [data-part="wave"]:nth-child(3) {
+    animation-delay: .3s;
+  }
+  .nk-icon[data-animate="pulse"][data-trigger="loop"] [data-part="wave"]:nth-child(4) {
+    animation-delay: .45s;
+  }
+  .nk-icon[data-animate="pulse"][data-trigger="loop"]:not(:has([data-part="wave"])) {
+    animation: nk-blink calc(var(--nk-icon-dur, .45s) * 2) ease-in-out infinite;
+  }
+
+  .nk-icon[data-animate="ring"][data-trigger="loop"] [data-part="body"] {
+    animation: nk-ring calc(var(--nk-icon-dur, .45s) * 3) var(--nk-icon-ease, cubic-bezier(.34, 1.4, .5, 1)) infinite;
+  }
+  .nk-icon[data-animate="ring"][data-trigger="loop"] [data-part="clapper"] {
+    animation: nk-clap calc(var(--nk-icon-dur, .45s) * 3) var(--nk-icon-ease, cubic-bezier(.34, 1.4, .5, 1)) infinite;
+  }
+
+  /* Whole-icon loops — animate the SVG host (works for any icon) */
+  .nk-icon[data-animate="float"][data-trigger="loop"] {
+    animation: nk-float calc(var(--nk-icon-dur, .45s) * 2.8) ease-in-out infinite;
+  }
+  .nk-icon[data-animate="blink"][data-trigger="loop"] {
+    animation: nk-blink calc(var(--nk-icon-dur, .45s) * 2.2) ease-in-out infinite;
+  }
+  .nk-icon[data-animate="beat"][data-trigger="loop"] [data-part="glyph"],
+  .nk-icon[data-animate="beat"][data-trigger="loop"] [data-part="body"] {
+    animation: nk-beat calc(var(--nk-icon-dur, .45s) * 1.6) var(--nk-icon-ease, cubic-bezier(.34, 1.4, .5, 1)) infinite;
+  }
+  .nk-icon[data-animate="beat"][data-trigger="loop"]:not(:has([data-part="glyph"])):not(:has([data-part="body"])) {
+    animation: nk-beat calc(var(--nk-icon-dur, .45s) * 1.6) var(--nk-icon-ease, cubic-bezier(.34, 1.4, .5, 1)) infinite;
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /* Hover-triggered presets                                                     */
+  /* -------------------------------------------------------------------------- */
+  .nk-icon[data-trigger="hover"][data-animate="spin"]:hover :is([data-part="spinner"], [data-part="gear"]) {
+    animation: nk-spin calc(var(--nk-icon-dur, .45s) * 1.6) var(--nk-icon-ease, cubic-bezier(.34, 1.4, .5, 1));
+  }
+  .nk-icon[data-trigger="hover"][data-animate="ring"]:hover [data-part="body"] {
+    animation: nk-ring calc(var(--nk-icon-dur, .45s) * 2) var(--nk-icon-ease, cubic-bezier(.34, 1.4, .5, 1));
+  }
+  .nk-icon[data-trigger="hover"][data-animate="ring"]:hover [data-part="clapper"] {
+    animation: nk-clap calc(var(--nk-icon-dur, .45s) * 2) var(--nk-icon-ease, cubic-bezier(.34, 1.4, .5, 1));
+  }
+  .nk-icon[data-trigger="hover"][data-animate="beat"]:hover [data-part="glyph"],
+  .nk-icon[data-trigger="hover"][data-animate="beat"]:hover [data-part="body"] {
+    animation: nk-beat calc(var(--nk-icon-dur, .45s) * 1.4) var(--nk-icon-ease, cubic-bezier(.34, 1.4, .5, 1));
+  }
+  .nk-icon[data-trigger="hover"][data-animate="beat"]:hover:not(:has([data-part="glyph"])):not(:has([data-part="body"])) {
+    animation: nk-beat calc(var(--nk-icon-dur, .45s) * 1.4) var(--nk-icon-ease, cubic-bezier(.34, 1.4, .5, 1));
+  }
+  .nk-icon[data-trigger="hover"][data-animate="bounce"]:hover :is([data-part="arrow"], [data-part="glyph"]) {
+    animation: nk-bounce calc(var(--nk-icon-dur, .45s) * 1.4) var(--nk-icon-ease, cubic-bezier(.34, 1.4, .5, 1));
+  }
+  .nk-icon[data-trigger="hover"][data-animate="nudge"]:hover :is([data-part="glyph"], [data-part="arrow"]) {
+    animation: nk-nudge calc(var(--nk-icon-dur, .45s) * 1.2) var(--nk-icon-ease, cubic-bezier(.34, 1.4, .5, 1));
+  }
+  .nk-icon[data-trigger="hover"][data-animate="open"]:hover [data-part="lid"] {
+    transform: translateY(-1.5px) rotate(-14deg);
+  }
+  .nk-icon[data-trigger="hover"][data-animate="wiggle"]:hover {
+    animation: nk-wiggle calc(var(--nk-icon-dur, .45s) * 1.5) var(--nk-icon-ease, cubic-bezier(.34, 1.4, .5, 1));
+  }
+  .nk-icon[data-trigger="hover"][data-animate="shake"]:hover {
+    animation: nk-shake calc(var(--nk-icon-dur, .45s) * 1.2) var(--nk-icon-ease, cubic-bezier(.34, 1.4, .5, 1));
+  }
+  .nk-icon[data-trigger="hover"][data-animate="pop"]:hover {
+    animation: nk-pop calc(var(--nk-icon-dur, .45s) * 1.1) var(--nk-icon-ease, cubic-bezier(.34, 1.4, .5, 1));
+  }
+  .nk-icon[data-trigger="hover"][data-animate="swing"]:hover {
+    transform-origin: center top;
+    animation: nk-swing calc(var(--nk-icon-dur, .45s) * 1.8) var(--nk-icon-ease, cubic-bezier(.34, 1.4, .5, 1));
+  }
+  .nk-icon[data-trigger="hover"][data-animate="float"]:hover {
+    animation: nk-float calc(var(--nk-icon-dur, .45s) * 2) ease-in-out;
+  }
+  .nk-icon[data-trigger="hover"][data-animate="pulse"]:hover [data-part="wave"] {
+    animation: nk-wave-pulse calc(var(--nk-icon-dur, .45s) * 1.6) ease-in-out;
+  }
+
+  /* Draw-on: path starts hidden; animation runs when data-play is set (once/in-view) */
+  .nk-icon[data-animate="draw"] [data-part="stroke"] {
+    stroke-dasharray: var(--nk-icon-len, 40);
+    stroke-dashoffset: var(--nk-icon-len, 40);
+  }
+
+  .nk-icon[data-animate="draw"][data-play] [data-part="stroke"] {
+    animation: nk-draw calc(var(--nk-icon-dur, .45s) * 1.6) var(--nk-icon-ease, cubic-bezier(.34, 1.4, .5, 1)) forwards;
+  }
+
+  /* Morphs (state-driven, tween via transition) */
+  .nk-icon[data-state="close"] [data-part="l1"] { transform: rotate(45deg) translateY(5px); }
+  .nk-icon[data-state="close"] [data-part="l3"] { transform: rotate(-45deg) translateY(-5px); }
+  .nk-icon[data-state="close"] [data-part="l2"] { opacity: 0; transform: scaleX(.2); }
+  .nk-icon[data-state="minus"] [data-part="v"] { transform: scaleY(0); }
+  .nk-icon[data-state="up"] [data-part="chevron"] { transform: rotate(180deg); }
+  .nk-icon [data-part="pause"] { opacity: 0; transform: scale(.5); }
+  .nk-icon[data-state="pause"] [data-part="play"] { opacity: 0; transform: scale(.5); }
+  .nk-icon[data-state="pause"] [data-part="pause"] { opacity: 1; transform: scale(1); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nk-icon,
+    .nk-icon * { animation: none !important; }
+    .nk-icon [data-part] { transition: none !important; }
+    .nk-icon[data-animate="draw"] [data-part="stroke"] {
+      stroke-dashoffset: 0;
+    }
+  }
+}

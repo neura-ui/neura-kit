@@ -8,6 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.11] - 2026-07-24
+
+### Added
+
+- **Orb**: New `neura::orb` canvas “thinking” indicator with six states (`working`, `searching`, `solving`, `listening`, `composing`, `shaping`), configurable `size` / `speed`, and a semantic `color` prop (`foreground`, `primary`, `success`, `danger`, …) driven by `currentColor` so ink follows light and dark themes live
+- **Icon set (Neura)**: First-party SVG icon set (`neura::icons.*`) with line / fill variants, optional `set="neura"`, and auto-resolve when the name is unique to Neura
+- **Icon animations**: Presets via `animate` + `trigger` (`spin`, `pulse`, `ring`, `float`, `blink`, `beat`, `bounce`, `nudge`, `open`, `wiggle`, `shake`, `pop`, `swing`, `draw`) with loop / hover / once triggers; draw-on plays once when the icon enters the viewport (`NeuraKitIcons`)
+- **Icon stack**: New `neura::icon-stack` isometric stacked-panel frame with size and color packs for decorative empty states
+- **Event calendar**: New `neura::event-calendar` with month / week / day / agenda views, mini calendar, configurable hours, and size / rounded / shadow packs
+
+### Improved
+
+- **Orb**: Theme switches update ink every frame (no longer stuck on the color read at init)
+- **Icons**: Animation CSS gated with `data-play` / triggers so draw-on and loop presets behave predictably across builds
+
 ## [2.0.7] - 2026-07-20
 
 ### Added

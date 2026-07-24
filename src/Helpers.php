@@ -113,6 +113,20 @@ if (! function_exists('neura_avatar_color')) {
     }
 }
 
+if (! function_exists('neura_icon_stack_size')) {
+    function neura_icon_stack_size(?string $size = null): array
+    {
+        return PackResolver::iconStackSize($size);
+    }
+}
+
+if (! function_exists('neura_icon_stack_color')) {
+    function neura_icon_stack_color(?string $color = null): array
+    {
+        return PackResolver::iconStackColor($color);
+    }
+}
+
 if (! function_exists('neura_input_size')) {
     function neura_input_size(?string $size = null): string
     {

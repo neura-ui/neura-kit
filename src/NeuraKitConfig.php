@@ -83,6 +83,50 @@ class NeuraKitConfig
         ], $options);
     }
 
+    public static function iconStack(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'size' => Size::MD->value,
+                'color' => 'foreground',
+            ],
+            'packs' => [
+                'sizes' => Packs\IconStack\Size::class,
+                'colors' => Packs\IconStack\Color::class,
+            ],
+        ], $options);
+    }
+
+    public static function icon(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'set' => 'neura',
+                'variant' => 'line',
+                'size' => 'size-5',
+            ],
+            'packs' => [
+                'animations' => Packs\Icon\Animation::class,
+            ],
+        ], $options);
+    }
+
+    public static function orb(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'state' => 'searching',
+                'size' => 64,
+                'speed' => 1,
+                'color' => 'foreground',
+            ],
+            'packs' => [
+                'states' => Packs\Orb\State::class,
+                'colors' => Packs\Orb\Color::class,
+            ],
+        ], $options);
+    }
+
     public static function input(array $options = []): array
     {
         return self::mix([
@@ -507,6 +551,22 @@ class NeuraKitConfig
             'packs' => [
                 'rounders' => Packs\Rounded::class,
                 'shadows' => Packs\Shadow::class,
+            ],
+        ], $options);
+    }
+
+    public static function eventCalendar(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'rounded' => self::GLOBAL,
+                'shadow' => self::GLOBAL,
+                'size' => Size::MD->value,
+            ],
+            'packs' => [
+                'rounders' => Packs\Rounded::class,
+                'shadows' => Packs\Shadow::class,
+                'sizes' => Packs\EventCalendar\Size::class,
             ],
         ], $options);
     }
