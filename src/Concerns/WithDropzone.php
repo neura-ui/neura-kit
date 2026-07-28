@@ -2,7 +2,7 @@
 
 namespace Neura\Kit\Concerns;
 
-use Neura\Kit\Support\ChunkedTemporaryFile;
+use Neura\Kit\Support\Dropzone\ChunkedTemporaryFile;
 use Neura\Kit\Support\Dropzone\DropzoneFiles;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 

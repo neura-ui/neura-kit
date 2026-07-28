@@ -57,6 +57,10 @@ return [
 
     'orb' => Config::orb(),
 
+    'preloader' => Config::preloader(),
+
+    'contribution-graph' => Config::contributionGraph(),
+
     'input' => Config::input(),
 
     'filters' => Config::filters(),

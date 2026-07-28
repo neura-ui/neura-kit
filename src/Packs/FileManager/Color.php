@@ -30,6 +30,14 @@ class Color extends BasePack
 
             'dropping' => 'data-[dropping]:ring-4 data-[dropping]:ring-primary-500/15 data-[dropping]:border-primary-400',
 
+            // Sortable drag affordances on rows / tiles (`data-drop`, `data-dragging`).
+            'drop' => [
+                'before' => 'data-[drop=before]:shadow-[inset_0_2px_0_0] data-[drop=before]:shadow-primary-500',
+                'after' => 'data-[drop=after]:shadow-[inset_0_-2px_0_0] data-[drop=after]:shadow-primary-500',
+                'inside' => 'data-[drop=inside]:bg-primary-50 data-[drop=inside]:ring-2 data-[drop=inside]:ring-inset data-[drop=inside]:ring-primary-400/50 dark:data-[drop=inside]:bg-primary-950/40',
+                'dragging' => 'data-[dragging]:opacity-40 data-[dragging]:cursor-grabbing',
+            ],
+
             'entry' => [
                 'base' => 'text-fg-secondary hover:bg-hover',
                 'selected' => 'data-[selected]:bg-primary-50 data-[selected]:text-fg dark:data-[selected]:bg-primary-950/50',

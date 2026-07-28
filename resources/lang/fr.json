@@ -180,5 +180,15 @@
     "inThisFolder": "Dans ce dossier",
     "everywhere": "Partout",
     "revealInFolder": "Afficher dans le dossier",
-    "resultsEverywhere": "{count} résultats dans tous les dossiers"
+    "resultsEverywhere": "{count} résultats dans tous les dossiers",
+    "manualOrder": "Ordre personnalisé",
+    "itemsMoved": "{count} déplacé(s)",
+    "itemsReordered": "{count} réorganisé(s)",
+    "contributionsInLastYear": "{count} contributions au cours de la dernière année",
+    "contributionsOnDate": "{count} contributions le {date}",
+    "weekdayMon": "Lun",
+    "weekdayWed": "Mer",
+    "weekdayFri": "Ven",
+    "less": "Moins",
+    "more": "Plus"
 }

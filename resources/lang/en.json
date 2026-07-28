@@ -180,5 +180,15 @@
     "inThisFolder": "In this folder",
     "everywhere": "Everywhere",
     "revealInFolder": "Reveal in folder",
-    "resultsEverywhere": "{count} results across all folders"
+    "resultsEverywhere": "{count} results across all folders",
+    "manualOrder": "Custom order",
+    "itemsMoved": "{count} moved",
+    "itemsReordered": "{count} reordered",
+    "contributionsInLastYear": "{count} contributions in the last year",
+    "contributionsOnDate": "{count} contributions on {date}",
+    "weekdayMon": "Mon",
+    "weekdayWed": "Wed",
+    "weekdayFri": "Fri",
+    "less": "Less",
+    "more": "More"
 }

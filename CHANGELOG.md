@@ -8,6 +8,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.13] - 2026-07-28
+
+### Added
+
+- **Contribution Graph**: New `neura::contribution-graph` GitHub-style year heatmap (`data` as `Y-m-d => count` or `{ date, count }`), with month / weekday labels, Less→More legend, `color` (`green` / `primary` / `emerald`), `size` (`sm` / `md` / `lg`), `from` / `to`, custom `thresholds`, and `ContributionGraphBuilder`
+- **Preloader**: New `neura::preloader` full-page boot overlay with brand, orb or spinner indicator, optional auto-dismiss after window load, and manual `NeuraKitPreloader.show()` / `hide()` control
+- **File Manager sortable**: Drag to reorder siblings or drop onto a folder to move; `sortable` prop (default `true`), `sort="manual"` for custom order, and `file-manager:reorder` / `file-manager:move` events
+- **i18n**: Contribution graph strings (total / per-day tooltips, weekday labels, Less / More) and file manager manual-order / moved / reordered labels (EN + FR)
+
+### Improved
+
+- **File Manager (grid)**: Folder drop targets treat most of the tile as `inside` (thin left/right edges only for sibling reorder), matching Finder / Explorer icon-view behaviour
+
+### Changed
+
+- **Support layout**: `ContributionGraphBuilder` → `Support/ContributionGraph/`; `ChunkedTemporaryFile` → `Support/Dropzone/` (namespaces updated accordingly)
+
 ## [2.0.12] - 2026-07-28
 
 ### Added

@@ -29,11 +29,18 @@ export type FileManagerEntry = FileManagerNode & {
   pathNames?: string[];
 };
 
+export type FileManagerSort = 'name' | 'size' | 'modified' | 'kind' | 'manual';
+export type FileManagerDropPosition = 'before' | 'after' | 'inside';
+
+const INTERNAL_DRAG_MIME = 'application/x-nk-file-manager';
+
 export type FileManagerOptions = {
   items?: FileManagerNode[];
   view?: 'list' | 'grid';
-  sort?: 'name' | 'size' | 'modified' | 'kind';
+  sort?: FileManagerSort;
   direction?: 'asc' | 'desc';
+  /** Enable drag to reorder siblings and drop onto folders to move. */
+  sortable?: boolean;
   selectable?: boolean;
   multiple?: boolean;
   searchable?: boolean;
@@ -67,6 +74,7 @@ const defaults: Required<Omit<FileManagerOptions, 'items' | 'path' | 'locale'>> 
   view: 'list',
   sort: 'name',
   direction: 'asc',
+  sortable: true,
   selectable: true,
   multiple: true,
   searchable: true,
@@ -214,7 +222,7 @@ export function neuraFileManager(options: FileManagerOptions = {}) {
     tree: config.items as FileManagerNode[],
     path: [...config.path] as string[],
     view: config.view as 'list' | 'grid',
-    sort: config.sort as 'name' | 'size' | 'modified' | 'kind',
+    sort: config.sort as FileManagerSort,
     direction: config.direction as 'asc' | 'desc',
     search: '',
     selected: [] as string[],
@@ -225,8 +233,15 @@ export function neuraFileManager(options: FileManagerOptions = {}) {
     loading: config.loading,
     announcement: '',
     menu: { open: false, ready: false, x: 0, y: 0, id: null as string | null },
+    drag: {
+      active: false,
+      ids: [] as string[],
+      target: null as string | null,
+      position: null as FileManagerDropPosition | null,
+    },
 
     // Configuration
+    sortable: config.sortable,
     selectable: config.selectable,
     multiple: config.multiple && config.selectable,
     searchable: config.searchable,
@@ -395,6 +410,11 @@ export function neuraFileManager(options: FileManagerOptions = {}) {
 
       const factor = this.direction === 'desc' ? -1 : 1;
 
+      // Manual order mirrors the underlying tree siblings — used after a drag reorder.
+      if (this.sort === 'manual') {
+        return list;
+      }
+
       return list.sort((a, b) => {
         // Folders always lead, whatever the sort is.
         if (a.isFolder !== b.isFolder) return a.isFolder ? -1 : 1;
@@ -411,6 +431,21 @@ export function neuraFileManager(options: FileManagerOptions = {}) {
 
         return comparison * factor;
       });
+    },
+
+    /** Drag is available when enabled and the list is not a filtered/global search. */
+    get canSortEntries(): boolean {
+      return this.sortable && !this.isFiltered && this.searchMode !== 'remote';
+    },
+
+    dropHint(entryId: string): FileManagerDropPosition | null {
+      if (!this.drag.active || this.drag.target !== entryId) return null;
+
+      return this.drag.position;
+    },
+
+    isDragged(entryId: string): boolean {
+      return this.drag.active && this.drag.ids.includes(entryId);
     },
 
     get isEmpty(): boolean {
@@ -793,8 +828,9 @@ export function neuraFileManager(options: FileManagerOptions = {}) {
     /* Sorting & view                                                    */
     /* ---------------------------------------------------------------- */
 
-    sortBy(column: 'name' | 'size' | 'modified' | 'kind') {
+    sortBy(column: FileManagerSort) {
       if (this.sort === column) {
+        if (column === 'manual') return;
         this.direction = this.direction === 'asc' ? 'desc' : 'asc';
       } else {
         this.sort = column;
@@ -809,6 +845,225 @@ export function neuraFileManager(options: FileManagerOptions = {}) {
 
       this.view = view;
       this.emit('view', { view });
+    },
+
+    /* ---------------------------------------------------------------- */
+    /* Drag & drop (reorder + move into folder)                          */
+    /* ---------------------------------------------------------------- */
+
+    onItemDragStart(event: DragEvent, entry: FileManagerEntry) {
+      if (!this.canSortEntries) {
+        event.preventDefault();
+        return;
+      }
+
+      const ids = this.isSelected(entry.id) && this.selected.length > 1
+        ? [...this.selected]
+        : [entry.id];
+
+      this.drag = { active: true, ids, target: null, position: null };
+      this.focusId = entry.id;
+
+      if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData(INTERNAL_DRAG_MIME, ids.join(','));
+        event.dataTransfer.setData('text/plain', ids.join(','));
+      }
+    },
+
+    onItemDragEnd() {
+      this.drag = { active: false, ids: [], target: null, position: null };
+    },
+
+    onItemDragOver(event: DragEvent, entry: FileManagerEntry) {
+      if (!this.drag.active || this.drag.ids.includes(entry.id)) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+
+      const target = event.currentTarget as HTMLElement;
+      const rect = target.getBoundingClientRect();
+      const xRatio = (event.clientX - rect.left) / Math.max(rect.width, 1);
+      const yRatio = (event.clientY - rect.top) / Math.max(rect.height, 1);
+
+      let position: FileManagerDropPosition;
+
+      if (this.view === 'grid') {
+        // Icon view: dropping on a folder means "move inside" (Finder / Explorer).
+        // Only a thin horizontal edge reorders as a sibling.
+        if (entry.isFolder) {
+          if (xRatio < 0.12) position = 'before';
+          else if (xRatio > 0.88) position = 'after';
+          else position = 'inside';
+        } else {
+          position = xRatio < 0.5 ? 'before' : 'after';
+        }
+      } else if (entry.isFolder) {
+        if (yRatio < 0.25) position = 'before';
+        else if (yRatio > 0.75) position = 'after';
+        else position = 'inside';
+      } else {
+        position = yRatio < 0.5 ? 'before' : 'after';
+      }
+
+      // Never nest a folder inside itself or one of its descendants.
+      if (position === 'inside' && this.drag.ids.some((id) => this.isSelfOrDescendant(id, entry.id))) {
+        position = this.view === 'grid'
+          ? (xRatio < 0.5 ? 'before' : 'after')
+          : (yRatio < 0.5 ? 'before' : 'after');
+      }
+
+      if (this.drag.target !== entry.id || this.drag.position !== position) {
+        this.drag = { ...this.drag, target: entry.id, position };
+      }
+    },
+
+    onItemDragLeave(event: DragEvent, entry: FileManagerEntry) {
+      const target = event.currentTarget as HTMLElement;
+      if (target.contains(event.relatedTarget as Node)) return;
+      if (this.drag.target === entry.id) {
+        this.drag = { ...this.drag, target: null, position: null };
+      }
+    },
+
+    onItemDrop(event: DragEvent, entry: FileManagerEntry) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (!this.drag.active || this.drag.ids.includes(entry.id) || !this.drag.position) {
+        this.onItemDragEnd();
+        return;
+      }
+
+      const ids = [...this.drag.ids];
+      const position = this.drag.position;
+      const targetId = entry.id;
+
+      this.applyMove(ids, targetId, position);
+      this.onItemDragEnd();
+    },
+
+    /**
+     * Move `ids` relative to `targetId` inside the open folder (or into it).
+     * Switches to manual sort on sibling reorder so the new order sticks.
+     */
+    applyMove(ids: string[], targetId: string, position: FileManagerDropPosition) {
+      const siblings = this.currentNodes;
+      const moving = ids
+        .map((id) => siblings.find((node) => String(node.id) === id))
+        .filter(Boolean) as FileManagerNode[];
+
+      if (moving.length === 0) return;
+
+      // Guard: cannot move a folder into itself / descendant (cross-folder path).
+      if (position === 'inside' && ids.some((id) => this.isSelfOrDescendant(id, targetId))) {
+        return;
+      }
+
+      const movingIds = new Set(moving.map((node) => String(node.id)));
+      const remainder = siblings.filter((node) => !movingIds.has(String(node.id)));
+      const targetIndex = remainder.findIndex((node) => String(node.id) === targetId);
+      const target = siblings.find((node) => String(node.id) === targetId);
+
+      if (position === 'inside' && target && (target.type === 'folder' || Array.isArray(target.children))) {
+        // Detach from current folder, then append inside the target.
+        this.replaceCurrentNodes(remainder);
+        if (!target.children) target.children = [];
+        target.children = [...target.children, ...moving];
+        this.tree = [...this.tree];
+
+        this.announce(t('itemsMoved', '{count} moved', { count: String(moving.length) }));
+        this.emit('move', {
+          items: moving,
+          target: this.raw(decorate(target, this.locale)),
+          position: 'inside',
+          path: [...this.path],
+        });
+        this.selected = moving.map((node) => String(node.id));
+        this.emitSelection();
+        return;
+      }
+
+      if (targetIndex === -1) return;
+
+      const insertAt = position === 'after' ? targetIndex + 1 : targetIndex;
+      const next = [
+        ...remainder.slice(0, insertAt),
+        ...moving,
+        ...remainder.slice(insertAt),
+      ];
+
+      this.replaceCurrentNodes(next);
+
+      if (this.sort !== 'manual') {
+        this.sort = 'manual';
+        this.emit('sort', { sort: this.sort, direction: this.direction });
+      }
+
+      this.announce(t('itemsReordered', '{count} reordered', { count: String(moving.length) }));
+      this.emit('reorder', {
+        items: moving,
+        order: next.map((node) => String(node.id)),
+        target: target ? this.raw(decorate(target, this.locale)) : null,
+        position,
+        path: [...this.path],
+      });
+      this.selected = moving.map((node) => String(node.id));
+      this.emitSelection();
+    },
+
+    /** Write the open folder's children list back into the tree. */
+    replaceCurrentNodes(nodes: FileManagerNode[]) {
+      if (this.path.length === 0) {
+        this.tree = nodes;
+        return;
+      }
+
+      let level = this.tree;
+      for (let i = 0; i < this.path.length; i++) {
+        const folder = level.find((node) => String(node.id) === this.path[i]);
+        if (!folder) return;
+
+        if (i === this.path.length - 1) {
+          folder.children = nodes;
+          // Bump the root array so Alpine re-evaluates nested getters.
+          this.tree = [...this.tree];
+          return;
+        }
+
+        level = folder.children ?? [];
+      }
+    },
+
+    /** True when `candidateId` is `folderId` or lives under it. */
+    isSelfOrDescendant(folderId: string, candidateId: string): boolean {
+      if (folderId === candidateId) return true;
+
+      const folder = this.findNode(this.tree, folderId);
+      if (!folder?.children) return false;
+
+      const stack = [...folder.children];
+      while (stack.length) {
+        const node = stack.pop()!;
+        if (String(node.id) === candidateId) return true;
+        if (node.children?.length) stack.push(...node.children);
+      }
+
+      return false;
+    },
+
+    findNode(nodes: FileManagerNode[], id: string): FileManagerNode | null {
+      for (const node of nodes) {
+        if (String(node.id) === id) return node;
+        if (node.children?.length) {
+          const found = this.findNode(node.children, id);
+          if (found) return found;
+        }
+      }
+
+      return null;
     },
 
     /* ---------------------------------------------------------------- */
@@ -832,7 +1087,10 @@ export function neuraFileManager(options: FileManagerOptions = {}) {
     },
 
     handleDragEnter(event: DragEvent) {
-      if (!Array.prototype.includes.call(event.dataTransfer?.types ?? ['Files'], 'Files')) return;
+      // Internal sortable drags must not open the upload overlay.
+      if (this.drag.active) return;
+      if (event.dataTransfer?.types?.includes(INTERNAL_DRAG_MIME)) return;
+      if (!Array.prototype.includes.call(event.dataTransfer?.types ?? [], 'Files')) return;
 
       this._dragDepth++;
       this.dropping = true;
@@ -846,6 +1104,10 @@ export function neuraFileManager(options: FileManagerOptions = {}) {
     handleDrop(event: DragEvent) {
       this._dragDepth = 0;
       this.dropping = false;
+
+      if (this.drag.active || event.dataTransfer?.types?.includes(INTERNAL_DRAG_MIME)) {
+        return;
+      }
 
       const files = Array.from(event.dataTransfer?.files ?? []);
       if (files.length === 0) return;

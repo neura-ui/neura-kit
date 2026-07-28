@@ -171,7 +171,9 @@ const MODES: Record<string, Mode> = {
   morph(ctx, L, t, ink) {
     const c = L / 2, R = L * 0.38, K = L / 64, N = 58;
     const shapes = [circlePt, trianglePt, squarePt];
-    const clock = t * 0.32, idx = Math.floor(clock) % 3, nx = (idx + 1) % 3;
+    // Floored modulo: a negative clock would otherwise index shapes[-1] and throw,
+    // taking the whole rAF loop down with it.
+    const clock = t * 0.32, idx = ((Math.floor(clock) % 3) + 3) % 3, nx = (idx + 1) % 3;
     const f = ease(clock - Math.floor(clock)), rot = t * 0.12;
     const cr = Math.cos(rot), sr = Math.sin(rot);
     for (let i = 0; i < N; i++) {
@@ -223,7 +225,10 @@ if (typeof document !== 'undefined') {
             || '#737373';
 
           const frame = (now: number): void => {
-            const t = ((now - start) / 1000) * speed;
+            // rAF reports the timestamp of the frame's start, which can predate the
+            // performance.now() captured above when init() runs mid-frame — clamping
+            // keeps the first tick from going negative.
+            const t = Math.max(0, ((now - start) / 1000) * speed);
             ctx.clearRect(0, 0, L, L);
             mode(ctx, L, t, readInk());
             this.raf = requestAnimationFrame(frame);

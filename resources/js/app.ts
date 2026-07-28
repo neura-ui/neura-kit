@@ -19,5 +19,6 @@ import './globals/tree';
 import './globals/flow';
 import './globals/icons';
 import './globals/orb';
+import './globals/preloader';
 import './components';
 

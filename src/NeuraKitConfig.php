@@ -127,6 +127,35 @@ class NeuraKitConfig
         ], $options);
     }
 
+    public static function preloader(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'indicator' => 'orb',
+                'orbState' => 'working',
+                'orbSize' => 72,
+                'autoHide' => true,
+                'minDuration' => 400,
+            ],
+        ], $options);
+    }
+
+    public static function contributionGraph(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'color' => 'green',
+                'size' => Size::MD->value,
+                'rounded' => 'sm',
+                'thresholds' => [1, 3, 6, 10],
+                'showLegend' => true,
+                'showMonths' => true,
+                'showWeekdays' => true,
+                'showTotal' => true,
+            ],
+        ], $options);
+    }
+
     public static function input(array $options = []): array
     {
         return self::mix([
@@ -420,6 +449,8 @@ class NeuraKitConfig
             'default' => [
                 'size' => 'md',
                 'view' => 'list',
+                'sort' => 'name',
+                'sortable' => true,
                 'rounded' => self::GLOBAL,
                 'shadow' => self::GLOBAL,
             ],

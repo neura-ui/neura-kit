@@ -3,6 +3,7 @@
     'view' => null,
     'sort' => 'name',
     'direction' => 'asc',
+    'sortable' => true,
     'selectable' => true,
     'multiple' => true,
     'searchable' => true,
@@ -98,6 +99,7 @@
         'selectable' => $selectable,
         'downloadable' => $downloadable,
         'deletable' => $deletable,
+        'sortable' => $sortable,
     ];
 @endphp
 
@@ -108,6 +110,7 @@
         view: @js($view),
         sort: @js($sort),
         direction: @js($direction),
+        sortable: @js((bool) $sortable),
         selectable: @js($selectable),
         multiple: @js($multiple),
         searchable: @js((bool) $searchable),
@@ -131,6 +134,8 @@
     x-on:click="closeMenu()"
     x-on:keydown.escape="closeMenu()"
     :data-dropping="dropping || null"
+    :data-sorting="drag.active || null"
+    :data-view="view"
     {{ $attributes->class(['relative', $shellClasses]) }}
     @if ($height) style="height: {{ $height }}" @endif
 >
@@ -248,13 +253,26 @@
                             x-on:click="sortBy('{{ $column }}'); open = false"
                         >
                             <span>{{ neura_trans($labelKey) }}</span>
-                            {{-- Blade components escape their attributes, so @js() would be encoded twice here. --}}
                             <span class="flex size-3.5 shrink-0 items-center justify-center text-fg-muted">
                                 <neura::icon name="bars-arrow-up" class="size-3.5" x-show="sortIcon('{{ $column }}') === 'asc'" />
                                 <neura::icon name="bars-arrow-down" class="size-3.5" x-show="sortIcon('{{ $column }}') === 'desc'" />
                             </span>
                         </button>
                     @endforeach
+
+                    @if ($sortable)
+                        <div class="my-1 h-px bg-edge/70"></div>
+                        <button
+                            type="button"
+                            class="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 {{ $sizes['meta'] }} text-fg-secondary transition-colors hover:bg-hover hover:text-fg"
+                            x-on:click="sortBy('manual'); open = false"
+                        >
+                            <span>{{ neura_trans('manualOrder') }}</span>
+                            <span class="flex size-3.5 shrink-0 items-center justify-center text-fg-muted">
+                                <neura::icon name="check" class="size-3.5" x-show="sort === 'manual'" />
+                            </span>
+                        </button>
+                    @endif
                 </div>
             </div>
 
@@ -409,21 +427,24 @@
                     @endif
 
                     <button type="button" class="flex min-w-0 flex-1 items-center gap-1 text-start transition-colors hover:text-fg"
-                        x-on:click="sortBy('name')">
+                        x-on:click="sortBy('name')"
+                        :aria-sort="sort === 'name' ? (direction === 'asc' ? 'ascending' : 'descending') : 'none'">
                         {{ neura_trans('name') }}
                         <neura::icon name="bars-arrow-up" class="size-3" x-show="sortIcon('name') === 'asc'" />
                         <neura::icon name="bars-arrow-down" class="size-3" x-show="sortIcon('name') === 'desc'" />
                     </button>
 
                     <button type="button" class="hidden w-24 shrink-0 items-center gap-1 text-start transition-colors hover:text-fg @[30rem]/list:flex"
-                        x-on:click="sortBy('size')">
+                        x-on:click="sortBy('size')"
+                        :aria-sort="sort === 'size' ? (direction === 'asc' ? 'ascending' : 'descending') : 'none'">
                         {{ neura_trans('size') }}
                         <neura::icon name="bars-arrow-up" class="size-3" x-show="sortIcon('size') === 'asc'" />
                         <neura::icon name="bars-arrow-down" class="size-3" x-show="sortIcon('size') === 'desc'" />
                     </button>
 
                     <button type="button" class="hidden w-40 shrink-0 items-center gap-1 text-start transition-colors hover:text-fg @[44rem]/list:flex"
-                        x-on:click="sortBy('modified')">
+                        x-on:click="sortBy('modified')"
+                        :aria-sort="sort === 'modified' ? (direction === 'asc' ? 'ascending' : 'descending') : 'none'">
                         {{ neura_trans('modified') }}
                         <neura::icon name="bars-arrow-up" class="size-3" x-show="sortIcon('modified') === 'asc'" />
                         <neura::icon name="bars-arrow-down" class="size-3" x-show="sortIcon('modified') === 'desc'" />
@@ -442,6 +463,7 @@
                             :multiple="$multiple"
                             :downloadable="$entryProps['downloadable']"
                             :deletable="$entryProps['deletable']"
+                            :sortable="$entryProps['sortable']"
                         />
                     </template>
                 </ul>
@@ -456,6 +478,7 @@
                             :colors="$entryProps['colors']"
                             :sprite="$entryProps['sprite']"
                             :selectable="$entryProps['selectable']"
+                            :sortable="$entryProps['sortable']"
                         />
                     </template>
                 </ul>

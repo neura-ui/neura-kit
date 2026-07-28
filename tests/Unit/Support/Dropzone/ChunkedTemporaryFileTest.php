@@ -1,11 +1,11 @@
 <?php
 
-namespace Neura\Kit\Tests\Unit\Support;
+namespace Neura\Kit\Tests\Unit\Support\Dropzone;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
-use Neura\Kit\Support\ChunkedTemporaryFile;
+use Neura\Kit\Support\Dropzone\ChunkedTemporaryFile;
 use Neura\Kit\Tests\TestCase;
 
 class ChunkedTemporaryFileTest extends TestCase

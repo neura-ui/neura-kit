@@ -1,6 +1,6 @@
 <?php
 
-namespace Neura\Kit\Support;
+namespace Neura\Kit\Support\Dropzone;
 
 use Illuminate\Support\Facades\Storage;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
