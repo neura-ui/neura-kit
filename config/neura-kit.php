@@ -73,6 +73,8 @@ return [
 
     'dropzone' => Config::dropzone(),
 
+    'file-manager' => Config::fileManager(),
+
     'fieldset' => Config::fieldset(),
 
     'popup' => Config::popup(),

@@ -1,6 +1,8 @@
-type DropzoneStatus = 'idle' | 'uploading' | 'success' | 'error';
+export type DropzoneStatus = 'idle' | 'uploading' | 'success' | 'error';
 
-type UploadResult = {
+export type DropzoneKind = 'image' | 'video' | 'audio' | 'pdf' | 'archive' | 'text' | 'file';
+
+export type UploadResult = {
   uuid?: string;
   filename?: string;
   path?: string;
@@ -9,686 +11,795 @@ type UploadResult = {
   [key: string]: any;
 };
 
-// Helper function to get translations reliably
-function t(key: string, params?: Record<string, string>): string | undefined {
-  const translations = (window as any).NeuraKitTranslations;
-  
-  // Check if translations are loaded and available
-  if (translations && translations.translations && Object.keys(translations.translations).length > 0) {
-    // Check if the translation key exists
-    if (translations.translations[key]) {
-      return translations.t(key, params || {});
-    }
-    // Translation doesn't exist, return undefined to allow fallback
-    return undefined;
-  }
-  
-  // Fallback to window.t if available
-  if (typeof (window as any).t === 'function') {
-    try {
-      const result = (window as any).t(key, params || {});
-      // If window.t returns something different from the key, it means translation exists
-      if (result && result !== key) {
-        return result;
-      }
-    } catch (e) {
-      // Ignore errors
-    }
-  }
-  
-  // No translations loaded or translation doesn't exist, return undefined to allow fallback
-  return undefined;
-}
-
-type DropzonePreview = {
+export type DropzoneItem = {
   uuid: string;
+  key: string;
+  kind: DropzoneKind;
   type: 'image' | 'file';
-  url?: string;              // object URL for preview
+  url: string | null;
   name: string;
+  bytes: number;
   size: string;
   extension: string;
   progress: number;
   status: DropzoneStatus;
-  error?: string | null;
-  server?: UploadResult | null; // backend response
+  error: string | null;
+  server: UploadResult | null;
+  remaining: string;
+};
+
+export type DropzoneRejection = {
+  id: string;
+  name: string;
+  message: string;
 };
 
 export type DropzoneOptions = {
   accept?: string;
   maxSizeBytes?: number;
+  maxFiles?: number | null;
   multiple?: boolean;
   chunkSize?: number;
   uploadUrl?: string | null;
   uploadHeaders?: Record<string, string>;
-  name?: string | null;           // form field name
+  name?: string | null;
   invalid?: boolean;
-  wireModel?: string | null;      // wire:model name (string from Blade)
+  wireModel?: string | null;
+  wireModelLive?: boolean;
   previewEnabled?: boolean;
   removable?: boolean;
+  disabled?: boolean;
   concurrency?: number;
+  autoUpload?: boolean;
+  notify?: boolean;
+  maxRetries?: number;
 };
 
-const defaultOptions: Required<Omit<DropzoneOptions, 'wireModel'>> & { wireModel: string | null } = {
+const defaultOptions: Required<DropzoneOptions> = {
   accept: 'image/*',
   maxSizeBytes: 10 * 1024 * 1024,
+  maxFiles: null,
   multiple: false,
-  chunkSize: 1 * 1024 * 1024,
+  chunkSize: 1024 * 1024,
   uploadUrl: null,
   uploadHeaders: {},
   name: null,
   invalid: false,
   wireModel: null,
+  wireModelLive: false,
   previewEnabled: true,
   removable: true,
+  disabled: false,
   concurrency: 2,
+  autoUpload: true,
+  notify: false,
+  maxRetries: 2,
 };
 
+/* -------------------------------------------------------------------------- */
+/* Helpers                                                                     */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Translate a key, falling back to the provided default when the bundle has no
+ * entry for it. Placeholders use the `{name}` syntax.
+ */
+function t(key: string, fallback: string, params?: Record<string, string>): string {
+  const store = (window as any).NeuraKitTranslations;
+
+  if (store?.translations?.[key]) {
+    return store.t(key, params ?? {});
+  }
+
+  const global = (window as any).t;
+  if (typeof global === 'function') {
+    try {
+      const value = global(key, params ?? {});
+      if (value && value !== key) return value;
+    } catch {
+      // ignore
+    }
+  }
+
+  let out = fallback;
+  if (params) {
+    for (const [name, value] of Object.entries(params)) {
+      out = out.split(`{${name}}`).join(value);
+    }
+  }
+
+  return out;
+}
+
 function uid(): string {
-  if (typeof crypto !== 'undefined' && (crypto as any).randomUUID) return (crypto as any).randomUUID();
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+  const c = globalThis.crypto as any;
+  if (c?.randomUUID) return c.randomUUID();
+
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (char) => {
     const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    const v = char === 'x' ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
 }
 
-function formatFileSize(bytes: number) {
-  if (!bytes) return '0 Bytes';
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.min(sizes.length - 1, Math.floor(Math.log(bytes) / Math.log(k)));
-  return `${Math.round((bytes / Math.pow(k, i)) * 100) / 100} ${sizes[i]}`;
+function formatFileSize(bytes: number): string {
+  if (!bytes || bytes < 0) return '0 B';
+
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.min(units.length - 1, Math.floor(Math.log(bytes) / Math.log(1024)));
+  const value = bytes / Math.pow(1024, i);
+
+  return `${value >= 100 || i === 0 ? Math.round(value) : Math.round(value * 10) / 10} ${units[i]}`;
+}
+
+function formatDuration(seconds: number): string {
+  if (!isFinite(seconds) || seconds < 0) return '';
+  if (seconds < 60) return `${Math.max(1, Math.round(seconds))}s`;
+
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ${Math.round(seconds % 60)}s`;
+
+  return `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
 }
 
 function getExtension(name: string): string {
-  const part = name.split('.').pop()?.trim() || '';
-  return part ? part.toUpperCase() : 'FILE';
+  const parts = name.split('.');
+  if (parts.length < 2) return '';
+
+  return (parts.pop() || '').trim().slice(0, 5).toUpperCase();
+}
+
+const EXTENSION_MIME: Record<string, string> = {
+  jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif',
+  webp: 'image/webp', avif: 'image/avif', svg: 'image/svg+xml', heic: 'image/heic',
+  heif: 'image/heif', bmp: 'image/bmp', ico: 'image/x-icon', tif: 'image/tiff', tiff: 'image/tiff',
+  mp4: 'video/mp4', webm: 'video/webm', mov: 'video/quicktime', avi: 'video/x-msvideo', mkv: 'video/x-matroska',
+  mp3: 'audio/mpeg', wav: 'audio/wav', ogg: 'audio/ogg', m4a: 'audio/mp4', flac: 'audio/flac',
+  pdf: 'application/pdf', csv: 'text/csv', txt: 'text/plain', md: 'text/markdown',
+  json: 'application/json', xml: 'application/xml',
+  zip: 'application/zip', rar: 'application/vnd.rar', '7z': 'application/x-7z-compressed',
+  gz: 'application/gzip', tar: 'application/x-tar',
+};
+
+const ARCHIVE_EXTENSIONS = ['zip', 'rar', '7z', 'gz', 'tar', 'bz2', 'xz'];
+
+function mimeOf(file: File): string {
+  const type = (file.type || '').toLowerCase();
+  if (type) return type;
+
+  const ext = (file.name.split('.').pop() || '').toLowerCase();
+
+  return EXTENSION_MIME[ext] || '';
+}
+
+function detectKind(file: File): DropzoneKind {
+  const mime = mimeOf(file);
+  const ext = (file.name.split('.').pop() || '').toLowerCase();
+
+  if (mime.startsWith('image/')) return 'image';
+  if (mime.startsWith('video/')) return 'video';
+  if (mime.startsWith('audio/')) return 'audio';
+  if (mime === 'application/pdf') return 'pdf';
+  if (ARCHIVE_EXTENSIONS.includes(ext)) return 'archive';
+  if (mime.startsWith('text/') || mime === 'application/json' || mime === 'application/xml') return 'text';
+
+  return 'file';
 }
 
 /**
- * Robust accept check supporting:
- * - image/*, application/pdf
- * - .png, .jpg
- * - comma-separated rules
+ * Accept check supporting `image/*`, `application/pdf`, `.png` and any
+ * comma separated combination of those. Files reported without a MIME type
+ * (common for `.heic`, `.md`, …) fall back to an extension lookup.
  */
 function matchesAccept(file: File, accept: string): boolean {
-  if (!accept || accept === '*/*') return true;
+  if (!accept || accept === '*' || accept === '*/*') return true;
 
-  const rules = accept.split(',').map((r) => r.trim()).filter(Boolean);
+  const rules = accept.split(',').map((rule) => rule.trim().toLowerCase()).filter(Boolean);
   if (rules.length === 0) return true;
 
-  const fileType = (file.type || '').toLowerCase();
-  const fileName = file.name.toLowerCase();
+  const mime = mimeOf(file);
+  const name = file.name.toLowerCase();
 
   return rules.some((rule) => {
-    const r = rule.toLowerCase();
+    if (rule.startsWith('.')) return name.endsWith(rule);
+    if (rule.endsWith('/*')) return mime.startsWith(rule.slice(0, -1));
 
-    // extension rule: ".png"
-    if (r.startsWith('.')) return fileName.endsWith(r);
-
-    // wildcard mime: "image/*"
-    if (r.endsWith('/*')) {
-      const prefix = r.slice(0, r.length - 1); // keep trailing slash
-      return fileType.startsWith(prefix);
-    }
-
-    // exact mime
-    return fileType === r;
+    return mime === rule;
   });
 }
 
-/**
- * Extract a human-readable error message from HTTP response
- */
-function extractErrorMessage(responseText: string, statusCode: number): string {
+class UploadError extends Error {
+  constructor(message: string, readonly status = 0, readonly retryable = true) {
+    super(message);
+    this.name = 'UploadError';
+  }
+}
+
+function abortError(): UploadError {
+  return new UploadError(t('uploadCancelled', 'Upload cancelled'), 0, false);
+}
+
+const STATUS_MESSAGES: Record<number, [string, string]> = {
+  400: ['badRequest', 'Bad request'],
+  401: ['unauthorized', 'Unauthorized'],
+  403: ['forbidden', 'Forbidden'],
+  404: ['notFound', 'Not found'],
+  413: ['fileTooLarge', 'File too large'],
+  419: ['sessionExpired', 'Session expired, please reload the page'],
+  422: ['invalidData', 'Invalid data'],
+  429: ['tooManyRequests', 'Too many requests'],
+  500: ['serverError', 'Server error'],
+  502: ['badGateway', 'Bad gateway'],
+  503: ['serviceUnavailable', 'Service unavailable'],
+  504: ['gatewayTimeout', 'Gateway timeout'],
+};
+
+function extractErrorMessage(responseText: string, status: number): string {
   try {
     const json = JSON.parse(responseText);
-    if (json.message) return json.message;
-    if (json.error) return json.error;
+    if (json.message) return String(json.message);
+    if (json.error) return String(json.error);
     if (json.errors && typeof json.errors === 'object') {
-      const firstError = Object.values(json.errors)[0];
-      if (Array.isArray(firstError)) return String(firstError[0]);
-      return String(firstError);
+      const first = Object.values(json.errors)[0];
+      return String(Array.isArray(first) ? first[0] : first);
     }
   } catch {
-    // ignore
+    // not json
   }
 
   const text = (responseText || '').trim();
 
+  if (text && !text.startsWith('<') && text.length < 240) return text;
+
   if (text.startsWith('<')) {
-    const titleMatch = text.match(/<title>(.*?)<\/title>/i);
-    if (titleMatch?.[1]) return titleMatch[1].trim();
-
-    const h1Match = text.match(/<h1[^>]*>(.*?)<\/h1>/i);
-    if (h1Match?.[1]) return h1Match[1].replace(/<[^>]*>/g, '').trim();
-
-    const statusMessages: Record<number, string> = {
-      400: t('badRequest') || 'Bad Request',
-      401: t('unauthorized') || 'Unauthorized',
-      403: t('forbidden') || 'Forbidden',
-      404: t('notFound') || 'Not Found',
-      413: t('fileTooLarge') || 'File too large - File size exceeds the allowed limit',
-      422: t('invalidData') || 'Invalid Data',
-      429: t('tooManyRequests') || 'Too Many Requests',
-      500: t('serverError') || 'Server Error',
-      502: t('badGateway') || 'Bad Gateway',
-      503: t('serviceUnavailable') || 'Service Unavailable',
-      504: t('gatewayTimeout') || 'Gateway Timeout',
-    };
-
-    return statusMessages[statusCode] || t('httpError', { code: String(statusCode) }) || `HTTP Error ${statusCode}`;
+    const title = text.match(/<title>(.*?)<\/title>/i)?.[1];
+    if (title) return title.trim();
   }
 
-  if (text && text.length < 240) return text;
+  const known = STATUS_MESSAGES[status];
+  if (known) return t(known[0], known[1]);
 
-  return t('uploadError', { code: String(statusCode) }) || `Upload error (${statusCode})`;
+  return t('uploadError', 'Upload error ({code})', { code: String(status) });
 }
 
-async function uploadInChunks(
-  file: File,
-  {
-    chunkSize,
-    uploadUrl,
-    headers,
-    field,
-    onProgress,
-    signal,
-    retryPerChunk = 2,
-  }: {
-    chunkSize: number;
-    uploadUrl: string;
-    headers: Record<string, string>;
-    field?: string | null;
-    onProgress: (percent: number) => void;
-    signal?: AbortSignal;
-    retryPerChunk?: number;
-  },
-): Promise<UploadResult> {
-  const totalChunks = Math.ceil(file.size / chunkSize);
-  const fileUuid = uid();
-  let lastResponse: any = null;
+function isRetryableStatus(status: number): boolean {
+  return status === 0 || status === 408 || status === 429 || status >= 500;
+}
 
-  const throwIfAborted = () => {
-    if (signal?.aborted) throw new Error(t('uploadCancelled') || 'Upload cancelled');
-  };
+function delay(ms: number, signal: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      signal.removeEventListener('abort', onAbort);
+      resolve();
+    }, ms);
+
+    const onAbort = () => {
+      clearTimeout(timer);
+      reject(abortError());
+    };
+
+    signal.addEventListener('abort', onAbort, { once: true });
+  });
+}
+
+type ChunkOptions = {
+  chunkSize: number;
+  uploadUrl: string;
+  headers: Record<string, string>;
+  field?: string | null;
+  signal: AbortSignal;
+  maxRetries: number;
+  onProgress: (loadedBytes: number) => void;
+};
+
+function sendChunk(body: FormData, options: ChunkOptions, onLoaded: (bytes: number) => void): Promise<any> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    const onAbort = () => xhr.abort();
+
+    xhr.open('POST', options.uploadUrl, true);
+    xhr.responseType = 'text';
+
+    for (const [key, value] of Object.entries(options.headers || {})) {
+      try {
+        xhr.setRequestHeader(key, value);
+      } catch {
+        // invalid header, skip
+      }
+    }
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) onLoaded(event.loaded);
+    };
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          resolve(JSON.parse(xhr.responseText));
+        } catch {
+          resolve({ success: true });
+        }
+        return;
+      }
+
+      reject(new UploadError(
+        extractErrorMessage(xhr.responseText, xhr.status),
+        xhr.status,
+        isRetryableStatus(xhr.status),
+      ));
+    };
+
+    xhr.onerror = () => reject(new UploadError(t('networkError', 'Network error - Unable to connect to server')));
+    xhr.onabort = () => reject(abortError());
+    xhr.onloadend = () => options.signal.removeEventListener('abort', onAbort);
+
+    options.signal.addEventListener('abort', onAbort, { once: true });
+    xhr.send(body);
+  });
+}
+
+/**
+ * Upload a file as a sequence of chunks, retrying transient failures only.
+ * Progress is reported in bytes so the caller can derive speed and ETA.
+ */
+async function uploadInChunks(file: File, options: ChunkOptions): Promise<UploadResult> {
+  const chunkSize = Math.max(1, options.chunkSize);
+  const totalChunks = Math.max(1, Math.ceil(file.size / chunkSize));
+  const fileUuid = uid();
+
+  let lastResponse: any = null;
+  let uploaded = 0;
 
   for (let index = 0; index < totalChunks; index++) {
-    throwIfAborted();
+    if (options.signal.aborted) throw abortError();
 
     const start = index * chunkSize;
     const end = Math.min(start + chunkSize, file.size);
-    const blob = file.slice(start, end);
+    const base = uploaded;
 
-    const formData = new FormData();
-    formData.append('chunk', blob, file.name);
-    formData.append('fileName', file.name);
-    formData.append('fileSize', String(file.size));
-    formData.append('chunkIndex', String(index));
-    formData.append('totalChunks', String(totalChunks));
-    formData.append('uuid', fileUuid);
-    if (field) formData.append('field', field);
+    const body = new FormData();
+    body.append('chunk', file.slice(start, end), file.name);
+    body.append('fileName', file.name);
+    body.append('fileSize', String(file.size));
+    body.append('chunkIndex', String(index));
+    body.append('totalChunks', String(totalChunks));
+    body.append('uuid', fileUuid);
+    if (options.field) body.append('field', options.field);
 
-    // Retry loop per chunk
     let attempt = 0;
-    while (true) {
-      throwIfAborted();
+
+    for (;;) {
       try {
-        await new Promise<void>((resolve, reject) => {
-          const xhr = new XMLHttpRequest();
-          xhr.open('POST', uploadUrl, true);
-
-          Object.entries(headers || {}).forEach(([k, v]) => {
-            try {
-              xhr.setRequestHeader(k, v);
-            } catch {
-              // ignore invalid header
-            }
-          });
-
-          if (signal) {
-            const abortHandler = () => {
-              try { xhr.abort(); } catch {}
-            };
-            signal.addEventListener('abort', abortHandler, { once: true });
-          }
-
-          xhr.upload.onprogress = (evt) => {
-            if (!evt.lengthComputable) return;
-            const chunkPercent = evt.total > 0 ? evt.loaded / evt.total : 0;
-            const overall = ((index + chunkPercent) / totalChunks) * 100;
-            onProgress(Math.round(overall));
-          };
-
-          xhr.onload = () => {
-            if (xhr.status >= 200 && xhr.status < 300) {
-              const overall = ((index + 1) / totalChunks) * 100;
-              onProgress(Math.round(overall));
-
-              try {
-                lastResponse = JSON.parse(xhr.responseText);
-              } catch {
-                lastResponse = { success: true };
-              }
-              resolve();
-              return;
-            }
-
-            reject(new Error(extractErrorMessage(xhr.responseText, xhr.status)));
-          };
-
-          xhr.onerror = () => reject(new Error(t('networkError') || 'Network error - Unable to connect to server'));
-          xhr.onabort = () => reject(new Error(t('uploadCancelled') || 'Upload cancelled'));
-
-          xhr.send(formData);
+        lastResponse = await sendChunk(body, options, (loaded) => {
+          options.onProgress(Math.min(file.size, base + loaded));
         });
 
-        break; // success, exit retry loop
-      } catch (e: any) {
-        attempt++;
-        if (attempt > retryPerChunk) throw e;
-        // small backoff
-        await new Promise((r) => setTimeout(r, 250 * attempt));
+        uploaded = end;
+        options.onProgress(uploaded);
+        break;
+      } catch (error: any) {
+        if (options.signal.aborted) throw abortError();
+
+        const retryable = error instanceof UploadError ? error.retryable : true;
+        if (!retryable || ++attempt > options.maxRetries) throw error;
+
+        options.onProgress(base);
+        await delay(Math.min(4000, 300 * 2 ** (attempt - 1)) + Math.random() * 200, options.signal);
       }
     }
   }
 
-  // Many backends return data on final chunk: { data: { uuid, filename, path, ... } }
-  // Normalize:
   if (lastResponse?.data && typeof lastResponse.data === 'object') return lastResponse.data;
+
   return lastResponse ?? { success: true };
 }
+
+function plain<T>(value: T): T {
+  if (value === null || typeof value !== 'object') return value;
+
+  try {
+    return JSON.parse(JSON.stringify(value));
+  } catch {
+    return value;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Component                                                                   */
+/* -------------------------------------------------------------------------- */
 
 export function neuraDropzone(options: DropzoneOptions = {}) {
   const config = { ...defaultOptions, ...options };
 
   return {
-    // State
-    previews: [] as DropzonePreview[],
-    isDragging: false,
-    _invalid: config.invalid,
+    // Public state
+    previews: [] as DropzoneItem[],
+    rejections: [] as DropzoneRejection[],
+    announcement: '',
+    serverInvalid: config.invalid,
+
+    // Configuration (exposed so custom markup can read it)
     accept: config.accept,
     maxSize: config.maxSizeBytes,
+    maxFiles: config.maxFiles,
     multiple: config.multiple,
     chunkSize: config.chunkSize,
     uploadUrl: config.uploadUrl,
     uploadHeaders: config.uploadHeaders,
     fieldName: config.name,
     wireModel: config.wireModel,
+    wireModelLive: config.wireModelLive,
     previewEnabled: config.previewEnabled,
     removable: config.removable,
+    disabled: config.disabled,
+    autoUpload: config.autoUpload,
+    notify: config.notify,
     concurrency: Math.max(1, config.concurrency || 1),
+    maxRetries: Math.max(0, config.maxRetries),
 
-    // Internal maps
+    // Internals
     _files: new Map<string, File>(),
-    _abort: new Map<string, AbortController>(),
-    _queueRunning: 0,
+    _controllers: new Map<string, AbortController>(),
     _queue: [] as string[],
-    
-    // FIXED: Add validation sync state management
-    _validationSyncScheduled: false,
-    _lastErrorKeys: [] as string[],
+    _running: 0,
+    _dragDepth: 0,
+    _observer: null as MutationObserver | null,
+    _syncScheduled: false,
 
-    get invalid() {
-      // Return the computed _invalid state which is kept in sync by the sync handlers
-      return this._invalid;
+    /* ---------------------------------------------------------------- */
+    /* Derived state                                                     */
+    /* ---------------------------------------------------------------- */
+
+    get isDragging(): boolean {
+      return this._dragDepth > 0;
     },
 
-    get hasError() {
-      return this.invalid || this.previews.some((p) => p.status === 'error');
+    get invalid(): boolean {
+      return this.serverInvalid;
     },
 
-    // FIXED: Improved validation sync with debouncing and proper state detection
-    _scheduleValidationSync() {
-      if (this._validationSyncScheduled) return;
-      
-      this._validationSyncScheduled = true;
-      
-      // Use microtask queue for immediate but non-blocking updates
-      queueMicrotask(() => {
-        this._performValidationSync();
-        this._validationSyncScheduled = false;
-      });
+    get hasError(): boolean {
+      return this.serverInvalid
+        || this.rejections.length > 0
+        || this.previews.some((item) => item.status === 'error');
     },
 
-    _performValidationSync() {
-      const self = this as any;
-      const wire = self.$wire;
-      
-      // If no wireModel and no fieldName, this is a static dropzone (e.g., :invalid="true")
-      // Don't override manual :invalid prop
-      if (!this.wireModel && !this.fieldName) {
-        return;
-      }
-      
-      // If $wire doesn't exist yet, skip
-      if (!wire) {
-        return;
-      }
-      
-      // Check for errors - Livewire 3 uses $errors property
-      let hasErrors = false;
-      try {
-        let errorKeys: string[] = [];
-        
-        // Method 1: wire.$errors (Livewire 3 style - this is a MessageBag proxy)
-        if (wire.$errors) {
-          // In Livewire 3, $errors is a proxy that has methods like has(), get(), etc.
-          // Check if our field has errors using has() method
-          const fieldToCheck = this.wireModel || this.fieldName;
-          if (fieldToCheck) {
-            // Try using has() method
-            if (typeof wire.$errors.has === 'function') {
-              if (wire.$errors.has(fieldToCheck) || 
-                  wire.$errors.has(fieldToCheck + '.*') ||
-                  wire.$errors.has(fieldToCheck + '.0')) {
-                hasErrors = true;
-              }
-            }
-            // Also try accessing as object
-            if (!hasErrors && typeof wire.$errors === 'object') {
-              const errObj = wire.$errors;
-              if (errObj[fieldToCheck] || errObj[fieldToCheck + '.*']) {
-                hasErrors = true;
-              }
-            }
-          }
-        }
-        
-        // Method 2: wire.errors (Livewire 2 style or fallback)
-        if (!hasErrors && wire.errors && typeof wire.errors === 'object') {
-          errorKeys = Object.keys(wire.errors);
-          if (errorKeys.length > 0) {
-            hasErrors = this._hasRelevantErrors(errorKeys);
-          }
-        }
-        
-      } catch (e) {
-        // Ignore errors - don't call methods that might not exist
-      }
-      
-      // Update based on Livewire errors
-      const wasInvalid = this._invalid;
-      this._invalid = hasErrors;
-      
-      // If state changed, force multiple reactive updates to ensure UI updates
-      if (wasInvalid !== hasErrors) {
-        // Touch multiple reactive properties to force Alpine to re-evaluate
-        this.previews = [...this.previews];
-        this.isDragging = !!this.isDragging;
-        
-        // Force Alpine to re-evaluate on next tick
-        const self = this as any;
-        if (self.$nextTick) {
-          self.$nextTick(() => {
-            // Re-touch to ensure reactivity
-            this.previews = [...this.previews];
-          });
-        }
-        
-        // Also use requestAnimationFrame for good measure
-        requestAnimationFrame(() => {
-          this.previews = [...this.previews];
-        });
-      }
+    /** Single attribute driving every visual state of the drop area. */
+    get state(): 'disabled' | 'dragging' | 'invalid' | 'idle' {
+      if (this.disabled) return 'disabled';
+      if (this.isDragging) return 'dragging';
+      if (this.hasError) return 'invalid';
+
+      return 'idle';
     },
 
-    _hasRelevantErrors(errorKeys: string[]): boolean {
-      if (this.fieldName) {
-        if (errorKeys.some((key: string) => key === this.fieldName || key.startsWith(this.fieldName + '.'))) {
-          return true;
-        }
-      }
-      
-      if (this.wireModel) {
-        if (errorKeys.some((key: string) => key === this.wireModel || key.startsWith(this.wireModel + '.'))) {
-          return true;
-        }
-      }
-      
-      return false;
+    get isUploading(): boolean {
+      return this.previews.some((item) => item.status === 'uploading');
     },
+
+    get isFull(): boolean {
+      if (this.disabled) return true;
+      if (!this.multiple) return false;
+
+      return this.maxFiles !== null && this.previews.length >= this.maxFiles;
+    },
+
+    get completedCount(): number {
+      return this.previews.filter((item) => item.status === 'success').length;
+    },
+
+    /** Weighted progress across every file currently in the queue. */
+    get overallProgress(): number {
+      const items = this.previews.filter((item) => item.status !== 'error');
+      if (items.length === 0) return 0;
+
+      const total = items.reduce((sum, item) => sum + Math.max(1, item.bytes), 0);
+      const done = items.reduce((sum, item) => sum + Math.max(1, item.bytes) * (item.progress / 100), 0);
+
+      return Math.round((done / total) * 100);
+    },
+
+    get totalBytes(): number {
+      return this.previews.reduce((sum, item) => sum + item.bytes, 0);
+    },
+
+    get totalSize(): string {
+      return formatFileSize(this.totalBytes);
+    },
+
+    /* ---------------------------------------------------------------- */
+    /* Lifecycle                                                         */
+    /* ---------------------------------------------------------------- */
 
     init() {
-      const w = window as any;
-      const self = this as any;
-      const rootElement = self.$el;
+      const flag = (this as any).$refs?.validity as HTMLElement | undefined;
+      if (!flag) return;
 
-      // FIXED: Livewire 3 with all hook variants
-      if (w.Livewire?.hook) {
-        try {
-          w.Livewire.hook('commit', () => {
-            this._scheduleValidationSync();
-          });
-        } catch {}
-        
-        try {
-          w.Livewire.hook('commit.response', () => {
-            this._scheduleValidationSync();
-          });
-        } catch {}
-        
-        try {
-          w.Livewire.hook('morph.updated', () => {
-            this._scheduleValidationSync();
-          });
-        } catch {}
+      // Server rendered validation state. Livewire (or any morph based
+      // library) rewrites this attribute on re-render, so observing it keeps
+      // the component in sync without polling or patching $wire.
+      this.serverInvalid = flag.dataset.invalid === '1';
 
-        try {
-          w.Livewire.hook('effect', () => {
-            this._scheduleValidationSync();
-          });
-        } catch {}
+      this._observer = new MutationObserver(() => {
+        const next = flag.dataset.invalid === '1';
+        if (next !== this.serverInvalid) this.serverInvalid = next;
+      });
+
+      this._observer.observe(flag, { attributes: true, attributeFilter: ['data-invalid'] });
+    },
+
+    destroy() {
+      this._observer?.disconnect();
+      this._observer = null;
+      this.cancelAll();
+      this.revokeAll();
+      this._files.clear();
+      this._queue = [];
+    },
+
+    /* ---------------------------------------------------------------- */
+    /* Input events                                                      */
+    /* ---------------------------------------------------------------- */
+
+    handleDragEnter(event: DragEvent) {
+      if (this.disabled) return;
+
+      if (!this._hasFiles(event)) return;
+      this._dragDepth++;
+    },
+
+    handleDragOver(event: DragEvent) {
+      if (this.disabled) return;
+
+      if (event.dataTransfer) {
+        event.dataTransfer.dropEffect = this.isFull ? 'none' : 'copy';
       }
 
-      // Listen to all Livewire events
-      const handleLivewireUpdate = () => {
-        this._scheduleValidationSync();
-      };
-
-      // Livewire 3 events
-      document.addEventListener('livewire:update', handleLivewireUpdate);
-      document.addEventListener('livewire:updated', handleLivewireUpdate);
-      document.addEventListener('livewire:navigated', handleLivewireUpdate);
-      document.addEventListener('livewire:init', handleLivewireUpdate);
-      document.addEventListener('livewire:initialized', handleLivewireUpdate);
-      
-      // Use Livewire.on() for more reliable event listening in Livewire 3
-      if (w.Livewire?.on) {
-        try {
-          w.Livewire.on('commit', handleLivewireUpdate);
-        } catch {}
-        try {
-          w.Livewire.on('response', handleLivewireUpdate);
-        } catch {}
-      }
-      
-      // Listen to the component's Livewire instance directly if available
-      if (self.$wire) {
-        // Watch for any property changes
-        try {
-          const originalSet = self.$wire.$set;
-          if (originalSet) {
-            self.$wire.$set = function(...args: any[]) {
-              const result = originalSet.apply(this, args);
-              handleLivewireUpdate();
-              return result;
-            };
-          }
-        } catch {}
-      }
-
-      // Watch form events
-      if (rootElement) {
-        const form = rootElement.closest('form') || rootElement;
-        
-        const handleFormEvent = () => {
-          this._scheduleValidationSync();
-          requestAnimationFrame(() => this._scheduleValidationSync());
-        };
-
-        form.addEventListener('submit', handleFormEvent, true);
-        form.addEventListener('click', (e: Event) => {
-          const target = e.target as HTMLElement;
-          if (target.tagName === 'BUTTON' || target.closest('button')) {
-            handleFormEvent();
-          }
-        }, true);
-      }
-
-      // Periodic check (100ms) as fallback for reliability - more aggressive for better UX
-      const intervalId = setInterval(() => {
-        this._performValidationSync();
-      }, 100);
-
-      // Store interval ID for cleanup if needed
-      (this as any)._validationInterval = intervalId;
-
-      // Initial check
-      queueMicrotask(() => this._performValidationSync());
-      requestAnimationFrame(() => this._performValidationSync());
+      // Some browsers drop `dragenter` when moving fast between children.
+      if (this._dragDepth === 0 && this._hasFiles(event)) this._dragDepth = 1;
     },
 
-    statusLabel(preview: DropzonePreview) {
-      if (preview.status === 'uploading') return t('uploading') || 'Uploading...';
-      if (preview.status === 'success') return t('complete') || 'Complete';
-      if (preview.status === 'error') return t('failed') || 'Failed';
-      return t('pending') || 'Pending';
+    handleDragLeave() {
+      if (this._dragDepth > 0) this._dragDepth--;
     },
 
-    triggerFileInput() {
-      const input = (this as any).$refs?.fileInput as HTMLInputElement | undefined;
-      if (!input) return;
+    handleDrop(event: DragEvent) {
+      this._dragDepth = 0;
+      if (this.disabled) return;
 
-      // Ensure it works consistently (some browsers require it in the same tick)
-      requestAnimationFrame(() => input.click());
+      this.addFiles(Array.from(event.dataTransfer?.files || []));
     },
 
-    handleDragOver(_e: DragEvent) {
-      this.isDragging = true;
+    handleFileSelect(event: Event) {
+      const input = event.target as HTMLInputElement;
+      const files = Array.from(input.files || []);
+
+      if (files.length > 0) this.addFiles(files);
+
+      // Reset so picking the same file again still fires `change`.
+      input.value = '';
     },
 
-    handleDragLeave(_e: DragEvent) {
-      this.isDragging = false;
+    handlePaste(event: ClipboardEvent) {
+      if (this.disabled) return;
+
+      const files = Array.from(event.clipboardData?.files || []);
+      if (files.length === 0) return;
+
+      event.preventDefault();
+      this.addFiles(files);
     },
 
-    handleDrop(e: DragEvent) {
-      this.isDragging = false;
-      const dropped = Array.from(e.dataTransfer?.files || []);
-      this.addFiles(dropped);
+    _hasFiles(event: DragEvent): boolean {
+      const types = event.dataTransfer?.types;
+
+      return !types || Array.prototype.includes.call(types, 'Files');
     },
 
-    handleFileSelect(e: Event) {
-      e.preventDefault();
-      e.stopPropagation();
-      
-      const target = e.target as HTMLInputElement;
-      const selected = Array.from(target.files || []);
-      
-      if (selected.length > 0) {
-        this.addFiles(selected);
-      }
+    /* ---------------------------------------------------------------- */
+    /* Files                                                             */
+    /* ---------------------------------------------------------------- */
 
-      // reset input so selecting same file again triggers change
-      target.value = '';
-    },
+    addFiles(incoming: File[]) {
+      if (this.disabled || incoming.length === 0) return;
 
-    addFiles(fileList: File[]) {
-      const dispatch = (this as any).$dispatch as ((name: string, detail?: any) => void) | undefined;
+      this.rejections = [];
 
-      const valid: File[] = [];
-      for (const file of fileList) {
+      const accepted: File[] = [];
+      const existingKeys = new Set(this.previews.map((item) => item.key));
+
+      let slots = this.multiple
+        ? (this.maxFiles === null ? Infinity : this.maxFiles - this.previews.length)
+        : 1;
+
+      for (const file of incoming) {
+        if (slots <= 0) {
+          this.reject(file.name, t('maxFilesReached', 'Maximum of {max} files reached', {
+            max: String(this.maxFiles ?? 1),
+          }));
+          continue;
+        }
+
+        if (file.size === 0) {
+          this.reject(file.name, t('emptyFile', 'This file is empty'));
+          continue;
+        }
+
         if (file.size > this.maxSize) {
-          dispatch?.('notify', {
-            type: 'error',
-            content:
-              t('fileExceedsMaxSize', {
-                fileName: file.name,
-                maxSize: Math.round(this.maxSize / 1024 / 1024).toString(),
-              }) || `File ${file.name} exceeds maximum size`,
-            duration: 5000,
-          });
+          this.reject(file.name, t('fileExceedsMaxSize', 'File {fileName} exceeds maximum size of {maxSize}MB', {
+            fileName: file.name,
+            maxSize: String(Math.round(this.maxSize / 1024 / 1024)),
+          }));
           continue;
         }
 
         if (!matchesAccept(file, this.accept)) {
-          dispatch?.('notify', {
-            type: 'error',
-            content: t('invalidFileType', { fileName: file.name }) || `Invalid file type: ${file.name}`,
-            duration: 5000,
-          });
+          this.reject(file.name, t('invalidFileType', 'Invalid file type: {fileName}', { fileName: file.name }));
           continue;
         }
 
-        valid.push(file);
+        const key = `${file.name}:${file.size}:${file.lastModified}`;
+        if (existingKeys.has(key)) {
+          this.reject(file.name, t('duplicateFile', 'This file has already been added'));
+          continue;
+        }
+
+        existingKeys.add(key);
+        accepted.push(file);
+        slots--;
       }
 
-      if (!this.multiple && valid.length > 0) {
-        // clean existing (revoke URLs)
-        this.clearAll();
-        valid.splice(1);
-      }
+      if (accepted.length === 0) return;
 
-      for (const file of valid) {
+      // Single mode always replaces the current selection.
+      if (!this.multiple) this.clearAll({ silent: true });
+
+      for (const file of accepted) {
         const id = uid();
+        const kind = detectKind(file);
+
         this._files.set(id, file);
 
-        const isImage = file.type?.startsWith('image/');
-        const url = this.previewEnabled && isImage ? URL.createObjectURL(file) : undefined;
-
-        const preview: DropzonePreview = {
+        this.previews.push({
           uuid: id,
-          type: isImage ? 'image' : 'file',
-          url,
+          key: `${file.name}:${file.size}:${file.lastModified}`,
+          kind,
+          type: kind === 'image' ? 'image' : 'file',
+          url: this.previewEnabled && kind === 'image' ? URL.createObjectURL(file) : null,
           name: file.name,
+          bytes: file.size,
           size: formatFileSize(file.size),
-          extension: getExtension(file.name),
+          extension: getExtension(file.name) || kind.toUpperCase(),
           progress: this.uploadUrl ? 0 : 100,
           status: this.uploadUrl ? 'idle' : 'success',
           error: null,
           server: null,
-        };
-
-        this.previews = [...this.previews, preview];
+          remaining: '',
+        });
       }
 
-      if (this.uploadUrl) this.startQueue();
+      this.announce(t('filesAdded', '{count} file(s) added', { count: String(accepted.length) }));
+      (this as any).$dispatch?.('dropzone:change', { files: accepted, count: this.previews.length });
+
+      if (!this.uploadUrl) {
+        this.syncModel();
+        return;
+      }
+
+      if (this.autoUpload) this.startQueue();
     },
 
-    startQueue() {
-      // enqueue idle items
-      for (const p of this.previews) {
-        if (p.status === 'idle' && !this._queue.includes(p.uuid)) this._queue.push(p.uuid);
+    reject(name: string, message: string) {
+      this.rejections.push({ id: uid(), name, message });
+
+      if (this.notify) {
+        (this as any).$dispatch?.('notify', { type: 'error', content: message, duration: 5000 });
       }
+
+      (this as any).$dispatch?.('dropzone:rejected', { name, message });
+    },
+
+    dismissRejection(id: string) {
+      this.rejections = this.rejections.filter((rejection) => rejection.id !== id);
+    },
+
+    dismissRejections() {
+      this.rejections = [];
+    },
+
+    find(uuid: string): DropzoneItem | undefined {
+      return this.previews.find((item) => item.uuid === uuid);
+    },
+
+    removeByUuid(uuid: string) {
+      const item = this.find(uuid);
+      if (!item) return;
+
+      this.cancel(uuid, { silent: true });
+
+      if (item.url) {
+        try { URL.revokeObjectURL(item.url); } catch { /* already revoked */ }
+      }
+
+      this._files.delete(uuid);
+      this._queue = this._queue.filter((queued) => queued !== uuid);
+      this.previews = this.previews.filter((preview) => preview.uuid !== uuid);
+
+      this.announce(t('fileRemoved', '{name} removed', { name: item.name }));
+      (this as any).$dispatch?.('dropzone:removed', { uuid, name: item.name });
+
+      this.syncModel();
+    },
+
+    clearAll(options: { silent?: boolean } = {}) {
+      this.cancelAll();
+      this.revokeAll();
+
+      this._files.clear();
+      this._queue = [];
+      this.previews = [];
+      this.rejections = [];
+
+      if (!options.silent) {
+        this.announce(t('allFilesRemoved', 'All files removed'));
+        this.syncModel();
+        (this as any).$dispatch?.('dropzone:cleared');
+      }
+    },
+
+    revokeAll() {
+      for (const item of this.previews) {
+        if (item.url) {
+          try { URL.revokeObjectURL(item.url); } catch { /* already revoked */ }
+        }
+      }
+    },
+
+    /* ---------------------------------------------------------------- */
+    /* Upload queue                                                      */
+    /* ---------------------------------------------------------------- */
+
+    startQueue() {
+      for (const item of this.previews) {
+        if (item.status === 'idle' && !this._queue.includes(item.uuid)) {
+          this._queue.push(item.uuid);
+        }
+      }
+
       this.pumpQueue();
     },
 
-    async pumpQueue() {
-      while (this._queueRunning < this.concurrency && this._queue.length > 0) {
-        const uuid = this._queue.shift()!;
+    pumpQueue() {
+      while (this._running < this.concurrency && this._queue.length > 0) {
+        const uuid = this._queue.shift() as string;
         const file = this._files.get(uuid);
-        if (!file) continue;
 
-        this._queueRunning++;
-        this.uploadOne(uuid, file)
-          .catch(() => void 0)
-          .finally(() => {
-            this._queueRunning--;
-            // Continue pumping in case new files were added
-            queueMicrotask(() => this.pumpQueue());
-          });
+        if (!file || !this.find(uuid)) continue;
+
+        this._running++;
+
+        this.uploadOne(uuid, file).finally(() => {
+          this._running--;
+          queueMicrotask(() => this.pumpQueue());
+        });
       }
     },
 
     async uploadOne(uuid: string, file: File) {
       if (!this.uploadUrl) return;
 
-      const dispatch = (this as any).$dispatch as ((name: string, detail?: any) => void) | undefined;
       const controller = new AbortController();
-      this._abort.set(uuid, controller);
+      this._controllers.set(uuid, controller);
 
-      this.setStatus(uuid, 'uploading');
-      this.setProgress(uuid, 0);
+      const item = this.find(uuid);
+      if (!item) return;
+
+      item.status = 'uploading';
+      item.progress = 0;
+      item.error = null;
+
+      const startedAt = Date.now();
+      let lastTick = 0;
 
       try {
         const result = await uploadInChunks(file, {
@@ -696,126 +807,178 @@ export function neuraDropzone(options: DropzoneOptions = {}) {
           uploadUrl: this.uploadUrl,
           headers: this.uploadHeaders,
           field: this.fieldName,
-          onProgress: (p) => this.setProgress(uuid, p),
           signal: controller.signal,
+          maxRetries: this.maxRetries,
+          onProgress: (loaded) => {
+            const current = this.find(uuid);
+            if (!current) return;
+
+            const percent = Math.min(100, Math.round((loaded / Math.max(1, file.size)) * 100));
+            if (percent !== current.progress) current.progress = percent;
+
+            const now = Date.now();
+            if (now - lastTick < 500) return;
+            lastTick = now;
+
+            const elapsed = (now - startedAt) / 1000;
+            const speed = elapsed > 0 ? loaded / elapsed : 0;
+            current.remaining = speed > 0 && loaded < file.size
+              ? formatDuration((file.size - loaded) / speed)
+              : '';
+          },
         });
 
-        this.setProgress(uuid, 100);
-        this.setServerResult(uuid, result);
-        this.setStatus(uuid, 'success');
+        const done = this.find(uuid);
+        if (!done) return;
 
-        // 1) Dispatch event for host listeners
-        dispatch?.('upload:success', {
-          file,
-          uuid,
-          data: result,
-        });
+        done.progress = 100;
+        done.remaining = '';
+        done.server = result;
+        done.status = 'success';
 
-        // 2) If wireModel was provided, set it directly (single or array)
-        const wire = (this as any).$wire;
-        if (this.wireModel && wire?.set) {
-          if (this.multiple) {
-            const current = wire.get?.(this.wireModel) ?? [];
-            const next = Array.isArray(current) ? [...current, result] : [result];
-            wire.set(this.wireModel, next);
-          } else {
-            wire.set(this.wireModel, result);
-          }
+        this.announce(t('fileUploaded', '{name} uploaded', { name: done.name }));
+        (this as any).$dispatch?.('upload:success', { file, uuid, data: result });
+
+        this.syncModel();
+      } catch (error: any) {
+        const failed = this.find(uuid);
+
+        if (failed) {
+          failed.status = 'error';
+          failed.progress = 0;
+          failed.remaining = '';
+          failed.error = error?.message || t('uploadFailed', 'Upload failed');
         }
 
-        // 3) For classic form submit (non-Livewire), write hidden inputs
-        this.syncHiddenInputs();
-      } catch (e: any) {
-        this.setStatus(uuid, 'error', e?.message || t('uploadFailed') || 'Upload failed');
-        dispatch?.('upload:error', { file, uuid, error: e });
+        (this as any).$dispatch?.('upload:error', { file, uuid, error });
+
+        // A failed file must not stay in the bound model.
+        this.syncModel();
       } finally {
-        this._abort.delete(uuid);
+        this._controllers.delete(uuid);
       }
     },
 
-    setProgress(uuid: string, value: number) {
-      const v = Math.min(100, Math.max(0, value));
-      this.previews = this.previews.map((p) => (p.uuid === uuid ? { ...p, progress: v } : p));
+    /** Upload every pending file — useful when `autoUpload` is disabled. */
+    uploadAll() {
+      if (!this.uploadUrl) return;
+      this.startQueue();
     },
 
-    setStatus(uuid: string, status: DropzoneStatus, error?: string | null) {
-      this.previews = this.previews.map((p) =>
-        p.uuid === uuid ? { ...p, status, error: error ?? (status === 'error' ? p.error : null) } : p,
-      );
+    retry(uuid: string) {
+      const item = this.find(uuid);
+      if (!item || item.status === 'uploading') return;
+
+      item.status = 'idle';
+      item.error = null;
+      item.progress = 0;
+
+      this.startQueue();
     },
 
-    setServerResult(uuid: string, server: UploadResult) {
-      this.previews = this.previews.map((p) => (p.uuid === uuid ? { ...p, server } : p));
+    cancel(uuid: string, options: { silent?: boolean } = {}) {
+      const controller = this._controllers.get(uuid);
+      if (controller) {
+        try { controller.abort(); } catch { /* already aborted */ }
+        this._controllers.delete(uuid);
+      }
+
+      this._queue = this._queue.filter((queued) => queued !== uuid);
+
+      if (options.silent) return;
+
+      const item = this.find(uuid);
+      if (item && item.status === 'uploading') {
+        item.status = 'error';
+        item.progress = 0;
+        item.remaining = '';
+        item.error = t('uploadCancelled', 'Upload cancelled');
+      }
     },
 
-    removeByUuid(uuid: string) {
-      // Abort in-flight upload
-      const ctrl = this._abort.get(uuid);
-      if (ctrl) {
-        try { ctrl.abort(); } catch {}
-        this._abort.delete(uuid);
+    cancelAll() {
+      for (const [, controller] of this._controllers) {
+        try { controller.abort(); } catch { /* already aborted */ }
       }
 
-      // Revoke object URL
-      const p = this.previews.find((x) => x.uuid === uuid);
-      if (p?.url && p.url.startsWith('blob:')) {
-        try { URL.revokeObjectURL(p.url); } catch {}
-      }
-
-      this._files.delete(uuid);
-      this._queue = this._queue.filter((x) => x !== uuid);
-      this.previews = this.previews.filter((x) => x.uuid !== uuid);
-
-      this.syncHiddenInputs();
-    },
-
-    clearAll() {
-      // Abort all
-      for (const [, ctrl] of this._abort) {
-        try { ctrl.abort(); } catch {}
-      }
-      this._abort.clear();
-
-      // Revoke all URLs
-      for (const p of this.previews) {
-        if (p.url && p.url.startsWith('blob:')) {
-          try { URL.revokeObjectURL(p.url); } catch {}
-        }
-      }
-
-      this._files.clear();
+      this._controllers.clear();
       this._queue = [];
-      this.previews = [];
+    },
 
-      this.syncHiddenInputs();
+    /* ---------------------------------------------------------------- */
+    /* Output                                                            */
+    /* ---------------------------------------------------------------- */
+
+    /**
+     * Push the current selection to Livewire and to the hidden inputs used by
+     * classic form submits. Always derived from the full list so removals and
+     * concurrent uploads can never desynchronise the bound value.
+     */
+    syncModel() {
+      if (this._syncScheduled) return;
+      this._syncScheduled = true;
+
+      queueMicrotask(() => {
+        this._syncScheduled = false;
+        this.syncHiddenInputs();
+
+        const wire = (this as any).$wire;
+        if (!this.wireModel || typeof wire?.set !== 'function') return;
+
+        const uploaded = this.previews
+          .filter((item) => item.status === 'success' && item.server)
+          .map((item) => plain(item.server));
+
+        const value = this.multiple ? uploaded : (uploaded[0] ?? null);
+
+        wire.set(this.wireModel, value, this.wireModelLive);
+      });
     },
 
     syncHiddenInputs() {
       const container = (this as any).$refs?.hiddenFields as HTMLElement | undefined;
-      if (!container) return;
+      if (!container || !this.fieldName) return;
 
-      container.innerHTML = '';
+      const uploaded = this.previews.filter((item) => item.status === 'success' && item.server);
 
-      if (!this.fieldName) return;
+      container.replaceChildren();
 
-      const successful = this.previews.filter((p) => p.status === 'success' && p.server);
-      if (successful.length === 0) return;
+      if (uploaded.length === 0) return;
 
-      if (this.multiple) {
-        for (const p of successful) {
-          const input = document.createElement('input');
-          input.type = 'hidden';
-          input.name = `${this.fieldName}[]`;
-          input.value = JSON.stringify(p.server);
-          container.appendChild(input);
-        }
-      } else {
+      const fragment = document.createDocumentFragment();
+
+      for (const item of uploaded) {
         const input = document.createElement('input');
         input.type = 'hidden';
-        input.name = this.fieldName;
-        input.value = JSON.stringify(successful[0].server);
-        container.appendChild(input);
+        input.name = this.multiple ? `${this.fieldName}[]` : this.fieldName;
+        input.value = JSON.stringify(plain(item.server));
+        fragment.appendChild(input);
+
+        if (!this.multiple) break;
       }
+
+      container.appendChild(fragment);
+    },
+
+    /* ---------------------------------------------------------------- */
+    /* Presentation helpers                                              */
+    /* ---------------------------------------------------------------- */
+
+    statusLabel(item: DropzoneItem): string {
+      if (item.status === 'uploading') {
+        return item.remaining
+          ? t('uploadingWithEta', 'Uploading… {time} left', { time: item.remaining })
+          : t('uploading', 'Uploading…');
+      }
+
+      if (item.status === 'success') return t('complete', 'Complete');
+      if (item.status === 'error') return t('failed', 'Failed');
+
+      return t('pending', 'Pending');
+    },
+
+    announce(message: string) {
+      this.announcement = message;
     },
   };
 }

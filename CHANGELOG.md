@@ -8,6 +8,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.12] - 2026-07-28
+
+### Added
+
+- **File Manager**: New `neura::file-manager` browser with list / grid views, breadcrumbs, local or remote search (folder or whole-tree scope), selection, details panel, upload / create / download / delete / rename affordances, and size / color / rounded / shadow packs
+- **Dropzone packs**: Size and color packs (`Packs\Dropzone`) plus `PackResolver::dropzoneSize()` / `dropzoneColor()` so dropzone density and ink follow config
+- **Dropzone previews**: Split list (`dropzone.item`) and grid (`dropzone.tile`) partials with `previewMode` (`list` / `grid`; grid by default for multiple image uploads)
+- **i18n**: English and French strings for file manager and dropzone (upload status, ETA, empty folder, search scope, selection, sort / view labels, …)
+
+### Improved
+
+- **Dropzone**: Reworked Alpine controller — chunked upload with retry, concurrency, cancel / retry actions, duplicate / empty / max-files guards, progress + ETA messaging, and clearer accept / max-files hints
+- **Layout header**: Tighter mobile padding and gaps, `min-w-0` / overflow handling so brand and actions no longer crowd the bar
+- **Sidebar toggle**: Resolves `toggle()` from the nearest `[data-slot=layout]` Alpine scope (works when the button is outside the layout `x-data`), with `type="button"` and `aria-label`
+- **Tokens**: Lighter `--nk-surface-inset` and stronger `--nk-separator` so recessed panels stay bright while hairline dividers remain readable on white
+
+### Fixed
+
+- **Layout main**: Dropped `max-h-screen` so nested scroll regions (e.g. docs) are not clipped to the viewport
+- **Sidebar**: Uses `min-h-0 h-full` instead of `min-h-[calc(100vh-var(--header-height))]` for correct flex height inside the layout grid
+- **Layout data attributes**: `data-in-mobile` / `data-in-tablet` / `data-collapsed` / `data-sidebar-open` bind to `null` when false so CSS attribute selectors match only active states
+
 ## [2.0.11] - 2026-07-24
 
 ### Added

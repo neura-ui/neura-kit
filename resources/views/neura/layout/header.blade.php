@@ -43,17 +43,17 @@
     };
 
     $containerClasses = Arr::toCssClasses([
-        'w-full px-4 sm:px-6 lg:px-8',
+        'w-full px-3 sm:px-6 lg:px-8',
         $centered ? 'mx-auto' : '',
         $sizeClasses,
-        'flex items-center gap-4',
+        'flex items-center gap-2 sm:gap-4 min-w-0',
     ]);
 @endphp
 
 <div {{ $attributes->class($headerClasses) }} data-slot="header">
     <div class="{{ $containerClasses }}">
         @if($withSidebarToggle)
-            <div class="md:hidden -ml-2">
+            <div class="md:hidden shrink-0 -ml-1">
                 <neura::sidebar.toggle :mobile="true" />
             </div>
         @endif
@@ -64,12 +64,12 @@
             </div>
         @endif
 
-        <div class="flex-1 min-w-0 {{ $directionClasses }}">
+        <div class="flex-1 min-w-0 overflow-hidden {{ $directionClasses }}">
             {{ $slot }}
         </div>
 
         @if (isset($slot->actions) || isset($actions))
-            <div data-slot="header-actions" {{ $actions->attributes->merge(['class' => "flex items-center gap-2 shrink-0"]) }}>
+            <div data-slot="header-actions" {{ $actions->attributes->merge(['class' => "flex items-center gap-1.5 sm:gap-2 shrink-0"]) }}>
                 {{ isset($slot->actions) ? $slot->actions : $actions }}
             </div>
         @endif

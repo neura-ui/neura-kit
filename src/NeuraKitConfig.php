@@ -401,12 +401,33 @@ class NeuraKitConfig
     {
         return self::mix([
             'default' => [
+                'size' => 'md',
                 'rounded' => self::GLOBAL,
                 'shadow' => self::GLOBAL,
             ],
             'packs' => [
                 'shadows' => Packs\Shadow::class,
                 'rounders' => Packs\Rounded::class,
+                'sizes' => Packs\Dropzone\Size::class,
+                'colors' => Packs\Dropzone\Color::class,
+            ],
+        ], $options);
+    }
+
+    public static function fileManager(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'size' => 'md',
+                'view' => 'list',
+                'rounded' => self::GLOBAL,
+                'shadow' => self::GLOBAL,
+            ],
+            'packs' => [
+                'shadows' => Packs\Shadow::class,
+                'rounders' => Packs\Rounded::class,
+                'sizes' => Packs\FileManager\Size::class,
+                'colors' => Packs\FileManager\Color::class,
             ],
         ], $options);
     }

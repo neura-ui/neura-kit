@@ -7,7 +7,9 @@ use Neura\Kit\Packs\Alert;
 use Neura\Kit\Packs\Avatar;
 use Neura\Kit\Packs\Badge;
 use Neura\Kit\Packs\Button;
+use Neura\Kit\Packs\Dropzone;
 use Neura\Kit\Packs\EventCalendar;
+use Neura\Kit\Packs\FileManager;
 use Neura\Kit\Packs\Filters;
 use Neura\Kit\Packs\Icon;
 use Neura\Kit\Packs\IconStack;
@@ -362,6 +364,44 @@ class PackResolver
         $colors = Input\Color::default();
 
         return $colors[$element] ?? $colors['base'];
+    }
+
+    public static function dropzoneSize(?string $size): array
+    {
+        $size = $size ?: self::componentDefault('dropzone', 'size') ?: 'md';
+        $sizes = self::packAll('dropzone', 'sizes') ?: Dropzone\Size::all();
+
+        return $sizes[$size] ?? $sizes['md'];
+    }
+
+    public static function dropzoneColor(?string $element = null): array
+    {
+        $colors = self::packAll('dropzone', 'colors') ?: Dropzone\Color::all();
+
+        if ($element === null) {
+            return $colors;
+        }
+
+        return (array) ($colors[$element] ?? []);
+    }
+
+    public static function fileManagerSize(?string $size): array
+    {
+        $size = $size ?: self::componentDefault('file-manager', 'size') ?: 'md';
+        $sizes = self::packAll('file-manager', 'sizes') ?: FileManager\Size::all();
+
+        return $sizes[$size] ?? $sizes['md'];
+    }
+
+    public static function fileManagerColor(?string $element = null): array
+    {
+        $colors = self::packAll('file-manager', 'colors') ?: FileManager\Color::all();
+
+        if ($element === null) {
+            return $colors;
+        }
+
+        return (array) ($colors[$element] ?? []);
     }
 
     public static function filtersSize(?string $size): array

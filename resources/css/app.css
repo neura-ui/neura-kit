@@ -16,16 +16,18 @@
 :root {
   --nk-surface: oklch(1 0 0);
   --nk-surface-raised: oklch(0.99 0 0);
-  --nk-surface-inset: oklch(0.94 0 0);
+  /* Recessed, not grey: sits just under hover so panels stay light on white. */
+  --nk-surface-inset: oklch(0.962 0 0);
   --nk-overlay: oklch(0 0 0 / 0.40);
 
   --nk-hover: oklch(0.97 0 0);
-  --nk-active: oklch(0.95 0 0);
+  --nk-active: oklch(0.945 0 0);
 
   --nk-edge: oklch(0.88 0 0);
   --nk-edge-hover: oklch(0.82 0 0);
   --nk-edge-focus: oklch(0.70 0 0);
-  --nk-separator: oklch(0.96 0 0);
+  /* Hairline dividers: must stay readable on white, lighter than an edge. */
+  --nk-separator: oklch(0.93 0 0);
 
   --nk-fg: oklch(0.145 0 0);
   --nk-fg-secondary: oklch(0.44 0 0);

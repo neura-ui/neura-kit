@@ -165,7 +165,7 @@
 
     <div
         @class([
-            'flex flex-col min-h-[calc(100vh-var(--header-height))]',
+            'flex flex-col min-h-0 h-full',
             'z-0' => $stickyHeader,
         ])
     >

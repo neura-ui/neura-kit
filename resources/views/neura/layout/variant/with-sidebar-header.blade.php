@@ -90,10 +90,10 @@
             }
         }"
 
-        x-bind:data-in-mobile="isMobile"
-        x-bind:data-in-tablet="isTablet"
-        x-bind:data-collapsed="collapsedSidebar"
-        x-bind:data-sidebar-open="sidebarOpen"
+        x-bind:data-in-mobile="isMobile || null"
+        x-bind:data-in-tablet="isTablet || null"
+        x-bind:data-collapsed="collapsedSidebar || null"
+        x-bind:data-sidebar-open="sidebarOpen || null"
     @endif
     data-slot="layout"
 >

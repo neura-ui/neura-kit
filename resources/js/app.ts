@@ -10,6 +10,7 @@ import './globals/spotlight';
 import './globals/clipboard';
 import './globals/color-picker';
 import './globals/dropzone';
+import './globals/file-manager';
 import './globals/chart';
 import './globals/lottie';
 import './globals/editor';
