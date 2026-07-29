@@ -95,12 +95,6 @@ class ComponentStyleConfigTest extends TestCase
         $this->assertSame('rounded-xl', PackResolver::rounded(neura_config('skeleton', 'rounded')));
     }
 
-    public function test_lottie_inherits_global_shadow_as_drop_shadow(): void
-    {
-        $this->assertSame('md', neura_config('lottie', 'shadow'));
-        $this->assertSame('drop-shadow-md', PackResolver::dropShadow(neura_config('lottie', 'shadow')));
-    }
-
     public function test_sideover_inherits_global_shadow(): void
     {
         $this->assertSame('md', neura_config('sideover', 'shadow'));

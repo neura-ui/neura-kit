@@ -56,7 +56,7 @@ abstract class TestCase extends OrchestraTestCase
 
     protected function loadRoutesFrom(): void
     {
-        \Illuminate\Support\Facades\Route::get('/neura-kit/lang/{locale}.json', \Neura\Kit\Http\Controllers\TranslationsController::class)
+        \Illuminate\Support\Facades\Route::get('/neura-kit/lang/{locale}.json', \Neura\Kit\Actions\Translation\GetTranslations::class)
             ->name('neura-kit.translations');
 
         $middleware = config('neura-kit.routes.middleware', ['web']);
@@ -66,17 +66,20 @@ abstract class TestCase extends OrchestraTestCase
         }
 
         \Illuminate\Support\Facades\Route::middleware($middleware)->prefix('neura-kit')->group(function () {
-            \Illuminate\Support\Facades\Route::post('/upload/chunks', [\Neura\Kit\Http\Controllers\ChunkController::class, 'upload'])
+            \Illuminate\Support\Facades\Route::post('/upload/chunks', \Neura\Kit\Actions\Upload\UploadChunk::class)
                 ->name('neura-kit.upload.chunks');
 
-            \Illuminate\Support\Facades\Route::get('/upload/file/{uuid}', [\Neura\Kit\Http\Controllers\ChunkController::class, 'getFile'])
+            \Illuminate\Support\Facades\Route::get('/upload/file/{uuid}', \Neura\Kit\Actions\Upload\GetUploadedFile::class)
                 ->name('neura-kit.upload.file');
 
-            \Illuminate\Support\Facades\Route::post('/editor/upload-image', [\Neura\Kit\Http\Controllers\EditorImageController::class, 'uploadImage'])
+            \Illuminate\Support\Facades\Route::post('/editor/upload-image', \Neura\Kit\Actions\Editor\UploadEditorImage::class)
                 ->name('neura-kit.editor.upload-image');
 
-            \Illuminate\Support\Facades\Route::post('/editor/fetch-url', [\Neura\Kit\Http\Controllers\EditorImageController::class, 'fetchUrl'])
-                ->name('neura-kit.editor.fetch-url');
+            \Illuminate\Support\Facades\Route::post('/editor/export', \Neura\Kit\Actions\Editor\ExportDocument::class)
+                ->name('neura-kit.editor.export');
+
+            \Illuminate\Support\Facades\Route::post('/editor/import', \Neura\Kit\Actions\Editor\ImportDocument::class)
+                ->name('neura-kit.editor.import');
         });
     }
 }

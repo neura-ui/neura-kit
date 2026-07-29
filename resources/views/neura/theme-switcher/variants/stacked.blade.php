@@ -5,7 +5,7 @@
         :iconVariant="$iconVariant"
         variant="soft"
         class="hover:bg-hover transition-colors"
-        x-on:click="$theme.setLight()"
+        x-on:click="$theme.setLight($event)"
         x-bind:class="{
             'bg-active!' : $theme.isLight
         }"
@@ -18,7 +18,7 @@
         :iconVariant="$iconVariant"
         variant="soft"
         class="hover:bg-hover transition-colors"
-        x-on:click="$theme.setDark()"
+        x-on:click="$theme.setDark($event)"
         x-bind:class="{
             'bg-active!' : $theme.isDark
         }"
@@ -31,7 +31,7 @@
         :iconVariant="$iconVariant"
         variant="soft"
         class="hover:bg-hover transition-colors"
-        x-on:click="$theme.setSystem()"
+        x-on:click="$theme.setSystem($event)"
         x-bind:class="{
             'bg-active!' : $theme.isSystem
         }"

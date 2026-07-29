@@ -19,7 +19,7 @@ class Color extends BasePack
         return [
             'area' => [
                 'base' => 'border-edge bg-surface',
-                'interactive' => 'cursor-pointer hover:border-edge-hover hover:bg-hover',
+                'interactive' => 'cursor-pointer hover:border-edge-hover hover:bg-hover dark:hover:border-edge-focus dark:hover:bg-white/10',
                 'focus' => 'has-[:focus-visible]:border-primary-500 has-[:focus-visible]:ring-4 has-[:focus-visible]:ring-primary-500/15 dark:has-[:focus-visible]:border-primary-400',
                 'dragging' => 'data-[state=dragging]:border-primary-500 data-[state=dragging]:bg-primary-50/80 data-[state=dragging]:ring-4 data-[state=dragging]:ring-primary-500/15 dark:data-[state=dragging]:border-primary-400 dark:data-[state=dragging]:bg-primary-950/50',
                 'invalid' => 'data-[state=invalid]:border-danger-400 data-[state=invalid]:bg-danger-50/60 dark:data-[state=invalid]:border-danger-500/70 dark:data-[state=invalid]:bg-danger-950/25',
@@ -28,7 +28,7 @@ class Color extends BasePack
 
             'tile' => [
                 'base' => 'bg-surface-inset text-fg-muted ring-1 ring-edge',
-                'hover' => 'group-hover/dz:text-fg-secondary',
+                'hover' => 'group-hover/dz:text-fg-secondary dark:group-hover/dz:bg-white/10 dark:group-hover/dz:text-fg dark:group-hover/dz:ring-white/15',
                 'dragging' => 'group-data-[state=dragging]/dz:bg-primary-100 group-data-[state=dragging]/dz:text-primary-600 group-data-[state=dragging]/dz:ring-primary-200 dark:group-data-[state=dragging]/dz:bg-primary-900/60 dark:group-data-[state=dragging]/dz:text-primary-400 dark:group-data-[state=dragging]/dz:ring-primary-800',
                 'invalid' => 'group-data-[state=invalid]/dz:bg-danger-100 group-data-[state=invalid]/dz:text-danger-600 group-data-[state=invalid]/dz:ring-danger-200 dark:group-data-[state=invalid]/dz:bg-danger-900/40 dark:group-data-[state=invalid]/dz:text-danger-400 dark:group-data-[state=invalid]/dz:ring-danger-800',
             ],

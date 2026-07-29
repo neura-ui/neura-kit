@@ -1,6 +1,6 @@
 {
     "name": "neura-ui/neura-kit",
-    "version": "2.0.13",
+    "version": "2.0.14",
     "authors": [
         {
             "name": "Neura UI",
@@ -27,7 +27,8 @@
     },
     "suggest": {
         "livewire/livewire": "^3.0|^4.0 Required for Livewire components (ModalManager, Table, ModalComponent)",
-        "wireui/heroicons": "^2.0 Required for icon components"
+        "wireui/heroicons": "^2.0 Required for icon components",
+        "paperdoc-dev/paperdoc-lib": "^1.0 Required for native editor document export (PDF, DOCX) and import"
     },
     "require-dev": {
         "orchestra/testbench": "^9.0|^10.0|^11.0",

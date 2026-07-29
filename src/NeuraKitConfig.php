@@ -541,18 +541,6 @@ class NeuraKitConfig
         ], $options);
     }
 
-    public static function lottie(array $options = []): array
-    {
-        return self::mix([
-            'default' => [
-                'shadow' => self::GLOBAL,
-            ],
-            'packs' => [
-                'shadows' => Packs\Shadow::class,
-            ],
-        ], $options);
-    }
-
     public static function chart(array $options = []): array
     {
         return self::mix([
@@ -563,6 +551,29 @@ class NeuraKitConfig
             'packs' => [
                 'rounders' => Packs\Rounded::class,
                 'shadows' => Packs\Shadow::class,
+            ],
+        ], $options);
+    }
+
+    public static function sparkline(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'color' => 'primary',
+                'fill' => true,
+                'curve' => 'smooth',
+            ],
+        ], $options);
+    }
+
+    public static function bars(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'color' => 'primary',
+                'rounded' => 'sm',
+                'gap' => 'sm',
+                'variant' => 'solid',
             ],
         ], $options);
     }

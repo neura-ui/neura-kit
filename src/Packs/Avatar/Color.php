@@ -9,7 +9,7 @@ class Color extends BasePack
     public static function default(): array
     {
         return [
-            'neutral' => 'bg-neutral-200 text-neutral-700 dark:bg-white/[0.10] dark:text-neutral-300 [&>[data-slot=icon]]:text-white!',
+            'neutral' => 'bg-neutral-200 text-neutral-700 dark:bg-white/[0.10] dark:text-neutral-300 **:data-[slot=icon]:text-white!',
             'red' => 'bg-red-200 text-red-800 dark:bg-red-500/20 dark:text-red-300',
             'orange' => 'bg-orange-200 text-orange-800 dark:bg-orange-500/20 dark:text-orange-300',
             'amber' => 'bg-amber-200 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300',

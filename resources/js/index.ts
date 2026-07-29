@@ -8,5 +8,3 @@ export * from './preset';
 export * from './core/colors';
 export * from './core/theme';
 export * from './core/defaults';
-// Globals (side effects - initializes window objects)
-import './app'

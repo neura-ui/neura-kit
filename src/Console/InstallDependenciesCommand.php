@@ -10,41 +10,14 @@ class InstallDependenciesCommand extends Command
 
     protected $description = 'Install missing JavaScript dependencies for Neura Kit';
 
-    protected array $dependencies = [
-        // Chart.js
-        'chart.js' => '^4.0.0',
-        
-        // Lottie
-        'lottie-web' => '^5.0.0',
-        
-        // Tiptap Editor (variant 1)
-        '@tiptap/core' => '^2.0.0',
-        '@tiptap/starter-kit' => '^2.0.0',
-        '@tiptap/extension-link' => '^2.0.0',
-        '@tiptap/extension-image' => '^2.0.0',
-        '@tiptap/extension-placeholder' => '^2.0.0',
-        '@tiptap/extension-text-align' => '^2.0.0',
-        '@tiptap/extension-underline' => '^2.0.0',
-        '@tiptap/extension-highlight' => '^2.0.0',
-        
-        // Editor.js (variant 2) - Core
-        '@editorjs/editorjs' => '^2.28.0',
-        '@editorjs/header' => '^2.7.0',
-        '@editorjs/list' => '^1.8.0',
-        '@editorjs/quote' => '^2.6.0',
-        '@editorjs/code' => '^2.8.0',
-        '@editorjs/image' => '^2.9.0',
-        '@editorjs/inline-code' => '^1.4.0',
-        
-        // Editor.js - Optional but recommended tools
-        '@editorjs/link' => '^2.5.0',
-        '@editorjs/marker' => '^1.3.0',
-        '@editorjs/delimiter' => '^1.3.0',
-        '@editorjs/table' => '^2.2.0',
-        
-        // Alpine Flow - Workflow/flowchart UI (Alpine.js provided by Livewire)
-        '@copyfactory/alpine-flow' => '^0.3.0',
-    ];
+    /**
+     * JavaScript packages the kit needs.
+     *
+     * Empty by design: chart, editor, flow, orb and other media engines are
+     * native (DOM / canvas) and pull in nothing. Chart.js, Tiptap, Editor.js
+     * and lottie-web were listed here until those variants were removed.
+     */
+    protected array $dependencies = [];
 
     public function handle(): int
     {

@@ -133,23 +133,29 @@ class NeuraKitServiceProvider extends ServiceProvider
             return;
         }
 
-        Route::get('/neura-kit/lang/{locale}.json', Http\Controllers\TranslationsController::class)
+        // Each endpoint is a single-purpose invokable action under src/Actions,
+        // so the route name and the class name describe the same thing.
+        Route::get('/neura-kit/lang/{locale}.json', Actions\Translation\GetTranslations::class)
             ->name('neura-kit.translations');
 
         $middleware = $this->routeMiddleware();
 
         Route::middleware($middleware)->prefix('neura-kit')->group(function () {
-            Route::post('/upload/chunks', [Http\Controllers\ChunkController::class, 'upload'])
+            Route::post('/upload/chunks', Actions\Upload\UploadChunk::class)
                 ->name('neura-kit.upload.chunks');
 
-            Route::get('/upload/file/{uuid}', [Http\Controllers\ChunkController::class, 'getFile'])
+            Route::get('/upload/file/{uuid}', Actions\Upload\GetUploadedFile::class)
                 ->name('neura-kit.upload.file');
 
-            Route::post('/editor/upload-image', [Http\Controllers\EditorImageController::class, 'uploadImage'])
+            Route::post('/editor/upload-image', Actions\Editor\UploadEditorImage::class)
                 ->name('neura-kit.editor.upload-image');
 
-            Route::post('/editor/fetch-url', [Http\Controllers\EditorImageController::class, 'fetchUrl'])
-                ->name('neura-kit.editor.fetch-url');
+            // Document conversion, backed by Paperdoc.
+            Route::post('/editor/export', Actions\Editor\ExportDocument::class)
+                ->name('neura-kit.editor.export');
+
+            Route::post('/editor/import', Actions\Editor\ImportDocument::class)
+                ->name('neura-kit.editor.import');
         });
     }
 

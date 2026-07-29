@@ -1,0 +1,810 @@
+/**
+ * Native rich editor — paper, chrome and print styles.
+ *
+ * The page box is driven entirely by custom properties the flow engine writes
+ * onto `.nk-pages` (`--nk-page-width`, `--nk-page-height`, the four margins).
+ * Nothing here hard-codes A4: changing the page size in the UI updates those
+ * variables and the sheets resize with them.
+ */
+
+.nk-native {
+  --nk-paper: #ffffff;
+  --nk-paper-ink: #202124;
+  --nk-canvas: #eef0f2;
+  --nk-canvas-edge: #dadce0;
+  --nk-paper-shadow:
+    0 1px 2px rgb(60 64 67 / 0.12),
+    0 4px 16px rgb(60 64 67 / 0.1);
+  --nk-doc-font: Arial, Helvetica, sans-serif;
+  --nk-doc-size: 14.67px; /* 11pt, the word-processor default */
+  --nk-chrome-bg: color-mix(in srgb, var(--color-surface, #fff) 92%, #f1f3f4);
+  --nk-tool-radius: 0.375rem;
+
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.dark .nk-native {
+  --nk-paper: #1e1e1e;
+  --nk-paper-ink: #e8eaed;
+  --nk-canvas: #121212;
+  --nk-canvas-edge: #3c4043;
+  --nk-paper-shadow:
+    0 1px 2px rgb(0 0 0 / 0.4),
+    0 6px 20px rgb(0 0 0 / 0.35);
+  --nk-chrome-bg: color-mix(in srgb, var(--color-surface, #1e1e1e) 88%, #000);
+}
+
+/* ---------------------------------------------------------------- chrome -- */
+
+.nk-native-chrome {
+  background: var(--nk-chrome-bg);
+  border-bottom: 1px solid var(--color-edge, var(--nk-canvas-edge));
+}
+
+.nk-native-menubar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem 0.75rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-edge, var(--nk-canvas-edge)) 70%, transparent);
+}
+
+.nk-native-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.125rem;
+  padding: 0.4rem 0.5rem;
+}
+
+.nk-tool-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+.nk-tool-divider {
+  width: 1px;
+  height: 1.25rem;
+  margin: 0 0.35rem;
+  flex-shrink: 0;
+  background: var(--color-edge, var(--nk-canvas-edge));
+  opacity: 0.85;
+}
+
+.nk-native-statusbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.4rem 0.75rem;
+  border-top: 1px solid var(--color-edge, var(--nk-canvas-edge));
+  background: var(--nk-chrome-bg);
+  font-size: 0.75rem;
+  color: var(--color-fg-muted, #5f6368);
+}
+
+.nk-status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-fg, #202124) 5%, transparent);
+  color: inherit;
+}
+
+.dark .nk-status-chip {
+  background: color-mix(in srgb, #fff 7%, transparent);
+}
+
+.nk-status-select {
+  appearance: none;
+  border: 1px solid transparent;
+  border-radius: 0.375rem;
+  background: transparent;
+  padding: 0.15rem 0.4rem;
+  font-size: inherit;
+  color: inherit;
+  outline: none;
+  cursor: pointer;
+}
+
+.nk-status-select:hover,
+.nk-status-select:focus-visible {
+  border-color: var(--color-edge, var(--nk-canvas-edge));
+  background: color-mix(in srgb, var(--color-fg, #202124) 5%, transparent);
+  color: var(--color-fg, #202124);
+}
+
+/* ---------------------------------------------------------------- canvas -- */
+
+.nk-native-canvas {
+  background-color: var(--nk-canvas);
+  background-image:
+    radial-gradient(ellipse 90% 60% at 50% 0%, color-mix(in srgb, #fff 55%, transparent), transparent 70%),
+    radial-gradient(var(--nk-canvas-edge) 0.7px, transparent 0.7px);
+  background-size: auto, 18px 18px;
+  overflow: auto;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 1.75rem 0 3.25rem;
+}
+
+.dark .nk-native-canvas {
+  background-image:
+    radial-gradient(ellipse 90% 55% at 50% 0%, color-mix(in srgb, #fff 4%, transparent), transparent 70%),
+    radial-gradient(color-mix(in srgb, var(--nk-canvas-edge) 55%, transparent) 0.7px, transparent 0.7px);
+}
+
+.nk-pages {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.75rem;
+  outline: none;
+  /* `zoom` scales layout as well as paint, so scrollbars and hit-testing stay
+     correct — a `transform` would leave the scroll area at the unscaled size. */
+  zoom: var(--nk-zoom, 1);
+}
+
+/* ------------------------------------------------------------------ page -- */
+
+.nk-page {
+  position: relative;
+  flex: 0 0 auto;
+  width: var(--nk-page-width, 794px);
+  height: var(--nk-page-height, 1123px);
+  padding: var(--nk-margin-top, 96px) var(--nk-margin-right, 96px)
+    var(--nk-margin-bottom, 96px) var(--nk-margin-left, 96px);
+  background: var(--nk-paper);
+  color: var(--nk-paper-ink);
+  box-shadow: var(--nk-paper-shadow);
+  border: 1px solid color-mix(in srgb, var(--nk-canvas-edge) 80%, transparent);
+  border-radius: 2px;
+  font-family: var(--nk-doc-font);
+  font-size: var(--nk-doc-size);
+  line-height: 1.15;
+  box-sizing: border-box;
+}
+
+.nk-page-body {
+  height: var(--nk-page-content-height, 931px);
+  /* Overflow is what the flow engine measures; it must never scroll. */
+  overflow: hidden;
+  outline: none;
+}
+
+/* Margin guides, shown while the ruler is open. */
+.nk-native[data-guides='on'] .nk-page::before {
+  content: '';
+  position: absolute;
+  inset: var(--nk-margin-top, 96px) var(--nk-margin-right, 96px) var(--nk-margin-bottom, 96px)
+    var(--nk-margin-left, 96px);
+  border: 1px dashed color-mix(in srgb, var(--nk-paper-ink) 22%, transparent);
+  pointer-events: none;
+}
+
+/**
+ * Header and footer.
+ *
+ * Both sit inside the page's margin band, absolutely positioned so they take no
+ * part in the body's flow — the page-flow engine never measures them and they
+ * cannot push content onto another sheet.
+ */
+.nk-page-header,
+.nk-page-footer {
+  position: absolute;
+  left: var(--nk-margin-left, 96px);
+  right: var(--nk-margin-right, 96px);
+  min-height: 1.2em;
+  font-size: 0.75rem;
+  color: color-mix(in srgb, var(--nk-paper-ink) 55%, transparent);
+  outline: none;
+}
+
+.nk-page-header {
+  top: calc(var(--nk-margin-top, 96px) / 3);
+}
+
+.nk-page-footer {
+  bottom: calc(var(--nk-margin-bottom, 96px) / 3);
+  text-align: center;
+}
+
+/* Only the sheet being edited reacts to the pointer. */
+.nk-page-header,
+.nk-page-footer {
+  cursor: text;
+}
+
+.nk-page:not(:first-of-type) .nk-page-header,
+.nk-page:not(:first-of-type) .nk-page-footer {
+  pointer-events: none;
+  user-select: none;
+}
+
+/* An empty header invites a double-click rather than looking broken. */
+.nk-page:first-of-type .nk-page-header:empty::before {
+  content: 'Double-click to add a header';
+  color: color-mix(in srgb, var(--nk-paper-ink) 28%, transparent);
+}
+
+.nk-page:first-of-type .nk-page-footer:empty::before {
+  content: 'Double-click to add a footer';
+  color: color-mix(in srgb, var(--nk-paper-ink) 28%, transparent);
+}
+
+/* Editing state: the region under the caret is outlined, the body steps back. */
+.nk-native[data-nk-hf-editing] .nk-page-body {
+  opacity: 0.45;
+}
+
+[contenteditable='true'][data-nk-header],
+[contenteditable='true'][data-nk-footer] {
+  outline: 2px solid var(--color-primary, #1a73e8);
+  outline-offset: 4px;
+  border-radius: 2px;
+  color: var(--nk-paper-ink);
+}
+
+/* Auto fields read as content, not as widgets. */
+[data-nk-field] {
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------- document -- */
+
+.nk-page-body > *,
+.nk-page-body li {
+  margin: 0;
+}
+
+.nk-page-body p,
+.nk-page-body h1,
+.nk-page-body h2,
+.nk-page-body h3,
+.nk-page-body h4,
+.nk-page-body blockquote,
+.nk-page-body pre,
+.nk-page-body ul,
+.nk-page-body ol,
+.nk-page-body table,
+.nk-page-body figure {
+  margin: 0 0 0.6em;
+}
+
+.nk-page-body h1 {
+  font-size: 2em;
+  font-weight: 400;
+  margin-top: 1.2em;
+  line-height: 1.2;
+}
+
+.nk-page-body h2 {
+  font-size: 1.5em;
+  font-weight: 400;
+  margin-top: 1em;
+  line-height: 1.25;
+}
+
+.nk-page-body h3 {
+  font-size: 1.25em;
+  font-weight: 400;
+  margin-top: 0.9em;
+  line-height: 1.3;
+}
+
+.nk-page-body h4 {
+  font-size: 1.1em;
+  font-weight: 400;
+  margin-top: 0.8em;
+}
+
+/* Title and Subtitle are the same tags styled differently, as in Docs. */
+.nk-page-body [data-nk-style='title'] {
+  font-size: 2.5em;
+  font-weight: 400;
+  margin-top: 0;
+}
+
+.nk-page-body [data-nk-style='subtitle'] {
+  font-size: 1.2em;
+  font-weight: 400;
+  color: color-mix(in srgb, var(--nk-paper-ink) 60%, transparent);
+  margin-top: 0;
+}
+
+.nk-page-body ul,
+.nk-page-body ol {
+  padding-left: 1.75em;
+}
+
+.nk-page-body ul {
+  list-style: disc;
+}
+
+.nk-page-body ul ul {
+  list-style: circle;
+}
+
+.nk-page-body ul ul ul {
+  list-style: square;
+}
+
+.nk-page-body ol {
+  list-style: decimal;
+}
+
+.nk-page-body ol ol {
+  list-style: lower-alpha;
+}
+
+.nk-page-body ol ol ol {
+  list-style: lower-roman;
+}
+
+.nk-page-body li {
+  margin-bottom: 0.15em;
+}
+
+/* The tail of a list item continued from the previous page keeps no marker. */
+.nk-page-body li[data-nk-continued] {
+  list-style: none;
+}
+
+.nk-page-body blockquote {
+  border-left: 3px solid color-mix(in srgb, var(--nk-paper-ink) 25%, transparent);
+  padding-left: 1em;
+  color: color-mix(in srgb, var(--nk-paper-ink) 75%, transparent);
+  font-style: italic;
+}
+
+.nk-page-body pre {
+  background: color-mix(in srgb, var(--nk-paper-ink) 6%, transparent);
+  border-radius: 4px;
+  padding: 0.75em 1em;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9em;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.nk-page-body code {
+  font-family: 'Courier New', Courier, monospace;
+  background: color-mix(in srgb, var(--nk-paper-ink) 8%, transparent);
+  border-radius: 3px;
+  padding: 0.1em 0.3em;
+  font-size: 0.9em;
+}
+
+.nk-page-body a {
+  color: #1155cc;
+  text-decoration: underline;
+}
+
+.dark .nk-page-body a {
+  color: #8ab4f8;
+}
+
+.nk-page-body mark {
+  background: #fff475;
+  color: inherit;
+}
+
+.nk-page-body hr {
+  border: none;
+  border-top: 1px solid color-mix(in srgb, var(--nk-paper-ink) 25%, transparent);
+  margin: 1em 0;
+}
+
+.nk-page-body img {
+  max-width: 100%;
+  height: auto;
+}
+
+.nk-page-body figure {
+  text-align: center;
+}
+
+.nk-page-body table {
+  border-collapse: collapse;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.nk-page-body th,
+.nk-page-body td {
+  border: 1px solid color-mix(in srgb, var(--nk-paper-ink) 30%, transparent);
+  padding: 0.35em 0.5em;
+  vertical-align: top;
+  text-align: left;
+}
+
+.nk-page-body th {
+  background: color-mix(in srgb, var(--nk-paper-ink) 6%, transparent);
+  font-weight: 700;
+}
+
+/* A manual page break has no height of its own; it only forces the flow. */
+.nk-page-body [data-nk-break] {
+  height: 0;
+  overflow: hidden;
+}
+
+/* ------------------------------------------------- block-level modifiers -- */
+
+.nk-page-body [data-nk-align='center'] {
+  text-align: center;
+}
+.nk-page-body [data-nk-align='right'] {
+  text-align: right;
+}
+.nk-page-body [data-nk-align='justify'] {
+  text-align: justify;
+}
+
+.nk-page-body [data-nk-indent='1'] {
+  margin-left: 2.5rem;
+}
+.nk-page-body [data-nk-indent='2'] {
+  margin-left: 5rem;
+}
+.nk-page-body [data-nk-indent='3'] {
+  margin-left: 7.5rem;
+}
+.nk-page-body [data-nk-indent='4'] {
+  margin-left: 10rem;
+}
+.nk-page-body [data-nk-indent='5'] {
+  margin-left: 12.5rem;
+}
+.nk-page-body [data-nk-indent='6'] {
+  margin-left: 15rem;
+}
+.nk-page-body [data-nk-indent='7'] {
+  margin-left: 17.5rem;
+}
+.nk-page-body [data-nk-indent='8'] {
+  margin-left: 20rem;
+}
+
+.nk-page-body [data-nk-spacing] {
+  line-height: attr(data-nk-spacing type(<number>), 1.15);
+}
+
+/* `attr()` with a type is still landing in browsers; keep explicit fallbacks. */
+.nk-page-body [data-nk-spacing='1'] {
+  line-height: 1;
+}
+.nk-page-body [data-nk-spacing='1.5'] {
+  line-height: 1.5;
+}
+.nk-page-body [data-nk-spacing='2'] {
+  line-height: 2;
+}
+.nk-page-body [data-nk-spacing='2.5'] {
+  line-height: 2.5;
+}
+
+/**
+ * Placeholder on an empty document.
+ *
+ * `data-nk-empty` is toggled from the component rather than matched with a CSS
+ * selector: an "empty" block is `<p><br></p>`, which `:empty` does not match,
+ * and `attr()` cannot reach the placeholder text from a descendant anyway.
+ */
+.nk-page-body[data-nk-empty][data-nk-placeholder]::before {
+  content: attr(data-nk-placeholder);
+  color: color-mix(in srgb, var(--nk-paper-ink) 40%, transparent);
+  pointer-events: none;
+  position: absolute;
+}
+
+/* ---------------------------------------------------------------- ruler -- */
+
+.nk-ruler {
+  position: relative;
+  height: 28px;
+  margin: 0 auto 8px;
+  background: color-mix(in srgb, var(--nk-paper) 92%, var(--nk-canvas));
+  border: 1px solid var(--nk-canvas-edge);
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgb(60 64 67 / 0.06);
+  font-size: 9px;
+  color: color-mix(in srgb, var(--nk-paper-ink) 55%, transparent);
+  user-select: none;
+  /* Same zoom as the sheets, so ruler pixels map 1:1 onto page pixels. */
+  zoom: var(--nk-zoom, 1);
+  touch-action: none;
+}
+
+.nk-ruler-margin {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: color-mix(in srgb, var(--nk-paper-ink) 10%, transparent);
+  pointer-events: none;
+}
+
+.nk-ruler-tick {
+  position: absolute;
+  bottom: 0;
+  width: 0;
+  border-left: 1px solid color-mix(in srgb, var(--nk-paper-ink) 30%, transparent);
+  height: 4px;
+  pointer-events: none;
+}
+
+.nk-ruler-tick.is-major {
+  height: 7px;
+}
+
+.nk-ruler-tick span {
+  position: absolute;
+  left: 3px;
+  bottom: 5px;
+  font-size: 9px;
+  line-height: 1;
+  color: color-mix(in srgb, var(--nk-paper-ink) 60%, transparent);
+}
+
+/* ------------------------------------------------------- ruler handles -- */
+
+.nk-ruler-handle {
+  position: absolute;
+  width: 12px;
+  height: 10px;
+  margin-left: -6px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: ew-resize;
+  z-index: 2;
+}
+
+.nk-ruler-handle::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  translate: -50% 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+}
+
+/* Margin markers point up from the bottom edge. */
+.nk-ruler-handle-left,
+.nk-ruler-handle-right {
+  bottom: 0;
+}
+
+.nk-ruler-handle-left::before,
+.nk-ruler-handle-right::before {
+  bottom: 0;
+  border-bottom: 9px solid var(--color-primary, #1a73e8);
+}
+
+/* The first-line marker points down from the top edge. */
+.nk-ruler-handle-indent {
+  top: 0;
+}
+
+.nk-ruler-handle-indent::before {
+  top: 0;
+  border-top: 9px solid var(--color-primary, #1a73e8);
+}
+
+.nk-ruler-handle:hover::before,
+.nk-ruler-handle:focus-visible::before {
+  filter: brightness(1.2);
+}
+
+.nk-ruler-handle:focus-visible {
+  outline: 2px solid var(--color-edge-focus, #1a73e8);
+  outline-offset: 1px;
+}
+
+/* --------------------------------------------------------------- toolbar -- */
+
+.nk-tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.85rem;
+  min-width: 1.85rem;
+  padding: 0 0.3rem;
+  border: 1px solid transparent;
+  border-radius: var(--nk-tool-radius);
+  color: var(--color-fg-muted, #5f6368);
+  transition:
+    background-color 120ms ease,
+    color 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.nk-tool:hover:not(:disabled) {
+  color: var(--color-fg, #202124);
+}
+
+.nk-tool[aria-pressed='true'] {
+  color: var(--color-primary, #1a73e8);
+}
+
+.nk-tool:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
+
+.nk-tool:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-primary, #1a73e8) 55%, transparent);
+  outline-offset: 1px;
+}
+
+.nk-tool svg {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ---------------------------------------------------------------- dialogs -- */
+
+.nk-editor-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(15 18 22 / 0.42);
+  backdrop-filter: blur(2px);
+}
+
+.dark .nk-editor-backdrop {
+  background: rgb(0 0 0 / 0.55);
+}
+
+.nk-editor-dialog {
+  width: min(100% - 2rem, 20rem);
+  border: 1px solid var(--color-edge, var(--nk-canvas-edge));
+  border-radius: 0.75rem;
+  background: var(--color-surface, var(--nk-paper));
+  padding: 1rem 1.1rem;
+  box-shadow:
+    0 8px 28px rgb(15 18 22 / 0.18),
+    0 2px 6px rgb(15 18 22 / 0.08);
+}
+
+.nk-editor-dialog h3 {
+  margin: 0 0 0.85rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.nk-editor-field {
+  width: 100%;
+  border: 1px solid var(--color-edge, var(--nk-canvas-edge));
+  border-radius: 0.5rem;
+  background: var(--color-surface, var(--nk-paper));
+  padding: 0.4rem 0.55rem;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.nk-editor-field:focus {
+  border-color: var(--color-primary, #1a73e8);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary, #1a73e8) 22%, transparent);
+}
+
+.nk-editor-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.875rem;
+  transition: background-color 120ms ease, color 120ms ease, opacity 120ms ease;
+}
+
+.nk-editor-btn-ghost {
+  color: var(--color-fg-muted, #5f6368);
+}
+
+.nk-editor-btn-ghost:hover {
+  color: var(--color-fg, #202124);
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+
+.nk-editor-btn-primary {
+  background: var(--color-primary, #1a73e8);
+  color: #fff;
+}
+
+.nk-editor-btn-primary:hover {
+  filter: brightness(1.06);
+}
+
+.nk-editor-menu {
+  border: 1px solid var(--color-edge, var(--nk-canvas-edge));
+  border-radius: 0.625rem;
+  background: var(--color-surface, var(--nk-paper));
+  padding: 0.3rem;
+  box-shadow:
+    0 10px 30px rgb(15 18 22 / 0.14),
+    0 2px 6px rgb(15 18 22 / 0.06);
+}
+
+.nk-editor-menu-item {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-radius: 0.375rem;
+  padding: 0.4rem 0.65rem;
+  text-align: left;
+  font-size: 0.875rem;
+  color: var(--color-fg, #202124);
+}
+
+.nk-editor-menu-item:hover {
+  background: color-mix(in srgb, var(--color-fg, #202124) 6%, transparent);
+}
+
+.nk-editor-menu-item.is-danger {
+  color: #dc2626;
+}
+
+.dark .nk-editor-menu-item.is-danger {
+  color: #f87171;
+}
+
+/* ---------------------------------------------------------------- print -- */
+
+@media print {
+  .nk-native-chrome,
+  .nk-ruler,
+  .nk-native-statusbar,
+  .nk-editor-backdrop,
+  .nk-editor-dialog {
+    display: none !important;
+  }
+
+  .nk-native,
+  .nk-native-canvas {
+    background: #fff;
+    overflow: visible;
+    padding: 0;
+    height: auto;
+  }
+
+  .nk-pages {
+    gap: 0;
+    zoom: 1;
+  }
+
+  .nk-page {
+    box-shadow: none;
+    border: none;
+    break-after: page;
+    page-break-after: always;
+    margin: 0;
+  }
+
+  .nk-page:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  .nk-page-footer {
+    color: #666;
+  }
+}

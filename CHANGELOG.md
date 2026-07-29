@@ -8,6 +8,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.14] - 2026-07-29
+
+### Added
+
+- **Theme switcher `pullcord` variant**: `neura::theme-switcher variant="pullcord"` — Verlet hanging-cord toggle; pull past the detent (or click / Enter / Space) to flip light ↔ dark
+- **PullCord options**: `embedded` (absolute inside a relative preview), `noEntrance`, `ariaLabel`, and physics overrides (`gravity`, `damping`, `iterations`, `stretchMax`)
+- **PullCord CSS vars**: Position and ink via `--nk-pullcord-top`, `--nk-pullcord-right`, `--nk-pullcord-z`, `--nk-pullcord-ink` on any ancestor
+- **Theme switch animations**: View Transition reveal when toggling light / dark / system — `circle`, `blur-circle`, `qr-scan`, `polygon`, `polygon-gradient`, `gif`, or `none` (inspired by [react-theme-switch-animation](https://github.com/MinhOmega/react-theme-switch-animation)); ignored for the pullcord variant
+- **`neura::theme-switcher` `animation` prop**: Per-instance animation via `data-nk-theme-animation` (default `circle`); works with `dropdown`, `stacked`, and `inline` variants
+- **`$theme` API**: Pass a click `$event` (or element / coordinates) so the reveal originates from the control — `$theme.toggle($event)`, `$theme.dark($event)`, `$theme.light($event)`, `$theme.system($event)`
+- **`$theme.configure()`**: Kit-wide defaults (`animationType`, `duration`, `easing`, `blurAmount`, `gifUrl`, …); `$theme.animation()` reads the active config
+- **System preference**: When stored theme is `system`, OS light/dark changes animate through the same View Transition path
+
+### Changed
+
+- **JS runtime**: Reorganized `resources/js/globals/` into `features/` (system, overlays, forms, data, media, chart, editor, flow) with a `runtime/loader` that detects Alpine factories on the page and lazy-loads only what is rendered
+- **Vite chunks**: Collapses lazy features into five named bundles — `neura-forms`, `neura-widgets`, `neura-overlays`, `neura-editor`, `neura-flow` — instead of one tiny file per component
+- **Eager surface**: Theme, toast, clipboard, translations, icons, preloader, and the `@neuraKit` overlay managers (modal / sideover / spotlight) stay in the entry chunk
+- **Editor**: Replaced Tiptap and Editor.js with the kit’s dependency-free **native editor** (`neura::editor` / `nativeEditor`) — A4 pages, toolbar, uploads, and optional Paperdoc export/import
+- **Chart**: Replaced Chart.js with the kit’s dependency-free **native chart** (`neura::chart` / `chartComponent`) — line, bar, pie, and doughnut on canvas
+- **Plugin entry**: `resources/js/index.ts` exports the Vite plugin and presets only — it no longer side-imports the browser runtime (avoids `window is not defined` when Vite loads the config)
+
+### Removed
+
+- **Lottie**: `neura::lottie` component and `lottie-web` integration removed
+- **Tiptap**: Editor variant, Blade views, and related JS removed
+- **Editor.js**: Editor variant, Blade views, `editorjs` theme CSS, and related JS removed
+- **Chart.js**: Chart.js adapter and third-party chart dependency removed
+
+### Fixed
+
+- **Boot race**: Top-level `await boot()` does not delay `DOMContentLoaded`; Livewire’s classic script would start Alpine before feature factories registered. `Livewire.start` is now wrapped so Alpine walks the DOM only after needed chunks have loaded
+- **Late SPA features**: Feature modules register via `onAlpineInit` so factories still attach after Alpine has already started (e.g. Livewire navigate)
+- **Color picker**: Removed `$wire` from the Alpine data object — `JSON.stringify` of the Alpine scope was hitting Livewire’s `$wire` proxy and requesting a non-existent `toJSON` component method
+
 ## [2.0.13] - 2026-07-28
 
 ### Added

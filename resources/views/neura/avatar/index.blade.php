@@ -37,10 +37,12 @@
         }
     }
 
-    $hasTextContent = $icon ?? ($initials ?? $slot->isNotEmpty());
+    $hasImage = filled($src);
+    $hasTextContent = filled($icon) || filled($initials) || $slot->isNotEmpty();
 
-    if (!$hasTextContent) {
+    if (!$hasImage && !$hasTextContent) {
         $icon = 'user';
+        $hasTextContent = true;
     }
 
     // Auto color handling
@@ -60,7 +62,7 @@
         : PackResolver::rounded($rounded ?? neura_config('avatar', 'rounded'));
     $shadowClass = PackResolver::shadow($shadow ?? neura_config('avatar', 'shadow'));
 
-    $avatarSize = $sizeConfig['container'] ?? '[:where(&)]:size-10 [:where(&)]:text-sm';
+    $avatarSize = $sizeConfig['container'] ?? 'size-10 shrink-0 text-sm';
     $avatarColor = PackResolver::avatarColor($color ?? 'neutral');
 
     $containerClasses = Arr::toCssClasses([
@@ -71,6 +73,7 @@
         'ring-1 ring-black/5 dark:ring-white/10',
         'hover:shadow-md hover:ring-black/10 dark:hover:ring-white/15' => $href,
         $avatarSize,
+        // Color (bg + text) only matters for initials/icon; keep behind the image
         $avatarColor,
         $attributes->get('class'),
     ]);
@@ -84,6 +87,8 @@
 
     // Slot styling for initials/text content
     $slotClasses = Arr::toCssClasses(['select-none font-semibold tracking-tight', $attributes->get('slot:class')]);
+
+    $imgAlt = $alt ?? $name ?? '';
 
     // Badge configuration
     $badgeColor = $attributes->get('badge:color') ?? (is_object($badge) ? $badge?->attributes?->get('color') : null);
@@ -124,20 +129,27 @@
     <neura::button.abstract :href="$href" :as="$as"
         {{ $attributes->except(['class', 'icon:class', 'slot:class', 'badge:class', 'badge:color', 'badge:circle', 'badge:position', 'badge:variant', 'color:seed', 'initials:single'])->class($containerClasses) }}>
 
-        {{-- Image content --}}
-        @if ($src)
-            <img src="{{ $src }}" alt="{{ $alt || $name }}" class="object-cover h-full w-full" />
-            {{-- Icon from name --}}
-        @elseif (is_string($icon))
-            <neura::icon name="{{ $icon }}" variant="{{ $iconVariant }}" class="{{ $iconClasses }}" />
-            {{-- SVG Icon slot --}}
+        {{-- Fallback layer (initials / icon) — revealed if the image is missing or fails --}}
+        @if (is_string($icon))
+            <neura::icon name="{{ $icon }}" variant="{{ $iconVariant }}" class="{{ $iconClasses }}" @if($hasImage) aria-hidden="true" @endif />
         @elseif ($slot->isNotEmpty())
-            <div class="{{ $iconClasses }}">
+            <div class="{{ $iconClasses }}" @if($hasImage) aria-hidden="true" @endif>
                 {{ $slot }}
             </div>
-            {{-- Initials as fallback --}}
-        @else
-            <span class="{{ $slotClasses }}">{{ $initials }}</span>
+        @elseif (filled($initials))
+            <span class="{{ $slotClasses }}" @if($hasImage) aria-hidden="true" @endif>{{ $initials }}</span>
+        @endif
+
+        {{-- Image overlays the fallback; onerror removes it so initials/name show --}}
+        @if ($hasImage)
+            <img
+                src="{{ $src }}"
+                alt="{{ $imgAlt }}"
+                class="absolute inset-0 size-full object-cover"
+                loading="lazy"
+                decoding="async"
+                onerror="this.remove()"
+            />
         @endif
     </neura::button.abstract>
 

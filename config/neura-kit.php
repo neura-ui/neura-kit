@@ -125,9 +125,11 @@ return [
 
     'skeleton' => Config::skeleton(),
 
-    'lottie' => Config::lottie(),
-
     'chart' => Config::chart(),
+
+    'sparkline' => Config::sparkline(),
+
+    'bars' => Config::bars(),
 
     'tree' => Config::tree(),
 
@@ -187,20 +189,30 @@ return [
     | Editor Configuration
     |--------------------------------------------------------------------------
     |
-    | Configuration for rich text editors (Tiptap, Editor.js)
+    | The editor is a paginated, word-processor style component with no
+    | third-party editor dependency. Pages auto-flow, so the page settings
+    | below define the sheet content is measured against.
     |
     */
 
     'editor' => [
-        'default_variant' => env('NEURA_KIT_EDITOR_VARIANT', 'tiptap'), // 'tiptap' or 'editorjs'
+        // Paper the document flows onto.
+        'page_size' => env('NEURA_KIT_EDITOR_PAGE_SIZE', 'a4'), // 'a4', 'letter' or 'legal'
+        'orientation' => env('NEURA_KIT_EDITOR_ORIENTATION', 'portrait'), // 'portrait' or 'landscape'
+
+        // Image uploads.
         'max_image_size' => env('NEURA_KIT_EDITOR_MAX_IMAGE_SIZE', 10240), // KB (10MB default)
         'image_disk' => env('NEURA_KIT_EDITOR_IMAGE_DISK', 'public'), // 'public', 'local', 's3', etc.
         'image_path' => env('NEURA_KIT_EDITOR_IMAGE_PATH', 'editor/images'),
+
         /*
-         * Allow Editor.js Livewire to download remote images (SSRF risk if enabled).
-         * Prefer uploading files via the authenticated upload endpoint instead.
+         * Document conversion via paperdoc-dev/paperdoc-lib (optional).
+         * Export renders the editor's HTML with its current page setup;
+         * import parses an uploaded file back into editable HTML.
          */
-        'allow_remote_image_download' => (bool) env('NEURA_KIT_EDITOR_ALLOW_REMOTE_IMAGES', false),
-        'remote_image_max_bytes' => (int) env('NEURA_KIT_EDITOR_REMOTE_IMAGE_MAX_BYTES', 10_485_760), // 10 MB
+        'export_formats' => ['pdf', 'docx', 'html', 'md'],
+        'import_formats' => ['docx', 'html', 'md', 'txt', 'csv', 'pdf'],
+        'max_export_bytes' => (int) env('NEURA_KIT_EDITOR_MAX_EXPORT_BYTES', 5_242_880), // 5 MB of HTML
+        'max_import_kilobytes' => (int) env('NEURA_KIT_EDITOR_MAX_IMPORT_KB', 20_480), // 20 MB upload
     ],
 ];

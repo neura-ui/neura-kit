@@ -15,7 +15,7 @@
         <neura::dropdown.item
             :icon="$lightIcon"
             :iconVariant="$iconVariant"
-            x-on:click="$theme.setLight();close()"
+            x-on:click="$theme.setLight($event);close()"
             x-bind:class="{'dark:bg-white/5 bg-black/5' : $theme.isLight }"
         >
             light
@@ -24,7 +24,7 @@
         <neura::dropdown.item
             :icon="$darkIcon"
             :iconVariant="$iconVariant"
-            x-on:click="$theme.setDark();close()"
+            x-on:click="$theme.setDark($event);close()"
             x-bind:class="{'dark:bg-white/5 bg-black/5' : $theme.isDark }"
         >
             dark
@@ -33,7 +33,7 @@
         <neura::dropdown.item
             :icon="$systemIcon"
             :iconVariant="$iconVariant"
-            x-on:click="$theme.setSystem();close()"
+            x-on:click="$theme.setSystem($event);close()"
             x-bind:class="{'dark:bg-white/5 bg-black/5' : $theme.isSystem }"
         >
             system
