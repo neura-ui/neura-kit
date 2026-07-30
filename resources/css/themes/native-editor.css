@@ -76,9 +76,10 @@
 
 .nk-native-statusbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.5rem 1rem;
   padding: 0.4rem 0.75rem;
   border-top: 1px solid var(--color-edge, var(--nk-canvas-edge));
   background: var(--nk-chrome-bg);
@@ -765,6 +766,34 @@
 
 .dark .nk-editor-menu-item.is-danger {
   color: #f87171;
+}
+
+/* ----------------------------------------------------------- responsive -- */
+
+@media (max-width: 640px) {
+  .nk-native-menubar {
+    gap: 0.5rem;
+    padding: 0.35rem 0.5rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+  }
+
+  .nk-native-toolbar {
+    padding: 0.35rem 0.35rem;
+  }
+
+  .nk-native-canvas {
+    padding: 0.75rem 0 1.5rem;
+  }
+
+  .nk-native-statusbar {
+    padding: 0.35rem 0.5rem;
+  }
+
+  .nk-status-chip {
+    padding: 0.1rem 0.4rem;
+  }
 }
 
 /* ---------------------------------------------------------------- print -- */

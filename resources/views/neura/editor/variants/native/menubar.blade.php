@@ -38,6 +38,7 @@
         'View' => [
             ['label' => 'Show outline', 'action' => 'showOutline = !showOutline'],
             ['label' => 'Toggle pagination', 'action' => 'togglePagination()'],
+            ['label' => 'Fit to width', 'action' => "setZoom('fit')"],
             ['label' => 'Zoom to 100%', 'action' => 'setZoom(100)'],
         ],
         'Insert' => [

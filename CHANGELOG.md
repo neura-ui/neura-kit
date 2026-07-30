@@ -6,7 +6,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.0.15] - 2026-07-30
+
+### Added
+
+- **Emoji Picker**: New `neura::emoji-picker` — native text input with search, categories, recent picks, and insert-at-cursor; `variant="button"` trigger for composers (`for` target id, `emoji-select` event, `popupAlign` / `popupPlacement`, `closeOnSelect`)
+- **Emoji data**: Bundled category catalog (`emoji-data`) with localStorage recents; lazy Alpine feature `neuraEmojiPicker` in the forms chunk
+- **Wizard**: Compound API with `@aware` inheritance — set `steps`, `stepProperty`, `totalSteps`, `linear`, `color`, and `size` once on `neura::wizard`
+- **Wizard steps**: `default` / `tabs` / `pills` indicators, linear furthest-step locking, keyboard tablist navigation, optional vertical `heading` / `subheading`
+- **Wizard navigation**: Client-only mode (`:stepProperty="false"`), `showCounter`, and Alpine fallbacks when no Livewire binding is present
+- **Wizard support**: `Support\Wizard\State` for step normalization, size tokens, and shared furthest-step scope keys
+
+### Changed
+
+- **Composer**: Reworked shell with `header` / `tools` / `submit` / `actions` slots, primary focus ring, auto-grow textarea, `submitOnEnter`, and quieter tool-button styling (pairs with emoji-picker button variant)
+- **Spotlight manager**: Layout and AI response markup refresh for clearer command results and streaming replies
+- **Orb**: Eager-loaded with the preloader (no longer a lazy widgets chunk) so the boot canvas paints on first frame
+- **Feature loader**: Boot budget (~800ms) so hung lazy chunks cannot block Livewire/Alpine; late arrivals reinitialise themselves
+
+### Fixed
+
+- **Wizard (vertical)**: Replaced `1fr` grid rows with `auto` so intrinsically sized wizards no longer inflate page height / trigger a second document scrollbar
+- **Preloader**: `maxWait` hard cap (default 2.5s) so a hung `window` load cannot leave the overlay up forever; hides after DOM is interactive + min duration
+- **Orb**: Synchronous first paint before `requestAnimationFrame` so the preloader is never a blank canvas on boot
 
 ## [2.0.14] - 2026-07-29
 

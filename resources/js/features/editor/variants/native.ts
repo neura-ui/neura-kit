@@ -143,6 +143,8 @@ if (typeof window !== 'undefined') {
         words: 0,
         characters: 0,
         zoom: config.zoom ?? 100,
+        /** `fit` scales the page to the canvas width; `manual` keeps a fixed %. */
+        zoomMode: 'fit' as 'fit' | 'manual',
         pageSize: (config.pageSize ?? 'a4') as PageSize,
         orientation: (config.orientation ?? 'portrait') as Orientation,
         margins: { ...DEFAULT_MARGINS, ...(config.margins ?? {}) } as Margins,
@@ -305,8 +307,13 @@ if (typeof window !== 'undefined') {
 
           // The editor may be mounted inside a collapsed panel or a tab that is
           // not shown yet. Pages cannot be measured at zero height, so reflow
-          // again the moment the sheets actually get laid out.
+          // again the moment the sheets actually get laid out. Also watch the
+          // canvas so fit-zoom can track narrow / mobile viewports.
           let hadHeight = (root.firstElementChild as HTMLElement | null)?.clientHeight ?? 0;
+          const canvas = (this as any).$el?.querySelector?.(
+            '.nk-native-canvas',
+          ) as HTMLElement | null;
+
           resizeObserver = new ResizeObserver(() => {
             const height = (root?.firstElementChild as HTMLElement | null)?.clientHeight ?? 0;
             if (height > 0 && hadHeight === 0) {
@@ -314,8 +321,12 @@ if (typeof window !== 'undefined') {
               this.pageCount = flow?.pageCount ?? 1;
             }
             hadHeight = height;
+            this.fitZoom();
           });
           resizeObserver.observe(root);
+          if (canvas) resizeObserver.observe(canvas);
+
+          this.fitZoom();
 
           const syncToolbar = () => {
             this.tick += 1;
@@ -1056,7 +1067,39 @@ if (typeof window !== 'undefined') {
         },
 
         // ---- page setup and view ---------------------------------------
-        setZoom(value: number) {
+        /**
+         * Scale the A4 (or letter, …) sheet so its width fits the canvas.
+         *
+         * Fixed page boxes (e.g. 794px for A4) otherwise force horizontal
+         * scrolling on phones and narrow docs columns. Fit mode is the default;
+         * picking a % from the status bar locks to that value.
+         */
+        fitZoom() {
+          if (this.zoomMode !== 'fit') return;
+
+          const canvas = (this as any).$el?.querySelector?.(
+            '.nk-native-canvas',
+          ) as HTMLElement | null;
+          if (!canvas) return;
+
+          const pageWidth = flow?.geometry.width ?? 794;
+          // Match .nk-native-canvas horizontal breathing room (see CSS).
+          const gutter = canvas.clientWidth < 640 ? 16 : 48;
+          const available = canvas.clientWidth - gutter;
+          if (available <= 0 || pageWidth <= 0) return;
+
+          const next = Math.min(100, Math.max(35, Math.floor((available / pageWidth) * 100)));
+          if (next !== this.zoom) this.zoom = next;
+        },
+
+        setZoom(value: number | 'fit') {
+          if (value === 'fit') {
+            this.zoomMode = 'fit';
+            this.fitZoom();
+            return;
+          }
+
+          this.zoomMode = 'manual';
           this.zoom = value;
         },
 
@@ -1072,6 +1115,7 @@ if (typeof window !== 'undefined') {
             margins: this.margins,
           });
           this.pageCount = flow?.pageCount ?? 1;
+          this.fitZoom();
         },
 
         setMargin(side: keyof Margins, inches: number) {

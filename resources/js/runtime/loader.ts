@@ -84,20 +84,45 @@ export function watchNavigation(): void {
     });
 }
 
+/**
+ * How long boot may block Livewire/Alpine for lazy chunks.
+ *
+ * Eager factories (orb, overlays, preloader) are already registered; a slow
+ * or hung widgets chunk must not leave the preloader's canvas blank.
+ * Anything that misses the budget is repaired via reinitialise() when it lands.
+ */
+const BOOT_BUDGET_MS = 800;
+
 /** Load every feature the current document needs. */
 export async function boot(): Promise<void[]> {
     if (typeof document === 'undefined') return [];
 
     const features = detect(document);
-    const results = await loadAll(features);
+
+    const pending = features.map((feature) =>
+        load(feature).then(() => {
+            // Late arrival after Alpine already walked the tree.
+            if (hasAlpineStarted()) reinitialise(feature);
+        }),
+    );
+
+    await Promise.race([
+        Promise.all(pending),
+        new Promise<void>((resolve) => {
+            window.setTimeout(resolve, BOOT_BUDGET_MS);
+        }),
+    ]);
 
     // Defensive: if Alpine somehow started before we finished (HMR, custom
     // Livewire boot), rebuild the subtrees that just got their factories.
     if (hasAlpineStarted()) {
         for (const feature of features) {
-            reinitialise(feature);
+            if (isLoaded(feature)) reinitialise(feature);
         }
     }
 
-    return results;
+    // Do not await the rest — late chunks repair themselves via the
+    // load().then(reinitialise) handlers above. Blocking here is what left
+    // the preloader orb blank while layout/widgets downloaded.
+    return [];
 }

@@ -54,6 +54,11 @@ export const FEATURES: readonly Feature[] = [
         load: () => import('../features/forms/color-picker'),
     },
     {
+        name: 'emoji-picker',
+        tokens: ['neuraEmojiPicker'],
+        load: () => import('../features/forms/emoji-picker'),
+    },
+    {
         name: 'phone-input',
         tokens: ['neuraPhoneInput'],
         load: () => import('../features/forms/phone-input'),
@@ -91,7 +96,7 @@ export const FEATURES: readonly Feature[] = [
     {
         name: 'orb',
         tokens: ['neuraOrb'],
-        load: () => import('../features/media/orb'),
+        load: () => Promise.resolve(), // eager via app.ts (preloader)
     },
     {
         name: 'layout',

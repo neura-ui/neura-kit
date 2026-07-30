@@ -7,6 +7,8 @@
  * eager.
  *
  * Overlay managers ship on every page via `@neuraKit`, so they stay eager too.
+ * The orb is eager as well: the global `<neura::preloader />` renders it on
+ * first paint, so a lazy chunk would leave a blank canvas until it arrived.
  *
  * Everything else is a component: it leaves a mark in the markup, so the
  * loader can find it and fetch only what the page renders.
@@ -25,6 +27,7 @@ import './features/system/neura-kit';
 import './features/system/clipboard';
 import './features/system/icons';
 import './features/system/preloader';
+import './features/media/orb';
 
 import './features/overlays/modal';
 import './features/overlays/sideover';

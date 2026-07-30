@@ -3,8 +3,8 @@
 
 {{-- Empty state --}}
 <div x-show="!aiResponse && !isLoading && query.length === 0" class="py-12 text-center">
-    <div class="mx-auto size-14 rounded-full bg-gradient-to-br from-primary-100 to-violet-100 dark:from-primary-900/30 dark:to-violet-900/30 flex items-center justify-center mb-4">
-        <x-neura::icon name="sparkles" class="size-7 text-primary-500" />
+    <div class="mx-auto mb-4 flex justify-center">
+        <x-neura::icon-stack size="lg" color="primary" icon="sparkles" />
     </div>
     <p class="text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ __('askAiAnything') }}</p>
     <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">{{ __('pressEnterToSend') }}</p>

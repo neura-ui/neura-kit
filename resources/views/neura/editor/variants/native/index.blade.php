@@ -175,9 +175,11 @@
                 ></button>
                 <select
                     class="nk-status-select"
-                    x-model.number="zoom"
+                    x-bind:value="zoomMode === 'fit' ? 'fit' : zoom"
+                    x-on:change="setZoom($event.target.value === 'fit' ? 'fit' : Number($event.target.value))"
                     aria-label="Zoom"
                 >
+                    <option value="fit">Fit</option>
                     @foreach([50, 75, 90, 100, 125, 150, 200] as $level)
                         <option value="{{ $level }}">{{ $level }}%</option>
                     @endforeach

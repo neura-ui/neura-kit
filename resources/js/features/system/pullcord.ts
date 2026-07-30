@@ -375,6 +375,10 @@ if (typeof document !== 'undefined') {
                 knob.addEventListener('keydown', (e) => this._onKeyDown(e));
               }
 
+              this._onThemeChanged = () => {
+                this._syncPulled();
+              };
+
               window.addEventListener('theme-changed', this._onThemeChanged);
 
               if (this.noEntrance || prefersReducedMotion()) {

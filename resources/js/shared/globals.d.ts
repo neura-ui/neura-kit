@@ -262,6 +262,7 @@ declare global {
         NeuraKitIcons?: { play: (el: Element) => void };
         NeuraKitPreloader?: Record<string, unknown>;
         neuraColorPicker?: (...args: any[]) => any;
+        neuraEmojiPicker?: (...args: any[]) => any;
         neuraDropzone?: (...args: any[]) => any;
         neuraFileManager?: (...args: any[]) => any;
         neuraPhoneInput?: (...args: any[]) => any;

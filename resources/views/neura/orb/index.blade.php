@@ -21,7 +21,6 @@
     data-nk-orb
     data-state="{{ $orbState }}"
     x-data="neuraOrb({ mode: '{{ $mode }}', speed: {{ (float) $orbSpeed }} })"
-    x-init="init()"
     {{ $attributes->class(['inline-block align-middle', $orbColor])->merge(['style' => "width: {$orbSize}px; height: {$orbSize}px;"]) }}
     aria-hidden="true"
 ></canvas>

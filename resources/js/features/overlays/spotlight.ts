@@ -151,77 +151,106 @@ function formatAiResponseSafe(text: string): string {
         return '';
     }
 
-    let formatted = text;
+    const codeBlocks: string[] = [];
 
-    formatted = formatted.replace(
-        /```(\w*)\n([\s\S]*?)```/g,
-        (_match, lang: string, code: string) =>
-            `<pre class="not-prose bg-neutral-100 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 border border-neutral-200 dark:border-neutral-800 p-4 rounded-lg overflow-x-auto my-3 text-xs font-mono leading-relaxed shadow-sm"><code class="language-${escapeHtml(lang)}">${escapeHtml(code)}</code></pre>`
-    );
+    // 1. Extract fenced code blocks before any escaping
+    let formatted = text.replace(
+        /```(\w*)\n?([\s\S]*?)```/g,
+        (_match, lang: string, code: string) => {
+            const index = codeBlocks.length;
+            codeBlocks.push(
+                `<pre class="not-prose bg-neutral-100 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 border border-neutral-200 dark:border-neutral-800 p-4 rounded-lg overflow-x-auto my-3 text-xs font-mono leading-relaxed shadow-sm"><code class="language-${escapeHtml(lang)}">${escapeHtml(code.trimEnd())}</code></pre>`
+            );
 
-    formatted = formatted.replace(
-        /`([^`]+)`/g,
-        (_match, code: string) => `<code class="not-prose">${escapeHtml(code)}</code>`
-    );
-
-    formatted = formatted.replace(
-        /\*\*([^*]+)\*\*/g,
-        (_match, value: string) => `<strong>${escapeHtml(value)}</strong>`
-    );
-
-    formatted = formatted.replace(
-        /\*([^*]+)\*/g,
-        (_match, value: string) => `<em>${escapeHtml(value)}</em>`
-    );
-
-    formatted = formatted.replace(
-        /\[([^\]]+)\]\(([^)]+)\)/g,
-        (_match, label: string, href: string) => {
-            if (!isSafeHref(href)) {
-                return escapeHtml(label);
-            }
-
-            return `<a href="${encodeURI(href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`;
+            return `\n\n%%CODE_BLOCK_${index}%%\n\n`;
         }
     );
 
+    // 2. Escape remaining plaintext so later markdown HTML is the only markup
+    formatted = escapeHtml(formatted);
+
+    // 3. Inline code
+    formatted = formatted.replace(
+        /`([^`]+)`/g,
+        (_match, code: string) => `<code class="not-prose">${code}</code>`
+    );
+
+    // 4. Bold / italic (already escaped content)
+    formatted = formatted.replace(
+        /\*\*([^*]+)\*\*/g,
+        (_match, value: string) => `<strong>${value}</strong>`
+    );
+    formatted = formatted.replace(
+        /\*([^*]+)\*/g,
+        (_match, value: string) => `<em>${value}</em>`
+    );
+
+    // 5. Links — href was escaped, decode for validation then re-encode in attribute
+    formatted = formatted.replace(
+        /\[([^\]]+)\]\(([^)]+)\)/g,
+        (_match, label: string, hrefEscaped: string) => {
+            const href = hrefEscaped
+                .replace(/&amp;/g, '&')
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>')
+                .replace(/&quot;/g, '"')
+                .replace(/&#39;/g, "'");
+
+            if (!isSafeHref(href)) {
+                return label;
+            }
+
+            return `<a href="${encodeURI(href)}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+        }
+    );
+
+    // 6. Headings
     formatted = formatted.replace(
         /^### (.+)$/gm,
-        (_match, value: string) => `<h3 class="text-base font-semibold mt-3 mb-2">${escapeHtml(value)}</h3>`
+        (_match, value: string) => `<h3 class="text-base font-semibold mt-3 mb-2">${value}</h3>`
     );
     formatted = formatted.replace(
         /^## (.+)$/gm,
-        (_match, value: string) => `<h2 class="text-lg font-semibold mt-4 mb-2">${escapeHtml(value)}</h2>`
+        (_match, value: string) => `<h2 class="text-lg font-semibold mt-4 mb-2">${value}</h2>`
     );
     formatted = formatted.replace(
         /^# (.+)$/gm,
-        (_match, value: string) => `<h1 class="text-xl font-bold mt-4 mb-3">${escapeHtml(value)}</h1>`
+        (_match, value: string) => `<h1 class="text-xl font-bold mt-4 mb-3">${value}</h1>`
     );
 
+    // 7. Unordered lists
     formatted = formatted.replace(
         /^- (.+)$/gm,
-        (_match, value: string) => `<li class="ml-4">${escapeHtml(value)}</li>`
+        (_match, value: string) => `<li class="ml-4">${value}</li>`
     );
     formatted = formatted.replace(
-        /(<li class="ml-4">.*<\/li>\n?)+/g,
+        /(?:<li class="ml-4">.*<\/li>\n?)+/g,
         (match) => `<ul class="list-disc list-outside my-2 space-y-1">${match}</ul>`
     );
 
+    // 8. Paragraphs — do NOT re-escape (markdown already produced safe HTML)
     const parts = formatted.split(/\n\n+/);
     formatted = parts
         .map((part) => {
-            if (part.match(/^<(h[1-3]|ul|ol|pre|div)/)) {
-                return part;
+            const trimmed = part.trim();
+            if (!trimmed) {
+                return '';
             }
 
-            const withBreaks = escapeHtml(part).replace(/\n/g, '<br>');
+            if (trimmed.match(/^<(h[1-3]|ul|ol|pre|div|%%CODE_BLOCK_)/) || trimmed.match(/^%%CODE_BLOCK_/)) {
+                return trimmed;
+            }
 
-            return `<p class="my-2 leading-relaxed">${withBreaks}</p>`;
+            return `<p class="my-2 leading-relaxed">${trimmed.replace(/\n/g, '<br>')}</p>`;
         })
+        .filter(Boolean)
         .join('');
 
-    formatted = formatted.replace(/<p class="my-2 leading-relaxed"><\/p>/g, '');
-    formatted = formatted.replace(/<p class="my-2 leading-relaxed">\s*<\/p>/g, '');
+    // 9. Restore code blocks
+    formatted = formatted.replace(
+        /%%CODE_BLOCK_(\d+)%%/g,
+        (_match, index: string) => codeBlocks[Number(index)] ?? ''
+    );
 
     return formatted;
 }

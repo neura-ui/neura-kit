@@ -45,7 +45,8 @@ const FEATURE_CHUNKS: ReadonlyArray<{ name: string; match: (path: string) => boo
     match: (path) =>
       path.includes('/features/data/') ||
       path.includes('/features/chart/') ||
-      path.includes('/features/media/') ||
+      // orb is eager (preloader); keep other media features lazy if added later
+      (path.includes('/features/media/') && !path.includes('/features/media/orb')) ||
       path.includes('/components/'),
   },
 ];

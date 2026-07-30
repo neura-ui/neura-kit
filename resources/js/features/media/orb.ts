@@ -225,18 +225,26 @@ if (typeof document !== 'undefined') {
             || getComputedStyle(document.documentElement).color
             || '#737373';
 
+          const paint = (t: number): void => {
+            ctx.clearRect(0, 0, L, L);
+            mode(ctx, L, t, readInk());
+          };
+
           const frame = (now: number): void => {
             // rAF reports the timestamp of the frame's start, which can predate the
             // performance.now() captured above when init() runs mid-frame — clamping
             // keeps the first tick from going negative.
-            const t = Math.max(0, ((now - start) / 1000) * speed);
-            ctx.clearRect(0, 0, L, L);
-            mode(ctx, L, t, readInk());
+            paint(Math.max(0, ((now - start) / 1000) * speed));
             this.raf = requestAnimationFrame(frame);
           };
 
-          if (reduce) { ctx.clearRect(0, 0, L, L); mode(ctx, L, 0.6, readInk()); }
-          else this.raf = requestAnimationFrame(frame);
+          // Paint synchronously so the preloader isn't blank until the first rAF.
+          if (reduce) {
+            paint(0.6);
+          } else {
+            paint(0);
+            this.raf = requestAnimationFrame(frame);
+          }
         },
 
         destroy(this: { raf: number }) {

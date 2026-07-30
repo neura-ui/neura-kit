@@ -70,34 +70,34 @@
             {{-- Header --}}
             <div class="flex items-center gap-3 px-4 py-3 border-b border-separator">
                 {{-- Mode Icon --}}
-                <div class="shrink-0 text-fg-disabled">
-                    <template x-if="isModeAvailable('search') && mode === 'search'">
-                        <div 
-                            x-transition:enter="transition ease-out duration-300"
-                            x-transition:enter-start="opacity-0"
-                            x-transition:enter-end="opacity-100"
-                        >
-                            <x-neura::icon name="magnifying-glass" class="size-5" />
-                        </div>
-                    </template>
-                    <template x-if="isModeAvailable('command') && mode === 'command'">
-                        <div 
-                            x-transition:enter="transition ease-out duration-300"
-                            x-transition:enter-start="opacity-0"
-                            x-transition:enter-end="opacity-100"
-                        >
-                            <x-neura::icon name="command-line" class="size-5" />
-                        </div>
-                    </template>
-                    <template x-if="isModeAvailable('ai') && mode === 'ai'">
-                        <div 
-                            x-transition:enter="transition ease-out duration-300"
-                            x-transition:enter-start="opacity-0"
-                            x-transition:enter-end="opacity-100"
-                        >
-                            <x-neura::icon name="sparkles" class="size-5" />
-                        </div>
-                    </template>
+                <div class="relative shrink-0 size-5 text-fg-disabled">
+                    <div
+                        x-show="isModeAvailable('search') && mode === 'search'"
+                        x-transition:enter="transition ease-out duration-150"
+                        x-transition:enter-start="opacity-0 scale-90"
+                        x-transition:enter-end="opacity-100 scale-100"
+                        class="absolute inset-0 flex items-center justify-center"
+                    >
+                        <x-neura::icon name="magnifying-glass" class="size-5" />
+                    </div>
+                    <div
+                        x-show="isModeAvailable('command') && mode === 'command'"
+                        x-transition:enter="transition ease-out duration-150"
+                        x-transition:enter-start="opacity-0 scale-90"
+                        x-transition:enter-end="opacity-100 scale-100"
+                        class="absolute inset-0 flex items-center justify-center"
+                    >
+                        <x-neura::icon name="command-line" class="size-5" />
+                    </div>
+                    <div
+                        x-show="isModeAvailable('ai') && mode === 'ai'"
+                        x-transition:enter="transition ease-out duration-150"
+                        x-transition:enter-start="opacity-0 scale-90"
+                        x-transition:enter-end="opacity-100 scale-100"
+                        class="absolute inset-0 flex items-center justify-center"
+                    >
+                        <x-neura::icon name="sparkles" class="size-5" />
+                    </div>
                 </div>
 
                 {{-- Input --}}
@@ -122,199 +122,201 @@
                     <x-neura::spinner size="sm" color="primary" />
                 </div>
 
-                {{-- Mode Tabs (Desktop) - Only show if more than 1 mode available --}}
-                <template x-if="getAvailableModes().length > 1">
-                    <div class="hidden sm:flex items-center gap-1 shrink-0 p-1 bg-surface-inset rounded-lg">
+                {{-- Mode Tabs + ESC --}}
+                <div
+                    x-show="getAvailableModes().length > 1"
+                    x-cloak
+                    class="max-sm:hidden inline-flex items-center shrink-0 gap-1.5 h-8"
+                >
+                    <div
+                        class="h-full inline-flex items-stretch gap-0.5 p-0.5 bg-surface-inset border border-edge rounded-md"
+                        role="tablist"
+                        aria-label="{{ __('switchMode') }}"
+                    >
                         <template x-for="m in getAvailableModes()" :key="m.value">
                             <button
                                 type="button"
+                                role="tab"
                                 @click.stop="$wire.setMode(m.value)"
-                                :class="mode === m.value 
-                                    ? 'bg-active text-fg shadow-sm' 
+                                :aria-selected="mode === m.value"
+                                :class="mode === m.value
+                                    ? 'bg-active text-fg shadow-sm'
                                     : 'text-fg-muted hover:text-fg'"
-                                class="px-2.5 py-1.5 text-xs font-medium rounded-md transition-all duration-200 flex items-center gap-1"
+                                class="inline-flex items-center gap-1.5 px-2.5 text-xs font-medium rounded-[5px] transition-colors duration-150"
                                 :title="m.label + ' (' + m.shortcut + ')'"
                             >
-                                <template x-if="m.value === 'ai'">
-                                    <span x-html="getIconSvg('sparkles')" class="size-3"></span>
-                                </template>
+                                <span x-html="getIconSvg(m.icon)" class="size-3 shrink-0"></span>
                                 <span x-text="m.label"></span>
                             </button>
                         </template>
                     </div>
-                </template>
 
-                {{-- Close --}}
+                    <button
+                        type="button"
+                        @click.stop="$wire.close()"
+                        class="inline-flex h-full items-center justify-center min-w-8 px-2.5 border border-edge bg-surface-inset rounded-md text-[10px] font-semibold tracking-wide text-fg-muted uppercase transition-colors hover:bg-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+                        aria-label="{{ __('close') }}"
+                        title="{{ __('close') }}"
+                    >
+                        ESC
+                    </button>
+                </div>
+
+                {{-- Close (mobile) --}}
                 <button
                     type="button"
                     @click.stop="$wire.close()"
-                    class="shrink-0 p-1.5 text-fg-muted hover:text-fg hover:bg-hover rounded-lg transition-colors"
+                    class="sm:hidden shrink-0 p-1.5 text-fg-muted hover:text-fg hover:bg-hover rounded-lg transition-colors"
                     aria-label="{{ __('close') }}"
                 >
-                    <kbd class="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium text-fg-muted bg-surface-inset rounded">ESC</kbd>
-                    <x-neura::icon name="x-mark" class="sm:hidden size-5" />
+                    <x-neura::icon name="x-mark" class="size-5" />
                 </button>
             </div>
 
-            {{-- Results (Search & Command modes) --}}
-            <div 
-                x-show="mode !== 'ai'"
-                x-transition:enter="transition ease-out duration-300"
-                x-transition:enter-start="opacity-0"
-                x-transition:enter-end="opacity-100"
-                x-transition:leave="transition ease-in duration-200"
-                x-transition:leave-start="opacity-100"
-                x-transition:leave-end="opacity-0"
-                class="max-h-[50vh] overflow-y-auto overscroll-contain"
-            >
-                {{-- Empty State --}}
+            {{-- Body: Search/Command results + AI share one cell for a clean crossfade --}}
+            <div class="relative grid">
+                {{-- Results (Search & Command modes) --}}
                 <div
-                    x-show="query.length > 0 && results.length === 0 && !isLoading"
-                    x-transition:enter="transition ease-out duration-300 delay-100"
+                    x-show="mode !== 'ai'"
+                    x-transition:enter="transition ease-out duration-200"
                     x-transition:enter-start="opacity-0"
                     x-transition:enter-end="opacity-100"
-                    x-transition:leave="transition ease-in duration-200"
+                    x-transition:leave="transition ease-in duration-150"
                     x-transition:leave-start="opacity-100"
                     x-transition:leave-end="opacity-0"
-                    class="py-12 text-center"
+                    class="col-start-1 row-start-1 max-h-[50vh] overflow-y-auto overscroll-contain"
                 >
-                    <div class="mx-auto size-12 rounded-full bg-surface-inset flex items-center justify-center mb-3">
-                        <x-neura::icon name="magnifying-glass" class="size-5 text-neutral-400" />
+                    {{-- Empty State --}}
+                    <div
+                        x-show="query.length > 0 && results.length === 0 && !isLoading"
+                        class="py-12 text-center"
+                    >
+                        <div class="mx-auto size-12 rounded-full bg-surface-inset flex items-center justify-center mb-3">
+                            <x-neura::icon name="magnifying-glass" class="size-5 text-neutral-400" />
+                        </div>
+                        <p class="text-sm text-fg-secondary">
+                            {{ __('noResultsFor') }} "<span x-text="query" class="font-medium text-fg"></span>"
+                        </p>
+                        <p class="text-xs text-fg-disabled mt-1">
+                            {{ __('tryDifferentSearch') }}
+                        </p>
                     </div>
-                    <p class="text-sm text-fg-secondary">
-                        {{ __('noResultsFor') }} "<span x-text="query" class="font-medium text-fg"></span>"
-                    </p>
-                    <p class="text-xs text-fg-disabled mt-1">
-                        {{ __('tryDifferentSearch') }}
-                    </p>
-                </div>
 
-                {{-- Initial State (Command mode) --}}
-                <div
-                    x-show="mode === 'command' && query.length === 0 && results.length === 0 && !isLoading"
-                    x-transition:enter="transition ease-out duration-300 delay-100"
-                    x-transition:enter-start="opacity-0"
-                    x-transition:enter-end="opacity-100"
-                    x-transition:leave="transition ease-in duration-200"
-                    x-transition:leave-start="opacity-100"
-                    x-transition:leave-end="opacity-0"
-                    class="py-8 text-center"
-                >
-                    <p class="text-sm text-fg-muted">{{ __('typeToSearchCommands') }}</p>
-                </div>
+                    {{-- Initial State (Command mode) --}}
+                    <div
+                        x-show="mode === 'command' && query.length === 0 && results.length === 0 && !isLoading"
+                        class="py-8 text-center"
+                    >
+                        <p class="text-sm text-fg-muted">{{ __('typeToSearchCommands') }}</p>
+                    </div>
 
-                {{-- Results List --}}
-                <ul 
-                    x-ref="resultsList" 
-                    x-show="results.length > 0"
-                    x-transition:enter="transition ease-out duration-300 delay-100"
-                    x-transition:enter-start="opacity-0"
-                    x-transition:enter-end="opacity-100"
-                    x-transition:leave="transition ease-in duration-200"
-                    x-transition:leave-start="opacity-100"
-                    x-transition:leave-end="opacity-0"
-                    class="py-2" 
-                    role="listbox"
-                >
-                    <template x-for="(result, index) in results" :key="result.id">
-                        <li
-                            @click.stop="$wire.handleResult(result)"
-                            @mouseenter="selectResult(index)"
-                            @class([
-                                'flex items-center gap-3 mx-2 px-3 py-2.5 cursor-pointer transition-colors group',
-                                $spotlightItemRoundedClass,
-                            ])
-                            :class="selectedIndex === index 
-                                ? 'bg-primary-50 dark:bg-primary-500/10' 
-                                : 'hover:bg-hover'"
-                            role="option"
-                            :aria-selected="selectedIndex === index"
-                        >
-                            {{-- Icon --}}
-                            <div
-                                :class="selectedIndex === index 
-                                    ? 'bg-primary-100 dark:bg-primary-500/20 text-primary-600 dark:text-primary-400' 
-                                    : 'bg-surface-inset text-fg-muted group-hover:bg-hover'"
+                    {{-- Results List --}}
+                    <ul
+                        x-ref="resultsList"
+                        x-show="results.length > 0"
+                        class="py-2"
+                        role="listbox"
+                    >
+                        <template x-for="(result, index) in results" :key="result.id">
+                            <li
+                                @click.stop="$wire.handleResult(result)"
+                                @mouseenter="selectResult(index)"
                                 @class([
-                                    'shrink-0 size-9 flex items-center justify-center transition-colors',
+                                    'flex items-center gap-3 mx-2 px-3 py-2.5 cursor-pointer transition-colors group',
                                     $spotlightItemRoundedClass,
                                 ])
+                                :class="selectedIndex === index
+                                    ? 'bg-primary-50 dark:bg-primary-500/10'
+                                    : 'hover:bg-hover'"
+                                role="option"
+                                :aria-selected="selectedIndex === index"
                             >
-                                <template x-if="result.icon">
-                                    <span x-html="getIconSvg(result.icon)" class="size-4"></span>
-                                </template>
-                                <template x-if="!result.icon">
-                                    <x-neura::icon name="arrow-right" class="size-4" />
-                                </template>
-                            </div>
-
-                            {{-- Content --}}
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2">
-                                    <span
-                                        x-text="result.title"
-                                        :class="selectedIndex === index 
-                                            ? 'text-primary-700 dark:text-primary-300' 
-                                            : 'text-fg'"
-                                        class="text-sm font-medium truncate"
-                                    ></span>
-                                    <span
-                                        x-show="result.badge"
-                                        x-text="result.badge"
-                                        class="shrink-0 px-1.5 py-0.5 text-[10px] font-medium rounded bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
-                                    ></span>
+                                {{-- Icon --}}
+                                <div
+                                    :class="selectedIndex === index
+                                        ? 'bg-primary-100 dark:bg-primary-500/20 text-primary-600 dark:text-primary-400'
+                                        : 'bg-surface-inset text-fg-muted group-hover:bg-hover'"
+                                    @class([
+                                        'shrink-0 size-9 flex items-center justify-center transition-colors',
+                                        $spotlightItemRoundedClass,
+                                    ])
+                                >
+                                    <template x-if="result.icon">
+                                        <span x-html="getIconSvg(result.icon)" class="size-4"></span>
+                                    </template>
+                                    <template x-if="!result.icon">
+                                        <x-neura::icon name="arrow-right" class="size-4" />
+                                    </template>
                                 </div>
-                                <p
-                                    x-show="result.description"
-                                    x-text="result.description"
-                                    class="text-xs text-fg-muted truncate mt-0.5"
-                                ></p>
-                            </div>
 
-                            {{-- Shortcut & Enter --}}
-                            <div class="shrink-0 flex items-center gap-2">
-                                <kbd 
-                                    x-show="result.shortcut"
-                                    x-text="result.shortcut"
-                                    class="hidden sm:inline-flex px-1.5 py-0.5 text-[10px] font-medium text-fg-disabled bg-surface-inset rounded"
-                                ></kbd>
-                                <kbd 
-                                    x-show="selectedIndex === index" 
-                                    x-transition
-                                    class="inline-flex px-1.5 py-0.5 text-[10px] font-medium text-primary-600 dark:text-primary-400 bg-primary-100 dark:bg-primary-900/30 rounded"
-                                >↵</kbd>
-                            </div>
-                        </li>
-                    </template>
-                </ul>
-            </div>
+                                {{-- Content --}}
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <span
+                                            x-text="result.title"
+                                            :class="selectedIndex === index
+                                                ? 'text-primary-700 dark:text-primary-300'
+                                                : 'text-fg'"
+                                            class="text-sm font-medium truncate"
+                                        ></span>
+                                        <span
+                                            x-show="result.badge"
+                                            x-text="result.badge"
+                                            class="shrink-0 px-1.5 py-0.5 text-[10px] font-medium rounded bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
+                                        ></span>
+                                    </div>
+                                    <p
+                                        x-show="result.description"
+                                        x-text="result.description"
+                                        class="text-xs text-fg-muted truncate mt-0.5"
+                                    ></p>
+                                </div>
 
-            {{-- AI Response Area --}}
-            <div 
-                x-show="isModeAvailable('ai') && mode === 'ai'"
-                x-transition:enter="transition ease-out duration-300"
-                x-transition:enter-start="opacity-0"
-                x-transition:enter-end="opacity-100"
-                x-transition:leave="transition ease-in duration-200"
-                x-transition:leave-start="opacity-100"
-                x-transition:leave-end="opacity-0"
-                class="max-h-[50vh] overflow-y-auto overscroll-contain"
-            >
-                @if($this->aiViewName())
-                    {{-- Custom AI View --}}
-                    @include($this->aiViewName(), [
-                        'aiResponse' => $aiResponse,
-                        'isLoading' => $isLoading,
-                        'query' => $query,
-                    ])
-                @else
-                    {{-- Default AI View --}}
-                    @include('neura-kit::neura.spotlight-manager.ai-response', [
-                        'aiResponse' => $aiResponse,
-                        'isLoading' => $isLoading,
-                        'query' => $query,
-                    ])
-                @endif
+                                {{-- Shortcut & Enter --}}
+                                <div class="shrink-0 flex items-center gap-2">
+                                    <kbd
+                                        x-show="result.shortcut"
+                                        x-text="result.shortcut"
+                                        class="hidden sm:inline-flex px-1.5 py-0.5 text-[10px] font-medium text-fg-disabled bg-surface-inset rounded"
+                                    ></kbd>
+                                    <kbd
+                                        x-show="selectedIndex === index"
+                                        x-transition
+                                        class="inline-flex px-1.5 py-0.5 text-[10px] font-medium text-primary-600 dark:text-primary-400 bg-primary-100 dark:bg-primary-900/30 rounded"
+                                    >↵</kbd>
+                                </div>
+                            </li>
+                        </template>
+                    </ul>
+                </div>
+
+                {{-- AI Response Area --}}
+                <div
+                    x-show="isModeAvailable('ai') && mode === 'ai'"
+                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0"
+                    x-transition:enter-end="opacity-100"
+                    x-transition:leave="transition ease-in duration-150"
+                    x-transition:leave-start="opacity-100"
+                    x-transition:leave-end="opacity-0"
+                    class="col-start-1 row-start-1 max-h-[50vh] overflow-y-auto overscroll-contain"
+                >
+                    @if($this->aiViewName())
+                        {{-- Custom AI View --}}
+                        @include($this->aiViewName(), [
+                            'aiResponse' => $aiResponse,
+                            'isLoading' => $isLoading,
+                            'query' => $query,
+                        ])
+                    @else
+                        {{-- Default AI View --}}
+                        @include('neura-kit::neura.spotlight-manager.ai-response', [
+                            'aiResponse' => $aiResponse,
+                            'isLoading' => $isLoading,
+                            'query' => $query,
+                        ])
+                    @endif
+                </div>
             </div>
 
             {{-- Footer --}}
