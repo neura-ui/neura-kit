@@ -65,6 +65,8 @@ return [
 
     'filters' => Config::filters(),
 
+    'rule-builder' => Config::ruleBuilder(),
+
     'textarea' => Config::input(),
 
     'select' => Config::input(),

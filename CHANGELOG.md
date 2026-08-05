@@ -6,6 +6,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.16] - 2026-08-05
+
+### Added
+
+- **Rule Builder**: New `neura::rule-builder` — nested WHEN / THEN editor with AND/OR groups, locked conditions, multi-select chips, drag-reorder, and If true / If false action branches
+- **Rule Builder fields**: Same field schema as Filters (`select` / `multiselect` / `text` + operators) for consistent filter/rule configs
+- **Rule Builder actions**: Configurable THEN actions with typed params (`select` / `text`) and live binding via `wire:model` / `x-model` / `rule-builder-changed`
+- **Rule Builder packs**: Size pack + `NeuraKitConfig::ruleBuilder()` / `PackResolver::ruleBuilderSize()`; i18n keys (en/fr) for when/then, combinators, and actions
+- **Docs**: Atom page + Data nav entry (`docs.atoms.rule-builder`, premium) with expense-style demo
+
+### Fixed
+
+- **Rule Builder rail**: Connector used `flex-1 bg-edge` in a row flex and painted empty grey squares beside AND badges; replaced with a 1px dashed rail
+- **Rule Builder Alpine**: Nested `x-if` shells left blank bordered rows; switched primary rule/group toggles to `x-show`
+- **Rule Builder boot**: Eager-register `neuraRuleBuilder` so SPA / first paint no longer throws `neuraRuleBuilder is not defined`
+
 ## [2.0.15] - 2026-07-30
 
 ### Added

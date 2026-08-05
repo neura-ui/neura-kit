@@ -11,6 +11,7 @@ use Neura\Kit\Packs\Dropzone;
 use Neura\Kit\Packs\EventCalendar;
 use Neura\Kit\Packs\FileManager;
 use Neura\Kit\Packs\Filters;
+use Neura\Kit\Packs\RuleBuilder;
 use Neura\Kit\Packs\Icon;
 use Neura\Kit\Packs\IconStack;
 use Neura\Kit\Packs\Input;
@@ -408,6 +409,14 @@ class PackResolver
     {
         $size = $size ?: 'sm';
         $sizes = Filters\Size::default();
+
+        return $sizes[$size] ?? $sizes['sm'];
+    }
+
+    public static function ruleBuilderSize(?string $size): array
+    {
+        $size = $size ?: 'sm';
+        $sizes = RuleBuilder\Size::default();
 
         return $sizes[$size] ?? $sizes['sm'];
     }

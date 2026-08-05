@@ -79,6 +79,11 @@ export const FEATURES: readonly Feature[] = [
         load: () => import('../features/data/tree'),
     },
     {
+        name: 'rule-builder',
+        tokens: ['neuraRuleBuilder'],
+        load: () => Promise.resolve(), // eager via app.ts
+    },
+    {
         name: 'chart',
         tokens: ['chartComponent'],
         load: () => import('../features/chart'),

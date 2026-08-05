@@ -114,6 +114,37 @@ class ComponentRenderingTest extends TestCase
         $this->assertStringContainsString('textarea', $html);
     }
 
+    public function test_rule_builder_component_renders()
+    {
+        if (! class_exists(\BladeUI\Heroicons\BladeHeroiconsServiceProvider::class)) {
+            $this->markTestSkipped('Heroicons package is not installed');
+
+            return;
+        }
+
+        try {
+            $html = Blade::render(<<<'BLADE'
+                <x-neura::rule-builder
+                    :fields="[
+                        ['key' => 'status', 'label' => 'Status', 'type' => 'select', 'options' => [['value' => 'a', 'label' => 'A']]],
+                    ]"
+                    :actions="[
+                        ['key' => 'notify', 'label' => 'Notify'],
+                    ]"
+                />
+            BLADE);
+
+            $this->assertStringContainsString('neuraRuleBuilder', $html);
+            $this->assertStringContainsString('nk-rule-builder', $html);
+        } catch (\Exception $e) {
+            if (str_contains($e->getMessage(), 'heroicons') || str_contains($e->getMessage(), 'Svg by Name')) {
+                $this->markTestSkipped('Heroicons components not properly registered: '.$e->getMessage());
+            } else {
+                throw $e;
+            }
+        }
+    }
+
     public function test_error_component_renders_slot_content_with_error_styles()
     {
         if (! class_exists(\BladeUI\Heroicons\BladeHeroiconsServiceProvider::class)) {

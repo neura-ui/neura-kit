@@ -33,6 +33,10 @@ import './features/overlays/modal';
 import './features/overlays/sideover';
 import './features/overlays/spotlight';
 
+// Rule builder is used on docs / app pages that Alpine walks on first paint.
+// Register eagerly so `x-data="neuraRuleBuilder(…)"` never races the lazy chunk.
+import './features/data/rule-builder';
+
 import { boot, watchNavigation } from './runtime/loader';
 
 watchNavigation();
