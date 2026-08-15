@@ -84,6 +84,21 @@ export const FEATURES: readonly Feature[] = [
         load: () => Promise.resolve(), // eager via app.ts
     },
     {
+        name: 'thinking-state',
+        tokens: ['neuraThinkingState'],
+        load: () => import('../features/ai/thinking-state'),
+    },
+    {
+        name: 'web-search',
+        tokens: ['neuraWebSearch'],
+        load: () => import('../features/ai/web-search'),
+    },
+    {
+        name: 'todo-list',
+        tokens: ['neuraTodoList'],
+        load: () => import('../features/ai/todo-list'),
+    },
+    {
         name: 'chart',
         tokens: ['chartComponent'],
         load: () => import('../features/chart'),

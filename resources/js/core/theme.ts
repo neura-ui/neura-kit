@@ -1,6 +1,6 @@
-import { generateColorScale, TAILWIND_COLORS } from './colors';
-import { DEFAULT_THEME } from './defaults';
-import type { NeuraKitConfig, NeuraKitTheme, SemanticColorName, TailwindColorName } from './types';
+import { generateColorScale, TAILWIND_COLORS } from './colors.ts';
+import { DEFAULT_THEME } from './defaults.ts';
+import type { NeuraKitConfig, NeuraKitTheme, SemanticColorName, TailwindColorName } from './types.ts';
 
 export function generateThemeCSS(userConfig: NeuraKitConfig = {}): string {
   const config: NeuraKitTheme = {

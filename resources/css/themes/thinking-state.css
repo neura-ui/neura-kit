@@ -1,0 +1,82 @@
+/**
+ * Thinking State — shimmering label + optional reasoning stream.
+ * Inspired by AICSS:
+ * - https://www.aicss.dev/components/thinking-state
+ * - https://www.aicss.dev/components/thinking-reasoning
+ */
+@keyframes nk-thinking-shimmer {
+  0% {
+    background-position: 100% center;
+  }
+
+  100% {
+    background-position: -100% center;
+  }
+}
+
+[data-slot='thinking-state'] {
+  --nk-thinking-from: var(--nk-fg-muted);
+  --nk-thinking-mid: var(--nk-fg);
+  --nk-thinking-to: var(--nk-fg-muted);
+  --nk-thinking-duration: 1.4s;
+}
+
+[data-slot='thinking-state'][data-animate='true'],
+[data-slot='thinking-state'] .nk-tr-shimmer[data-animate='true'] {
+  background-image: linear-gradient(
+    90deg,
+    var(--nk-thinking-from) 0%,
+    var(--nk-thinking-mid) 40%,
+    var(--nk-thinking-mid) 60%,
+    var(--nk-thinking-to) 100%
+  );
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: nk-thinking-shimmer var(--nk-thinking-duration) linear infinite;
+}
+
+[data-slot='thinking-state'][data-variant='reasoning'] .nk-tr-header {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: inherit;
+}
+
+[data-slot='thinking-state'][data-variant='reasoning'] .nk-tr-header:disabled {
+  cursor: default;
+}
+
+[data-slot='thinking-state'][data-variant='reasoning'] .nk-tr-header--clickable:hover .nk-tr-label {
+  color: var(--nk-fg);
+}
+
+[data-slot='thinking-state'][data-variant='reasoning'] .nk-tr-chevron {
+  transform: rotate(0deg);
+}
+
+[data-slot='thinking-state'][data-variant='reasoning'] .nk-tr-chevron--open {
+  transform: rotate(180deg);
+}
+
+[data-slot='thinking-state'][data-variant='reasoning'] .nk-tr-viewport--scroll {
+  scrollbar-width: thin;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-slot='thinking-state'][data-animate='true'],
+  [data-slot='thinking-state'] .nk-tr-shimmer[data-animate='true'] {
+    animation: none;
+    background-image: none;
+    color: var(--nk-fg-secondary);
+    -webkit-text-fill-color: var(--nk-fg-secondary);
+  }
+
+  [data-slot='thinking-state'][data-variant='reasoning'] .nk-tr-viewport,
+  [data-slot='thinking-state'][data-variant='reasoning'] .nk-tr-stream,
+  [data-slot='thinking-state'][data-variant='reasoning'] .nk-tr-chevron {
+    transition: none !important;
+  }
+}

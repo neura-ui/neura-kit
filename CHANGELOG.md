@@ -6,6 +6,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-08-15
+
+### Added
+
+- **Thinking State**: New `neura::thinking-state` — collapsible “thinking” indicator with optional reasoning steps, progressive reveal, sizes, and Alpine `neuraThinkingState`
+- **Web Search**: New `neura::web-search` — streaming search UI with query label, source list states (`pending` / `loading` / `done`), autoplay / loop, and Alpine `neuraWebSearch`
+- **Todo List**: New `neura::todo-list` — agent-style checklist with pending / active / done statuses, autoplay stepping, collapse, and Alpine `neuraTodoList`
+- **File Diff**: New `neura::file-diff` — compact unified diff card (add / del / ctx rows, file header, +/- counts)
+- **Image Generation**: New `neura::image-generation` — generating / done card with prompt, aspect presets, and resolution label
+- **Orb CSS engine**: Pure-CSS orb variants (Lattice S1–S5, Lens B1–B5, Ring C1–C5, Helix G1–G5, Morph M1–M5) via `variant`, optional `pill` / `label`, backed by `OrbCssGeometry` and `neura::orb.css`
+- **Button loading orb**: `loadingIndicator="orb"` (or config `button.loadingIndicator`) replaces the spinner; `orbState`, `orbVariant`, `orbSize`, `orbColor` with size-aware defaults
+- **i18n**: EN / FR strings for thinking, web search, todos, file diff, and image generation
+
+### Changed
+
+- **Vite plugin imports**: Relative TypeScript imports in the config-loaded plugin graph now use explicit `.ts` extensions for future Vite `configLoader: 'native'` compatibility
+- **Feature loader**: Registers lazy Alpine features for thinking-state, web-search, and todo-list
+
 ## [2.0.16] - 2026-08-05
 
 ### Added

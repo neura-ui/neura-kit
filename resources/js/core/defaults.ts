@@ -1,4 +1,4 @@
-import type { NeuraKitTheme } from './types';
+import type { NeuraKitTheme } from './types.ts';
 
 export const DEFAULT_THEME = {
   colors: {

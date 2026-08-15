@@ -1,10 +1,10 @@
 import type {Plugin} from 'vite';
-import {generateThemeCSS} from '../core/theme';
-import {loadNeuraConfig} from '../core/config';
-import {transformCss} from './css-transform';
-import {transformJs} from './js-transform';
-import {configureOptimizeDeps} from './optimize';
-import type {NeuraKitUserConfig, TransformResult} from '../core/types';
+import {generateThemeCSS} from '../core/theme.ts';
+import {loadNeuraConfig} from '../core/config.ts';
+import {transformCss} from './css-transform.ts';
+import {transformJs} from './js-transform.ts';
+import {configureOptimizeDeps} from './optimize.ts';
+import type {NeuraKitUserConfig, TransformResult} from '../core/types.ts';
 
 export function neuraKitPlugin(
     userConfig: NeuraKitUserConfig = {}

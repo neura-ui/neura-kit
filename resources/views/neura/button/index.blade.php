@@ -9,6 +9,11 @@
     'shadow' => null,
     'loading' => false,
     'loadingDisabled' => false,
+    'loadingIndicator' => null,
+    'orbState' => null,
+    'orbVariant' => null,
+    'orbSize' => null,
+    'orbColor' => null,
     'variant' => null,
     'icon' => null,
     'iconAfter' => null,
@@ -27,6 +32,11 @@
     $rounded = $rounded ?? neura_config('button', 'rounded');
     $shadow = $shadow ?? neura_config('button', 'shadow');
     $variant = $variant ?? neura_config('button', 'variant') ?? 'primary';
+    $loadingIndicator = $loadingIndicator ?? neura_config('button', 'loadingIndicator') ?? 'spinner';
+    $useOrbLoading = $loadingIndicator === 'orb';
+    $orbState = $orbState ?? neura_config('button', 'orbState') ?? 'working';
+    $orbColor = $orbColor ?? neura_config('button', 'orbColor') ?? 'current';
+    $orbSize = $orbSize ?? IconSize::orb()[$size] ?? 16;
 
     $semanticColors = ['primary', 'secondary', 'danger', 'success', 'warning', 'info'];
     $tailwindColors = [
@@ -132,7 +142,17 @@
     data-slot="button"
 >
     <div @class(['absolute inset-0 hidden items-center justify-center']) {{ $loadingAttributes }}>
-        <neura::icon.loading :variant="$iconVariant" :attributes="$iconAttributes" data-slot="loading-indicator"/>
+        @if ($useOrbLoading)
+            <neura::orb
+                :state="$orbState"
+                :variant="$orbVariant"
+                :size="$orbSize"
+                :color="$orbColor"
+                data-slot="loading-indicator"
+            />
+        @else
+            <neura::icon.loading :variant="$iconVariant" :attributes="$iconAttributes" data-slot="loading-indicator"/>
+        @endif
     </div>
 
     @if($icon)

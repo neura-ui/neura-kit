@@ -1,6 +1,6 @@
 import { resolve } from 'path';
 import { existsSync } from 'fs';
-import type { TransformResult } from '../core/types';
+import type { TransformResult } from '../core/types.ts';
 
 export function transformJs(code: string): TransformResult | null {
   if (code.includes('neura-kit/resources/js/app.ts') || code.includes('neura-ui/neura-kit/resources/js/app.ts')) {

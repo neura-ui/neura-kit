@@ -1,4 +1,4 @@
-import type { TransformResult } from '../core/types';
+import type { TransformResult } from '../core/types.ts';
 
 function extractThemeContent(themeCSS: string): string {
   const match = themeCSS.match(/@theme\s*\{([\s\S]*?)\}/);

@@ -2,6 +2,12 @@
 @import './themes/flow.css';
 @import './themes/icons.css';
 @import './themes/pullcord.css';
+@import './themes/thinking-state.css';
+@import './themes/orb-css.css';
+@import './themes/web-search.css';
+@import './themes/image-generation.css';
+@import './themes/file-diff.css';
+@import './themes/todo-list.css';
 
 /**
  * ============================================================================

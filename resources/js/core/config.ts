@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'fs';
 import { resolve } from 'path';
 import { pathToFileURL } from 'url';
-import type { NeuraKitConfig } from './types';
+import type { NeuraKitConfig } from './types.ts';
 
 const CONFIG_FILES = [
   'neura-kit.config.js',

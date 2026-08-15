@@ -1,0 +1,64 @@
+/** Image Generation tool state — inspired by https://www.aicss.dev/components/image-generation */
+
+.nk-ig-wrap{flex-direction:column;align-items:center;gap:14px;transition:width .38s cubic-bezier(.34,1.26,.64,1);display:flex}
+
+.nk-ig-canvas{aspect-ratio:1;border-radius:0.75rem;background:var(--nk-surface-inset);width:100%;max-width:260px;transition:height .38s cubic-bezier(.34,1.26,.64,1);position:relative;overflow:hidden}
+
+.dark .nk-ig-canvas{background:var(--nk-surface-inset)}
+
+.nk-ig-dots{background-image:radial-gradient(circle, var(--nk-fg-disabled) .7px, transparent 1.3px);opacity:.22;background-repeat:space;background-size:11px 11px;position:absolute;inset:2px}
+
+.nk-ig-glow{background-image:radial-gradient(circle, var(--color-primary-500, #3b82f6) 1.1px, transparent 1.6px);--ig-glow:100px;-webkit-mask-image:radial-gradient(#000 0%,#0000 60%),radial-gradient(#000 0%,#0000 62%);mask-image:radial-gradient(#000 0%,#0000 60%),radial-gradient(#000 0%,#0000 62%);-webkit-mask-repeat:no-repeat,no-repeat;mask-repeat:no-repeat,no-repeat;-webkit-mask-size:calc(var(--ig-glow) * 1.1) calc(var(--ig-glow) * .95), calc(var(--ig-glow) * .8) calc(var(--ig-glow) * .8);-webkit-mask-size:calc(var(--ig-glow) * 1.1) calc(var(--ig-glow) * .95), calc(var(--ig-glow) * .8) calc(var(--ig-glow) * .8);mask-size:calc(var(--ig-glow) * 1.1) calc(var(--ig-glow) * .95), calc(var(--ig-glow) * .8) calc(var(--ig-glow) * .8);animation:nk-ig-morph 4.2s cubic-bezier(0.34, 1.26, 0.64, 1) infinite, nk-ig-breathe 1.9s cubic-bezier(0.66, 0, 0.34, 1) infinite;background-repeat:space;background-size:11px 11px;position:absolute;inset:2px;-webkit-mask-position:16% 20%,30% 32%;mask-position:16% 20%,30% 32%}
+
+@keyframes nk-ig-morph{0%{-webkit-mask-size:calc(var(--ig-glow) * 1.1) calc(var(--ig-glow) * .95), calc(var(--ig-glow) * .8) calc(var(--ig-glow) * .8);-webkit-mask-size:calc(var(--ig-glow) * 1.1) calc(var(--ig-glow) * .95), calc(var(--ig-glow) * .8) calc(var(--ig-glow) * .8);mask-size:calc(var(--ig-glow) * 1.1) calc(var(--ig-glow) * .95), calc(var(--ig-glow) * .8) calc(var(--ig-glow) * .8);-webkit-mask-position:16% 20%,30% 32%;mask-position:16% 20%,30% 32%}25%{-webkit-mask-size:calc(var(--ig-glow) * .96) calc(var(--ig-glow) * 1.22), calc(var(--ig-glow) * .88) calc(var(--ig-glow) * .76);-webkit-mask-size:calc(var(--ig-glow) * .96) calc(var(--ig-glow) * 1.22), calc(var(--ig-glow) * .88) calc(var(--ig-glow) * .76);mask-size:calc(var(--ig-glow) * .96) calc(var(--ig-glow) * 1.22), calc(var(--ig-glow) * .88) calc(var(--ig-glow) * .76);-webkit-mask-position:84% 16%,66% 30%;mask-position:84% 16%,66% 30%}50%{-webkit-mask-size:calc(var(--ig-glow) * 1.24) calc(var(--ig-glow) * .92), calc(var(--ig-glow) * .76) calc(var(--ig-glow) * .92);-webkit-mask-size:calc(var(--ig-glow) * 1.24) calc(var(--ig-glow) * .92), calc(var(--ig-glow) * .76) calc(var(--ig-glow) * .92);mask-size:calc(var(--ig-glow) * 1.24) calc(var(--ig-glow) * .92), calc(var(--ig-glow) * .76) calc(var(--ig-glow) * .92);-webkit-mask-position:82% 84%,62% 68%;mask-position:82% 84%,62% 68%}75%{-webkit-mask-size:calc(var(--ig-glow) * 1) calc(var(--ig-glow) * 1.12), calc(var(--ig-glow) * .92) calc(var(--ig-glow) * .8);-webkit-mask-size:calc(var(--ig-glow) * 1) calc(var(--ig-glow) * 1.12), calc(var(--ig-glow) * .92) calc(var(--ig-glow) * .8);mask-size:calc(var(--ig-glow) * 1) calc(var(--ig-glow) * 1.12), calc(var(--ig-glow) * .92) calc(var(--ig-glow) * .8);-webkit-mask-position:14% 82%,34% 66%;mask-position:14% 82%,34% 66%}to{-webkit-mask-size:calc(var(--ig-glow) * 1.1) calc(var(--ig-glow) * .95), calc(var(--ig-glow) * .8) calc(var(--ig-glow) * .8);-webkit-mask-size:calc(var(--ig-glow) * 1.1) calc(var(--ig-glow) * .95), calc(var(--ig-glow) * .8) calc(var(--ig-glow) * .8);mask-size:calc(var(--ig-glow) * 1.1) calc(var(--ig-glow) * .95), calc(var(--ig-glow) * .8) calc(var(--ig-glow) * .8);-webkit-mask-position:16% 20%,30% 32%;mask-position:16% 20%,30% 32%}}
+
+@keyframes nk-ig-breathe{0%,to{opacity:.55}50%{opacity:1}}
+
+.nk-ig-res{font-family:ui-monospace, SFMono-Regular, Menlo, monospace;color:var(--nk-fg-muted);background:color-mix(in srgb, var(--nk-surface) 72%, transparent);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);border-radius:999px;padding:2px 7px;font-size:11px;position:absolute;top:8px;right:8px}
+
+.nk-ig-meta{text-align:left;flex-direction:column;align-items:flex-start;gap:2px;width:100%;max-width:260px;display:flex}
+
+.nk-ig-meta .nk-shimmerText{font-size:14px}
+
+@media (prefers-reduced-motion:reduce){.nk-ig-glow{opacity:.7;animation:none}.nk-ig-wrap,.nk-ig-canvas{transition:none}}
+
+.nk-ig-label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--nk-fg);
+}
+
+.nk-ig-prompt {
+  font-size: 0.8125rem;
+  color: var(--nk-fg-muted);
+}
+
+.nk-ig-label.nk-ig-shimmer {
+  background-image: linear-gradient(
+    90deg,
+    var(--nk-fg-muted) 0%,
+    var(--nk-fg) 40%,
+    var(--nk-fg) 60%,
+    var(--nk-fg-muted) 100%
+  );
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: nk-ws-shimmer 1.4s linear infinite;
+}
+
+.nk-ig-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.nk-ig-wrap[data-status='done'] .nk-ig-dots,
+.nk-ig-wrap[data-status='done'] .nk-ig-glow {
+  display: none;
+}

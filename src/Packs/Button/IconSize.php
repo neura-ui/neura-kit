@@ -27,5 +27,17 @@ class IconSize extends BasePack
             'xl' => 'outline',
         ];
     }
+
+    /** Pixel size for loading orbs, keyed by button size. */
+    public static function orb(): array
+    {
+        return [
+            'xs' => 14,
+            'sm' => 16,
+            'md' => 18,
+            'lg' => 20,
+            'xl' => 24,
+        ];
+    }
 }
 

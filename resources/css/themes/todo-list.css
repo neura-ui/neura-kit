@@ -1,0 +1,82 @@
+/** To-do List — inspired by https://www.aicss.dev/components/task-list */
+
+.nk-todo{transition:padding-top .28s cubic-bezier(0.22, 1, 0.36, 1), padding-bottom .28s cubic-bezier(0.22, 1, 0.36, 1);border-radius:8px;padding:6px 12px 12px}
+
+.nk-todo-collapsed-card{padding-top:6px;padding-bottom:6px}
+
+.nk-todo-head{cursor:pointer;width:100%;color:var(--nk-fg);background:0 0;border:0;align-items:center;gap:8px;min-height:22px;padding:0;font-size:13px;display:flex}
+
+.nk-todo-head-icon{width:16px;height:16px;color:var(--nk-fg-disabled);flex:none;position:relative}
+
+.nk-todo-list-icon,.nk-todo-chevron,.nk-todo-head-check{transition:opacity .14s cubic-bezier(0.22, 1, 0.36, 1);margin:auto;position:absolute;inset:0}
+
+.nk-todo-list-icon,.nk-todo-chevron{width:13px;height:13px}
+
+.nk-todo-head-check{width:16px;height:16px;color:var(--color-green-500, #22c55e)}
+
+.nk-todo-chevron{opacity:0;transition:opacity .14s cubic-bezier(0.22, 1, 0.36, 1), transform .22s cubic-bezier(0.22, 1, 0.36, 1)}
+
+.nk-todo-head[aria-expanded=false] .nk-todo-chevron{transform:rotate(-90deg)}
+
+.nk-todo-head:active{transform:none}
+
+.nk-todo-head:hover .nk-todo-list-icon,.nk-todo-head:hover .nk-todo-head-pie,.nk-todo-head:hover .nk-todo-head-check{opacity:0}
+
+.nk-todo-head:hover .nk-todo-chevron{opacity:1}
+
+.nk-todo-title{font-weight:500}
+
+.nk-todo-count{color:var(--nk-fg-disabled);font-variant-numeric:tabular-nums;margin-left:auto}
+
+.nk-roll-count{align-items:baseline;display:inline-flex}
+
+.nk-roll-digit{height:1em;line-height:1em;display:inline-block;overflow:hidden}
+
+.nk-roll-inner{flex-direction:column;transition:transform .35s cubic-bezier(.4,0,.2,1);display:flex}
+
+.nk-roll-inner span{height:1em;line-height:1em}
+
+.nk-roll-inner-up{transform:translateY(-1em)}
+
+.nk-todo-collapsible{opacity:1;transition:grid-template-rows .28s cubic-bezier(0.22, 1, 0.36, 1), opacity .2s cubic-bezier(0.22, 1, 0.36, 1);grid-template-rows:1fr;display:grid}
+
+.nk-todo-collapsed{opacity:0;pointer-events:none;grid-template-rows:0fr}
+
+.nk-todo-inner{min-height:0;overflow:hidden}
+
+.nk-todo-list{flex-direction:column;gap:8px;margin:0;padding:10px 0 0;font-size:13px;list-style:none;display:flex}
+
+.nk-todo-item{color:var(--nk-fg-disabled);animation:nk-todo-item-in .36s cubic-bezier(0.22, 1, 0.36, 1) backwards;animation-delay:calc(var(--todo-i, 0) * 50ms);align-items:flex-start;gap:9px;line-height:18px;display:flex}
+
+@keyframes nk-todo-item-in{0%{opacity:0;transform:translateY(-7px)}to{opacity:1;transform:translateY(0)}}
+
+.nk-todo-icon-wrap{flex:none;width:16px;height:16px;margin-top:1px;position:relative}
+
+.nk-todo-icon{width:16px;height:16px;color:var(--nk-fg-disabled);opacity:0;transition:opacity .32s cubic-bezier(0.22, 1, 0.36, 1);position:absolute;inset:0}
+
+.nk-todo-icon-on{opacity:1}
+
+.nk-todo-icon-strong{color:var(--nk-fg)}
+
+.nk-todo-label{color:var(--nk-fg-disabled);transition:color .36s cubic-bezier(0.22, 1, 0.36, 1);font-weight:400;position:relative}
+
+.nk-todo-label:before{content:attr(data-label);background:linear-gradient(90deg, var(--nk-fg) 0%, var(--nk-fg) 30%, color-mix(in srgb, var(--nk-fg) 45%, transparent) 45%, color-mix(in srgb, var(--nk-fg) 45%, transparent) 55%, var(--nk-fg) 70%, var(--nk-fg) 100%);color:#0000;-webkit-text-fill-color:transparent;opacity:0;transition:opacity .36s cubic-bezier(0.22, 1, 0.36, 1);pointer-events:none;background-size:300% 100%;-webkit-background-clip:text;background-clip:text;position:absolute;inset:0}
+
+.nk-todo-head-pie{width:13px;height:13px;color:var(--nk-fg);transition:opacity .14s cubic-bezier(0.22, 1, 0.36, 1), --todo-pie .4s cubic-bezier(0.22, 1, 0.36, 1);border-radius:50%;margin:auto;position:absolute;inset:0}
+
+.nk-todo-head-pie-ring{width:100%;height:100%;color:var(--nk-fg-disabled);position:absolute;inset:0;overflow:visible}
+
+.nk-todo-head-pie:after{content:"";background:conic-gradient(currentColor var(--todo-pie,0%), transparent 0);border-radius:50%;position:absolute;inset:2.6px}
+
+.nk-todo-active .nk-todo-label{color:#0000}
+
+.nk-todo-active .nk-todo-label:before{opacity:1;animation:2.25s infinite nk-todo-label-shine}
+
+.nk-todo-done .nk-todo-label{color:var(--nk-fg-muted);text-decoration:line-through}
+
+@media (prefers-reduced-motion:reduce){.nk-todo-item{animation:none}.nk-todo-icon,.nk-todo-label,.nk-todo-label:before{transition:none}.nk-todo-active .nk-todo-label:before{animation:none}}
+
+@keyframes nk-todo-label-shine {
+  0%, 18% { background-position: 100% 0; }
+  82%, 100% { background-position: 0 0; }
+}

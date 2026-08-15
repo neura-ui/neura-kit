@@ -1,4 +1,4 @@
-import type { TailwindColorName, ColorScale, ColorBase, ColorStep } from './types';
+import type { TailwindColorName, ColorScale, ColorBase, ColorStep } from './types.ts';
 
 export const TAILWIND_COLORS: Record<TailwindColorName, ColorBase> = {
   slate: { h: 215, c: 0.025 },

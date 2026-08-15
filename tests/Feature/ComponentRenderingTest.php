@@ -43,6 +43,25 @@ class ComponentRenderingTest extends TestCase
         }
     }
 
+    public function test_button_loading_orb_indicator_renders()
+    {
+        $html = Blade::render('<x-neura::button loading="true" loadingIndicator="orb" orbState="working">Save</x-neura::button>');
+
+        $this->assertStringContainsString('data-slot="loading-indicator"', $html);
+        $this->assertStringContainsString('data-nk-orb', $html);
+        $this->assertStringContainsString('data-state="working"', $html);
+        $this->assertStringDoesNotContainString('animate-spin', $html);
+    }
+
+    public function test_button_loading_spinner_indicator_renders_by_default()
+    {
+        $html = Blade::render('<x-neura::button loading="true">Save</x-neura::button>');
+
+        $this->assertStringContainsString('data-slot="loading-indicator"', $html);
+        $this->assertStringContainsString('animate-spin', $html);
+        $this->assertStringDoesNotContainString('data-nk-orb', $html);
+    }
+
     public function test_modal_manager_component_renders()
     {
         $html = Blade::render('<x-neura::modal-manager :components="[]" />');
@@ -143,6 +162,82 @@ class ComponentRenderingTest extends TestCase
                 throw $e;
             }
         }
+    }
+
+    public function test_thinking_state_component_renders()
+    {
+        $html = Blade::render('<x-neura::thinking-state label="Thinking" />');
+
+        $this->assertStringContainsString('Thinking', $html);
+        $this->assertStringContainsString('data-slot="thinking-state"', $html);
+        $this->assertStringContainsString('data-animate="true"', $html);
+    }
+
+    public function test_thinking_state_reasoning_mode_renders()
+    {
+        $html = Blade::render(<<<'BLADE'
+            <x-neura::thinking-state
+                :reasoning="['First step', 'Second step']"
+                :done="true"
+                :duration="3"
+            />
+        BLADE);
+
+        $this->assertStringContainsString('neuraThinkingState', $html);
+        $this->assertStringContainsString('data-variant="reasoning"', $html);
+        $this->assertStringContainsString('First step', $html);
+    }
+
+    public function test_web_search_component_renders()
+    {
+        $html = Blade::render('<x-neura::web-search query="test query" :done="true" :loop="false" />');
+
+        $this->assertStringContainsString('neuraWebSearch', $html);
+        $this->assertStringContainsString('data-slot="web-search"', $html);
+        $this->assertStringContainsString('test query', $html);
+    }
+
+    public function test_image_generation_component_renders()
+    {
+        $html = Blade::render('<x-neura::image-generation prompt="lake at dawn" aspect="landscape" />');
+
+        $this->assertStringContainsString('data-slot="image-generation"', $html);
+        $this->assertStringContainsString('nk-ig-canvas', $html);
+        $this->assertStringContainsString('lake at dawn', $html);
+    }
+
+    public function test_file_diff_component_renders()
+    {
+        $html = Blade::render(<<<'BLADE'
+            <x-neura::file-diff
+                file="src/auth.ts"
+                :rows="[
+                    ['old' => 1, 'cur' => 1, 'type' => 'ctx', 'text' => 'const x = 1'],
+                    ['old' => null, 'cur' => 2, 'type' => 'add', 'text' => 'const y = 2'],
+                ]"
+            />
+        BLADE);
+
+        $this->assertStringContainsString('data-slot="file-diff"', $html);
+        $this->assertStringContainsString('src/auth.ts', $html);
+        $this->assertStringContainsString('nk-diff-row', $html);
+        $this->assertStringContainsString('const y = 2', $html);
+    }
+
+    public function test_todo_list_component_renders()
+    {
+        $html = Blade::render(<<<'BLADE'
+            <x-neura::todo-list
+                :items="[
+                    ['label' => 'One', 'status' => 'done'],
+                    ['label' => 'Two', 'status' => 'active'],
+                ]"
+            />
+        BLADE);
+
+        $this->assertStringContainsString('neuraTodoList', $html);
+        $this->assertStringContainsString('data-slot="todo-list"', $html);
+        $this->assertStringContainsString('One', $html);
     }
 
     public function test_error_component_renders_slot_content_with_error_styles()

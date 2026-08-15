@@ -21,6 +21,9 @@ class NeuraKitConfig
                 'shadow' => self::GLOBAL,
                 'size' => Size::SM->value,
                 'variant' => Variant::DARK->value,
+                'loadingIndicator' => 'spinner',
+                'orbState' => 'working',
+                'orbColor' => 'current',
             ],
             'packs' => [
                 'rounders' => Packs\Rounded::class,
