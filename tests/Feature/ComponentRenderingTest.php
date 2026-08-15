@@ -45,12 +45,13 @@ class ComponentRenderingTest extends TestCase
 
     public function test_button_loading_orb_indicator_renders()
     {
-        $html = Blade::render('<x-neura::button loading="true" loadingIndicator="orb" orbState="working">Save</x-neura::button>');
+        $html = Blade::render('<x-neura::button loading="true" loadingIndicator="orb" orbVariant="S3">Save</x-neura::button>');
 
         $this->assertStringContainsString('data-slot="loading-indicator"', $html);
-        $this->assertStringContainsString('data-nk-orb', $html);
-        $this->assertStringContainsString('data-state="working"', $html);
+        $this->assertStringContainsString('data-engine="css"', $html);
+        $this->assertStringContainsString('data-variant="S3"', $html);
         $this->assertStringDoesNotContainString('animate-spin', $html);
+        $this->assertStringDoesNotContainString('data-nk-orb', $html);
     }
 
     public function test_button_loading_spinner_indicator_renders_by_default()

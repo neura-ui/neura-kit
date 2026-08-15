@@ -10,7 +10,6 @@
     'loading' => false,
     'loadingDisabled' => false,
     'loadingIndicator' => null,
-    'orbState' => null,
     'orbVariant' => null,
     'orbSize' => null,
     'orbColor' => null,
@@ -34,7 +33,7 @@
     $variant = $variant ?? neura_config('button', 'variant') ?? 'primary';
     $loadingIndicator = $loadingIndicator ?? neura_config('button', 'loadingIndicator') ?? 'spinner';
     $useOrbLoading = $loadingIndicator === 'orb';
-    $orbState = $orbState ?? neura_config('button', 'orbState') ?? 'working';
+    $orbVariant = $orbVariant ?? neura_config('button', 'orbVariant') ?? 'S3';
     $orbColor = $orbColor ?? neura_config('button', 'orbColor') ?? 'current';
     $orbSize = $orbSize ?? IconSize::orb()[$size] ?? 16;
 
@@ -144,7 +143,6 @@
     <div @class(['absolute inset-0 hidden items-center justify-center']) {{ $loadingAttributes }}>
         @if ($useOrbLoading)
             <neura::orb
-                :state="$orbState"
                 :variant="$orbVariant"
                 :size="$orbSize"
                 :color="$orbColor"

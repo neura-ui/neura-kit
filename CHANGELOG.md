@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **File Diff**: New `neura::file-diff` — compact unified diff card (add / del / ctx rows, file header, +/- counts)
 - **Image Generation**: New `neura::image-generation` — generating / done card with prompt, aspect presets, and resolution label
 - **Orb CSS engine**: Pure-CSS orb variants (Lattice S1–S5, Lens B1–B5, Ring C1–C5, Helix G1–G5, Morph M1–M5) via `variant`, optional `pill` / `label`, backed by `OrbCssGeometry` and `neura::orb.css`
-- **Button loading orb**: `loadingIndicator="orb"` (or config `button.loadingIndicator`) replaces the spinner; `orbState`, `orbVariant`, `orbSize`, `orbColor` with size-aware defaults
+- **Button loading orb**: `loadingIndicator="orb"` (or config `button.loadingIndicator`) replaces the spinner with a CSS orb variant; `orbVariant` (default `S3`), `orbSize`, `orbColor` with size-aware defaults
 - **i18n**: EN / FR strings for thinking, web search, todos, file diff, and image generation
 
 ### Changed

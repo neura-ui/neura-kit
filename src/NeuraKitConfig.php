@@ -22,7 +22,7 @@ class NeuraKitConfig
                 'size' => Size::SM->value,
                 'variant' => Variant::DARK->value,
                 'loadingIndicator' => 'spinner',
-                'orbState' => 'working',
+                'orbVariant' => 'S3',
                 'orbColor' => 'current',
             ],
             'packs' => [
