@@ -1,7 +1,9 @@
 @aware([
     'collapsible' => true,
-    'size' => 'md'
-])@props([
+    'size' => 'md',
+    'variant' => null,
+])
+@props([
     'icon' => null,
     'badge' => null,
     'label' => null,
@@ -11,11 +13,12 @@
     'variant' => null,
     'color' => null,
     'activePattern' => null,
-])@php
+])
+@php
     use Neura\Kit\Support\PackResolver;
 
     $size = $size ?? $attributes->get('size') ?? neura_config('navlist', 'size');
-    $variant = $variant ?? neura_config('navlist', 'variant');
+    $variant = $variant ?? $attributes->get('variant') ?? neura_config('navlist', 'variant');
     $color = $color ?? neura_config('navlist', 'color');
 
     $sizeConfig = PackResolver::navlistSize($size);

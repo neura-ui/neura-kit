@@ -20,17 +20,22 @@
     };
 @endphp
 
-<neura::navlist.group.label
-    :collapsable="$collapsable"
-    :icon="$icon"
-    :size="$size"
-    :group-id="$groupId"
-    density="default"
->
-    @if ($hasLabel)
-        <x-slot:label>{{ $label }}</x-slot:label>
-    @endif
-</neura::navlist.group.label>
+<div @class([
+    'pb-2 mb-0.5',
+    'border-b border-edge' => $hasLabel,
+])>
+    <neura::navlist.group.label
+        :collapsable="$collapsable"
+        :icon="$icon"
+        :size="$size"
+        :group-id="$groupId"
+        density="default"
+    >
+        @if ($hasLabel)
+            <x-slot:label>{{ $label }}</x-slot:label>
+        @endif
+    </neura::navlist.group.label>
+</div>
 
 <ul
     @if ($collapsable)

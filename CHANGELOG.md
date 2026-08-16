@@ -6,6 +6,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.2] - 2026-08-16
+
+### Added
+
+- **Navlist variants**: Item styles `default` / `ghost` / `soft` / `rail` — set on `neura::navlist` and inherited by items via `@aware` (per-item override still works)
+- **Navlist group variants**: Layout variants `default` / `compact` / `separated` / `card` (independent from item styles); shared `group.label` partial
+
+### Changed
+
+- **Navlist group**: Label accepts a prop or `<x-slot:label>` for custom content; clearer spacing between groups, labels, and items; default variant no longer draws a left border rail
+
+## [2.1.1] - 2026-08-15
+
+### Changed
+
+- **Button loading orb**: Uses CSS `orbVariant` (default `S3`) instead of canvas `orbState`; drop `orbState` from the button API
+
 ## [2.1.0] - 2026-08-15
 
 ### Added

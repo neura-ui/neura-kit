@@ -5,7 +5,7 @@
 ])
 
 @php
-    $navlistClasses = 'flex flex-col w-full [:has([data-collapsed]_&)_&]:items-center gap-y-0.5 py-1 px-2';
+    $navlistClasses = 'flex flex-col w-full [:has([data-collapsed]_&)_&]:items-center gap-y-1 py-1 px-2';
 @endphp
 
 <nav
@@ -13,7 +13,7 @@
     data-slot="navlist"
     aria-label="{{ $label ?? 'Navigation' }}"
 >
-    <ul role="list" class="flex flex-col w-full gap-y-0.5">
+    <ul role="list" class="flex flex-col w-full gap-y-1">
         {{ $slot }}
     </ul>
 </nav>
