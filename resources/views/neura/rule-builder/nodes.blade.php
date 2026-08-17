@@ -74,8 +74,9 @@
             x-on:dragover="onDragOver('when', ({{ $parentExpr }}).id, item.id, $event)"
             x-on:drop="onDrop('when', ({{ $parentExpr }}).id, item.id, $event)"
         >
-            {{-- RULE (x-show avoids empty Alpine x-if shells) --}}
-            <div x-show="item.kind === 'rule'" x-cloak>
+            {{-- RULE --}}
+            <template x-if="item.kind === 'rule'">
+                <div>
                 <div
                     class="{{ $rowClass }} flex flex-wrap items-center gap-x-1.5 rounded-xl border border-edge/70 bg-surface-raised/60 text-sm text-fg"
                     x-show="item.locked"
@@ -234,10 +235,12 @@
                         <neura::icon name="trash" class="{{ $iconClass }}" />
                     </button>
                 </div>
-            </div>
+                </div>
+            </template>
 
             {{-- GROUP --}}
-            <div x-show="item.kind === 'group'" x-cloak class="rounded-2xl border border-edge/80 bg-surface-inset/80 p-3 {{ $roundedClass }}">
+            <template x-if="item.kind === 'group'">
+                <div class="rounded-2xl border border-edge/80 bg-surface-inset/80 p-3 {{ $roundedClass }}">
                 <div class="mb-3 flex items-center gap-2">
                     <button
                         type="button"
@@ -301,7 +304,8 @@
                         </button>
                     </div>
                 </div>
-            </div>
+                </div>
+            </template>
         </div>
     </div>
 </template>

@@ -6,6 +6,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.7] - 2026-08-17
+
+### Fixed
+
+- **Rule Builder Alpine errors**: The rule and group branches were rendered with `x-show`, which only hides the markup via CSS while Alpine still evaluates both branches' expressions — `countConditions(item)` on a rule (no `children`) and `item.values.map(...)` on a group both threw `can't access property Symbol.iterator`. Switched both blocks to `x-if` so only the matching branch is evaluated
+
 ## [2.1.6] - 2026-08-17
 
 ### Added
