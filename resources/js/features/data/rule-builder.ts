@@ -103,16 +103,32 @@ function emptyValue(): RuleBuilderValue {
     };
 }
 
+function singleOptionValue(config: FieldConfig | undefined | null): FieldOption['value'] | null {
+    if (!config) return null;
+    if (config.type !== 'select' && config.type !== 'multiselect') return null;
+    if (config.options.length !== 1) return null;
+    return config.options[0].value;
+}
+
 function normalizeRule(raw: Partial<RuleNode> | null | undefined, fields: Record<string, FieldConfig>): RuleNode {
     const field = raw?.field ?? Object.keys(fields)[0] ?? '';
     const config = fields[field];
+    const operator = raw?.operator ?? config?.defaultOperator ?? 'is';
+
+    let values = Array.isArray(raw?.values) ? [...raw!.values!] : [];
+    if (values.length === 0 && operator !== 'empty' && operator !== 'not_empty') {
+        const single = singleOptionValue(config);
+        if (single !== null) {
+            values = [single];
+        }
+    }
 
     return {
         id: raw?.id ?? uid('r'),
         kind: 'rule',
         field,
-        operator: raw?.operator ?? config?.defaultOperator ?? 'is',
-        values: Array.isArray(raw?.values) ? [...raw!.values!] : [],
+        operator,
+        values,
         locked: Boolean(raw?.locked),
     };
 }
@@ -405,7 +421,9 @@ if (typeof window !== 'undefined') {
                         const config = this.fieldConfig(field);
                         rule.field = field;
                         rule.operator = config?.defaultOperator ?? 'is';
-                        rule.values = [];
+
+                        const single = singleOptionValue(config);
+                        rule.values = single !== null ? [single] : [];
                     },
 
                     setOperator(ruleId: string, operator: string) {
@@ -416,6 +434,11 @@ if (typeof window !== 'undefined') {
                         rule.operator = operator;
                         if (operator === 'empty' || operator === 'not_empty') {
                             rule.values = [];
+                        } else if (rule.values.length === 0) {
+                            const single = singleOptionValue(this.fieldConfig(rule.field));
+                            if (single !== null) {
+                                rule.values = [single];
+                            }
                         }
                     },
 

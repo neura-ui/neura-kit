@@ -160,7 +160,13 @@
                     </template>
 
                     <template x-if="needsValue(item.operator) && fieldConfig(item.field) && fieldConfig(item.field).type === 'select'">
-                        <div class="relative">
+                        <span
+                            class="{{ $controlClass }} inline-flex items-center gap-1 rounded-md border border-edge/80 bg-surface-raised/80 text-fg"
+                            x-show="(fieldConfig(item.field)?.options ?? []).length === 1"
+                            x-text="item.values.length ? optionLabel(item.field, item.values[0]) : label('selectValue')"
+                        ></span>
+
+                        <div class="relative" x-show="(fieldConfig(item.field)?.options ?? []).length > 1">
                             <button type="button" class="{{ $pillClass }}" x-on:click="toggleOpen('val-' + item.id)" x-bind:disabled="isDisabled">
                                 <span x-text="item.values.length ? optionLabel(item.field, item.values[0]) : label('selectValue')"></span>
                                 <neura::icon name="chevron-down" class="size-3 text-fg-muted" />
@@ -189,7 +195,7 @@
                                     </button>
                                 </span>
                             </template>
-                            <div class="relative">
+                            <div class="relative" x-show="(fieldConfig(item.field)?.options ?? []).length > 1">
                                 <button
                                     type="button"
                                     class="{{ $chipClass }} inline-flex items-center justify-center rounded-md border border-dashed border-edge text-fg-muted hover:bg-hover hover:text-fg disabled:opacity-40"

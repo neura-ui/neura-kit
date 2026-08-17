@@ -6,6 +6,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.6] - 2026-08-17
+
+### Added
+
+- **Rule Builder single-option fields**: When a `select` / `multiselect` field has exactly one option, the value is auto-selected on rule creation, on field change, and on operator switch; the value renders as a static pill (no dropdown) for `select`, and the add-chip button is hidden for `multiselect`
+
 ## [2.1.5] - 2026-08-17
 
 ### Added
