@@ -6,6 +6,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-08-17
+
+### Added
+
+- **Dropzone variants**: New `variant` prop on `neura::dropzone` — `default` / `solid` / `card` / `minimal` / `cover`. Backed by `Packs\Dropzone\Variant`, `PackResolver::dropzoneVariant()`, and a `neura-kit.dropzone.default.variant` config default. Each variant can override the area rounding, shadow, and hide the icon tile (`minimal`)
+- **Select size**: `size` prop on `neura::select` (`xs` / `sm` / `md` / `lg` / `xl`), sharing the `Input\Size` pack so the trigger matches the `neura::input` height and padding; options follow the size
+- **Filters variants**: New `variant` prop on `neura::filters` — `default` / `solid` / `card` / `minimal`. Backed by `Packs\Filters\Variant` and `PackResolver::filtersVariant()`; variants control the chip surface, panel surface, and shadow
+- **Filters colors**: New `color` prop on `neura::filters` — `primary` / `secondary` / `danger` / `success` / `warning` / `info` plus any Tailwind color. The tint applies to the add-filter and clear-all buttons only; the active filter chips keep their neutral structural surface
+- **Dropzone avatar variant**: New `avatar` variant on `neura::dropzone` — a circular profile-photo picker. The picked image fills the circle (`object-cover`), a camera overlay appears on hover, and a small remove button sits on the corner when a photo is set. Text is hidden, the preview list is skipped, and the default icon switches to a camera
+
+### Changed
+
+- **Dropzone style**: Aligned with the ReUI file-upload look — 1px dashed frame, hover now tints only the border (no background flash), drag shows a soft `bg-primary/5` veil (no scale/shadow), and the icon sits in a circular `rounded-full bg-muted` tile that turns `primary` while dragging. Transition narrowed to `transition-colors`
+- **Dropzone packs**: `Packs\Dropzone\Color` no longer sets the resting surface (`area.base`) — surfaces are owned by the variants — and its state classes were recalibrated (border-only hover, `primary/5` drag, circular tile states)
+
 ## [2.1.3] - 2026-08-16
 
 ### Fixed

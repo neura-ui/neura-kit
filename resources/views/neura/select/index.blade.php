@@ -13,6 +13,7 @@
     'invalid' => null,
     'triggerClass' => null,
     'value' => null,
+    'size' => neura_config('select', 'size'),
 ])
 
 @php

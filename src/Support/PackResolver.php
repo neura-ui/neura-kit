@@ -386,6 +386,14 @@ class PackResolver
         return (array) ($colors[$element] ?? []);
     }
 
+    public static function dropzoneVariant(?string $variant): array
+    {
+        $variant = $variant ?: self::componentDefault('dropzone', 'variant') ?: 'default';
+        $variants = self::packAll('dropzone', 'variants') ?: Dropzone\Variant::all();
+
+        return $variants[$variant] ?? $variants['default'];
+    }
+
     public static function fileManagerSize(?string $size): array
     {
         $size = $size ?: self::componentDefault('file-manager', 'size') ?: 'md';
@@ -411,6 +419,14 @@ class PackResolver
         $sizes = Filters\Size::default();
 
         return $sizes[$size] ?? $sizes['sm'];
+    }
+
+    public static function filtersVariant(?string $variant): array
+    {
+        $variant = $variant ?: self::componentDefault('filters', 'variant') ?: 'default';
+        $variants = self::packAll('filters', 'variants') ?: Filters\Variant::all();
+
+        return $variants[$variant] ?? $variants['default'];
     }
 
     public static function ruleBuilderSize(?string $size): array

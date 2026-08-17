@@ -11,7 +11,7 @@ class Size extends BasePack
         return [
             'sm' => [
                 'area' => 'px-4 py-5 gap-2.5',
-                'tile' => 'size-9 rounded-lg',
+                'tile' => 'size-9 rounded-full',
                 'glyph' => 'size-4',
                 'text' => 'text-xs',
                 'hint' => 'text-[0.6875rem]',
@@ -26,7 +26,7 @@ class Size extends BasePack
             ],
             'md' => [
                 'area' => 'px-6 py-7 gap-3',
-                'tile' => 'size-11 rounded-xl',
+                'tile' => 'size-12 rounded-full',
                 'glyph' => 'size-5',
                 'text' => 'text-sm',
                 'hint' => 'text-xs',
@@ -41,7 +41,7 @@ class Size extends BasePack
             ],
             'lg' => [
                 'area' => 'px-8 py-10 gap-4',
-                'tile' => 'size-14 rounded-2xl',
+                'tile' => 'size-14 rounded-full',
                 'glyph' => 'size-6',
                 'text' => 'text-base',
                 'hint' => 'text-sm',

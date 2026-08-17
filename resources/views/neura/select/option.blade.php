@@ -1,6 +1,7 @@
 @aware([
     'searchable' => false,
     'multiple' => false,
+    'size' => 'md',
 ])
 
 @props([
@@ -27,6 +28,14 @@
 
     $checkboxColors = PackResolver::inputColor('checkbox');
     $checkboxRounded = PackResolver::rounded(neura_config('checkbox', 'rounded'));
+
+    $optionSizeClasses = match ($size ?? 'md') {
+        'xs' => 'px-2 py-1 text-xs',
+        'sm' => 'px-2 py-1 text-sm',
+        'lg' => 'px-3 py-2 text-base',
+        'xl' => 'px-3.5 py-2.5 text-lg',
+        default => 'px-2.5 py-1.5 text-sm',
+    };
 @endphp
 
 <li tabindex="0" x-bind:data-value="@js($value)" x-bind:data-label="@js($displayLabel)"
@@ -46,7 +55,7 @@
     role="option" data-slot="option"
     class="
         rounded-[calc(var(--popup-round)-var(--popup-padding))] col-span-full grid grid-cols-subgrid items-center
-        focus:bg-active px-2.5 py-1.5 w-full text-sm
+        focus:bg-active w-full {{ $optionSizeClasses }}
         self-center cursor-pointer hover:bg-hover transition-colors duration-100
     ">
     <div class="flex items-center gap-1.5 min-w-0">

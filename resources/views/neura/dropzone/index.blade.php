@@ -21,6 +21,7 @@
     'autoUpload' => true,
     'notify' => false,
     'size' => null,
+    'variant' => null,
     'rounded' => null,
     'shadow' => null,
 ])
@@ -33,8 +34,21 @@
     $sizes = PackResolver::dropzoneSize($size);
     $colors = PackResolver::dropzoneColor();
 
+    $variant = $variant ?: neura_config('dropzone', 'variant');
+    $variantConfig = PackResolver::dropzoneVariant($variant);
+
+    // Avatar mode renders a circular profile-photo picker: the preview image
+    // fills the circle and an overlay hints at "change photo".
+    $isAvatar = $variantConfig['avatar'] ?? false;
+    $showText = $variantConfig['showText'] ?? true;
+    $icon = $variantConfig['icon'] ?? $icon;
+
     $roundedClass = PackResolver::rounded($rounded ?: neura_config('dropzone', 'rounded'));
     $shadowClass = PackResolver::shadow($shadow ?: neura_config('dropzone', 'shadow'));
+
+    // A variant may override the shared rounding / shadow of the drop area.
+    $areaRounded = $variantConfig['rounded'] ?? $roundedClass;
+    $areaShadow = $variantConfig['shadow'] ?? $shadowClass;
 
     $disabled = filled($disabled) && $disabled;
     $multiple = filled($multiple) && $multiple;
@@ -88,13 +102,14 @@
     $previewMode = $previewMode ?: ($multiple && str_starts_with((string) $accept, 'image/') ? 'grid' : 'list');
 
     $areaClasses = Arr::toCssClasses([
-        'group/dz relative flex w-full flex-col items-center justify-center text-center',
-        'border-2 border-dashed outline-none',
-        'transition-[background-color,border-color,box-shadow,transform] duration-200 motion-reduce:transition-none',
-        $roundedClass,
-        $shadowClass,
+        'group/dz relative flex flex-col items-center justify-center text-center',
+        'w-full' => ! $isAvatar,
+        'outline-none',
+        'transition-colors duration-200 motion-reduce:transition-none',
         $sizes['area'],
-        $colors['area']['base'] => ! $disabled,
+        $variantConfig['area'],
+        $areaRounded,
+        $areaShadow,
         $colors['area']['interactive'] => ! $disabled,
         $colors['area']['focus'] => ! $disabled,
         $colors['area']['dragging'] => ! $disabled,
@@ -105,6 +120,7 @@
     $tileClasses = Arr::toCssClasses([
         'flex shrink-0 items-center justify-center transition-all duration-200 motion-reduce:transition-none',
         $sizes['tile'],
+        $variantConfig['tile'],
         $colors['tile']['base'],
         $colors['tile']['hover'] => ! $disabled,
         $colors['tile']['dragging'] => ! $disabled,
@@ -148,7 +164,11 @@
     x-on:drop.prevent="handleDrop($event)"
     x-on:paste="handlePaste($event)"
     :aria-busy="isUploading"
-    {{ $attributes->whereDoesntStartWith('wire:model')->class('w-full') }}
+    @if ($isAvatar)
+        {{ $attributes->whereDoesntStartWith('wire:model')->class([$variantConfig['wrapper']]) }}
+    @else
+        {{ $attributes->whereDoesntStartWith('wire:model')->class(['w-full', $variantConfig['wrapper']]) }}
+    @endif
 >
     {{-- Server rendered validation state, watched by the component so Livewire
          re-renders keep the visual state in sync without polling. --}}
@@ -176,28 +196,77 @@
             x-on:click.stop
         />
 
-        <span class="{{ $tileClasses }}" aria-hidden="true">
-            <neura::icon
-                :name="$icon"
-                class="{{ $sizes['glyph'] }} transition-transform duration-200 group-data-[state=dragging]/dz:-translate-y-0.5 motion-reduce:transition-none"
-            />
-        </span>
+        @if ($isAvatar)
+            {{-- Avatar mode: the picked photo fills the circle. The tile shows
+                 only while no photo has been chosen. --}}
+            <template x-for="preview in previews" :key="preview.uuid">
+                <img
+                    x-show="preview.url"
+                    :src="preview.url"
+                    :alt="preview.name"
+                    loading="lazy"
+                    decoding="async"
+                    class="absolute inset-0 size-full object-cover"
+                />
+            </template>
 
-        <span class="flex flex-col gap-1">
-            <span class="{{ $sizes['text'] }} font-medium transition-colors {{ $colors['text']['title'] }}">
-                <span x-show="!isDragging">
-                    {{ $text ?? neura_trans('dragAndDrop').' '.($multiple ? neura_trans('files') : neura_trans('aFile')).' '.neura_trans('hereOr') }}
-                    @unless ($text)
-                        <span class="{{ $colors['text']['action'] }} underline underline-offset-2">{{ neura_trans('browse') }}</span>
-                    @endunless
-                </span>
-                <span x-show="isDragging" x-cloak class="{{ $colors['text']['action'] }}">
-                    {{ neura_trans('dropToUpload') }}
-                </span>
+            <span class="{{ $tileClasses }}" aria-hidden="true" x-show="previews.length === 0">
+                <neura::icon
+                    :name="$icon"
+                    class="{{ $sizes['glyph'] }} transition-transform duration-200 group-data-[state=dragging]/dz:-translate-y-0.5 motion-reduce:transition-none"
+                />
             </span>
 
-            <span id="{{ $uid }}-hint" class="{{ $sizes['hint'] }} {{ $colors['text']['hint'] }}">{{ $hintText }}</span>
-        </span>
+            {{-- Hover hint to change the photo --}}
+            <span
+                class="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 text-white opacity-0 transition-opacity duration-200 group-hover/dz:opacity-100 group-data-[state=dragging]/dz:opacity-100"
+                aria-hidden="true"
+            >
+                <neura::icon name="camera" class="size-5" />
+            </span>
+
+            @if ($removable && ! $disabled)
+                <button
+                    type="button"
+                    class="absolute -top-1 -end-1 z-10 flex size-6 items-center justify-center rounded-full bg-neutral-900 text-white shadow-sm transition hover:bg-danger-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                    x-bind:disabled="isDisabled"
+                    x-show="previews.length > 0"
+                    :aria-label="@js(neura_trans('removeFile'))"
+                    x-on:click.stop="removeByUuid(previews[0].uuid)"
+                >
+                    <neura::icon name="x-mark" class="size-3.5" />
+                </button>
+            @endif
+
+            <span id="{{ $uid }}-hint" class="sr-only">{{ $hintText }}</span>
+        @else
+            @if ($variantConfig['showTile'] !== false)
+                <span class="{{ $tileClasses }}" aria-hidden="true">
+                    <neura::icon
+                        :name="$icon"
+                        class="{{ $sizes['glyph'] }} transition-transform duration-200 group-data-[state=dragging]/dz:-translate-y-0.5 motion-reduce:transition-none"
+                    />
+                </span>
+            @endif
+
+            @if ($showText)
+                <span class="flex flex-col gap-1">
+                    <span class="{{ $sizes['text'] }} font-medium transition-colors {{ $colors['text']['title'] }}">
+                        <span x-show="!isDragging">
+                            {{ $text ?? neura_trans('dragAndDrop').' '.($multiple ? neura_trans('files') : neura_trans('aFile')).' '.neura_trans('hereOr') }}
+                            @unless ($text)
+                                <span class="{{ $colors['text']['action'] }} underline underline-offset-2">{{ neura_trans('browse') }}</span>
+                            @endunless
+                        </span>
+                        <span x-show="isDragging" x-cloak class="{{ $colors['text']['action'] }}">
+                            {{ neura_trans('dropToUpload') }}
+                        </span>
+                    </span>
+
+                    <span id="{{ $uid }}-hint" class="{{ $sizes['hint'] }} {{ $colors['text']['hint'] }}">{{ $hintText }}</span>
+                </span>
+            @endif
+        @endif
     </label>
 
     {{-- Hidden inputs mirroring the uploaded payloads for classic form submits. --}}
@@ -226,7 +295,7 @@
         </template>
     </ul>
 
-    @if ($preview)
+    @if ($preview && ! $isAvatar)
         <div x-show="previews.length > 0" x-cloak class="mt-3" data-slot="dropzone-previews">
             @if ($multiple)
                 <div class="mb-2 flex items-center justify-between gap-3">

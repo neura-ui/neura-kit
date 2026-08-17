@@ -185,12 +185,14 @@ class NeuraKitConfig
                 'shadow' => self::GLOBAL,
                 'rounded' => self::GLOBAL,
                 'size' => Size::SM->value,
+                'variant' => 'default',
             ],
             'packs' => [
                 'shadows' => Packs\Shadow::class,
                 'rounders' => Packs\Rounded::class,
                 'sizes' => Packs\Filters\Size::class,
                 'colors' => Packs\Input\Color::class,
+                'variants' => Packs\Filters\Variant::class,
             ],
         ], $options);
     }
@@ -453,6 +455,7 @@ class NeuraKitConfig
         return self::mix([
             'default' => [
                 'size' => 'md',
+                'variant' => 'default',
                 'rounded' => self::GLOBAL,
                 'shadow' => self::GLOBAL,
             ],
@@ -461,6 +464,7 @@ class NeuraKitConfig
                 'rounders' => Packs\Rounded::class,
                 'sizes' => Packs\Dropzone\Size::class,
                 'colors' => Packs\Dropzone\Color::class,
+                'variants' => Packs\Dropzone\Variant::class,
             ],
         ], $options);
     }

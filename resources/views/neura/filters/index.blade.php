@@ -8,6 +8,8 @@
     'showClear' => true,
     'disabled' => false,
     'size' => neura_config('filters', 'size'),
+    'variant' => null,
+    'color' => null,
     'rounded' => neura_config('filters', 'rounded'),
     'shadow' => neura_config('filters', 'shadow'),
 ])
@@ -82,9 +84,16 @@
 
     // Design-system tokens resolved from config + packs (mirrors button / input).
     $sizeConfig = PackResolver::filtersSize($size);
+    $variant = $variant ?: neura_config('filters', 'variant');
+    $variantConfig = PackResolver::filtersVariant($variant);
     $roundedClass = PackResolver::rounded($rounded);
     [$roundedStart, $roundedEnd] = PackResolver::roundedSidesLogical($rounded);
-    $shadowClass = PackResolver::shadow($shadow);
+    $shadowClass = PackResolver::shadow($variantConfig['shadow'] ?? $shadow);
+
+    // The `color` prop tints the add-filter and clear-all buttons only;
+    // the chips keep their structural variant surface.
+    $color = $color ?: neura_config('filters', 'color');
+    $buttonColor = $color !== null && $color !== 'default' ? $color : null;
 
     $roundedToken = PackResolver::roundedToken($rounded);
     $roundedValue = match ($roundedToken) {
@@ -103,7 +112,7 @@
     $itemRadius = 'rounded-[calc(var(--nk-filter-round)-0.25rem)]';
 
     $segmentClass = 'flex h-full items-center whitespace-nowrap ' . $sizeConfig['segment'];
-    $panelClass = 'absolute start-0 top-full z-50 mt-1 min-w-44 border border-edge bg-surface-raised backdrop-blur-xl ring-1 ring-black/[0.03] dark:ring-white/[0.04] p-1 ' . $roundedClass . ' ' . $shadowClass;
+    $panelClass = 'absolute start-0 top-full z-50 mt-1 min-w-44 border border-edge backdrop-blur-xl ring-1 ring-black/[0.03] dark:ring-white/[0.04] p-1 ' . $variantConfig['panel'] . ' ' . $roundedClass . ' ' . $shadowClass;
     $itemClass = 'flex w-full cursor-pointer items-center gap-2 px-2.5 py-1.5 text-start text-[13px] leading-snug text-fg transition-colors duration-100 hover:bg-hover ' . $itemRadius;
     $panelSearchClass = 'mb-1 w-full border-0 border-b border-separator bg-transparent px-2 py-1.5 text-sm text-fg placeholder:text-fg-muted focus:outline-none';
 @endphp
@@ -327,7 +336,7 @@
 
     {{-- Active filter chips --}}
     <template x-for="filter in filters" :key="filter.id">
-        <div class="inline-flex {{ $sizeConfig['chip'] }} items-stretch divide-x divide-edge {{ $roundedClass }} border border-edge bg-surface {{ $shadowClass }}">
+        <div class="inline-flex {{ $sizeConfig['chip'] }} items-stretch divide-x divide-edge {{ $roundedClass }} {{ $variantConfig['chip'] }} {{ $shadowClass }}">
             {{-- Field label --}}
             <div class="{{ $segmentClass }} {{ $roundedStart }} text-fg-secondary">
                 @foreach ($normalizedFields as $field)
@@ -482,6 +491,7 @@
         @else
             <neura::button
                 variant="outline"
+                :color="$buttonColor"
                 :size="$size"
                 :rounded="$rounded"
                 icon="funnel"
@@ -602,6 +612,7 @@
     @if ($showClear)
         <neura::button
             variant="ghost"
+            :color="$buttonColor"
             :size="$size"
             :rounded="$rounded"
             x-cloak
