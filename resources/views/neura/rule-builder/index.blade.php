@@ -32,6 +32,8 @@
         'not_contains' => __('notContains'),
         'starts_with' => __('startsWith'),
         'ends_with' => __('endsWith'),
+        'greater_than' => __('greaterThan'),
+        'less_than' => __('lessThan'),
         'empty' => __('isEmpty'),
         'not_empty' => __('isNotEmpty'),
     ];
@@ -40,12 +42,16 @@
         'select' => ['is', 'is_not', 'empty', 'not_empty'],
         'multiselect' => ['is_any_of', 'is_not_any_of', 'includes_all', 'excludes_all', 'empty', 'not_empty'],
         'text' => ['contains', 'not_contains', 'starts_with', 'ends_with', 'is', 'empty', 'not_empty'],
+        'number' => ['is', 'is_not', 'greater_than', 'less_than', 'empty', 'not_empty'],
+        'date' => ['is', 'is_not', 'greater_than', 'less_than', 'empty', 'not_empty'],
     ];
 
     $defaultOperators = [
         'select' => 'is',
         'multiselect' => 'is_any_of',
         'text' => 'contains',
+        'number' => 'is',
+        'date' => 'is',
     ];
 
     $normalizedFields = collect($fields)->map(function ($field) use ($operatorSets, $defaultOperators) {

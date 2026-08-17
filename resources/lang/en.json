@@ -140,6 +140,8 @@
     "notContains": "does not contain",
     "startsWith": "starts with",
     "endsWith": "ends with",
+    "greaterThan": "is greater than",
+    "lessThan": "is less than",
     "isEmpty": "is empty",
     "isNotEmpty": "is not empty",
     "clearAll": "Clear all",

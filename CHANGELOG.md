@@ -6,7 +6,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.1.3] - 2026-08-17
+## [2.1.5] - 2026-08-17
+
+### Added
+
+- **Rule Builder numeric operators**: New `greater_than` and `less_than` operators available on `number` and `date` fields (in addition to `is` / `is_not` / `empty` / `not_empty`), with default operator `is`
+- **Rule Builder number / date fields**: Two new field types — `number` renders a numeric input (`step="any"`, decimal-friendly) and `date` renders a native date picker, both backed by the shared `text` value editor so values stay untouched in `rule.values`
+- **i18n**: EN / FR labels for `greaterThan` (“is greater than” / « est supérieur à ») and `lessThan` (“is less than” / « est inférieur à »)
+
+## [2.1.4] - 2026-08-17
 
 ### Added
 

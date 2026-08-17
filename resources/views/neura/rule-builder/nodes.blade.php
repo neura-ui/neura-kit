@@ -136,6 +136,29 @@
                         />
                     </template>
 
+                    <template x-if="needsValue(item.operator) && fieldConfig(item.field) && fieldConfig(item.field).type === 'number'">
+                        <input
+                            type="number"
+                            step="any"
+                            inputmode="decimal"
+                            class="{{ $controlClass }} min-w-24 rounded-md border border-edge/80 bg-surface text-fg placeholder:text-fg-muted focus:outline-none focus:ring-1 focus:ring-fg/15"
+                            x-bind:placeholder="fieldConfig(item.field)?.placeholder || label('selectValue')"
+                            x-bind:value="item.values[0] ?? ''"
+                            x-on:input="setTextValue(item.id, $event.target.value)"
+                            x-bind:disabled="isDisabled"
+                        />
+                    </template>
+
+                    <template x-if="needsValue(item.operator) && fieldConfig(item.field) && fieldConfig(item.field).type === 'date'">
+                        <input
+                            type="date"
+                            class="{{ $controlClass }} min-w-36 rounded-md border border-edge/80 bg-surface text-fg placeholder:text-fg-muted focus:outline-none focus:ring-1 focus:ring-fg/15"
+                            x-bind:value="item.values[0] ?? ''"
+                            x-on:input="setTextValue(item.id, $event.target.value)"
+                            x-bind:disabled="isDisabled"
+                        />
+                    </template>
+
                     <template x-if="needsValue(item.operator) && fieldConfig(item.field) && fieldConfig(item.field).type === 'select'">
                         <div class="relative">
                             <button type="button" class="{{ $pillClass }}" x-on:click="toggleOpen('val-' + item.id)" x-bind:disabled="isDisabled">

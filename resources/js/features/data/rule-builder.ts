@@ -43,7 +43,7 @@ export type FieldOption = {
 export type FieldConfig = {
     key: string;
     label: string;
-    type: 'select' | 'multiselect' | 'text';
+    type: 'select' | 'multiselect' | 'text' | 'number' | 'date';
     icon?: string | null;
     placeholder?: string | null;
     options: FieldOption[];
