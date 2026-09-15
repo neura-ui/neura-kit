@@ -6,6 +6,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.8] - 2026-09-15
+
+### Fixed
+
+- **Event Calendar mini-calendar locale**: The sidebar `neura::calendar` now receives the parent `locale` prop (previously only `value` / `first-day-of-week` were forwarded, so the mini stayed in English while the main grid respected `fr`)
+- **Translations merge**: `neura_load_translations()` now merges package + app JSON files (package en → package locale → `resource_path` → `lang_path`) instead of returning the first file found — a partial app `fr.json` no longer shadows kit keys such as `contributionsInLastYear` / `weekdayMon`
+- **Contribution Graph i18n / weekdays**: Month headers and cell tooltips use Carbon `translatedFormat` with the app locale; weekday label column widened (`w-9`) and no longer uses `size-*` on the text (that clipped `Lun`/`Mer`/`Ven` into the cell square)
+
 ## [2.1.7] - 2026-08-17
 
 ### Fixed

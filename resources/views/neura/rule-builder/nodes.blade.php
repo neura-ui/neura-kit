@@ -16,6 +16,8 @@
     $nextDepth = $depth + 1;
     $pillClass = $controlClass . ' inline-flex items-center gap-1 rounded-md border border-edge/80 bg-surface-raised/80 text-fg hover:bg-hover disabled:opacity-50';
     $ghostPillClass = $controlClass . ' inline-flex items-center gap-1 rounded-md text-fg-secondary hover:bg-hover hover:text-fg disabled:opacity-50';
+    $ghostTextClass = $controlClass . ' inline-flex items-center gap-1 rounded-md text-fg-secondary';
+    $staticValueClass = $controlClass . ' inline-flex items-center gap-1 rounded-md border border-edge/80 bg-surface-raised/80 text-fg';
 @endphp
 
 <template x-for="(item, index) in {{ $nodesExpr }}" :key="item.id">
@@ -91,7 +93,7 @@
                     x-show="!item.locked"
                 >
                     <div class="relative">
-                        <button type="button" class="{{ $pillClass }}" x-on:click="toggleOpen('field-' + item.id)" x-bind:disabled="isDisabled">
+                        <button type="button" class="{{ $pillClass }}" x-on:click="toggleOpen('field-' + item.id)" x-bind:disabled="isDisabled || fieldsList.length === 0">
                             <span x-text="fieldConfig(item.field)?.label ?? label('selectField')"></span>
                             <neura::icon name="chevron-down" class="size-3 text-fg-muted" />
                         </button>
@@ -108,23 +110,30 @@
                         </div>
                     </div>
 
-                    <div class="relative">
-                        <button type="button" class="{{ $ghostPillClass }}" x-on:click="toggleOpen('op-' + item.id)" x-bind:disabled="isDisabled">
-                            <span x-text="operatorLabel(item.operator)"></span>
-                            <neura::icon name="chevron-down" class="size-3 text-fg-muted" />
-                        </button>
-                        <div
-                            x-show="open === 'op-' + item.id" x-cloak x-on:click.outside="closeOpen()"
-                            class="absolute start-0 top-full z-50 mt-1 min-w-44 overflow-hidden rounded-lg border border-edge bg-surface-raised p-1 shadow-lg"
-                        >
-                            <template x-for="op in (fieldConfig(item.field)?.operators ?? [])" :key="op">
-                                <button type="button" class="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-start text-sm text-fg hover:bg-hover" x-on:click="setOperator(item.id, op); closeOpen()">
-                                    <span x-text="operatorLabel(op)"></span>
-                                    <neura::icon name="check" class="ms-auto size-3.5" x-show="item.operator === op" />
-                                </button>
-                            </template>
+                    {{-- One operator (or an unresolved field): plain text, nothing to pick from --}}
+                    <template x-if="operatorsFor(item.field).length < 2">
+                        <span class="{{ $ghostTextClass }}" x-text="operatorLabel(item.operator)"></span>
+                    </template>
+
+                    <template x-if="operatorsFor(item.field).length > 1">
+                        <div class="relative">
+                            <button type="button" class="{{ $ghostPillClass }}" x-on:click="toggleOpen('op-' + item.id)" x-bind:disabled="isDisabled">
+                                <span x-text="operatorLabel(item.operator)"></span>
+                                <neura::icon name="chevron-down" class="size-3 text-fg-muted" />
+                            </button>
+                            <div
+                                x-show="open === 'op-' + item.id" x-cloak x-on:click.outside="closeOpen()"
+                                class="absolute start-0 top-full z-50 mt-1 min-w-44 overflow-hidden rounded-lg border border-edge bg-surface-raised p-1 shadow-lg"
+                            >
+                                <template x-for="op in operatorsFor(item.field)" :key="op">
+                                    <button type="button" class="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-start text-sm text-fg hover:bg-hover" x-on:click="setOperator(item.id, op); closeOpen()">
+                                        <span x-text="operatorLabel(op)"></span>
+                                        <neura::icon name="check" class="ms-auto size-3.5" x-show="item.operator === op" />
+                                    </button>
+                                </template>
+                            </div>
                         </div>
-                    </div>
+                    </template>
 
                     <template x-if="needsValue(item.operator) && fieldConfig(item.field) && fieldConfig(item.field).type === 'text'">
                         <input
@@ -160,14 +169,16 @@
                         />
                     </template>
 
-                    <template x-if="needsValue(item.operator) && fieldConfig(item.field) && fieldConfig(item.field).type === 'select'">
+                    {{-- Single option (or none): nothing to choose, so render the value as text --}}
+                    <template x-if="needsValue(item.operator) && fieldConfig(item.field)?.type === 'select' && optionsFor(item.field).length < 2">
                         <span
-                            class="{{ $controlClass }} inline-flex items-center gap-1 rounded-md border border-edge/80 bg-surface-raised/80 text-fg"
-                            x-show="(fieldConfig(item.field)?.options ?? []).length === 1"
+                            class="{{ $staticValueClass }}"
                             x-text="item.values.length ? optionLabel(item.field, item.values[0]) : label('selectValue')"
                         ></span>
+                    </template>
 
-                        <div class="relative" x-show="(fieldConfig(item.field)?.options ?? []).length > 1">
+                    <template x-if="needsValue(item.operator) && fieldConfig(item.field)?.type === 'select' && optionsFor(item.field).length > 1">
+                        <div class="relative">
                             <button type="button" class="{{ $pillClass }}" x-on:click="toggleOpen('val-' + item.id)" x-bind:disabled="isDisabled">
                                 <span x-text="item.values.length ? optionLabel(item.field, item.values[0]) : label('selectValue')"></span>
                                 <neura::icon name="chevron-down" class="size-3 text-fg-muted" />
@@ -176,7 +187,7 @@
                                 x-show="open === 'val-' + item.id" x-cloak x-on:click.outside="closeOpen()"
                                 class="absolute start-0 top-full z-50 mt-1 max-h-56 min-w-44 overflow-auto rounded-lg border border-edge bg-surface-raised p-1 shadow-lg"
                             >
-                                <template x-for="opt in (fieldConfig(item.field)?.options ?? [])" :key="String(opt.value)">
+                                <template x-for="opt in optionsFor(item.field)" :key="String(opt.value)">
                                     <button type="button" class="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-start text-sm text-fg hover:bg-hover" x-on:click="setSelectValue(item.id, opt.value); closeOpen()">
                                         <span x-text="opt.label"></span>
                                         <neura::icon name="check" class="ms-auto size-3.5" x-show="item.values.includes(opt.value)" />
@@ -196,7 +207,7 @@
                                     </button>
                                 </span>
                             </template>
-                            <div class="relative" x-show="(fieldConfig(item.field)?.options ?? []).length > 1">
+                            <div class="relative" x-show="optionsFor(item.field).length > 0">
                                 <button
                                     type="button"
                                     class="{{ $chipClass }} inline-flex items-center justify-center rounded-md border border-dashed border-edge text-fg-muted hover:bg-hover hover:text-fg disabled:opacity-40"
@@ -209,7 +220,7 @@
                                     x-show="open === 'multi-' + item.id" x-cloak x-on:click.outside="closeOpen()"
                                     class="absolute start-0 top-full z-50 mt-1 max-h-56 min-w-44 overflow-auto rounded-lg border border-edge bg-surface-raised p-1 shadow-lg"
                                 >
-                                    <template x-for="opt in (fieldConfig(item.field)?.options ?? [])" :key="String(opt.value)">
+                                    <template x-for="opt in optionsFor(item.field)" :key="String(opt.value)">
                                         <button type="button" class="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-start text-sm text-fg hover:bg-hover" x-on:click="toggleMultiValue(item.id, opt.value)">
                                             <span
                                                 class="flex size-4 shrink-0 items-center justify-center rounded border border-edge"

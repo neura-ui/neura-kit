@@ -66,7 +66,7 @@
                         type="button"
                         class="{{ $pillClass }}"
                         x-on:click="toggleOpen('act-{{ $branch }}-' + action.id)"
-                        x-bind:disabled="isDisabled"
+                        x-bind:disabled="isDisabled || actions.length === 0"
                     >
                         <span x-text="actionDef(action.type)?.label ?? label('selectAction')"></span>
                         <neura::icon name="chevron-down" class="size-3 text-fg-muted" />
@@ -108,7 +108,7 @@
                                     type="button"
                                     class="{{ $pillClass }}"
                                     x-on:click="toggleOpen('param-{{ $branch }}-' + action.id + '-' + param.key)"
-                                    x-bind:disabled="isDisabled"
+                                    x-bind:disabled="isDisabled || (param.options || []).length === 0"
                                 >
                                     <span x-text="(param.options || []).find(o => o.value === action.params[param.key])?.label || param.label"></span>
                                     <neura::icon name="chevron-down" class="size-3 text-fg-muted" />

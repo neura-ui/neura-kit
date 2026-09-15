@@ -42,6 +42,13 @@
         default => 'size-2.5',
     };
 
+    // Weekday labels share cell height but must not use size-* (that clips text to a square).
+    $weekdayRow = match ($size) {
+        'sm' => 'h-2',
+        'lg' => 'h-3.5',
+        default => 'h-2.5',
+    };
+
     $gap = match ($size) {
         'sm' => 'gap-0.5',
         'lg' => 'gap-1',
@@ -119,7 +126,7 @@
             @if ($showMonths)
                 <div class="flex {{ $gap }}">
                     @if ($showWeekdays)
-                        <div class="w-7 shrink-0" aria-hidden="true"></div>
+                        <div class="w-9 shrink-0" aria-hidden="true"></div>
                     @endif
                     <div class="flex {{ $gap }} font-mono text-[10px] leading-none text-fg-muted">
                         @foreach ($graph['monthLabels'] as $label)
@@ -134,11 +141,11 @@
             <div class="flex {{ $gap }}">
                 @if ($showWeekdays)
                     <div
-                        class="flex w-7 shrink-0 flex-col justify-between py-px font-mono text-[10px] leading-none text-fg-muted"
+                        class="flex w-9 shrink-0 flex-col justify-between py-px font-mono text-[10px] leading-none text-fg-muted"
                         aria-hidden="true"
                     >
                         @foreach ($weekdayLabels as $label)
-                            <span class="{{ $cell }} flex items-center">{{ $label }}</span>
+                            <span class="{{ $weekdayRow }} flex items-center whitespace-nowrap">{{ $label }}</span>
                         @endforeach
                     </div>
                 @endif
@@ -154,7 +161,9 @@
                                     $title = $day['inRange']
                                         ? neura_trans('contributionsOnDate', [
                                             'count' => number_format($day['count']),
-                                            'date' => \Carbon\Carbon::parse($day['date'])->format('M j, Y'),
+                                            'date' => \Carbon\Carbon::parse($day['date'])
+                                                ->locale(app()->getLocale())
+                                                ->translatedFormat('j M Y'),
                                         ])
                                         : null;
                                 @endphp

@@ -30,23 +30,34 @@ if (! function_exists('neura_trans')) {
 if (! function_exists('neura_load_translations')) {
     function neura_load_translations(string $locale): array
     {
+        // Package first (base), then app overrides. Merge every existing file —
+        // first-win previously let a partial app JSON shadow the full kit catalog.
         $paths = [
-            resource_path("lang/{$locale}.json"),
-            resource_path('lang/en.json'),
-            __DIR__."/../resources/lang/{$locale}.json",
             __DIR__.'/../resources/lang/en.json',
+            __DIR__."/../resources/lang/{$locale}.json",
+            resource_path('lang/en.json'),
+            resource_path("lang/{$locale}.json"),
         ];
 
-        foreach ($paths as $path) {
-            if (file_exists($path)) {
-                $translations = json_decode(file_get_contents($path), true);
-                if (json_last_error() === JSON_ERROR_NONE && is_array($translations)) {
-                    return $translations;
-                }
+        if (function_exists('lang_path')) {
+            $paths[] = lang_path('en.json');
+            $paths[] = lang_path("{$locale}.json");
+        }
+
+        $merged = [];
+
+        foreach (array_unique($paths) as $path) {
+            if (! is_file($path)) {
+                continue;
+            }
+
+            $translations = json_decode(file_get_contents($path), true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($translations)) {
+                $merged = array_merge($merged, $translations);
             }
         }
 
-        return [];
+        return $merged;
     }
 }
 

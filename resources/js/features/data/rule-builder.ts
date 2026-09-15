@@ -309,6 +309,14 @@ if (typeof window !== 'undefined') {
                         return this.fieldConfigs[key] ?? null;
                     },
 
+                    operatorsFor(key: string): string[] {
+                        return this.fieldConfig(key)?.operators ?? [];
+                    },
+
+                    optionsFor(key: string): FieldOption[] {
+                        return this.fieldConfig(key)?.options ?? [];
+                    },
+
                     actionDef(type: string): ActionDef | null {
                         return this.actionMap[type] ?? null;
                     },

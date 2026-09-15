@@ -169,7 +169,7 @@ class ContributionGraphBuilder
 
             // Show when this week contains the 1st, or when no month has been shown yet.
             if ($firstOfMonth !== null || $lastMonth === null) {
-                $labels[] = $anchor->format('M');
+                $labels[] = self::monthAbbrev($anchor);
                 $lastMonth = $monthKey;
 
                 continue;
@@ -177,7 +177,7 @@ class ContributionGraphBuilder
 
             // Month rolled over mid-week without a day-1 cell in this column.
             if ($firstInRange !== null && $firstInRange->format('Y-m') !== $lastMonth) {
-                $labels[] = $firstInRange->format('M');
+                $labels[] = self::monthAbbrev($firstInRange);
                 $lastMonth = $firstInRange->format('Y-m');
 
                 continue;
@@ -187,5 +187,12 @@ class ContributionGraphBuilder
         }
 
         return $labels;
+    }
+
+    private static function monthAbbrev(Carbon $date): string
+    {
+        $locale = function_exists('app') ? (string) app()->getLocale() : 'en';
+
+        return $date->copy()->locale($locale)->translatedFormat('M');
     }
 }

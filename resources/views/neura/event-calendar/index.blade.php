@@ -473,8 +473,12 @@
         @if ($showMiniCalendar)
             <div class="hidden w-72 shrink-0 flex-col gap-4 overflow-y-auto border-e border-edge p-3 lg:flex">
                 <div class="flex justify-center" x-on:date-selected="goToDate($event.detail.date)">
-                    <neura::calendar :value="$initialKey" :first-day-of-week="$firstDayOfWeek"
-                        class="[&>div]:border-0 [&>div]:bg-transparent [&>div]:p-0 [&>div]:shadow-none" />
+                    <neura::calendar
+                        :value="$initialKey"
+                        :locale="$locale"
+                        :first-day-of-week="$firstDayOfWeek"
+                        class="[&>div]:border-0 [&>div]:bg-transparent [&>div]:p-0 [&>div]:shadow-none"
+                    />
                 </div>
 
                 @isset($sidebar)
