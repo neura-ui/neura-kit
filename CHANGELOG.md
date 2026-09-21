@@ -6,6 +6,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.9] - 2026-09-21
+
+### Fixed
+
+- **Select nested Livewire binding**: `neura::select` no longer strips `wire:model` / `x-model` and syncs via `this.$wire.set()` — that could resolve `$wire` to the parent `modal-manager` inside nested modals (`PublicPropertyNotFoundException`). Binding now uses `x-modelable="state"` with native `wire:model` / `x-model` on the root so Livewire attaches to the owning component
+
 ## [2.1.8] - 2026-09-15
 
 ### Fixed

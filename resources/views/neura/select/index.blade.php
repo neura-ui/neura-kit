@@ -17,16 +17,14 @@
 ])
 
 @php
-    // Extract value from attributes if passed as HTML attribute (e.g., value="{{ ... }}")
     $defaultValue = $value ?? $attributes->get('value');
-    
-    $wireModel = null;
-    foreach ($attributes->getAttributes() as $key => $value) {
-        if (str_starts_with($key, 'wire:model')) {
-            $wireModel = $value;
-            break;
-        }
-    }
+
+    // Plain Alpine state — Livewire/Alpine bind via x-modelable + wire:model / x-model on the root.
+    // Avoid this.$wire.set(): in nested Livewire (modal-manager → modal), Alpine's $wire can
+    // resolve to the parent manager and throw PublicPropertyNotFoundException.
+    $initialState = $multiple
+        ? (is_array($defaultValue) ? $defaultValue : ($defaultValue !== null ? [$defaultValue] : []))
+        : $defaultValue;
 @endphp
 
 <div x-data="{
@@ -44,56 +42,7 @@
     isSearchable: @js($searchable),
     searchPlaceholder: @js($searchPlaceholder ?? ucfirst(neura_trans('search'))),
     placeholder: @js($placeholder ?? ucfirst(neura_trans('select'))),
-    wireProperty: @js($wireModel),
-    defaultValue: @js($defaultValue),
-    // FIX: Initialize internal state for x-model
-    _internalState: @js($multiple ? (is_array($defaultValue) ? $defaultValue : ($defaultValue !== null ? [$defaultValue] : [])) : $defaultValue),
-
-    get state() {
-        // Check if we have a wire:model property
-        if (this.wireProperty && this.$wire) {
-            const value = this.$wire.get(this.wireProperty);
-            if (this.isMultiple) {
-                // For multiple, return array if exists, otherwise use default value
-                if (Array.isArray(value) && value.length > 0) {
-                    return value;
-                }
-                if (value && !Array.isArray(value)) {
-                    return [value];
-                }
-                // Use default value if provided
-                if (this.defaultValue !== null && this.defaultValue !== undefined) {
-                    return Array.isArray(this.defaultValue) ? this.defaultValue : [this.defaultValue];
-                }
-                return [];
-            }
-            // If wire model has a value, use it; otherwise use default value
-            return value !== null && value !== undefined ? value : (this.defaultValue ?? null);
-        }
-
-        // FIX: Fall back to internal state for x-model binding
-        // If internal state is null/undefined and we have a default value, use it
-        if (this._internalState === null || this._internalState === undefined) {
-            if (this.isMultiple) {
-                if (this.defaultValue !== null && this.defaultValue !== undefined) {
-                    return Array.isArray(this.defaultValue) ? this.defaultValue : [this.defaultValue];
-                }
-                return [];
-            }
-            return this.defaultValue ?? null;
-        }
-        return this._internalState;
-    },
-
-    set state(value) {
-        // Set internal state
-        this._internalState = value;
-
-        // Also set wire property if it exists
-        if (this.wireProperty && this.$wire) {
-            this.$wire.set(this.wireProperty, value);
-        }
-    },
+    state: @js($initialState),
 
     init() {
         // Global click handler to close when clicking outside
@@ -130,14 +79,12 @@
             }, 50);
         });
 
-        // Watch for Livewire wire model value changes
-        if (this.wireProperty && this.$wire) {
-            this.$watch(() => this.$wire.get(this.wireProperty), () => {
-                this.$nextTick(() => {
-                    this.rebuildOptions();
-                });
+        // Rebuild when bound state changes (wire:model / x-model via x-modelable)
+        this.$watch('state', () => {
+            this.$nextTick(() => {
+                this.rebuildOptions();
             });
-        }
+        });
 
         // Listen for Livewire updates and rebuild options immediately
         if (typeof Livewire !== 'undefined' && Livewire.hook) {
@@ -469,10 +416,11 @@
         return this.search && this.search.trim().length > 0;
     }
 }"
+    x-modelable="state"
     x-on:keydown.escape="open && (activePanel ? backPanel() : close())"
     x-bind:style="'--select-popup-w: ' + (anchorWidth ? anchorWidth + 'px' : '100%')"
     x-bind:class="open ? 'z-50' : ''"
-    {{ $attributes->whereDoesntStartWith(['wire:model', 'x-model', 'value', 'name', 'label', 'triggerLabel', 'placeholder', 'searchable', 'searchPlaceholder', 'multiple', 'clearable', 'disabled', 'icon', 'iconAfter', 'invalid', 'triggerClass'])->class([
+    {{ $attributes->whereDoesntStartWith(['value', 'name', 'label', 'triggerLabel', 'placeholder', 'searchable', 'searchPlaceholder', 'multiple', 'clearable', 'disabled', 'icon', 'iconAfter', 'invalid', 'triggerClass'])->class([
         'relative [--popup-round:var(--radius-box)] [--popup-padding:--spacing(1)]',
         'dark:border-red-400! dark:shadow-red-400 text-red-400! placeholder:text-red-400!' => $invalid,
     ]) }}>
