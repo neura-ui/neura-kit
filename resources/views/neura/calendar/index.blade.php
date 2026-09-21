@@ -40,6 +40,24 @@
         $value = $value ?? '';
     }
 
+    // Normalize date-only strings (strip time / timezone from Carbon ISO datetimes)
+    $toDateStr = static function ($v) {
+        if (! is_string($v) || $v === '') {
+            return $v;
+        }
+        return preg_match('/^(\d{4}-\d{2}-\d{2})/', $v, $m) ? $m[1] : $v;
+    };
+    if ($range && is_array($value)) {
+        $value = [
+            'start' => $toDateStr($value['start'] ?? null),
+            'end' => $toDateStr($value['end'] ?? null),
+        ];
+    } elseif ($multiple && is_array($value)) {
+        $value = array_values(array_filter(array_map($toDateStr, $value)));
+    } elseif (is_string($value)) {
+        $value = $toDateStr($value) ?? '';
+    }
+
     $monthsCount = max(1, min(4, (int) $months));
     $captionLayout = in_array($captionLayout, ['dropdown', 'dropdowns'], true) && $monthsCount === 1
         ? 'dropdown'
@@ -90,6 +108,8 @@
         ready: false,
 
         init() {
+            this.selectedDate = this.normalizeValue(this.selectedDate);
+
             let anchor = this.parseDate(this.anchorDate()) ?? new Date();
 
             {{-- Without a selection, keep the initial view inside the allowed bounds --}}
@@ -112,35 +132,35 @@
             this.$watch('currentMonth', () => this.buildMonths());
             this.$watch('currentYear', () => this.buildMonths());
 
+            // Keep grid in sync; x-modelable handles wire:model / x-model (avoid $wire.set).
             this.$watch('selectedDate', (value) => {
-                this.buildMonths();
-                this.$root?._x_model?.set(value);
-
-                let wireModel = this?.$root.getAttributeNames().find(n => n.startsWith('wire:model'));
-                if (this.$wire && wireModel) {
-                    let prop = this.$root.getAttribute(wireModel);
-                    this.$wire.set(prop, value, wireModel?.includes('.live'));
+                const normalized = this.normalizeValue(value);
+                if (JSON.stringify(normalized) !== JSON.stringify(value)) {
+                    this.selectedDate = normalized;
+                    return;
                 }
+                this.buildMonths();
             });
         },
 
-        syncFromModel() {
-            const model = this.$root?._x_model;
-            if (!model) return;
+        toDateStr(value) {
+            if (! value || typeof value !== 'string') return value;
+            const m = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+            return m ? (m[1] + '-' + m[2] + '-' + m[3]) : value;
+        },
 
-            let value;
-            try { value = model.get(); } catch (e) { return; }
-            if (value === undefined) return;
-
-            if (this.isRange) value = value ?? { start: null, end: null };
-            else if (this.isMultiple) value = value ?? [];
-            else value = value ?? '';
-
-            if (JSON.stringify(value) === JSON.stringify(this.selectedDate)) return;
-
-            this.selectedDate = value;
-            const focus = this.parseDate(this.anchorDate());
-            if (focus) this.showMonth(focus.getFullYear(), focus.getMonth());
+        normalizeValue(value) {
+            if (this.isRange) {
+                if (! value || typeof value !== 'object') return { start: null, end: null };
+                return {
+                    start: value.start ? this.toDateStr(value.start) : null,
+                    end: value.end ? this.toDateStr(value.end) : null,
+                };
+            }
+            if (this.isMultiple) {
+                return (Array.isArray(value) ? value : []).map(v => this.toDateStr(v)).filter(Boolean);
+            }
+            return value ? this.toDateStr(value) : '';
         },
 
         anchorDate() {
@@ -549,9 +569,9 @@
 
         parseDate(dateStr) {
             if (! dateStr || typeof dateStr !== 'string') return null;
-            const [year, month, day] = dateStr.split('-').map(Number);
-            if (! year || ! month || ! day) return null;
-            const date = new Date(year, month - 1, day);
+            const m = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (! m) return null;
+            const date = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
             return isNaN(date) ? null : date;
         },
 
@@ -591,7 +611,7 @@
             this.emitSelection();
         }
     }"
-    x-effect="syncFromModel()"
+    x-modelable="selectedDate"
     {{ $attributes->merge(['class' => 'select-none w-fit' . ($disabled ? ' opacity-50 cursor-not-allowed' : '')]) }}
 >
     @if ($name)

@@ -13,33 +13,54 @@
 ])
 
 @php
-    $wireModel = $attributes->wire('model');
+    if ($range) {
+        $initialValue = $value ?? ['start' => null, 'end' => null];
+    } elseif ($multiple) {
+        $initialValue = $value ?? [];
+    } else {
+        $initialValue = $value ?? '';
+    }
 @endphp
 
+{{--
+    Bind via x-modelable + native wire:model / x-model (do not use @entangle or $wire.set).
+    displayValue must parse YYYY-MM-DD as a local calendar date — new Date('YYYY-MM-DD') is UTC
+    and shifts the day in non-UTC timezones.
+--}}
 <div
     x-data="{
-        value: @if($wireModel->value()) @entangle($wireModel) @else {{ json_encode($value) }} @endif,
+        value: @js($initialValue),
         range: {{ $range ? 'true' : 'false' }},
         multiple: {{ $multiple ? 'true' : 'false' }},
         locale: '{{ $locale }}',
         open: false,
 
+        toDateStr(value) {
+            if (! value || typeof value !== 'string') return value;
+            const m = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+            return m ? (m[1] + '-' + m[2] + '-' + m[3]) : value;
+        },
+
+        formatDateLabel(dateStr) {
+            if (! dateStr) return '';
+            const normalized = this.toDateStr(dateStr);
+            const m = String(normalized).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+            if (! m) {
+                const fallback = new Date(dateStr);
+                return isNaN(fallback) ? dateStr : fallback.toLocaleDateString(this.locale, { year: 'numeric', month: 'short', day: 'numeric' });
+            }
+            const date = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+            return date.toLocaleDateString(this.locale, { year: 'numeric', month: 'short', day: 'numeric' });
+        },
+
         get displayValue() {
-            if (!this.value) return '';
-            
-            const options = { year: 'numeric', month: 'short', day: 'numeric' };
-            
-            const format = (dateStr) => {
-                if (!dateStr) return '';
-                const date = new Date(dateStr);
-                return isNaN(date) ? dateStr : date.toLocaleDateString(this.locale, options);
-            };
+            if (! this.value) return '';
 
             if (this.range) {
                 if (typeof this.value === 'object') {
-                    const start = this.value.start ? format(this.value.start) : '';
-                    const end = this.value.end ? format(this.value.end) : '';
-                    if (start && end) return `${start} - ${end}`;
+                    const start = this.value.start ? this.formatDateLabel(this.value.start) : '';
+                    const end = this.value.end ? this.formatDateLabel(this.value.end) : '';
+                    if (start && end) return start + ' - ' + end;
                     if (start) return start;
                 }
                 return '';
@@ -47,20 +68,16 @@
 
             if (this.multiple) {
                 if (Array.isArray(this.value)) {
-                    return this.value.map(d => format(d)).join(', ');
+                    return this.value.map(d => this.formatDateLabel(d)).join(', ');
                 }
                 return '';
             }
 
-            return format(this.value);
+            return this.formatDateLabel(this.value);
         },
 
         toggle() {
-            if (this.open) {
-                this.open = false;
-            } else {
-                this.open = true;
-            }
+            this.open = ! this.open;
         },
 
         hide() {
@@ -68,8 +85,7 @@
         }
     }"
     x-modelable="value"
-    {{ $attributes->whereDoesntStartWith(['wire:model', 'class']) }}
-    class="w-full relative"
+    {{ $attributes->whereDoesntStartWith(['class'])->merge(['class' => 'w-full relative']) }}
     @click.away="hide()"
     @keydown.escape="hide()"
 >
@@ -81,7 +97,7 @@
         :disabled="$disabled"
         right-icon="calendar"
         class="cursor-pointer"
-        :invalid="$errors->has($name)"
+        :invalid="$name && $errors->has($name)"
     />
 
     <div
