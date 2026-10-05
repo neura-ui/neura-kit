@@ -22,6 +22,13 @@ type OutputOptions = {
  */
 const FEATURE_CHUNKS: ReadonlyArray<{ name: string; match: (path: string) => boolean }> = [
   {
+    // Shared helpers must not land inside a feature chunk. Forms and widgets
+    // both import them; if Rollup parks one in each chunk they initialize
+    // each other and hit a temporal dead zone (`Cannot access 'U' before initialization`).
+    name: 'neura-runtime',
+    match: (path) => path.includes('/shared/') || path.includes('/runtime/'),
+  },
+  {
     name: 'neura-editor',
     match: (path) => path.includes('/features/editor/'),
   },
