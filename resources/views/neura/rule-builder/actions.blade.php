@@ -17,8 +17,9 @@
             class="relative flex gap-2"
             x-bind:class="{
                 'opacity-50': isDragging(action.id),
-                'ring-1 ring-fg/15 rounded-xl': isDragOver(action.id),
+                'rounded-xl ring-1 ring-fg/20': isDragOver(action.id),
             }"
+            x-on:dragenter="onDragOver('{{ $dragKind }}', '{{ $branch }}', action.id, $event)"
             x-on:dragover="onDragOver('{{ $dragKind }}', '{{ $branch }}', action.id, $event)"
             x-on:drop="onDrop('{{ $dragKind }}', '{{ $branch }}', action.id, $event)"
         >
@@ -31,16 +32,16 @@
                 ></div>
 
                 <div class="relative z-[1] mt-2 flex size-7 items-center justify-center">
-                    <button
-                        type="button"
-                        class="cursor-grab text-fg-muted/70 hover:text-fg active:cursor-grabbing disabled:opacity-40"
+                    <div
+                        class="flex size-7 cursor-grab items-center justify-center text-fg-muted/70 hover:text-fg active:cursor-grabbing"
+                        role="button"
                         draggable="true"
+                        x-show="!isDisabled"
                         x-on:dragstart="onDragStart('{{ $dragKind }}', '{{ $branch }}', action.id, $event)"
                         x-on:dragend="onDragEnd()"
-                        x-bind:disabled="isDisabled"
                         x-bind:title="label('dragToReorder')"
                     >
-                        <svg class="{{ $iconClass }}" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                        <svg class="{{ $iconClass }} pointer-events-none" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
                             <circle cx="5" cy="3.5" r="1.1" />
                             <circle cx="11" cy="3.5" r="1.1" />
                             <circle cx="5" cy="8" r="1.1" />
@@ -48,7 +49,7 @@
                             <circle cx="5" cy="12.5" r="1.1" />
                             <circle cx="11" cy="12.5" r="1.1" />
                         </svg>
-                    </button>
+                    </div>
                 </div>
 
                 <span

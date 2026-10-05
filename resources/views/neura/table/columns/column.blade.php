@@ -39,12 +39,12 @@
 
 <div class="{{ $alignClass }}">
     @if ($isEmpty && $placeholder)
-        <span class="text-neutral-400 dark:text-neutral-500 text-xs">{{ $placeholder }}</span>
+        <span class="nk-table-muted">{{ $placeholder }}</span>
     @elseif ($isEmpty)
-        <span class="text-neutral-300 dark:text-neutral-600 text-xs">—</span>
+        <span class="nk-table-dash">—</span>
     @else
         <div class="inline-flex items-center gap-1.5 max-w-full">
-            <span class="text-neutral-900 dark:text-neutral-100 text-[13px] {{ $truncate ? 'truncate' : '' }}"
+            <span class="nk-table-value {{ $truncate ? 'truncate' : '' }}"
                 @if($truncate) style="max-width: {{ $truncateLength * 0.55 }}em;" title="{{ $displayValue }}" @endif
             >{{ $displayValue }}</span>
 
@@ -57,10 +57,10 @@
                         copied = true;
                         setTimeout(() => copied = false, 1500);
                     "
-                    class="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-100"
+                    class="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-fast ease-standard"
                 >
                     <template x-if="!copied">
-                        <neura::icon name="clipboard-document" class="size-3.5 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors" />
+                        <neura::icon name="clipboard-document" class="size-3.5 text-fg-muted hover:text-fg transition-colors" />
                     </template>
                     <template x-if="copied">
                         <neura::icon name="check" class="size-3.5 text-emerald-500" />

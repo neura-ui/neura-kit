@@ -535,17 +535,18 @@ if (typeof window !== 'undefined') {
 
                     onDragOver(kind: DragKind, parentId: string, overId: string, event: DragEvent) {
                         if (!this.drag.nodeId || this.drag.kind !== kind || this.drag.parentId !== parentId) return;
-                        if (this.drag.nodeId === overId) return;
                         event.preventDefault();
+                        if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+                        if (this.drag.nodeId === overId) return;
                         this.drag.overId = overId;
                     },
 
                     onDrop(kind: DragKind, parentId: string, overId: string, event: DragEvent) {
-                        event.preventDefault();
                         if (!this.drag.nodeId || this.drag.kind !== kind || this.drag.parentId !== parentId) {
-                            this.onDragEnd();
                             return;
                         }
+                        event.preventDefault();
+                        event.stopPropagation();
                         if (this.drag.nodeId === overId) {
                             this.onDragEnd();
                             return;

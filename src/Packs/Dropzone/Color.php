@@ -30,15 +30,15 @@ class Color extends BasePack
             ],
 
             'tile' => [
-                'base' => 'bg-surface-inset text-fg-muted',
-                'hover' => 'group-hover/dz:text-fg-secondary',
+                'base' => 'bg-transparent text-fg',
+                'hover' => 'group-hover/dz:text-fg',
                 'dragging' => 'group-data-[state=dragging]/dz:bg-primary-500/10 group-data-[state=dragging]/dz:text-primary-600 dark:group-data-[state=dragging]/dz:bg-primary-500/15 dark:group-data-[state=dragging]/dz:text-primary-400',
                 'invalid' => 'group-data-[state=invalid]/dz:bg-danger-500/10 group-data-[state=invalid]/dz:text-danger-600 dark:group-data-[state=invalid]/dz:bg-danger-500/15 dark:group-data-[state=invalid]/dz:text-danger-400',
             ],
 
             'text' => [
-                'title' => 'text-fg-secondary',
-                'action' => 'text-primary-600 dark:text-primary-400',
+                'title' => 'text-fg',
+                'action' => 'text-fg font-medium',
                 'hint' => 'text-fg-muted group-data-[state=invalid]/dz:text-danger-500 dark:group-data-[state=invalid]/dz:text-danger-400',
             ],
 

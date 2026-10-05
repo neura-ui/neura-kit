@@ -16,7 +16,7 @@
     @if($tdWidth) style="width: {{ $tdWidth }}px; min-width: {{ $tdWidth }}px;" @endif
 >
     @if ($isEditable && $editType === 'boolean')
-        <div class="{{ $tdPadding }} cursor-pointer select-none hover:bg-neutral-50 dark:hover:bg-white/[0.02] transition-colors flex items-center justify-between gap-2"
+        <div class="{{ $tdPadding }} cursor-pointer select-none hover:bg-hover transition-colors flex items-center justify-between gap-2"
             wire:click="updateField({{ Js::from($rowId) }}, '{{ $column->key }}', {{ $cellValue ? 'false' : 'true' }})"
         >
             <x-dynamic-component
@@ -29,7 +29,7 @@
                 :html="$column->html"
                 :extraAttributes="$column->extraAttributes"
             />
-            <neura::icon name="pencil-square" variant="micro" class="size-3 shrink-0 text-neutral-300 dark:text-neutral-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <neura::icon name="pencil-square" variant="micro" class="size-3 shrink-0 text-fg-disabled opacity-0 group-hover:opacity-100 transition-opacity" />
         </div>
     @elseif ($isEditable)
         <div x-data="{
@@ -57,7 +57,7 @@
         }">
             <div x-show="!editing"
                 @click="start()"
-                class="{{ $tdPadding }} cursor-text rounded-sm hover:bg-primary-50/40 dark:hover:bg-primary-500/[0.04] transition-colors flex items-center justify-between gap-2"
+                class="{{ $tdPadding }} cursor-text rounded-sm hover:bg-hover transition-colors flex items-center justify-between gap-2"
             >
                 <x-dynamic-component
                     :component="$column->component"
@@ -69,7 +69,7 @@
                     :html="$column->html"
                     :extraAttributes="$column->extraAttributes"
                 />
-                <neura::icon name="pencil-square" variant="micro" class="size-3 shrink-0 text-neutral-300 dark:text-neutral-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <neura::icon name="pencil-square" variant="micro" class="size-3 shrink-0 text-fg-disabled opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
 
             <div x-show="editing" x-cloak class="px-1.5 py-1">
@@ -80,7 +80,7 @@
                         @change="save()"
                         @keydown.escape.prevent="cancel()"
                         @blur="save()"
-                        class="w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-white/10 rounded-md px-2 py-1 text-[13px] text-neutral-900 dark:text-neutral-100 outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-400 dark:focus:border-primary-500/40 transition-shadow"
+                        class="nk-table-editor"
                     >
                         @foreach ($column->editableOptions ?? [] as $optVal => $optLabel)
                             <option value="{{ $optVal }}">{{ $optLabel }}</option>
@@ -93,7 +93,7 @@
                         @keydown.escape.prevent="cancel()"
                         @blur="save()"
                         rows="2"
-                        class="w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-white/10 rounded-md px-2 py-1 text-[13px] text-neutral-900 dark:text-neutral-100 outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-400 dark:focus:border-primary-500/40 transition-shadow resize-none"
+                        class="nk-table-editor resize-none"
                     ></textarea>
                 @else
                     <input
@@ -103,7 +103,7 @@
                         @keydown.enter="save()"
                         @keydown.escape.prevent="cancel()"
                         @blur="save()"
-                        class="w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-white/10 rounded-md px-2 py-1 text-[13px] text-neutral-900 dark:text-neutral-100 outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-400 dark:focus:border-primary-500/40 transition-shadow"
+                        class="nk-table-editor"
                     />
                 @endif
             </div>

@@ -61,7 +61,7 @@
     ];
 
     $shellClasses = Arr::toCssClasses([
-        'flex w-full flex-col overflow-hidden border transition-shadow duration-200',
+        'flex w-full flex-col overflow-hidden border transition-shadow duration-fast ease-standard',
         $roundedClass,
         $shadowClass,
         $colors['shell'],
@@ -185,7 +185,9 @@
                     <label class="relative flex items-center">
                         <span class="sr-only">{{ $searchPlaceholder ?? neura_trans('search') }}</span>
                         <neura::icon name="magnifying-glass" class="pointer-events-none absolute left-2 size-3.5 text-fg-muted" x-show="!searching" />
-                        <span class="absolute left-2 size-3.5 animate-spin rounded-full border border-edge border-t-fg-muted" x-show="searching" x-cloak></span>
+                        <span class="absolute left-2 text-fg-muted" x-show="searching" x-cloak>
+                            <neura::spinner variant="ring" size="xs" color="current" />
+                        </span>
                         <input
                             type="search"
                             x-model="search"
@@ -242,9 +244,16 @@
                 <div
                     x-show="open"
                     x-cloak
-                    x-transition.opacity.duration.120ms
+                    data-side="bottom"
+                    data-align="end"
+                    x-transition:enter="nk-menu-motion"
+                    x-transition:enter-start="nk-menu-from"
+                    x-transition:enter-end="nk-menu-to"
+                    x-transition:leave="nk-menu-leaving"
+                    x-transition:leave-start="nk-menu-to"
+                    x-transition:leave-end="nk-menu-out"
                     x-on:click.outside="open = false"
-                    class="absolute end-0 z-30 mt-1 w-44 overflow-hidden rounded-xl border border-edge bg-surface p-1 shadow-lg"
+                    class="nk-menu-motion absolute end-0 z-30 mt-1 w-44 overflow-hidden rounded-xl border border-edge bg-surface p-1 shadow-lg"
                 >
                     @foreach (['name' => 'name', 'size' => 'size', 'modified' => 'modified', 'kind' => 'type'] as $column => $labelKey)
                         <button
@@ -546,8 +555,10 @@
         x-show="menu.open"
         x-cloak
         {{-- Laid out but hidden until measured, so it never paints at the wrong spot. --}}
-        :class="menu.ready ? 'opacity-100' : 'invisible opacity-0'"
-        class="absolute z-50 w-52 overflow-hidden rounded-xl border border-edge bg-surface p-1 shadow-lg transition-opacity duration-100"
+        data-side="bottom"
+        data-align="start"
+        :class="menu.ready ? 'nk-menu-to' : 'nk-menu-from invisible'"
+        class="nk-menu-motion absolute z-50 w-52 overflow-hidden rounded-xl border border-edge bg-surface p-1 shadow-lg"
         :style="`left: ${menu.x}px; top: ${menu.y}px`"
         x-on:click.stop
         role="menu"

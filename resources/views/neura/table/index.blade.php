@@ -17,7 +17,7 @@
     $isFullHeight = $styles['fullHeight'];
 
     $wrapperClass = Arr::toCssClasses([
-        'w-full',
+        'nk-table w-full',
         $isFullHeight ? 'flex flex-col h-full' : '',
         $v['wrapper'],
         !$isBordered ? '!border-transparent !ring-0' : '',
@@ -36,7 +36,7 @@
     $theadBgClass = $v['thead'] . ' backdrop-blur-sm';
 
     $rowClass = Arr::toCssClasses([
-        'group last:border-b-0 transition-colors duration-75',
+        'group last:border-b-0 transition-colors duration-fast ease-standard',
         $v['row'],
         !$isBordered ? '!border-transparent' : '',
     ]);

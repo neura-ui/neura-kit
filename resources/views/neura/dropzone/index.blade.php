@@ -20,6 +20,7 @@
     'concurrency' => 2,
     'autoUpload' => true,
     'notify' => false,
+    'compactAt' => null,
     'size' => null,
     'variant' => null,
     'rounded' => null,
@@ -40,6 +41,8 @@
     // Avatar mode renders a circular profile-photo picker: the preview image
     // fills the circle and an overlay hints at "change photo".
     $isAvatar = $variantConfig['avatar'] ?? false;
+    $dashed = in_array($variant, ['default', 'card', 'cover', 'avatar'], true);
+    $compactAt = $compactAt !== null && $compactAt !== '' ? max(1, (int) $compactAt) : null;
     $showText = $variantConfig['showText'] ?? true;
     $icon = $variantConfig['icon'] ?? $icon;
 
@@ -102,10 +105,10 @@
     $previewMode = $previewMode ?: ($multiple && str_starts_with((string) $accept, 'image/') ? 'grid' : 'list');
 
     $areaClasses = Arr::toCssClasses([
-        'group/dz relative flex flex-col items-center justify-center text-center',
+        'nk-dz-area group/dz relative flex flex-col items-center justify-center text-center',
         'w-full' => ! $isAvatar,
         'outline-none',
-        'transition-colors duration-200 motion-reduce:transition-none',
+        'transition-colors duration-fast ease-standard motion-reduce:transition-none',
         $sizes['area'],
         $variantConfig['area'],
         $areaRounded,
@@ -118,7 +121,7 @@
     ]);
 
     $tileClasses = Arr::toCssClasses([
-        'flex shrink-0 items-center justify-center transition-all duration-200 motion-reduce:transition-none',
+        'nk-dz-tile flex shrink-0 items-center justify-center transition-all duration-fast ease-standard motion-reduce:transition-none',
         $sizes['tile'],
         $variantConfig['tile'],
         $colors['tile']['base'],
@@ -157,6 +160,7 @@
         autoUpload: @js((bool) $autoUpload),
         notify: @js((bool) $notify),
         concurrency: @js((int) $concurrency),
+        compactAt: @js($compactAt),
     })"
     x-on:dragenter.prevent="handleDragEnter($event)"
     x-on:dragover.prevent="handleDragOver($event)"
@@ -182,7 +186,20 @@
         <p class="{{ $sizes['meta'] }} text-fg-secondary mb-3">{{ $description }}</p>
     @endif
 
-    <label data-slot="dropzone-area" :data-state="state" class="{{ $areaClasses }}">
+    <label
+        x-ref="dropArea"
+        data-slot="dropzone-area"
+        :data-state="state"
+        :data-compact="isCompact ? '' : null"
+        @if ($dashed) data-dashed @endif
+        class="{{ $areaClasses }}"
+    >
+        @if ($dashed)
+            <svg class="nk-dz-edge" aria-hidden="true">
+                <rect x-ref="edgeRect" />
+            </svg>
+        @endif
+
         <input
             x-ref="fileInput"
             type="file"
@@ -197,8 +214,6 @@
         />
 
         @if ($isAvatar)
-            {{-- Avatar mode: the picked photo fills the circle. The tile shows
-                 only while no photo has been chosen. --}}
             <template x-for="preview in previews" :key="preview.uuid">
                 <img
                     x-show="preview.url"
@@ -206,23 +221,20 @@
                     :alt="preview.name"
                     loading="lazy"
                     decoding="async"
-                    class="absolute inset-0 size-full object-cover"
+                    class="nk-dz-avatar-photo"
                 />
             </template>
 
-            <span class="{{ $tileClasses }}" aria-hidden="true" x-show="previews.length === 0">
-                <neura::icon
-                    :name="$icon"
-                    class="{{ $sizes['glyph'] }} transition-transform duration-200 group-data-[state=dragging]/dz:-translate-y-0.5 motion-reduce:transition-none"
-                />
+            <span class="nk-dz-avatar-mark" aria-hidden="true" x-show="previews.length === 0">
+                <neura::icon name="camera" class="size-6 nk-dz-glyph" />
             </span>
 
-            {{-- Hover hint to change the photo --}}
-            <span
-                class="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 text-white opacity-0 transition-opacity duration-200 group-hover/dz:opacity-100 group-data-[state=dragging]/dz:opacity-100"
-                aria-hidden="true"
-            >
+            <span class="nk-dz-avatar-scrim" x-show="previews.length > 0" x-cloak aria-hidden="true">
                 <neura::icon name="camera" class="size-5" />
+            </span>
+
+            <span class="nk-dz-avatar-badge" x-show="previews.length > 0" x-cloak aria-hidden="true">
+                <neura::icon name="camera" class="size-3.5" />
             </span>
 
             @if ($removable && ! $disabled)
@@ -244,13 +256,13 @@
                 <span class="{{ $tileClasses }}" aria-hidden="true">
                     <neura::icon
                         :name="$icon"
-                        class="{{ $sizes['glyph'] }} transition-transform duration-200 group-data-[state=dragging]/dz:-translate-y-0.5 motion-reduce:transition-none"
+                        class="{{ $sizes['glyph'] }} nk-dz-glyph"
                     />
                 </span>
             @endif
 
             @if ($showText)
-                <span class="flex flex-col gap-1">
+                <span class="nk-dz-copy flex flex-col gap-1">
                     <span class="{{ $sizes['text'] }} font-medium transition-colors {{ $colors['text']['title'] }}">
                         <span x-show="!isDragging">
                             {{ $text ?? neura_trans('dragAndDrop').' '.($multiple ? neura_trans('files') : neura_trans('aFile')).' '.neura_trans('hereOr') }}
@@ -263,7 +275,7 @@
                         </span>
                     </span>
 
-                    <span id="{{ $uid }}-hint" class="{{ $sizes['hint'] }} {{ $colors['text']['hint'] }}">{{ $hintText }}</span>
+                    <span id="{{ $uid }}-hint" class="nk-dz-hint {{ $sizes['hint'] }} {{ $colors['text']['hint'] }}">{{ $hintText }}</span>
                 </span>
             @endif
         @endif
@@ -277,6 +289,7 @@
         x-show="rejections.length > 0"
         x-cloak
         class="mt-3 space-y-1.5"
+        role="alert"
         data-slot="dropzone-rejections"
     >
         <template x-for="rejection in rejections" :key="rejection.id">
@@ -296,7 +309,13 @@
     </ul>
 
     @if ($preview && ! $isAvatar)
-        <div x-show="previews.length > 0" x-cloak class="mt-3" data-slot="dropzone-previews">
+        <div
+            x-show="previews.length > 0"
+            x-cloak
+            class="mt-3"
+            data-slot="dropzone-previews"
+            x-on:keydown="onListKey($event)"
+        >
             @if ($multiple)
                 <div class="mb-2 flex items-center justify-between gap-3">
                     <p class="{{ $sizes['meta'] }} text-fg-muted">

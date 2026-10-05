@@ -45,6 +45,14 @@ return [
 
     'button' => Config::button(),
 
+    'split-button' => Config::splitButton(),
+
+    'button-group' => Config::buttonGroup(),
+
+    'expanding-button-group' => Config::expandingButtonGroup(),
+
+    'confirm-morph' => Config::confirmMorph(),
+
     'badge' => Config::badge(),
 
     'alert' => Config::alert(),
@@ -62,6 +70,12 @@ return [
     'contribution-graph' => Config::contributionGraph(),
 
     'input' => Config::input(),
+
+    'number-field' => Config::numberField(),
+
+    'mention-input' => Config::mentionInput(),
+
+    'signature-pad' => Config::signaturePad(),
 
     'filters' => Config::filters(),
 
@@ -135,9 +149,17 @@ return [
 
     'tree' => Config::tree(),
 
+    'json-viewer' => Config::jsonViewer(),
+
     'flow' => Config::flow(),
 
     'kanban' => Config::kanban(),
+
+    'time-dial' => Config::timeDial(),
+
+    'date-reel' => Config::dateReel(),
+
+    'activity-rings' => Config::activityRings(),
 
     'event-calendar' => Config::eventCalendar(),
 

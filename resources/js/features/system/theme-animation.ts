@@ -6,6 +6,8 @@
  * (polygon / GIF ideas also inspired by rudrodip/theme-toggle-effect).
  */
 
+import { motionTokens } from '../../shared/motion-tokens.ts';
+
 export type ThemeAnimationType =
   | 'circle'
   | 'blur-circle'
@@ -66,8 +68,8 @@ const defaults: Required<
     | 'styleId'
   >
 > & { gifUrl?: string } = {
-  duration: 750,
-  easing: 'ease-in-out',
+  duration: motionTokens.duration.considered,
+  easing: motionTokens.ease.enter,
   pseudoElement: '::view-transition-new(root)',
   globalClassName: 'dark',
   animationType: 'circle',

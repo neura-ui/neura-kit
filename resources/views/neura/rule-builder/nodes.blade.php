@@ -21,7 +21,16 @@
 @endphp
 
 <template x-for="(item, index) in {{ $nodesExpr }}" :key="item.id">
-    <div class="relative flex gap-2">
+    <div
+        class="relative flex gap-2"
+        x-bind:class="{
+            'opacity-50': isDragging(item.id),
+            'rounded-xl ring-1 ring-fg/20': isDragOver(item.id),
+        }"
+        x-on:dragenter="onDragOver('when', ({{ $parentExpr }}).id, item.id, $event)"
+        x-on:dragover="onDragOver('when', ({{ $parentExpr }}).id, item.id, $event)"
+        x-on:drop="onDrop('when', ({{ $parentExpr }}).id, item.id, $event)"
+    >
         {{-- Rail --}}
         <div class="{{ $railClass }} relative flex shrink-0 flex-col items-center self-stretch">
             <div
@@ -34,17 +43,16 @@
                 <span class="text-fg-muted" x-show="item.locked" x-cloak x-bind:title="label('lockedCondition')">
                     <neura::icon name="lock-closed" class="{{ $iconClass }}" />
                 </span>
-                <button
-                    type="button"
-                    class="cursor-grab text-fg-muted/70 hover:text-fg active:cursor-grabbing disabled:opacity-40"
+                <div
+                    class="flex size-7 cursor-grab items-center justify-center text-fg-muted/70 hover:text-fg active:cursor-grabbing"
+                    role="button"
                     draggable="true"
-                    x-show="!item.locked"
+                    x-show="!item.locked && !isDisabled"
                     x-on:dragstart="onDragStart('when', ({{ $parentExpr }}).id, item.id, $event)"
                     x-on:dragend="onDragEnd()"
-                    x-bind:disabled="isDisabled"
                     x-bind:title="label('dragToReorder')"
                 >
-                    <svg class="{{ $iconClass }}" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                    <svg class="{{ $iconClass }} pointer-events-none" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
                         <circle cx="5" cy="3.5" r="1.1" />
                         <circle cx="11" cy="3.5" r="1.1" />
                         <circle cx="5" cy="8" r="1.1" />
@@ -52,7 +60,7 @@
                         <circle cx="5" cy="12.5" r="1.1" />
                         <circle cx="11" cy="12.5" r="1.1" />
                     </svg>
-                </button>
+                </div>
             </div>
 
             <button
@@ -67,15 +75,7 @@
             ></button>
         </div>
 
-        <div
-            class="min-w-0 flex-1 pb-5"
-            x-bind:class="{
-                'opacity-50': isDragging(item.id),
-                'ring-1 ring-fg/15 rounded-xl': isDragOver(item.id),
-            }"
-            x-on:dragover="onDragOver('when', ({{ $parentExpr }}).id, item.id, $event)"
-            x-on:drop="onDrop('when', ({{ $parentExpr }}).id, item.id, $event)"
-        >
+        <div class="min-w-0 flex-1 pb-5">
             {{-- RULE --}}
             <template x-if="item.kind === 'rule'">
                 <div>

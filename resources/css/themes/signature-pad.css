@@ -1,0 +1,324 @@
+.nk-sign {
+    --nk-sign-paper: #f6f4ef;
+    --nk-sign-ink: #1c1917;
+    --nk-sign-blue: #1d4ed8;
+    --nk-sign-violet: #6d28d9;
+    --nk-sign-line: color-mix(in oklab, #1c1917 28%, transparent);
+    --nk-sign-muted: color-mix(in oklab, #1c1917 58%, transparent);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+    min-width: 0;
+}
+
+.dark .nk-sign {
+    --nk-sign-paper: #141311;
+    --nk-sign-ink: #f6f4ef;
+    --nk-sign-blue: #93c5fd;
+    --nk-sign-violet: #c4b5fd;
+    --nk-sign-line: color-mix(in oklab, #f6f4ef 28%, transparent);
+    --nk-sign-muted: color-mix(in oklab, #f6f4ef 62%, transparent);
+}
+
+.nk-sign-pad {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 600 / 260;
+    overflow: hidden;
+    background:
+        linear-gradient(180deg, color-mix(in oklab, white 55%, transparent), transparent 28%),
+        var(--nk-sign-paper);
+    border: 1px solid color-mix(in oklab, var(--nk-sign-ink) 14%, var(--color-edge, var(--nk-edge, oklch(0.85 0 0))));
+    box-shadow:
+        inset 0 1px 0 color-mix(in oklab, white 70%, transparent),
+        0 1px 2px color-mix(in oklab, var(--nk-sign-ink) 5%, transparent),
+        0 10px 28px color-mix(in oklab, var(--nk-sign-ink) 5%, transparent);
+    touch-action: none;
+    cursor: crosshair;
+    user-select: none;
+}
+
+.dark .nk-sign-pad {
+    background:
+        linear-gradient(180deg, color-mix(in oklab, white 8%, transparent), transparent 28%),
+        var(--nk-sign-paper);
+    box-shadow:
+        inset 0 1px 0 color-mix(in oklab, white 8%, transparent),
+        0 10px 28px color-mix(in oklab, black 28%, transparent);
+}
+
+.nk-sign[data-variant='ghost'] .nk-sign-pad {
+    border-color: transparent;
+}
+
+.nk-sign[data-variant='soft'] .nk-sign-pad {
+    background: color-mix(in oklab, var(--nk-tone, var(--color-primary-600)) 8%, var(--nk-sign-paper));
+}
+
+.nk-sign[data-disabled] .nk-sign-pad {
+    cursor: not-allowed;
+    opacity: 0.72;
+}
+
+.nk-sign-pad:focus {
+    outline: none;
+}
+
+.nk-sign-pad:focus-visible {
+    box-shadow: 0 0 0 2px var(--nk-sign-paper), 0 0 0 4px var(--nk-tone, var(--color-primary-600));
+}
+
+.nk-sign-stage,
+.nk-sign-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.nk-sign-svg {
+    display: block;
+    overflow: visible;
+}
+
+.nk-sign-base {
+    position: absolute;
+    left: 8%;
+    right: 8%;
+    top: 72%;
+    height: 1px;
+    background: var(--nk-sign-line);
+    pointer-events: none;
+}
+
+.nk-sign-hint {
+    position: absolute;
+    left: 50%;
+    top: 62%;
+    transform: translateX(-50%);
+    pointer-events: none;
+    color: var(--nk-sign-muted);
+    font-size: 1rem;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+}
+
+.nk-sign-hint span {
+    display: block;
+    transition: opacity 220ms ease, filter 220ms ease, transform 220ms ease;
+}
+
+.nk-sign.is-signed .nk-sign-hint span {
+    opacity: 0;
+    filter: blur(4px);
+    transform: translateY(-6px);
+}
+
+.nk-sign-signer {
+    position: absolute;
+    left: 7%;
+    top: 76%;
+    font-size: 0.75rem;
+    color: var(--nk-sign-muted);
+    pointer-events: none;
+}
+
+.nk-sign-wipe {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -16%;
+    width: 16%;
+    opacity: 0;
+    pointer-events: none;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        transparent 48%,
+        color-mix(in oklab, var(--nk-sign-ink) 34%, transparent) 68%,
+        var(--nk-sign-paper) 76%,
+        transparent 100%
+    );
+}
+
+.nk-sign-nib-dot {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.nk-sign-tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.nk-sign button {
+    appearance: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    color: inherit;
+    cursor: pointer;
+}
+
+.nk-sign-radios {
+    position: relative;
+    display: inline-flex;
+    gap: 0.1rem;
+    padding: 0.15rem;
+    border: 1px solid var(--color-edge, var(--nk-edge, oklch(0.85 0 0)));
+    border-radius: 999px;
+    background: var(--nk-surface-raised, #fff);
+}
+
+.nk-sign-glide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--nk-fg) 7%, var(--nk-surface-raised, transparent));
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--nk-fg) 8%, transparent);
+    pointer-events: none;
+}
+
+.nk-sign-swatch,
+.nk-sign-width,
+.nk-sign-tool {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 1.85rem;
+    height: 1.85rem;
+    border-radius: 999px;
+    color: color-mix(in oklab, var(--nk-fg) 78%, transparent);
+}
+
+.nk-sign-tool:hover:not(:disabled) {
+    color: var(--nk-fg);
+    background: color-mix(in oklab, var(--nk-fg) 8%, transparent);
+}
+
+.nk-sign[data-size='xs'] .nk-sign-swatch,
+.nk-sign[data-size='xs'] .nk-sign-width,
+.nk-sign[data-size='xs'] .nk-sign-tool,
+.nk-sign[data-size='sm'] .nk-sign-swatch,
+.nk-sign[data-size='sm'] .nk-sign-width,
+.nk-sign[data-size='sm'] .nk-sign-tool {
+    width: 1.6rem;
+    height: 1.6rem;
+}
+
+.nk-sign[data-size='lg'] .nk-sign-swatch,
+.nk-sign[data-size='lg'] .nk-sign-width,
+.nk-sign[data-size='lg'] .nk-sign-tool,
+.nk-sign[data-size='xl'] .nk-sign-swatch,
+.nk-sign[data-size='xl'] .nk-sign-width,
+.nk-sign[data-size='xl'] .nk-sign-tool {
+    width: 2.15rem;
+    height: 2.15rem;
+}
+
+.nk-sign-swatch:hover,
+.nk-sign-width:hover,
+.nk-sign-tool:hover,
+.nk-sign-export:hover {
+    background: color-mix(in oklab, currentColor 8%, transparent);
+}
+
+.nk-sign-tool:disabled,
+.nk-sign-export:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.nk-sign-tool svg {
+    width: 1rem;
+    height: 1rem;
+}
+
+.nk-sign-dot {
+    width: 0.8rem;
+    height: 0.8rem;
+    border-radius: 999px;
+    background: var(--nk-sign-ink);
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--nk-sign-ink) 20%, transparent);
+}
+
+.nk-sign-dot[data-ink='blue'] {
+    background: var(--nk-sign-blue);
+}
+
+.nk-sign-dot[data-ink='violet'] {
+    background: var(--nk-sign-violet);
+}
+
+.nk-sign-mark {
+    width: 0.85rem;
+    border-radius: 999px;
+    background: currentColor;
+}
+
+.nk-sign-mark[data-nib='fine'] {
+    width: 0.55rem;
+    height: 1px;
+}
+
+.nk-sign-mark[data-nib='medium'] {
+    width: 0.8rem;
+    height: 2px;
+}
+
+.nk-sign-mark[data-nib='bold'] {
+    width: 1.05rem;
+    height: 4px;
+}
+
+.nk-sign-save {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-left: auto;
+}
+
+.nk-sign-save-label {
+    margin-right: 0.15rem;
+    font-size: 0.75rem;
+    color: var(--nk-sign-muted);
+}
+
+.nk-sign .nk-sign-export {
+    height: 1.85rem;
+    padding: 0 0.7rem;
+    border: 1px solid var(--color-edge, var(--nk-edge, oklch(0.85 0 0)));
+    border-radius: 999px;
+    background: var(--nk-surface-raised, #fff);
+    color: var(--nk-fg);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.nk-sign .nk-sign-export:hover:not(:disabled) {
+    background: color-mix(in oklab, var(--nk-fg) 6%, var(--nk-surface-raised, #fff));
+}
+
+.nk-sign-note {
+    margin: 0;
+    font-size: 0.75rem;
+    line-height: 1.45;
+    color: var(--nk-sign-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .nk-sign.is-signed .nk-sign-hint span {
+        filter: none;
+        transform: none;
+    }
+}

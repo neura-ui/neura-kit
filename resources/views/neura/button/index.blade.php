@@ -99,7 +99,7 @@
     $iconAttributes = (new ComponentAttributeBag())->class($iconClasses);
 
     $classes = [
-        'relative inline-flex items-center font-medium justify-center gap-x-2 whitespace-nowrap transition-all duration-150',
+        'relative inline-flex items-center font-medium justify-center gap-x-2 whitespace-nowrap transition-all duration-fast ease-standard',
         'disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none cursor-pointer',
         $roundedClass,
         $shadowClass,
@@ -149,7 +149,7 @@
                 data-slot="loading-indicator"
             />
         @else
-            <neura::icon.loading :variant="$iconVariant" :attributes="$iconAttributes" data-slot="loading-indicator"/>
+            <neura::spinner variant="ring" size="sm" color="current" data-slot="loading-indicator" />
         @endif
     </div>
 
@@ -158,7 +158,7 @@
     @endif
 
     @if($slot->isNotEmpty())
-        <span>{{ $slot }}</span>
+        <span class="inline-flex items-center">{{ $slot }}</span>
     @endif
 
     @if($iconAfter)

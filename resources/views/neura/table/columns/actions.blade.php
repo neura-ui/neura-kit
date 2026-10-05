@@ -99,11 +99,11 @@
 @endphp
 
 @php
-    $btnClass = 'inline-flex items-center justify-center rounded-md transition-colors duration-100 size-7 text-neutral-400 dark:text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-white/[0.06]';
+    $btnClass = 'nk-table-iconbtn';
     $disabledClass = 'pointer-events-none opacity-30';
 @endphp
 
-<div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-100">
+<div class="flex items-center gap-0.5">
     @foreach($renderedActions as $a)
         @php
             $classes = $btnClass . ($a['disabled'] ? ' ' . $disabledClass : '');

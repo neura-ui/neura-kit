@@ -1,0 +1,168 @@
+/* Async action button — label morph, trailing mark, width spring. */
+
+.nk-action {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* The button slot is wrapped in a span. Drop that box so the morph width is the button width. */
+.nk-action > span {
+  display: contents;
+}
+
+.nk-action[data-state='pending'] {
+  cursor: progress;
+}
+
+.nk-action:active:not(:disabled):not([data-state='pending']) {
+  transform: scale(0.97);
+}
+
+.nk-action[data-wide]:active:not(:disabled):not([data-state='pending']) {
+  transform: scale(0.985);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nk-action:active {
+    transform: none;
+  }
+}
+
+.nk-action-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.nk-action-morph {
+  display: inline-flex;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.nk-action-morph[data-morphing] {
+  overflow: visible;
+  clip-path: inset(-0.6em 0 -0.6em -0.3em);
+}
+
+.nk-action-glyphs {
+  display: inline-flex;
+  flex: none;
+  white-space: pre;
+}
+
+.nk-action-glyph {
+  display: inline-block;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .nk-action-glyph[data-fresh] {
+    animation: nk-glyph-in var(--duration-standard) var(--ease-enter) both;
+    animation-delay: min(calc(var(--glyph-i, 0) * 16ms), 100ms);
+  }
+}
+
+@keyframes nk-glyph-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+    filter: blur(4px);
+  }
+}
+
+.nk-glyph-leave {
+  transition:
+    opacity var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard),
+    filter var(--duration-fast) var(--ease-standard);
+}
+
+.nk-glyph-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}
+
+.nk-glyph-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+  filter: blur(2px);
+}
+
+.nk-action-icon {
+  display: grid;
+  width: 1.0625rem;
+  height: 1.0625rem;
+  flex: 0 0 1.0625rem;
+  place-items: center;
+}
+
+.nk-action-phase {
+  grid-area: 1 / 1;
+  display: grid;
+  width: 1.0625rem;
+  height: 1.0625rem;
+  place-items: center;
+}
+
+.nk-phase-enter {
+  transition:
+    opacity var(--duration-standard) var(--ease-enter),
+    transform var(--duration-standard) var(--ease-enter),
+    filter var(--duration-standard) var(--ease-enter);
+}
+
+.nk-phase-leave {
+  transition:
+    opacity var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard),
+    filter var(--duration-fast) var(--ease-standard);
+}
+
+.nk-phase-rest {
+  opacity: 1;
+  transform: none;
+  filter: blur(0);
+}
+
+.nk-arrow-from {
+  opacity: 0;
+  transform: translateX(-6px);
+  filter: blur(2px);
+}
+
+.nk-arrow-to {
+  opacity: 0;
+  transform: translateX(8px);
+  filter: blur(2px);
+}
+
+.nk-icon-from,
+.nk-icon-to {
+  opacity: 0;
+  transform: scale(0.6);
+  filter: blur(2px);
+}
+
+.nk-action-check {
+  width: 1rem;
+  height: 1rem;
+}
+
+.nk-action-check path {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .nk-action-check path {
+    stroke-dashoffset: 24;
+    animation: nk-action-draw var(--duration-standard) var(--ease-enter) 50ms forwards;
+  }
+}
+
+@keyframes nk-action-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}

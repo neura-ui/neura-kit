@@ -13,7 +13,7 @@
     use Illuminate\Support\Arr;
 
     $tileClasses = Arr::toCssClasses([
-        'group/item group/tile relative aspect-square overflow-hidden border transition-colors duration-200 motion-reduce:transition-none',
+        'group/item group/tile relative aspect-square overflow-hidden border transition-colors duration-fast ease-standard motion-reduce:transition-none',
         $rounded,
         $colors['item']['base'],
         $colors['item']['error'],
@@ -29,8 +29,10 @@
 
 <li
     data-slot="dropzone-tile"
+    :data-uuid="item.uuid"
     :data-status="item.status"
     :data-kind="item.kind"
+    x-init="enterRow($el)"
     class="{{ $tileClasses }}"
 >
     <template x-if="item.url">
@@ -77,7 +79,7 @@
                 :aria-label="item.name"
             >
                 <div
-                    class="h-full rounded-full bg-white transition-[width] duration-300 ease-out motion-reduce:transition-none"
+                    class="nk-dz-bar h-full rounded-full bg-white"
                     :style="`width: ${item.progress}%`"
                 ></div>
             </div>

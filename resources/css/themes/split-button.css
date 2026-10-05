@@ -1,0 +1,343 @@
+/* Menu open: offset toward the trigger, scale from that edge, fade.
+   Close is shorter and reverses from the current transform. */
+
+.nk-menu-motion {
+  --menu-x: 0px;
+  --menu-y: -5px;
+  --menu-origin: top center;
+  transform-origin: var(--menu-origin);
+  transition:
+    opacity var(--nk-duration-fast) var(--nk-ease-enter),
+    transform var(--nk-duration-spring) var(--nk-ease-spring);
+}
+
+.nk-menu-motion[data-side='top'] {
+  --menu-y: 5px;
+  --menu-origin: bottom center;
+}
+
+.nk-menu-motion[data-side='top'][data-align='start'] { --menu-origin: bottom left; }
+.nk-menu-motion[data-side='top'][data-align='end'] { --menu-origin: bottom right; }
+.nk-menu-motion[data-side='bottom'][data-align='start'] { --menu-origin: top left; }
+.nk-menu-motion[data-side='bottom'][data-align='end'] { --menu-origin: top right; }
+
+.nk-menu-motion[data-side='left'] {
+  --menu-x: 5px;
+  --menu-y: 0px;
+  --menu-origin: center right;
+}
+
+.nk-menu-motion[data-side='left'][data-align='start'] { --menu-origin: top right; }
+.nk-menu-motion[data-side='left'][data-align='end'] { --menu-origin: bottom right; }
+
+.nk-menu-motion[data-side='right'] {
+  --menu-x: -5px;
+  --menu-y: 0px;
+  --menu-origin: center left;
+}
+
+.nk-menu-motion[data-side='right'][data-align='start'] { --menu-origin: top left; }
+.nk-menu-motion[data-side='right'][data-align='end'] { --menu-origin: bottom left; }
+
+.nk-menu-from {
+  opacity: 0;
+  transform: translate(var(--menu-x), var(--menu-y)) scale(0.97);
+}
+
+.nk-menu-to {
+  opacity: 1;
+  transform: none;
+}
+
+.nk-menu-out {
+  opacity: 0;
+  transform: translate(calc(var(--menu-x) * 0.5), calc(var(--menu-y) * 0.5)) scale(0.985);
+}
+
+.nk-menu-leaving {
+  pointer-events: none;
+  transition:
+    opacity 130ms var(--nk-ease-standard),
+    transform 130ms var(--nk-ease-standard);
+}
+
+.nk-menu-motion .nk-menu-item,
+.nk-menu-motion [data-slot='dropdown-item'],
+.nk-menu-motion [role='menuitem'] {
+  --i: 0;
+  transition-property: opacity, transform, background-color, color;
+  transition-duration:
+    var(--nk-duration-standard),
+    var(--nk-duration-standard),
+    var(--nk-duration-fast),
+    var(--nk-duration-fast);
+  transition-timing-function:
+    var(--nk-ease-enter),
+    var(--nk-ease-enter),
+    var(--nk-ease-standard),
+    var(--nk-ease-standard);
+  transition-delay:
+    calc(min(var(--i, 0), 4) * 35ms),
+    calc(min(var(--i, 0), 4) * 35ms),
+    0s,
+    0s;
+}
+
+.nk-menu-motion > :nth-child(2),
+.nk-menu-motion .nk-menu-item:nth-child(2),
+.nk-menu-motion [role='menuitem']:nth-child(2) { --i: 1; }
+.nk-menu-motion > :nth-child(3),
+.nk-menu-motion .nk-menu-item:nth-child(3),
+.nk-menu-motion [role='menuitem']:nth-child(3) { --i: 2; }
+.nk-menu-motion > :nth-child(4),
+.nk-menu-motion .nk-menu-item:nth-child(4),
+.nk-menu-motion [role='menuitem']:nth-child(4) { --i: 3; }
+.nk-menu-motion > :nth-child(n + 5),
+.nk-menu-motion .nk-menu-item:nth-child(n + 5),
+.nk-menu-motion [role='menuitem']:nth-child(n + 5) { --i: 4; }
+
+.nk-menu-from .nk-menu-item,
+.nk-menu-from [data-slot='dropdown-item'],
+.nk-menu-from [role='menuitem'],
+.nk-menu-out .nk-menu-item,
+.nk-menu-out [data-slot='dropdown-item'],
+.nk-menu-out [role='menuitem'] {
+  opacity: 0;
+  transform: translate(calc(var(--menu-x) * 0.4), calc(var(--menu-y) * 0.4));
+}
+
+.nk-menu-leaving .nk-menu-item,
+.nk-menu-leaving [data-slot='dropdown-item'],
+.nk-menu-leaving [role='menuitem'] {
+  transition-delay: 0s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nk-menu-motion,
+  .nk-menu-leaving {
+    transition: opacity var(--nk-duration-fast) linear;
+  }
+
+  .nk-menu-from,
+  .nk-menu-out,
+  .nk-menu-from .nk-menu-item,
+  .nk-menu-from [data-slot='dropdown-item'],
+  .nk-menu-from [role='menuitem'],
+  .nk-menu-out .nk-menu-item,
+  .nk-menu-out [data-slot='dropdown-item'],
+  .nk-menu-out [role='menuitem'] {
+    transform: none;
+  }
+}
+
+/* One pill, two actions. The pill presses only while the main half is held.
+   The chevron stays still so the menu is measured from a stable anchor. */
+
+.nk-split {
+  display: inline-flex;
+  align-items: stretch;
+  max-width: 100%;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform var(--nk-duration-spring) var(--nk-ease-spring);
+}
+
+.nk-split:has(> .nk-split-main:active:not(:disabled)):not([data-state='pending']) {
+  transform: scale(0.97);
+  transition-duration: var(--nk-duration-fast);
+  transition-timing-function: var(--nk-ease-standard);
+}
+
+.nk-split-main,
+.nk-split-trigger {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nk-split-main {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  border-start-start-radius: inherit;
+  border-end-start-radius: inherit;
+}
+
+.nk-split-slot {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  overflow: hidden;
+}
+
+.nk-split-slot[data-morphing] {
+  overflow: visible;
+  clip-path: inset(-0.6em -0.5em -0.6em -0.3em);
+}
+
+.nk-split-content {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  width: max-content;
+}
+
+.nk-split[data-state='pending'] {
+  cursor: progress;
+}
+
+.nk-split:not(:has(.nk-split-trigger)) .nk-split-main {
+  border-radius: inherit;
+}
+
+.nk-split-content .nk-action-icon {
+  margin-inline-start: 0.5rem;
+}
+
+.nk-split-content .nk-action-phase {
+  animation: nk-phase-pop var(--nk-duration-fast) var(--nk-ease-enter);
+}
+
+@keyframes nk-phase-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+    filter: blur(2px);
+  }
+}
+
+.nk-split-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  margin-inline-end: 0.5rem;
+}
+
+.nk-split-icon-phase {
+  grid-area: 1 / 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nk-split-icon-in {
+  transition:
+    opacity var(--nk-duration-fast) var(--nk-ease-enter),
+    filter var(--nk-duration-fast) var(--nk-ease-enter),
+    transform var(--nk-duration-spring) var(--nk-ease-spring);
+}
+
+.nk-split-icon-out {
+  transition:
+    opacity var(--nk-duration-fast) var(--nk-ease-standard),
+    filter var(--nk-duration-fast) var(--nk-ease-standard),
+    transform var(--nk-duration-fast) var(--nk-ease-standard);
+}
+
+.nk-split-icon-from {
+  opacity: 0;
+  transform: scale(0.6);
+  filter: blur(2px);
+}
+
+.nk-split-icon-rest {
+  opacity: 1;
+  transform: none;
+  filter: blur(0);
+}
+
+.nk-split-trigger {
+  display: grid;
+  flex: none;
+  place-items: center;
+  border-inline-start: 1px solid color-mix(in oklab, currentColor 22%, transparent);
+  border-start-end-radius: inherit;
+  border-end-end-radius: inherit;
+}
+
+.nk-split-chevron {
+  transition: transform var(--nk-duration-spring) var(--nk-ease-spring);
+}
+
+.nk-split-trigger[aria-expanded='true'] .nk-split-chevron {
+  transform: rotate(180deg);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .nk-split-main:hover:not(:disabled),
+  .nk-split-trigger:hover:not(:disabled) {
+    background: color-mix(in oklab, currentColor 12%, transparent);
+  }
+}
+
+.nk-split-main:active:not(:disabled),
+.nk-split-trigger:active:not(:disabled),
+.nk-split-trigger[aria-expanded='true'] {
+  background: color-mix(in oklab, currentColor 18%, transparent);
+}
+
+.nk-split-main:disabled,
+.nk-split-trigger:disabled {
+  cursor: not-allowed;
+  opacity: 0.52;
+}
+
+.nk-split-menu {
+  z-index: 9999;
+  min-width: min(12rem, 100vw);
+  padding: 5px;
+}
+
+.nk-split-menu .nk-menu-item {
+  display: flex;
+  min-height: 2rem;
+  width: 100%;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0 0.7rem;
+  border: 0;
+  border-radius: calc(var(--dropdown-radius, 0.75rem) - 6px);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.875rem;
+  text-align: start;
+  cursor: pointer;
+  outline: none;
+}
+
+.nk-split-menu .nk-menu-item:hover:not(:disabled),
+.nk-split-menu .nk-menu-item:focus-visible {
+  background: var(--color-hover, color-mix(in oklab, currentColor 8%, transparent));
+}
+
+.nk-split-menu .nk-menu-item:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.nk-split-menu .nk-menu-item.has-tone {
+  color: var(--nk-item);
+}
+
+.dark .nk-split-menu .nk-menu-item.has-tone {
+  color: var(--nk-item-soft, var(--nk-item));
+}
+
+.nk-split-menu .nk-menu-item.has-tone:hover:not(:disabled),
+.nk-split-menu .nk-menu-item.has-tone:focus-visible {
+  background: color-mix(in oklab, currentColor 10%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nk-split,
+  .nk-split-chevron {
+    transition: none;
+  }
+
+  .nk-split:has(> .nk-split-main:active:not(:disabled)):not([data-state='pending']) {
+    transform: none;
+  }
+}

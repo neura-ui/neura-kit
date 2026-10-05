@@ -131,7 +131,7 @@
 
         <div @class([
             'isolate',
-            'relative flex items-stretch w-full disabled:shadow-none transition-colors duration-200',
+            'relative flex items-stretch w-full disabled:shadow-none transition-colors duration-fast ease-standard',
             $roundedClass,
         ])>
             <div
@@ -181,7 +181,7 @@
                         'z-10',
                         'inline-block border w-full text-fg disabled:text-fg-muted placeholder-neutral-400 disabled:placeholder-neutral-400/70 dark:placeholder-neutral-500 dark:disabled:placeholder-neutral-600',
                         'bg-surface disabled:bg-neutral-50 dark:disabled:bg-neutral-900/60',
-                        'disabled:cursor-not-allowed transition-colors duration-150',
+                        'disabled:cursor-not-allowed transition-colors duration-fast ease-standard',
                         $shadowClass,
                         'disabled:shadow-none',
                         $roundedClass,
@@ -224,20 +224,22 @@
         <div
             x-show="open && !isDisabled"
             x-cloak
-            class="{{ $popupContainerClass }} w-full"
-            x-transition:enter="transition ease-out duration-100"
-            x-transition:enter-start="opacity-0 -translate-y-1 scale-95"
-            x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-            x-transition:leave="transition ease-in duration-75"
-            x-transition:leave-start="opacity-100 translate-y-0 scale-100"
-            x-transition:leave-end="opacity-0 -translate-y-1 scale-95"
+            class="nk-menu-motion {{ $popupContainerClass }} w-full"
+            data-side="bottom"
+            data-align="start"
+            x-transition:enter="nk-menu-motion"
+            x-transition:enter-start="nk-menu-from"
+            x-transition:enter-end="nk-menu-to"
+            x-transition:leave="nk-menu-leaving"
+            x-transition:leave-start="nk-menu-to"
+            x-transition:leave-end="nk-menu-out"
             @click.stop=""
             style="display:none;"
         >
             <div class="mb-2 pb-2 border-b border-separator">
                 <div @class([
                     'isolate',
-                    'relative flex items-stretch w-full transition-colors duration-200',
+                    'relative flex items-stretch w-full transition-colors duration-fast ease-standard',
                     $roundedClass,
                 ])>
                     <input
@@ -251,7 +253,7 @@
                             'z-10',
                             'inline-block border w-full text-fg placeholder-neutral-400 dark:placeholder-neutral-500',
                             'bg-surface',
-                            'transition-colors duration-150',
+                            'transition-colors duration-fast ease-standard',
                             $shadowClass,
                             $roundedClass,
                             'focus:ring-offset-0 focus:outline-none',

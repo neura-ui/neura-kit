@@ -17,7 +17,7 @@
         '[&_[data-slot=sidebar]]:fixed [&_[data-slot=sidebar]]:inset-y-0 [&_[data-slot=sidebar]]:left-0',
         '[&_[data-slot=sidebar]]:top-[var(--header-height)] [&_[data-slot=sidebar]]:h-[calc(100vh-var(--header-height))]',
         '[&_[data-slot=sidebar]]:z-40 [&_[data-slot=sidebar]]:w-[var(--sidebar-width)]',
-        '[&_[data-slot=sidebar]]:transition-transform [&_[data-slot=sidebar]]:duration-300 [&_[data-slot=sidebar]]:ease-in-out',
+        '[&_[data-slot=sidebar]]:transition-transform [&_[data-slot=sidebar]]:duration-standard [&_[data-slot=sidebar]]:ease-standard',
         '[&_[data-slot=sidebar]]:-translate-x-full',
         'data-[sidebar-open]:[&_[data-slot=sidebar]]:translate-x-0',
 
@@ -102,8 +102,8 @@
     <div
         x-show="isMobile && sidebarOpen"
         style="display: none;"
-        x-transition:enter="transition-opacity duration-300"
-        x-transition:leave="transition-opacity duration-300"
+        x-transition:enter="transition-opacity duration-standard ease-enter"
+        x-transition:leave="transition-opacity duration-fast ease-standard"
         x-transition:enter-start="opacity-0"
         x-transition:enter-end="opacity-100"
         x-transition:leave-start="opacity-100"

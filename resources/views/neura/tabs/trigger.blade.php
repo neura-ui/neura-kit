@@ -8,7 +8,7 @@
 
     $variant = $variant ?? neura_config('tabs', 'variant');
 
-    $baseClasses = 'inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50';
+    $baseClasses = 'inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all duration-fast ease-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50';
     $variantClasses = PackResolver::tabsVariant($variant);
     $roundedClass = $variant === 'pills'
         ? PackResolver::rounded(neura_config('tabs', 'rounded'))

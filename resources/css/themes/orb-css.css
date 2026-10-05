@@ -23,7 +23,6 @@
   display: inline-flex;
   align-items: center;
   vertical-align: middle;
-  color: var(--nk-fg, currentColor);
 }
 
 /* The inline pill form — same component, wrapped. */
@@ -61,9 +60,6 @@
 }
 
 .dark {
-  .nk-orb-css {
-    color: var(--nk-fg, currentColor);
-  }
   .nk-orb-css[data-pill] {
     background: var(--nk-surface-raised, var(--nk-surface));
     box-shadow:
@@ -110,6 +106,17 @@
   border-radius: 50%;
   background: currentColor;
   opacity: var(--orb-rest);
+}
+
+/* Inside a button the stage is small and the ink must match the label.
+   A higher rest keeps the unlit cells visible on both light and dark fills. */
+[data-slot='button'] .nk-orb-lattice {
+  --orb-rest: 0.55;
+  --orb-dim: 0.28;
+}
+
+[data-slot='button'] .nk-orb-ring {
+  --orb-ring-rest: 0.5;
 }
 
 /* One wave shape drives all three sweeps. What separates them is the pair of

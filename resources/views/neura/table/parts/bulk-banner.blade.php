@@ -1,32 +1,25 @@
 @if ($this->hasBulkActions() && !empty($this->selected))
-    <div class="bg-primary-50/60 dark:bg-primary-500/[0.04] border-b border-primary-100 dark:border-primary-500/10 px-3 py-1.5">
-        <div class="flex items-center justify-between gap-3">
-            <div class="flex items-center gap-3">
-                <div class="flex items-center gap-1.5 text-xs text-primary-700 dark:text-primary-300">
-                    <span class="size-1.5 rounded-full bg-primary-500 shrink-0"></span>
-                    <span class="font-medium">
-                        {{ $this->selectedCount }} {{ $this->selectedCount === 1 ? neura_trans('rowSelected') : neura_trans('rowsSelected') }}
-                    </span>
-                </div>
+    <div class="nk-table-selection">
+        <div class="flex items-center gap-3">
+            <span class="font-medium">
+                {{ $this->selectedCount }} {{ $this->selectedCount === 1 ? neura_trans('rowSelected') : neura_trans('rowsSelected') }}
+            </span>
 
-                @if (!$this->selectAll && $this->selectedCount < $this->totalRows && $this->selectPage)
-                    <button wire:click="selectAllRows"
-                        class="text-xs text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-200 font-medium underline underline-offset-2">
-                        {{ neura_trans('selectAllRows', ['count' => $this->totalRows]) }}
-                    </button>
-                @endif
+            @if (!$this->selectAll && $this->selectedCount < $this->totalRows && $this->selectPage)
+                <button type="button" wire:click="selectAllRows">
+                    {{ neura_trans('selectAllRows', ['count' => $this->totalRows]) }}
+                </button>
+            @endif
 
-                @if ($this->selectAll)
-                    <span class="text-xs text-primary-500 dark:text-primary-400">
-                        {{ neura_trans('allRowsSelected', ['count' => $this->totalRows]) }}
-                    </span>
-                @endif
-            </div>
-
-            <button wire:click="deselectAllRows"
-                class="text-xs text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 font-medium transition-colors">
-                {{ neura_trans('deselectAll') }}
-            </button>
+            @if ($this->selectAll)
+                <span class="nk-table-muted">
+                    {{ neura_trans('allRowsSelected', ['count' => $this->totalRows]) }}
+                </span>
+            @endif
         </div>
+
+        <button type="button" wire:click="deselectAllRows">
+            {{ neura_trans('deselectAll') }}
+        </button>
     </div>
 @endif

@@ -4,10 +4,10 @@
     $colors = PackResolver::inputColor('radio');
 
     $indicatorClasses = [
-        'relative shrink-0 size-[18px] rounded-full border transition-all duration-200',
+        'relative shrink-0 size-[18px] rounded-full border transition-all duration-fast ease-standard',
         'bg-transparent',
         $colors['border'] => true,
-        "after:content-[''] after:absolute after:size-[7px] after:rounded-full after:top-1/2 after:left-1/2 after:-translate-x-1/2 after:-translate-y-1/2 after:opacity-0 after:scale-50 after:transition-all after:duration-200",
+        "after:content-[''] after:absolute after:size-[7px] after:rounded-full after:top-1/2 after:left-1/2 after:-translate-x-1/2 after:-translate-y-1/2 after:opacity-0 after:scale-50 after:transition-all after:duration-fast after:ease-standard",
         $colors['dot'] => true,
     ];
 @endphp

@@ -1,0 +1,358 @@
+/* Time dial — a quiet clock for planning across cities */
+
+.nk-time-dial {
+    container-type: inline-size;
+    width: 100%;
+    max-width: 44rem;
+    color: var(--color-fg);
+}
+
+.nk-time-dial-body {
+    display: grid;
+    justify-items: center;
+    gap: 1.25rem;
+}
+
+@container (min-width: 36rem) {
+    .nk-time-dial-body {
+        grid-template-columns: 16rem minmax(0, 1fr);
+        align-items: center;
+        justify-items: stretch;
+        gap: 1.5rem 1.75rem;
+    }
+}
+
+.nk-dial-stage {
+    position: relative;
+    width: min(100%, 16rem);
+    aspect-ratio: 1;
+    touch-action: none;
+    outline: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.nk-dial-stage:focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 4px;
+}
+
+.nk-dial-stage[data-pointer-focus]:focus,
+.nk-dial-stage[data-pointer-focus]:focus-visible {
+    outline: none;
+}
+
+.nk-dial-disc {
+    position: absolute;
+    z-index: 0;
+    inset: 11%;
+    border-radius: 999px;
+    background: var(--color-surface);
+    pointer-events: none;
+}
+
+.nk-dial-svg {
+    position: relative;
+    z-index: 1;
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.nk-time-dial.is-dragging .nk-dial-pin,
+.nk-time-dial.is-dragging .nk-dial-cursor,
+.nk-time-dial.is-dragging .nk-dial-needle {
+    transition: none;
+}
+
+.nk-dial-face {
+    fill: color-mix(in oklab, var(--color-fg) 3.5%, var(--color-surface));
+}
+
+.nk-dial-track {
+    fill: none;
+    stroke: color-mix(in oklab, var(--color-fg) 10%, transparent);
+    stroke-width: 1;
+}
+
+.nk-dial-band {
+    fill: color-mix(in oklab, var(--color-success-500, var(--color-primary-500)) 22%, var(--color-surface));
+}
+
+.nk-dial-needle {
+    transform-origin: 100px 100px;
+    transform-box: view-box;
+    transition: transform 280ms var(--nk-ease-enter, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.nk-dial-needle line {
+    stroke: color-mix(in oklab, var(--color-fg) 55%, transparent);
+    stroke-width: 1.35;
+    stroke-linecap: round;
+}
+
+.nk-dial-hole {
+    fill: var(--color-surface);
+    stroke: var(--color-edge);
+    stroke-width: 1;
+}
+
+.nk-dial-tick {
+    fill: color-mix(in oklab, var(--color-fg-muted) 70%, transparent);
+}
+
+.nk-dial-tick.is-major {
+    fill: var(--color-fg-secondary);
+}
+
+.nk-dial-hour {
+    fill: var(--color-fg-muted);
+    font-size: 6.5px;
+    font-weight: 600;
+    text-anchor: middle;
+    dominant-baseline: central;
+    pointer-events: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.nk-dial-readout {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 46%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
+    text-align: center;
+    pointer-events: none;
+}
+
+.nk-dial-cityname,
+.nk-dial-day {
+    margin: 0;
+    font-size: 0.6875rem;
+    line-height: 1.3;
+    color: var(--color-fg-muted);
+}
+
+.nk-dial-time {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+}
+
+.nk-dial-pin {
+    position: absolute;
+    z-index: 1;
+    transform: translate(-50%, -50%);
+    color: var(--color-fg-secondary);
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    pointer-events: none;
+    transition:
+        left 280ms var(--nk-ease-enter, cubic-bezier(0.16, 1, 0.3, 1)),
+        top 280ms var(--nk-ease-enter, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.nk-dial-pin.is-on {
+    color: var(--color-success-700, var(--color-fg));
+}
+
+.nk-dial-cursor {
+    position: absolute;
+    z-index: 2;
+    width: 1.35rem;
+    height: 1.35rem;
+    margin: -0.675rem 0 0 -0.675rem;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    border: 1px solid color-mix(in oklab, var(--color-fg) 14%, transparent);
+    background: var(--color-surface);
+    color: var(--color-fg);
+    box-shadow: 0 1px 2px color-mix(in oklab, var(--color-fg) 16%, transparent);
+    pointer-events: none;
+    transition:
+        left 280ms var(--nk-ease-enter, cubic-bezier(0.16, 1, 0.3, 1)),
+        top 280ms var(--nk-ease-enter, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.nk-dial-cursor svg {
+    width: 0.8rem;
+    height: 0.8rem;
+}
+
+.nk-dial-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 0;
+}
+
+.nk-dial-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.nk-dial-row {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.55rem 0.7rem;
+    border: 0;
+    background: transparent;
+    color: var(--color-fg);
+    text-align: left;
+    cursor: pointer;
+    box-shadow: inset 0 0 0 1px transparent;
+}
+
+.nk-dial-row:hover {
+    background: color-mix(in oklab, var(--color-fg) 3%, transparent);
+}
+
+.nk-dial-row[aria-pressed="true"] {
+    background: transparent;
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-fg) 18%, var(--color-edge));
+}
+
+.nk-dial-row:focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 1px;
+}
+
+.nk-dial-sky {
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+    color: var(--color-fg-muted);
+}
+
+.nk-dial-sky.is-on {
+    color: var(--color-success-600, var(--color-primary-600));
+}
+
+.nk-dial-copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.nk-dial-name {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.nk-dial-meta {
+    font-size: 0.75rem;
+    line-height: 1.3;
+    color: var(--color-fg-muted);
+}
+
+.nk-dial-clock {
+    margin-left: auto;
+    font-size: 1.05rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    line-height: 1;
+}
+
+.nk-dial-shift {
+    flex-shrink: 0;
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--color-fg) 8%, transparent);
+    padding: 0.12rem 0.4rem;
+    font-size: 0.625rem;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--color-fg-secondary);
+}
+
+.nk-dial-hint {
+    margin: 0.55rem 0 0;
+    font-size: 0.75rem;
+    line-height: 1.45;
+    color: var(--color-fg-muted);
+}
+
+.nk-dial-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 0.85rem;
+}
+
+.nk-dial-count {
+    margin: 0;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: var(--color-fg-secondary);
+    font-weight: 600;
+}
+
+.nk-dial-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.35rem;
+    margin-left: auto;
+}
+
+.nk-dial-action {
+    border: 1px solid var(--color-edge);
+    background: var(--color-surface);
+    color: var(--color-fg);
+    border-radius: 999px;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.nk-dial-action.is-primary {
+    background: var(--color-fg);
+    color: var(--color-surface);
+    border-color: var(--color-fg);
+}
+
+.nk-dial-action:hover {
+    background: color-mix(in oklab, var(--color-fg) 5%, var(--color-surface));
+}
+
+.nk-dial-action.is-primary:hover {
+    background: color-mix(in oklab, var(--color-fg) 88%, var(--color-surface));
+}
+
+.nk-dial-action:focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
+}
+
+.nk-time-dial-status {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}

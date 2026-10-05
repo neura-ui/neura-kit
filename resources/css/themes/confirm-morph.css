@@ -1,0 +1,352 @@
+.nk-confirm {
+  --nk-confirm-h: 2.5rem;
+  --nk-confirm-icon: 1rem;
+  --nk-confirm-font: 0.875rem;
+  position: relative;
+  display: inline-flex;
+  max-width: 100%;
+  vertical-align: middle;
+  color: var(--nk-fg);
+  font-family: inherit;
+  font-size: var(--nk-confirm-font);
+  line-height: 1;
+}
+
+.nk-confirm[data-size="xs"] {
+  --nk-confirm-h: 1.5rem;
+  --nk-confirm-icon: 0.875rem;
+  --nk-confirm-font: 0.75rem;
+}
+
+.nk-confirm[data-size="sm"] {
+  --nk-confirm-h: 2rem;
+  --nk-confirm-icon: 1rem;
+  --nk-confirm-font: 0.875rem;
+}
+
+.nk-confirm[data-size="lg"] {
+  --nk-confirm-h: 3rem;
+  --nk-confirm-icon: 1.25rem;
+  --nk-confirm-font: 1rem;
+}
+
+.nk-confirm[data-size="xl"] {
+  --nk-confirm-h: 3.5rem;
+  --nk-confirm-icon: 1.5rem;
+  --nk-confirm-font: 1.125rem;
+}
+
+.nk-confirm-surface {
+  position: relative;
+  display: flex;
+  height: var(--nk-confirm-h);
+  max-width: 100%;
+  justify-content: center;
+  overflow: clip;
+  background: var(--nk-surface-raised);
+}
+
+.nk-confirm-surface::after {
+  content: "";
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  border: 1px solid var(--nk-edge);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.nk-confirm[data-variant="outline"]:not([data-color="neutral"]) .nk-confirm-surface {
+  background: color-mix(in oklch, var(--nk-tone) 4%, var(--nk-surface-raised));
+}
+
+.nk-confirm[data-variant="outline"]:not([data-color="neutral"]) .nk-confirm-surface::after {
+  border-color: color-mix(in oklch, var(--nk-tone) 18%, var(--nk-edge));
+}
+
+.nk-confirm[data-variant="soft"]:not([data-color="neutral"]) .nk-confirm-surface {
+  background: color-mix(in oklch, var(--nk-tone) 12%, var(--nk-surface-raised));
+}
+
+.nk-confirm[data-variant="soft"] .nk-confirm-surface::after,
+.nk-confirm[data-variant="ghost"] .nk-confirm-surface::after {
+  border-color: transparent;
+}
+
+.nk-confirm[data-variant="ghost"] .nk-confirm-surface {
+  background: transparent;
+}
+
+.nk-confirm[data-variant="solid"]:not([data-color="neutral"]) .nk-confirm-surface {
+  background: var(--nk-tone);
+  color: #fff;
+}
+
+.nk-confirm[data-variant="dark"]:not([data-color="neutral"]) .nk-confirm-surface {
+  background: var(--nk-tone-strong, var(--nk-tone));
+  color: #fff;
+}
+
+.dark .nk-confirm[data-variant="dark"]:not([data-color="neutral"]) .nk-confirm-surface {
+  background: var(--nk-tone-soft, var(--nk-tone));
+  color: var(--nk-tone-strong, var(--nk-fg));
+}
+
+.nk-confirm[data-variant][data-state="confirming"] .nk-confirm-surface,
+.nk-confirm[data-variant][data-state="pending"] .nk-confirm-surface,
+.nk-confirm[data-variant][data-state="done"] .nk-confirm-surface,
+.nk-confirm[data-variant][data-state="error"] .nk-confirm-surface {
+  background: var(--nk-surface-raised);
+  color: var(--nk-fg);
+}
+
+.nk-confirm-face {
+  display: flex;
+  height: 100%;
+  flex: none;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0 0.3rem;
+  white-space: nowrap;
+}
+
+.nk-confirm-face[data-face="idle"] {
+  padding: 0;
+}
+
+.nk-confirm[data-state="confirming"] .nk-confirm-face,
+.nk-confirm[data-state="done"] .nk-confirm-face,
+.nk-confirm[data-state="error"] .nk-confirm-face {
+  padding-bottom: 2px;
+}
+
+.nk-confirm-face[data-leaving] {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  translate: -50% 0;
+  pointer-events: none;
+}
+
+.nk-confirm-trigger {
+  display: inline-flex;
+  height: 100%;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.95rem 0 0.8rem;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: var(--nk-tone, var(--nk-fg));
+  cursor: pointer;
+  font: inherit;
+  font-weight: 500;
+}
+
+.nk-confirm:is([data-variant="solid"], [data-variant="dark"]):not([data-color="neutral"]) .nk-confirm-trigger {
+  color: inherit;
+}
+
+.nk-confirm-trigger:disabled {
+  color: var(--nk-fg-muted);
+  cursor: not-allowed;
+}
+
+.nk-confirm-icon {
+  display: grid;
+  width: var(--nk-confirm-icon);
+  height: var(--nk-confirm-icon);
+  place-items: center;
+}
+
+.nk-confirm-icon > svg {
+  width: 100%;
+  height: 100%;
+}
+
+.nk-confirm-prompt {
+  flex: none;
+  padding: 0 0.35rem 0 0.65rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.nk-confirm-secondary,
+.nk-confirm-primary {
+  display: inline-flex;
+  flex: none;
+  height: calc(var(--nk-confirm-h) - 0.7rem);
+  align-items: center;
+  padding: 0 0.7rem;
+  border: 0;
+  background: transparent;
+  color: var(--nk-fg);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 500;
+}
+
+.nk-confirm-secondary {
+  color: var(--nk-fg-secondary, var(--nk-fg-muted));
+}
+
+.nk-confirm[data-variant="outline"] .nk-confirm-secondary,
+.nk-confirm[data-variant="solid"] .nk-confirm-secondary,
+.nk-confirm[data-variant="dark"] .nk-confirm-secondary {
+  color: var(--nk-fg);
+  box-shadow: inset 0 0 0 1px var(--nk-edge);
+}
+
+.nk-confirm[data-variant="outline"] .nk-confirm-primary {
+  color: var(--nk-tone, var(--nk-fg));
+  background: transparent;
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--nk-tone, var(--nk-fg)) 45%, var(--nk-edge));
+}
+
+.nk-confirm[data-variant="soft"] .nk-confirm-primary {
+  color: var(--nk-tone, var(--nk-fg));
+  background: color-mix(in oklch, var(--nk-tone, var(--nk-fg)) 14%, var(--nk-surface));
+}
+
+.nk-confirm[data-variant="ghost"] .nk-confirm-primary {
+  color: var(--nk-tone, var(--nk-fg));
+  background: transparent;
+}
+
+.nk-confirm[data-variant="solid"] .nk-confirm-primary {
+  color: #fff;
+  background: var(--nk-tone, var(--nk-fg));
+}
+
+.nk-confirm[data-variant="dark"] .nk-confirm-primary {
+  color: #fff;
+  background: var(--nk-tone-strong, var(--nk-tone, var(--nk-fg)));
+}
+
+.dark .nk-confirm[data-variant="dark"] .nk-confirm-primary {
+  color: var(--nk-tone-strong, var(--nk-fg));
+  background: var(--nk-tone-soft, var(--nk-surface));
+}
+
+.nk-confirm-secondary:active,
+.nk-confirm-primary:active,
+.nk-confirm:has(.nk-confirm-trigger:active) .nk-confirm-surface {
+  transform: scale(0.96);
+}
+
+.nk-confirm-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0 0.85rem 0 0.7rem;
+  font-weight: 500;
+}
+
+.nk-confirm-status[data-tone="success"] {
+  color: var(--color-success-700, var(--nk-fg));
+}
+
+.nk-confirm-check {
+  width: 18px;
+  height: 18px;
+}
+
+.nk-confirm-check circle {
+  fill: var(--color-success-600, currentColor);
+  transform-origin: 9px 9px;
+  animation: nk-confirm-pop 340ms var(--nk-ease-enter) both;
+}
+
+.nk-confirm-check path {
+  stroke: var(--nk-surface);
+  stroke-dasharray: 12;
+  stroke-dashoffset: 12;
+  animation: nk-confirm-tick 280ms var(--nk-ease-enter) 120ms forwards;
+}
+
+.nk-confirm-drain {
+  position: absolute;
+  z-index: 1;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  overflow: hidden;
+  background: color-mix(in oklch, var(--nk-fg) 16%, transparent);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.nk-confirm-drain-fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: color-mix(in oklch, var(--nk-fg) 55%, transparent);
+  transform: scaleX(1);
+  transform-origin: left center;
+}
+
+.nk-confirm:not([data-color="neutral"]) .nk-confirm-drain {
+  background: color-mix(in oklch, var(--nk-tone) 32%, transparent);
+}
+
+.nk-confirm:not([data-color="neutral"]) .nk-confirm-drain-fill {
+  background: var(--nk-tone);
+}
+
+.nk-confirm[data-state="confirming"] .nk-confirm-drain,
+.nk-confirm[data-state="done"] .nk-confirm-drain,
+.nk-confirm[data-state="error"] .nk-confirm-drain {
+  opacity: 1;
+}
+
+@keyframes nk-confirm-pop {
+  from { opacity: 0; transform: scale(0.4); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes nk-confirm-tick {
+  to { stroke-dashoffset: 0; }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .nk-confirm-trigger:hover:not(:disabled) {
+    background: color-mix(in oklch, var(--nk-fg) 5%, transparent);
+  }
+
+  .nk-confirm:not([data-color="neutral"]) .nk-confirm-trigger:hover:not(:disabled) {
+    background: color-mix(in oklch, var(--nk-tone, var(--nk-fg)) 8%, transparent);
+  }
+
+  .nk-confirm-secondary:hover {
+    background: color-mix(in oklch, var(--nk-fg) 7%, transparent);
+    color: var(--nk-fg);
+  }
+
+  .nk-confirm[data-variant="outline"] .nk-confirm-primary:hover,
+  .nk-confirm[data-variant="soft"] .nk-confirm-primary:hover,
+  .nk-confirm[data-variant="ghost"] .nk-confirm-primary:hover {
+    background: color-mix(in oklch, var(--nk-tone, var(--nk-fg)) 10%, transparent);
+  }
+
+  .nk-confirm[data-variant="solid"] .nk-confirm-primary:hover {
+    background: var(--nk-tone-strong, var(--nk-tone, var(--nk-fg)));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nk-confirm-surface,
+  .nk-confirm-secondary,
+  .nk-confirm-primary,
+  .nk-confirm-check circle,
+  .nk-confirm-check path {
+    animation: none;
+    transition: none;
+    transform: none;
+  }
+
+  .nk-confirm-check path {
+    stroke-dashoffset: 0;
+  }
+}

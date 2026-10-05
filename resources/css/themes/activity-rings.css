@@ -1,0 +1,202 @@
+/* Activity rings — tick rings for a few daily goals */
+
+.nk-rings {
+    position: relative;
+    container-type: inline-size;
+    width: 100%;
+    max-width: 36rem;
+    color: var(--color-fg);
+    --ring-0: oklch(0.55 0.16 277);
+    --ring-1: oklch(0.74 0.14 78);
+    --ring-2: oklch(0.58 0.1 158);
+    --ring-3: oklch(0.6 0.16 25);
+}
+
+.dark .nk-rings {
+    --ring-0: oklch(0.75 0.12 277);
+    --ring-1: oklch(0.82 0.12 82);
+    --ring-2: oklch(0.78 0.09 158);
+    --ring-3: oklch(0.74 0.13 25);
+}
+
+.nk-rings-body {
+    display: grid;
+    justify-content: start;
+    justify-items: center;
+    gap: 1.25rem;
+}
+
+@container (min-width: 30rem) {
+    .nk-rings-body {
+        grid-template-columns: 14.5rem minmax(12rem, 16rem);
+        align-items: center;
+        justify-items: stretch;
+        gap: 1.25rem 1.5rem;
+    }
+}
+
+.nk-rings-stage {
+    position: relative;
+    width: min(100%, 14.5rem);
+    aspect-ratio: 1;
+    margin-inline: auto;
+}
+
+.nk-rings-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.nk-rings-svg g {
+    transition: opacity 160ms var(--nk-ease-standard, cubic-bezier(0.22, 1, 0.36, 1));
+}
+
+.nk-rings-center {
+    position: absolute;
+    inset: 28%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    pointer-events: none;
+}
+
+.nk-rings-score {
+    margin: 0;
+    font-size: 1.85rem;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.nk-rings-of {
+    margin: 0.2rem 0 0;
+    font-size: 0.75rem;
+    color: var(--color-fg-muted);
+}
+
+.nk-rings-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 0;
+}
+
+.nk-rings-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-rows: auto auto;
+    column-gap: 0.7rem;
+    width: 100%;
+    padding: 0.4rem 0.55rem;
+    border: 0;
+    background: transparent;
+    color: var(--color-fg);
+    text-align: left;
+    cursor: pointer;
+}
+
+.nk-rings-row:hover,
+.nk-rings-row[aria-pressed="true"] {
+    background: var(--color-surface-inset);
+}
+
+.nk-rings-row.is-dim {
+    opacity: 0.38;
+}
+
+.nk-rings-row:focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 1px;
+}
+
+.nk-rings-swatch {
+    grid-row: 1 / span 2;
+    align-self: center;
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 999px;
+}
+
+.nk-rings-name {
+    grid-column: 2;
+    grid-row: 1;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.nk-rings-pct {
+    grid-column: 3;
+    grid-row: 1;
+    font-size: 0.875rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.nk-rings-meta {
+    grid-column: 2 / span 2;
+    grid-row: 2;
+    font-size: 0.75rem;
+    line-height: 1.3;
+    color: var(--color-fg-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.nk-rings-week {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.25rem;
+    width: min(100%, 32rem);
+    margin-top: 1rem;
+}
+
+.nk-rings-day {
+    display: flex;
+    flex: 1 1 2.4rem;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
+    min-width: 2.4rem;
+    padding: 0.4rem 0.25rem;
+    border: 0;
+    background: transparent;
+    color: var(--color-fg-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.nk-rings-day[aria-checked="true"] {
+    background: var(--color-surface-inset);
+    color: var(--color-fg);
+}
+
+.nk-rings-day:focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 1px;
+}
+
+.nk-rings-caption {
+    margin: 0.65rem 0 0;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: var(--color-fg-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.nk-rings-status {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}

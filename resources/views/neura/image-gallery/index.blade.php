@@ -95,9 +95,9 @@
     <template x-teleport="body">
         <div 
             x-show="imageGalleryOpened" 
-            x-transition:enter="transition ease-in-out duration-300" 
+            x-transition:enter="transition ease-standard duration-standard" 
             x-transition:enter-start="opacity-0" 
-            x-transition:leave="transition ease-in-out duration-300" 
+            x-transition:leave="transition ease-standard duration-standard" 
             x-transition:leave-end="opacity-0" 
             @click="imageGalleryClose" 
             @keydown.window.escape="imageGalleryClose" 
@@ -117,9 +117,9 @@
 
                 <img 
                     x-show="imageGalleryOpened" 
-                    x-transition:enter="transition ease-in-out duration-300" 
+                    x-transition:enter="transition ease-standard duration-standard" 
                     x-transition:enter-start="opacity-0 transform scale-50" 
-                    x-transition:leave="transition ease-in-out duration-300" 
+                    x-transition:leave="transition ease-standard duration-standard" 
                     x-transition:leave-end="opacity-0 transform scale-50" 
                     class="object-contain object-center w-full h-full select-none cursor-zoom-out" 
                     :src="imageGalleryActiveUrl" 

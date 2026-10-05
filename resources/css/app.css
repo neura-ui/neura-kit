@@ -1,5 +1,10 @@
 @import './themes/native-editor.css';
 @import './themes/flow.css';
+@import './themes/kanban.css';
+@import './themes/time-dial.css';
+@import './themes/date-reel.css';
+@import './themes/activity-rings.css';
+@import './themes/json-viewer.css';
 @import './themes/icons.css';
 @import './themes/pullcord.css';
 @import './themes/thinking-state.css';
@@ -8,6 +13,22 @@
 @import './themes/image-generation.css';
 @import './themes/file-diff.css';
 @import './themes/todo-list.css';
+@import './themes/action-button.css';
+@import './themes/split-button.css';
+@import './themes/button-group.css';
+@import './themes/expanding-button-group.css';
+@import './themes/confirm-morph.css';
+@import './themes/number-field.css';
+@import './themes/mention-input.css';
+@import './themes/select.css';
+@import './themes/dropzone.css';
+@import './themes/signature-pad.css';
+@import './themes/toast.css';
+@import './themes/table.css';
+@import './themes/popup.css';
+@import './themes/calendar.css';
+@import './themes/preloader.css';
+@import './motion.css';
 
 /**
  * ============================================================================
@@ -85,6 +106,14 @@
   --color-fg-muted: var(--nk-fg-muted);
   --color-fg-disabled: var(--nk-fg-disabled);
   --color-fg-on-emphasis: var(--nk-fg-on-emphasis);
+
+  --ease-standard: var(--nk-ease-standard);
+  --ease-enter: var(--nk-ease-enter);
+  --ease-spring: var(--nk-ease-spring);
+  --duration-fast: var(--nk-duration-fast);
+  --duration-standard: var(--nk-duration-standard);
+  --duration-considered: var(--nk-duration-considered);
+  --duration-spring: var(--nk-duration-spring);
 }
 
 /**
@@ -127,7 +156,7 @@
   ::-webkit-scrollbar-thumb {
     background: var(--scrollbar-thumb);
     border-radius: 3px;
-    transition: background 150ms ease;
+    transition: background var(--duration-fast) var(--ease-standard);
   }
 
   ::-webkit-scrollbar-thumb:hover {
@@ -264,58 +293,58 @@
  * --nk-* on descendants therefore has no effect on inherited --color-*.
  */
 
-/* Contrast: dark sidebar & header, neutral main */
+/* Contrast: dark sidebar & header. Lightness is fixed; hue stays with the surface. */
 .nk-layout--contrast [data-slot="sidebar"],
 .nk-layout--contrast [data-slot="header"] {
-  --color-surface: oklch(0.16 0 0);
-  --color-hover: oklch(1 0 0 / 0.06);
-  --color-active: oklch(1 0 0 / 0.10);
-  --color-separator: oklch(1 0 0 / 0.06);
-  --color-edge: oklch(1 0 0 / 0.08);
-  --color-fg: oklch(0.93 0 0);
-  --color-fg-secondary: oklch(0.65 0 0);
-  --color-fg-muted: oklch(0.50 0 0);
+  --color-surface: oklch(from var(--nk-surface) 0.16 c h);
+  --color-hover: oklch(from var(--nk-fg) 1 c h / 0.06);
+  --color-active: oklch(from var(--nk-fg) 1 c h / 0.10);
+  --color-separator: oklch(from var(--nk-fg) 1 c h / 0.06);
+  --color-edge: oklch(from var(--nk-fg) 1 c h / 0.08);
+  --color-fg: oklch(from var(--nk-surface) 0.93 c h);
+  --color-fg-secondary: oklch(from var(--nk-surface) 0.65 c h);
+  --color-fg-muted: oklch(from var(--nk-surface) 0.50 c h);
   color-scheme: dark;
-  color: oklch(0.93 0 0);
+  color: oklch(from var(--nk-surface) 0.93 c h);
 }
 
 .dark .nk-layout--contrast [data-slot="sidebar"],
 .dark .nk-layout--contrast [data-slot="header"] {
-  --color-surface: oklch(0.10 0 0);
-  --color-hover: oklch(1 0 0 / 0.05);
-  --color-separator: oklch(1 0 0 / 0.05);
-  --color-edge: oklch(1 0 0 / 0.06);
+  --color-surface: oklch(from var(--nk-surface) 0.10 c h);
+  --color-hover: oklch(from var(--nk-fg) 1 c h / 0.05);
+  --color-separator: oklch(from var(--nk-fg) 1 c h / 0.05);
+  --color-edge: oklch(from var(--nk-fg) 1 c h / 0.06);
 }
 
 /* Muted: light sidebar & header frame, darker main content well */
 .nk-layout--muted [data-slot="sidebar"] {
-  --color-separator: oklch(0.93 0 0);
+  --color-separator: oklch(from var(--nk-separator) 0.93 c h);
 }
 
 .nk-layout--muted [data-slot="header"] {
-  --color-separator: oklch(0.93 0 0);
+  --color-separator: oklch(from var(--nk-separator) 0.93 c h);
 }
 
 .nk-layout--muted [data-slot="main"] {
-  --color-surface: oklch(0.965 0 0);
-  --color-surface-inset: oklch(0.945 0 0);
-  --color-separator: oklch(0.91 0 0);
+  --color-surface: oklch(from var(--nk-surface) 0.965 c h);
+  --color-surface-inset: oklch(from var(--nk-surface) 0.945 c h);
+  --color-separator: oklch(from var(--nk-separator) 0.91 c h);
 }
 
 .dark .nk-layout--muted [data-slot="sidebar"] {
-  --color-surface: oklch(0.16 0 0);
-  --color-separator: oklch(1 0 0 / 0.06);
+  --color-surface: oklch(from var(--nk-surface) 0.16 c h);
+  --color-separator: oklch(from var(--nk-fg) 1 c h / 0.06);
 }
 
 .dark .nk-layout--muted [data-slot="header"] {
-  --color-surface: oklch(0.16 0 0);
-  --color-separator: oklch(1 0 0 / 0.06);
+  --color-surface: oklch(from var(--nk-surface) 0.16 c h);
+  --color-separator: oklch(from var(--nk-fg) 1 c h / 0.06);
 }
 
 .dark .nk-layout--muted [data-slot="main"] {
-  --color-surface: oklch(0.11 0 0);
-  --color-surface-inset: oklch(0.105 0 0);
-  --color-separator: oklch(1 0 0 / 0.05);
+  --color-surface: oklch(from var(--nk-surface) 0.11 c h);
+  --color-surface-inset: oklch(from var(--nk-surface) 0.105 c h);
+  --color-separator: oklch(from var(--nk-fg) 1 c h / 0.05);
 }
 
 /* Accent: light tinted sidebar & header in light mode, dark tinted in dark mode */
@@ -343,14 +372,15 @@
  * ============================================================================
  */
 [data-slot="layout"] {
-  transition: margin-left 300ms cubic-bezier(0.4, 0, 0.2, 1),
-              margin-right 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    margin-left var(--duration-standard) var(--ease-standard),
+    margin-right var(--duration-standard) var(--ease-standard);
 }
 
 /**
- * ============================================================================
- * Performance Optimizations
- * ============================================================================
+ * Reduced motion.
+ * Keep the end state, focus and feedback. Remove travel, loops and parallax.
+ * A component that still needs a short fade can opt back in with opacity only.
  */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -358,6 +388,7 @@
   *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
   }
 }

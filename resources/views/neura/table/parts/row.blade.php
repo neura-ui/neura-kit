@@ -8,9 +8,10 @@
 
 @php
     $rowId = $row->{$this->getRowKey()};
+    $isSelected = $this->hasBulkActions() && in_array((string) $rowId, array_map('strval', $this->selected), true);
 @endphp
 
-<tr class="{{ $rowClass }}">
+<tr class="{{ $rowClass }} {{ $isSelected ? 'is-selected' : '' }}">
     @if ($this->hasBulkActions())
         <td class="pl-3 pr-1 py-1.5">
             <neura::checkbox.group wire:model.live="selected">

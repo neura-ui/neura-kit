@@ -8,16 +8,18 @@
  */
 
 .nk-native {
-  --nk-paper: #ffffff;
-  --nk-paper-ink: #202124;
-  --nk-canvas: #eef0f2;
-  --nk-canvas-edge: #dadce0;
+  /* Sheet, well and chrome follow the surface ramp so a tinted theme
+     does not leave a flat gray island inside the editor. */
+  --nk-paper: var(--color-surface, #ffffff);
+  --nk-paper-ink: var(--color-fg, #202124);
+  --nk-canvas: var(--color-surface-inset, #eef0f2);
+  --nk-canvas-edge: var(--color-edge, #dadce0);
   --nk-paper-shadow:
     0 1px 2px rgb(60 64 67 / 0.12),
     0 4px 16px rgb(60 64 67 / 0.1);
   --nk-doc-font: Arial, Helvetica, sans-serif;
   --nk-doc-size: 14.67px; /* 11pt, the word-processor default */
-  --nk-chrome-bg: color-mix(in srgb, var(--color-surface, #fff) 92%, #f1f3f4);
+  --nk-chrome-bg: var(--color-surface, #fff);
   --nk-tool-radius: 0.375rem;
 
   display: flex;
@@ -26,14 +28,14 @@
 }
 
 .dark .nk-native {
-  --nk-paper: #1e1e1e;
-  --nk-paper-ink: #e8eaed;
-  --nk-canvas: #121212;
-  --nk-canvas-edge: #3c4043;
+  --nk-paper: var(--color-surface-raised, #1e1e1e);
+  --nk-paper-ink: var(--color-fg, #e8eaed);
+  --nk-canvas: var(--color-surface-inset, #121212);
+  --nk-canvas-edge: var(--color-edge, #3c4043);
   --nk-paper-shadow:
     0 1px 2px rgb(0 0 0 / 0.4),
     0 6px 20px rgb(0 0 0 / 0.35);
-  --nk-chrome-bg: color-mix(in srgb, var(--color-surface, #1e1e1e) 88%, #000);
+  --nk-chrome-bg: var(--color-surface, #1e1e1e);
 }
 
 /* ---------------------------------------------------------------- chrome -- */

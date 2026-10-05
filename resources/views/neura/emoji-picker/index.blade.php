@@ -100,7 +100,7 @@
         </button>
     @else
         <div @class([
-            'isolate relative flex items-stretch w-full transition-colors duration-200',
+            'isolate relative flex items-stretch w-full transition-colors duration-fast ease-standard',
             $roundedClass,
         ])>
             <div
@@ -131,7 +131,7 @@
                         'z-10 inline-block border w-full text-fg disabled:text-fg-muted',
                         'placeholder-neutral-400 dark:placeholder-neutral-500',
                         'bg-surface disabled:bg-neutral-50 dark:disabled:bg-neutral-900/60',
-                        'disabled:cursor-not-allowed transition-colors duration-150',
+                        'disabled:cursor-not-allowed transition-colors duration-fast ease-standard',
                         $shadowClass,
                         'disabled:shadow-none',
                         $roundedClass,
@@ -165,14 +165,16 @@
     <div
         x-show="open && !isDisabled"
         x-cloak
-        x-transition:enter="transition ease-out duration-100"
-        x-transition:enter-start="opacity-0 -translate-y-1 scale-95"
-        x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-        x-transition:leave="transition ease-in duration-75"
-        x-transition:leave-start="opacity-100 translate-y-0 scale-100"
-        x-transition:leave-end="opacity-0 -translate-y-1 scale-95"
+        data-side="bottom"
+        data-align="start"
+        x-transition:enter="nk-menu-motion"
+        x-transition:enter-start="nk-menu-from"
+        x-transition:enter-end="nk-menu-to"
+        x-transition:leave="nk-menu-leaving"
+        x-transition:leave-start="nk-menu-to"
+        x-transition:leave-end="nk-menu-out"
         @click.stop=""
-        @class([$popupContainerClass])
+        @class(['nk-menu-motion', $popupContainerClass])
         style="display:none;"
         role="dialog"
         aria-label="{{ __('Emoji picker') }}"
@@ -187,7 +189,7 @@
                 autocomplete="off"
                 @class([
                     'w-full border bg-surface text-fg placeholder-neutral-400 dark:placeholder-neutral-500',
-                    'transition-colors duration-150 focus:ring-offset-0 focus:outline-none',
+                    'transition-colors duration-fast ease-standard focus:ring-offset-0 focus:outline-none',
                     $roundedClass,
                     $inputColors['border'],
                     $inputColors['focus'],

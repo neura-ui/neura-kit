@@ -49,7 +49,7 @@
         'flex items-center justify-center border overflow-hidden appearance-none',
         'bg-transparent',
         'disabled:cursor-not-allowed disabled:opacity-50',
-        'transition-all duration-200',
+        'transition-all duration-fast ease-standard',
         'shadow-none disabled:shadow-none',
         'focus:ring-offset-0 focus:outline-none',
         $sizeClasses,
@@ -62,7 +62,7 @@
         $checkboxColors['indeterminate'],
     ];
 
-    $iconClasses = [$iconSizeClasses, 'text-white', 'transition-all duration-200'];
+    $iconClasses = [$iconSizeClasses, 'text-white', 'transition-all duration-fast ease-standard'];
 @endphp
 
 <div x-bind:data-checked="_checked && !_indeterminate" x-bind:data-indeterminate="_indeterminate"
@@ -77,13 +77,13 @@
     {{ $attributes->merge(['class' => Arr::toCssClasses($buttonClasses)]) }}>
 
     <neura::icon name="check" :variant="$iconVariant" @class($iconClasses) x-show="_checked && !_indeterminate"
-        x-transition:enter="transition-all duration-150"
+        x-transition:enter="transition-all duration-fast ease-standard"
         x-transition:enter-start="opacity-0 scale-50"
         x-transition:enter-end="opacity-100 scale-100"
         style="display:none" />
 
     <neura::icon name="minus" :variant="$iconVariant" @class($iconClasses) x-show="_indeterminate"
-        x-transition:enter="transition-all duration-150"
+        x-transition:enter="transition-all duration-fast ease-standard"
         x-transition:enter-start="opacity-0 scale-50"
         x-transition:enter-end="opacity-100 scale-100"
         style="display:none" />

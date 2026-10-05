@@ -6,6 +6,58 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2026-10-05
+
+### Added
+
+- **Action button**: New `neura::action-button` — the label morphs through idle, pending, and success (`pending-label`, `success-label`, `reset-after`, `method`, `delay`). Size, variant, color, rounded, and shadow follow the button packs. Loading uses the ring spinner
+- **Split button**: New `neura::split-button` — a primary action plus a menu. Each menu item accepts the same `pending-label`, `success-label`, `done-label`, and `reset-after` as the main button. Color is set per action
+- **Button group**: New `neura::button-group` — segmented control with a sliding indicator. A numeric value scales; other labels crossfade. Items, a more-menu, or slot buttons. `orientation`, `attached`, size, variant, color, and rounded
+- **Expanding button group**: New `neura::expanding-button-group` — a collapsed label that opens into actions, with `confirm-duration`. Inner buttons use the same size, variant, color, and rounded packs
+- **Confirm morph**: New `neura::confirm-morph` — inline confirm, pending, done, error, retry, and undo (`confirm-timeout`, `result-timeout`, `undo-method`). The progress bar sits on the bottom edge of the control
+- **Number field**: New `neura::number-field` — stepper and optional scrub, `min` / `max` / `step` / `large-step`, prefix and suffix, plural `suffix-one` / `suffix-many`, and a limit hint
+- **Mention input**: New `neura::mention-input` — `@` for people and channels, a suggestion list (`placement`, `max-suggestions`), auto-grow rows, and `submit-on-enter`
+- **Signature pad**: New `neura::signature-pad` — canvas signature with `ink`, `nib`, signer name, and a PNG download
+- **Time dial**: New `neura::time-dial` — a clock face for up to five cities, a working-hours arc, and 12- or 24-hour labels. Only the cursor moves. Noon stays at the top, 6 at the left, 18 at the right, and midnight at the bottom. City marks sit on the face
+- **Date reel**: New `neura::date-reel` — scrolling columns for `datetime`, `date`, or `time`, with `minute-step`, presets, and an optional confirm
+- **Activity rings**: New `neura::activity-rings` — up to four goal rings and a day scrubber (`metrics`, `days`, `focused`)
+- **JSON viewer**: New `neura::json-viewer` — collapsible tree, search that opens matching branches (capped at 2000), paging (`page-size`), copy value or path, and keyboard navigation (arrows, Enter, `/`, Escape). Strings longer than 40 characters ellipsize. Config key `json-viewer` (rounded follows the global style)
+- **Chart types**: The native canvas chart accepts `donut` (doughnut with a hover lift), `waffle` (10×10, one cell is 1%, filled column by column from the bottom-left), and `slope` (exactly two moments, start and end labels, rank beside the end, one highlighted series). `rows`, `columns`, `start-label`, `end-label`, and `unit` are forwarded as options
+- **Motion**: Shared tokens in `resources/css/motion.css` and `motion-tokens.ts` — `duration-fast` (160ms), `duration-standard` (240ms), `duration-considered` (480ms), `duration-spring` (580ms), `ease-standard`, `ease-enter`, and `ease-spring`. `prefersReducedMotion()` drops travel and keeps the end state for scripted motion
+- **Appearance**: `neuraKit({ appearance })` builds the light and dark surface ramp from one hue. `style` is `neutral` (gray), `muted`, `tint`, or `vivid`. `light` (0–1, stock 1) and `dark` (0–1, stock 0.7) shift the whole ramp together, so borders and text stay in step with the canvas. `color` defaults to primary
+- **i18n**: EN / FR strings for the JSON viewer and the new form and action controls
+
+### Changed
+
+- **Release**: Package version is 3.0.0, MIT, with no license key. Install with `composer require neura-ui/neura-kit:^3.0`
+- **Installer**: `php artisan neura-kit:install` patches the first config it finds — `vite.config.js`, `.mjs`, `.ts`, or `.mts` — then adds the Tailwind `@source` line to `resources/css/app.css`. `app.js` stays untouched
+- **Popups**: Dialog, modal, popover, dropdown, context menu, select, command, and the filters “add filter” panel open with the same morph (`menu-morph`)
+- **Tooltip**: Travel is short and comes in from the opposite side of the trigger. Reduced motion skips the travel
+- **Toast**: Stacked from the bottom, three visible with a peek and a scale step, drag to dismiss, optional progress. The factory registers through `onAlpineInit`
+- **Select**: The highlighted option and multi-select chips animate. Multiple selection stays on `neura::select`; there is no separate multi-select component
+- **Calendar and date picker**: The selected day uses the button-group indicator, on both axes
+- **Dropzone**: Dashed frame, inset tile, and a preview that follows the surface tokens. The avatar variant is unchanged
+- **Table**: Toolbar, rows, cells, and pagination use the surface tokens. The search field has no fill and no border, including while focused
+- **Filters**: The value segment keeps the width from the size pack (`w-28` through `w-44`), so choosing another parameter does not resize the chip
+- **Flow**: The canvas uses the shared surface, edge, and type colors
+- **Kanban**: Board, columns, and cards use the surface tokens. Moving a card runs a FLIP
+- **Spinner**: Buttons and action controls use the ring spinner as the loading indicator
+- **Orb**: Variants that disappeared on a neutral canvas were retuned so the glyph stays readable in light and dark
+- **Native editor**: Syntax colors follow the shared highlight palette in light and dark
+- **Button group radius**: The sliding highlight uses the same radius as the segment, at rest and on hover
+- **Reduced motion**: The global CSS rule still collapses `animation-duration` and `transition-duration`. `element.animate()` is not affected by that rule, so scripted motion checks `prefersReducedMotion()` itself
+
+### Fixed
+
+- **Rule builder drag**: Reordering a rule or an action did not move the node. Drag now reorders within the parent list and writes the new order back
+- **Button spinner**: The loading mark inside a button did not paint. The ring spinner is rendered in the indicator slot
+- **Time dial focus**: A focus ring stayed on the face after the pointer left, and the selected time sat on top of the cursor. The face does not keep that outline, and the readout clears the hand
+- **Confirm morph progress**: The progress bar was offset from the bottom edge. It is flush with the control
+- **Button group slots**: Buttons passed through the slot did not share the segment height, radius, or indicator. Slot buttons use the same metrics as `items`
+- **Waffle colors**: A single `backgroundColor` painted every cell the same color. Category colors use the array only when it contains more than one distinct color; otherwise they fall back to the palette
+- **Slope labels**: Start values were drawn on top of the lines, the legend collided with the first column, and end ranks overlapped. Names and start values sit left of the dot, the legend is off, overlapping labels spread, and the y scale follows the data instead of being forced through zero
+- **Toast boot**: After the stack restyle the factory could miss Alpine’s first walk. It now registers on `onAlpineInit`, including when Alpine has already started
+
 ## [2.1.10] - 2026-09-21
 
 ### Fixed

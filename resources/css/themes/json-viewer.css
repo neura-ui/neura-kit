@@ -1,0 +1,264 @@
+/* JSON viewer — collapsible tree, search, and copy */
+
+.nk-json {
+    container-type: inline-size;
+    --nk-json-indent: 16px;
+    color: var(--color-fg);
+    font-size: 0.8125rem;
+    line-height: 1.4;
+}
+
+@container (max-width: 420px) {
+    .nk-json {
+        --nk-json-indent: 12px;
+    }
+
+    .nk-json-key {
+        max-width: 40%;
+    }
+
+    .nk-json-path-type {
+        display: none;
+    }
+}
+
+.nk-json-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.55rem 0.7rem;
+    border-bottom: 1px solid var(--color-edge);
+}
+
+.nk-json-search,
+.nk-json-more,
+.nk-json-path button {
+    font-family: inherit;
+    font-size: inherit;
+}
+
+.nk-json-search {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-fg);
+    outline: none;
+}
+
+.nk-json-search::placeholder {
+    color: var(--color-fg-muted);
+}
+
+.nk-json-count {
+    flex: none;
+    color: var(--color-fg-muted);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.75rem;
+}
+
+.nk-json-tree {
+    position: relative;
+    overflow: auto;
+    padding: 0.35rem 0;
+}
+
+.nk-json-highlight {
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    top: 0;
+    border-radius: 6px;
+    background: var(--nk-active, color-mix(in oklab, var(--color-fg) 8%, transparent));
+    pointer-events: none;
+    transition: transform 180ms var(--nk-ease-enter), height 180ms var(--nk-ease-enter), opacity 180ms var(--nk-ease-enter);
+}
+
+.nk-json-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-height: 28px;
+    padding-inline-end: 4.75rem;
+    animation: nk-json-row 180ms var(--nk-ease-enter) both;
+}
+
+.nk-json-row.is-current {
+    z-index: 1;
+}
+
+@keyframes nk-json-row {
+    from {
+        opacity: 0;
+        transform: translateY(-3px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.nk-json-chevron,
+.nk-json-spacer {
+    flex: none;
+    width: 1rem;
+    height: 1rem;
+}
+
+.nk-json-chevron {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--color-fg-muted);
+    cursor: pointer;
+}
+
+.nk-json-chevron svg {
+    width: 0.7rem;
+    height: 0.7rem;
+    transition: transform 180ms var(--nk-ease-enter);
+}
+
+.nk-json-chevron.is-open svg {
+    transform: rotate(90deg);
+}
+
+.nk-json-key {
+    max-width: 46%;
+    overflow: hidden;
+    color: var(--syn-attr, var(--color-fg));
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nk-json-preview,
+.nk-json-meta {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.nk-json-preview {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nk-json-preview[data-type='string'] {
+    color: var(--syn-string, var(--color-fg));
+}
+
+.nk-json-preview[data-type='number'] {
+    color: var(--syn-number, var(--color-fg));
+}
+
+.nk-json-preview[data-type='boolean'],
+.nk-json-preview[data-type='null'] {
+    color: var(--syn-name, var(--color-fg-muted));
+}
+
+.nk-json-preview[data-type='object'],
+.nk-json-preview[data-type='array'],
+.nk-json-meta {
+    color: var(--color-fg-muted);
+}
+
+.nk-json-more {
+    border: 0;
+    background: transparent;
+    color: var(--color-fg);
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.nk-json-actions {
+    position: absolute;
+    inset-inline-end: 0.35rem;
+    display: flex;
+    gap: 0.15rem;
+    opacity: 0;
+}
+
+.nk-json-row:hover .nk-json-actions,
+.nk-json-row.is-current .nk-json-actions,
+.nk-json-actions:focus-within {
+    opacity: 1;
+}
+
+.nk-json-actions button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.4rem;
+    height: 1.4rem;
+    padding: 0;
+    border: 0;
+    border-radius: 4px;
+    background: var(--color-surface);
+    color: var(--color-fg-muted);
+    cursor: pointer;
+}
+
+.nk-json-actions button:hover {
+    color: var(--color-fg);
+}
+
+.nk-json-actions svg {
+    width: 0.8rem;
+    height: 0.8rem;
+}
+
+.nk-json-empty {
+    margin: 0;
+    padding: 0.8rem 0.9rem;
+    color: var(--color-fg-muted);
+}
+
+.nk-json-path {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.45rem 0.7rem;
+    border-top: 1px solid var(--color-edge);
+    color: var(--color-fg-muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.75rem;
+}
+
+.nk-json-path-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nk-json-path-type {
+    flex: none;
+}
+
+.nk-json-path button {
+    flex: none;
+    margin-inline-start: auto;
+    border: 0;
+    background: transparent;
+    color: var(--color-fg);
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.nk-json-status {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}

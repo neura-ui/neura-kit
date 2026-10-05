@@ -23,12 +23,14 @@ import './features/system/translations';
 import './features/system/theme';
 import './features/system/pullcord';
 import './features/system/toast';
+import './features/system/tooltip';
 import './features/system/neura-kit';
 import './features/system/clipboard';
 import './features/system/icons';
 import './features/system/preloader';
 import './features/media/orb';
 
+import './features/overlays/menu-morph';
 import './features/overlays/modal';
 import './features/overlays/sideover';
 import './features/overlays/spotlight';

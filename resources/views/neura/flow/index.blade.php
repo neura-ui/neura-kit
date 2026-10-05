@@ -152,18 +152,18 @@
 
                         <div class="flow-card">
                             <div class="flow-icon" x-text="nodeIcon(node)"></div>
-                        </div>
-
-                        <div class="flow-meta">
-                            <p class="flow-title" x-text="(node.data && node.data.label) || node.type || 'Step'"></p>
-                            <p
-                                class="flow-sub"
-                                x-show="node.data && node.data.description"
-                                x-text="node.data && node.data.description"
-                            ></p>
+                            <div class="flow-meta">
+                                <p class="flow-title" x-text="(node.data && node.data.label) || node.type || 'Step'"></p>
+                                <p
+                                    class="flow-sub"
+                                    x-show="node.data && node.data.description"
+                                    x-text="node.data && node.data.description"
+                                ></p>
+                            </div>
                             <span
                                 class="flow-badge"
                                 x-show="node.data && node.data.status"
+                                x-bind:data-status="node.data && node.data.status"
                                 x-text="node.data && node.data.status"
                             ></span>
                         </div>

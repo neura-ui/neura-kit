@@ -229,7 +229,7 @@
                     class="col-start-1 row-start-1 group rounded-full aria-disabled:cursor-not-allowed {{ $focus }}"
                 >
                     <span
-                        class="flex items-center justify-center rounded-full border transition-colors duration-300 {{ $tokens['circle'] }}"
+                        class="flex items-center justify-center rounded-full border transition-colors duration-fast ease-standard {{ $tokens['circle'] }}"
                         :class="[
                             isActive({{ $n }}) && @js($colors['active'] . ' border-transparent'),
                             isDone({{ $n }}) && @js($colors['completed']),
@@ -265,7 +265,7 @@
                     ])>
                         <div class="absolute inset-0 bg-neutral-200 dark:bg-white/[0.08]"></div>
                         <div
-                            class="absolute rounded-full {{ $colors['connector'] }} {{ $vertical ? 'inset-x-0 top-0 transition-[height] duration-500 ease-out' : 'inset-y-0 left-0 transition-[width] duration-500 ease-out' }}"
+                            class="absolute rounded-full {{ $colors['connector'] }} {{ $vertical ? 'inset-x-0 top-0 transition-[height] duration-spring ease-spring' : 'inset-y-0 left-0 transition-[width] duration-spring ease-spring' }}"
                             :style="isDone({{ $n }}) ? '{{ $vertical ? 'height' : 'width' }}: 100%' : '{{ $vertical ? 'height' : 'width' }}: 0%'"
                         ></div>
                     </div>
@@ -277,7 +277,7 @@
                     $tokens['verticalPad'] => $vertical && ! $last,
                 ])>
                     <span
-                        class="block font-medium leading-tight transition-colors duration-300 {{ $tokens['label'] }}"
+                        class="block font-medium leading-tight transition-colors duration-fast ease-standard {{ $tokens['label'] }}"
                         :class="[
                             isActive({{ $n }}) && @js($colors['labelActive'] ?? 'text-fg'),
                             isDone({{ $n }}) && @js($colors['labelCompleted'] ?? 'text-fg-secondary'),

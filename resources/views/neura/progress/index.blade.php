@@ -93,7 +93,7 @@
     if ($indeterminate) {
         $animationClasses = 'animate-[progress-indeterminate_1.5s_ease-in-out_infinite]';
     } elseif ($animated) {
-        $animationClasses = 'transition-all duration-500 ease-out';
+        $animationClasses = 'transition-all duration-spring ease-spring';
     }
 
     // Striped pattern

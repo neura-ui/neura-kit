@@ -66,8 +66,15 @@
         <div
             x-show="open"
             x-cloak
-            x-transition.opacity
-            class="nk-editor-menu absolute left-0 top-full z-30 mt-1.5 w-48"
+            data-side="bottom"
+            data-align="start"
+            x-transition:enter="nk-menu-motion"
+            x-transition:enter-start="nk-menu-from"
+            x-transition:enter-end="nk-menu-to"
+            x-transition:leave="nk-menu-leaving"
+            x-transition:leave-start="nk-menu-to"
+            x-transition:leave-end="nk-menu-out"
+            class="nk-menu-motion nk-editor-menu absolute left-0 top-full z-30 mt-1.5 w-48"
         >
             <template x-for="style in styleMenu" :key="style.name">
                 <button
@@ -256,8 +263,15 @@
         <div
             x-show="open"
             x-cloak
-            x-transition.opacity
-            class="absolute left-0 top-full z-30 mt-1 w-52 rounded-md border border-edge bg-surface py-1 shadow-lg"
+            data-side="bottom"
+            data-align="start"
+            x-transition:enter="nk-menu-motion"
+            x-transition:enter-start="nk-menu-from"
+            x-transition:enter-end="nk-menu-to"
+            x-transition:leave="nk-menu-leaving"
+            x-transition:leave-start="nk-menu-to"
+            x-transition:leave-end="nk-menu-out"
+            class="nk-menu-motion absolute left-0 top-full z-30 mt-1 w-52 rounded-md border border-edge bg-surface py-1 shadow-lg"
         >
             <button
                 type="button"

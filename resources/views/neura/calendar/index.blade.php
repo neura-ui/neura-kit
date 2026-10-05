@@ -73,10 +73,22 @@
     $calendarShadowClass = PackResolver::shadow(neura_config('popup', 'shadow'));
 
     $selectedColor = PackResolver::buttonColor('primary', 'dark');
-    $daySelectedClasses = trim(
-        str_replace(' shadow-sm', '', $selectedColor['base'] ?? 'bg-primary-900 text-white dark:bg-primary-100 dark:text-primary-900')
-        . ' ' . ($selectedColor['hover'] ?? 'hover:bg-primary-800 dark:hover:bg-primary-200')
-    );
+    $selectedBase = trim(str_replace(
+        ' shadow-sm',
+        '',
+        $selectedColor['base'] ?? 'bg-primary-900 text-white dark:bg-primary-100 dark:text-primary-900',
+    ));
+    $selectedBg = [];
+    $selectedText = [];
+    foreach (preg_split('/\s+/', $selectedBase) as $part) {
+        if (str_contains($part, 'bg-')) {
+            $selectedBg[] = $part;
+        } elseif (str_contains($part, 'text-')) {
+            $selectedText[] = $part;
+        }
+    }
+    $daySelectedBgClasses = implode(' ', $selectedBg) ?: 'bg-primary-900 dark:bg-primary-100';
+    $daySelectedTextClasses = implode(' ', $selectedText) ?: 'text-white dark:text-primary-900';
 @endphp
 
 <div
@@ -93,7 +105,7 @@
         firstDayOfWeek: {{ json_encode((int) $firstDayOfWeek) }},
         monthsCount: {{ json_encode($monthsCount) }},
         showOutsideDays: {{ json_encode($showOutsideDays) }},
-        selectedClasses: {{ json_encode($daySelectedClasses) }},
+        selectedTextClasses: {{ json_encode($daySelectedTextClasses) }},
         presets: {{ json_encode((object) $presets) }},
         dayLabels: {{ json_encode((object) $dayLabels) }},
         events: {{ json_encode((object) $events) }},
@@ -129,10 +141,22 @@
             this.buildMonths();
             this.ready = true;
 
-            this.$watch('currentMonth', () => this.buildMonths());
-            this.$watch('currentYear', () => this.buildMonths());
+            this.$watch('currentMonth', () => {
+                this.buildMonths();
+                this.$nextTick(() => this.syncSelection(false));
+            });
+            this.$watch('currentYear', () => {
+                this.buildMonths();
+                this.$nextTick(() => this.syncSelection(false));
+            });
 
             // Keep grid in sync; x-modelable handles wire:model / x-model (avoid $wire.set).
+            const release = () => {
+                this.$root.querySelectorAll('[data-cal-highlight]').forEach((node) => node.removeAttribute('data-pressed'));
+            };
+            window.addEventListener('pointerup', release);
+            window.addEventListener('pointercancel', release);
+
             this.$watch('selectedDate', (value) => {
                 const normalized = this.normalizeValue(value);
                 if (JSON.stringify(normalized) !== JSON.stringify(value)) {
@@ -140,7 +164,19 @@
                     return;
                 }
                 this.buildMonths();
+                this.$nextTick(() => this.syncSelection(true));
             });
+
+            this.$nextTick(() => this.syncSelection(false));
+
+            if (typeof ResizeObserver !== 'undefined') {
+                let frame = 0;
+                const observer = new ResizeObserver(() => {
+                    cancelAnimationFrame(frame);
+                    frame = requestAnimationFrame(() => this.syncSelection(false));
+                });
+                observer.observe(this.$root);
+            }
         },
 
         toDateStr(value) {
@@ -325,17 +361,17 @@
             if (day.isDisabled) {
                 classes.push('rounded-md text-fg-disabled opacity-50');
             } else if (day.isSelected && day.inMonth) {
-                classes.push('rounded-md', this.selectedClasses);
+                classes.push('rounded-md', this.selectedTextClasses);
             } else if (band === 'middle') {
-                classes.push('rounded-none text-fg hover:bg-active');
+                classes.push('rounded-none text-fg');
             } else if (band === 'start' || band === 'end') {
-                classes.push('rounded-md text-fg hover:bg-active');
+                classes.push('rounded-md text-fg');
             } else if (! day.inMonth) {
-                classes.push('rounded-md text-fg-muted hover:bg-hover');
+                classes.push('rounded-md text-fg-muted');
             } else if (day.isToday) {
                 classes.push('rounded-md bg-active text-fg font-medium');
             } else {
-                classes.push('rounded-md text-fg hover:bg-hover');
+                classes.push('rounded-md text-fg');
             }
 
             if (day.isToday && day.isSelected) classes.push('font-medium');
@@ -387,6 +423,218 @@
             if (this.isRange && this.selectedDate.start && ! this.selectedDate.end) {
                 this.hoveredDate = day.dateStr;
             }
+        },
+
+        dayMotionReduced() {
+            return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        },
+
+        dayBox(days, button) {
+            const outer = days.getBoundingClientRect();
+            const inner = button.getBoundingClientRect();
+
+            return {
+                x: inner.left - outer.left + days.scrollLeft,
+                y: inner.top - outer.top + days.scrollTop,
+                w: inner.width,
+                h: inner.height,
+            };
+        },
+
+        dayAtPoint(days, x, y) {
+            const buttons = days.querySelectorAll('button[data-date]');
+            let best = null;
+            let bestDist = Infinity;
+
+            buttons.forEach((button) => {
+                if (button.disabled || button.classList.contains('invisible')) return;
+                const rect = button.getBoundingClientRect();
+                const cx = Math.min(Math.max(x, rect.left), rect.right);
+                const cy = Math.min(Math.max(y, rect.top), rect.bottom);
+                const dist = ((x - cx) ** 2) + ((y - cy) ** 2);
+                if (dist < bestDist) {
+                    bestDist = dist;
+                    best = button;
+                }
+            });
+
+            return best;
+        },
+
+        moveDayHighlight(days, highlight, button) {
+            if (highlight.dataset.shown === '1' && highlight.dataset.key === button.dataset.date) return;
+            if (highlight.dataset.key !== button.dataset.date) highlight.removeAttribute('data-pressed');
+            highlight.dataset.key = button.dataset.date || '';
+            const box = this.dayBox(days, button);
+            highlight.dataset.box = `${box.x}|${box.y}|${box.w}|${box.h}`;
+            const shown = highlight.dataset.shown === '1';
+            if (! shown || this.dayMotionReduced()) this.jumpDayHighlight(highlight, box, ! shown);
+            else this.glideDayHighlight(highlight, box);
+            highlight.dataset.shown = '1';
+        },
+
+        jumpDayHighlight(highlight, box, fadeIn) {
+            highlight._nkAnim?.cancel();
+            highlight.style.transform = `translate(${box.x}px, ${box.y}px)`;
+            highlight.style.width = `${box.w}px`;
+            highlight.style.height = `${box.h}px`;
+            if (! fadeIn || this.dayMotionReduced()) {
+                highlight.style.opacity = '1';
+                return;
+            }
+            const from = getComputedStyle(highlight).opacity;
+            highlight._nkAnim = highlight.animate(
+                [{ opacity: from }, { opacity: 1 }],
+                { duration: 160, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'forwards' },
+            );
+            highlight._nkAnim.onfinish = () => {
+                highlight.style.opacity = '1';
+                highlight._nkAnim?.cancel();
+            };
+        },
+
+        glideDayHighlight(highlight, box) {
+            const from = getComputedStyle(highlight);
+            const fromTransform = from.transform === 'none' ? 'translate(0px, 0px)' : from.transform;
+            const fromWidth = from.width;
+            const fromHeight = from.height;
+            highlight._nkAnim?.cancel();
+            const next = {
+                transform: `translate(${box.x}px, ${box.y}px)`,
+                width: `${box.w}px`,
+                height: `${box.h}px`,
+                opacity: '1',
+            };
+            highlight._nkAnim = highlight.animate(
+                [{ transform: fromTransform, width: fromWidth, height: fromHeight, opacity: 1 }, next],
+                { duration: 260, easing: 'linear(0, 0.18 12%, 0.42 24%, 0.64 38%, 0.82 52%, 0.94 66%, 1.02 78%, 1.035 88%, 1.01 94%, 1)', fill: 'forwards' },
+            );
+            highlight._nkAnim.onfinish = () => {
+                highlight.style.transform = next.transform;
+                highlight.style.width = next.width;
+                highlight.style.height = next.height;
+                highlight.style.opacity = '1';
+                highlight._nkAnim?.cancel();
+            };
+        },
+
+        selectionEntries() {
+            if (this.isRange) {
+                const entries = [];
+                if (this.selectedDate?.start) entries.push({ key: 'start', date: this.selectedDate.start });
+                if (this.selectedDate?.end && this.selectedDate.end !== this.selectedDate.start) {
+                    entries.push({ key: 'end', date: this.selectedDate.end });
+                }
+                return entries;
+            }
+
+            if (this.isMultiple) {
+                return (Array.isArray(this.selectedDate) ? this.selectedDate : []).map((date) => ({ key: date, date }));
+            }
+
+            return this.selectedDate ? [{ key: 'value', date: this.selectedDate }] : [];
+        },
+
+        ensureSelectionDisc(days, key) {
+            const existing = [...days.querySelectorAll('[data-cal-selected]')].find((node) => node.dataset.calSelected === key);
+            if (existing) return existing;
+
+            const proto = days.querySelector('[data-cal-proto]');
+            if (! proto) return null;
+            const disc = proto.cloneNode(false);
+            disc.removeAttribute('data-cal-proto');
+            disc.dataset.calSelected = key;
+            days.appendChild(disc);
+
+            return disc;
+        },
+
+        syncSelection(animate) {
+            const entries = this.selectionEntries();
+            const wanted = new Set(entries.map((entry) => entry.key));
+
+            this.$root.querySelectorAll('.nk-cal-days').forEach((days) => {
+                if (days.getBoundingClientRect().width === 0) return;
+
+                days.querySelectorAll('[data-cal-selected]').forEach((disc) => {
+                    if (! wanted.has(disc.dataset.calSelected)) this.hideDayHighlight(disc);
+                });
+
+                entries.forEach((entry) => {
+                    const button = [...days.querySelectorAll('button[data-date]')].find((node) => node.dataset.date === entry.date && ! node.hasAttribute('data-outside'));
+                    const disc = this.ensureSelectionDisc(days, entry.key);
+                    if (! disc) return;
+                    if (! button) {
+                        this.hideDayHighlight(disc);
+                        return;
+                    }
+                    if (! animate) {
+                        if (disc._nkAnim && disc._nkAnim.playState === 'running') return;
+                        const box = this.dayBox(days, button);
+                        const signature = `${box.x}|${box.y}|${box.w}|${box.h}`;
+                        if (disc.dataset.shown === '1' && disc.dataset.key === entry.date && disc.dataset.box === signature) return;
+                        this.jumpDayHighlight(disc, box, disc.dataset.shown !== '1');
+                        disc.dataset.shown = '1';
+                        disc.dataset.key = entry.date;
+                        disc.dataset.box = signature;
+                        return;
+                    }
+                    this.moveDayHighlight(days, disc, button);
+                });
+            });
+        },
+
+        hideDayHighlight(highlight) {
+            if (! highlight || highlight.dataset.shown !== '1') return;
+            highlight.dataset.shown = '';
+            highlight.removeAttribute('data-pressed');
+            highlight._nkAnim?.cancel();
+            if (this.dayMotionReduced()) {
+                highlight.style.opacity = '0';
+                return;
+            }
+            const from = getComputedStyle(highlight).opacity;
+            highlight._nkAnim = highlight.animate(
+                [{ opacity: from }, { opacity: 0 }],
+                { duration: 160, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'forwards' },
+            );
+            highlight._nkAnim.onfinish = () => {
+                highlight.style.opacity = '0';
+                highlight._nkAnim?.cancel();
+            };
+        },
+
+        onDayPointer(event) {
+            if (event.pointerType === 'touch') return;
+            const days = event.currentTarget;
+            const highlight = days.querySelector('[data-cal-highlight]');
+            if (! highlight) return;
+            const button = this.dayAtPoint(days, event.clientX, event.clientY);
+            if (! button) return;
+            this.moveDayHighlight(days, highlight, button);
+        },
+
+        onDayPointerLeave(event) {
+            if (event.currentTarget.contains(document.activeElement)) return;
+            this.hideDayHighlight(event.currentTarget.querySelector('[data-cal-highlight]'));
+        },
+
+        onDayPointerDown(event) {
+            if (event.button !== 0) return;
+            const days = event.currentTarget;
+            const highlight = days.querySelector('[data-cal-highlight]');
+            const button = event.target.closest('[data-date]');
+            if (! highlight || ! button || button.disabled || ! days.contains(button)) return;
+            this.moveDayHighlight(days, highlight, button);
+            highlight.dataset.pressed = '';
+        },
+
+        onDayFocus(event) {
+            const button = event.target.closest('[data-date]');
+            const days = event.currentTarget;
+            const highlight = days.querySelector('[data-cal-highlight]');
+            if (! button || button.disabled || ! highlight || ! days.contains(button)) return;
+            this.moveDayHighlight(days, highlight, button);
         },
 
         hasEventsOn(dateStr) {
@@ -708,7 +956,7 @@
                         <template x-for="(presetValue, presetLabel) in presets" :key="presetLabel">
                             <button
                                 type="button"
-                                class="cursor-pointer rounded-md px-2.5 py-1.5 text-start text-sm whitespace-nowrap transition-colors duration-100 disabled:pointer-events-none disabled:opacity-50"
+                                class="cursor-pointer rounded-md px-2.5 py-1.5 text-start text-sm whitespace-nowrap transition-colors duration-fast ease-standard disabled:pointer-events-none disabled:opacity-50"
                                 x-bind:class="isPresetActive(presetValue)
                                     ? 'bg-active text-fg font-medium'
                                     : 'text-fg-secondary hover:bg-hover hover:text-fg'"
@@ -815,6 +1063,15 @@
                                         </template>
                                     </div>
 
+                                    <div
+                                        class="nk-cal-days"
+                                        x-on:pointermove="onDayPointer($event)"
+                                        x-on:pointerleave="onDayPointerLeave($event)"
+                                        x-on:pointerdown="onDayPointerDown($event)"
+                                        x-on:focusin="onDayFocus($event)"
+                                    >
+                                    <span class="nk-cal-highlight" data-cal-highlight aria-hidden="true"></span>
+                                    <span class="nk-cal-selected {{ $daySelectedBgClasses }}" data-cal-proto aria-hidden="true"></span>
                                     <template x-for="(week, weekIndex) in grid.weeks" :key="weekIndex">
                                         <div class="mt-1 flex" role="row">
                                             <template x-for="(day, dayIndex) in week" :key="day.dateStr">
@@ -826,7 +1083,7 @@
                                                 >
                                                     <button
                                                         type="button"
-                                                        class="relative z-10 inline-flex {{ $cellSizeClass }} cursor-pointer items-center justify-center text-sm font-normal transition-colors duration-100 select-none focus-visible:relative focus-visible:z-20 focus-visible:ring-2 focus-visible:ring-edge-focus focus-visible:outline-none disabled:pointer-events-none"
+                                                        class="relative z-10 inline-flex {{ $cellSizeClass }} cursor-pointer items-center justify-center text-sm font-normal transition-colors duration-fast ease-standard select-none focus-visible:relative focus-visible:z-20 focus-visible:ring-2 focus-visible:ring-edge-focus focus-visible:outline-none disabled:pointer-events-none"
                                                         x-bind:class="dayClasses(day)"
                                                         x-bind:disabled="isDisabled || day.isDisabled"
                                                         x-bind:tabindex="day.dateStr === focusableDate && day.inMonth ? 0 : -1"
@@ -858,6 +1115,7 @@
                                             </template>
                                         </div>
                                     </template>
+                                    </div>
                                 </div>
                             </div>
                         </template>

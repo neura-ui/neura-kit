@@ -1,7 +1,7 @@
 @aware(['darkIcon'=>'moon','lightIcon'=>'sun','iconVariant' => "mini"])
 
 <div
-    class="flex items-center transition-all duration-200 size-10 overflow-hidden"
+    class="flex items-center transition-all duration-fast ease-standard size-10 overflow-hidden"
  >
     <neura::button
         :icon="$lightIcon"

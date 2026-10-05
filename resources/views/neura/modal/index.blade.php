@@ -97,10 +97,10 @@
     x-on:keydown.escape.window="@if($closeOnEscape && !$persistent) close() @endif"
     style="display: none; z-index: 100;"
     class="fixed inset-0 overflow-y-auto"
-    x-transition:enter="ease-out duration-300"
+    x-transition:enter="ease-enter duration-standard"
     x-transition:enter-start="opacity-0"
     x-transition:enter-end="opacity-100"
-    x-transition:leave="ease-in duration-200"
+    x-transition:leave="ease-standard duration-fast"
     x-transition:leave-start="opacity-100"
     x-transition:leave-end="opacity-0"
     x-cloak
@@ -115,10 +115,10 @@
             x-on:click.stop
             @if($customMaxWidth) style="max-width: {{ $customMaxWidth }};" @endif
             class="relative bg-surface-raised backdrop-blur-xl w-full {{ $maxWidthClass }} border border-edge {{ $modalRoundedClass }} {{ $modalShadowClass }}"
-            x-transition:enter="ease-out duration-300"
+            x-transition:enter="ease-enter duration-standard"
             x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
-            x-transition:leave="ease-in duration-200"
+            x-transition:leave="ease-standard duration-fast"
             x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
             x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
         >

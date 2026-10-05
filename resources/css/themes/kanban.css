@@ -1,0 +1,457 @@
+/* Kanban — quiet lanes, hairline cards */
+
+.nk-kanban {
+    --kb-lane: var(--color-surface-inset);
+    --kb-card: var(--color-surface);
+    --kb-edge: var(--color-edge);
+    --kb-muted: var(--color-fg-muted);
+    position: relative;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.dark .nk-kanban {
+    --kb-card: var(--color-surface-raised);
+}
+
+.nk-kanban-scroll {
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    padding-bottom: 0.15rem;
+    scrollbar-width: thin;
+}
+
+.nk-kanban-board {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    width: max-content;
+    min-width: 100%;
+}
+
+.nk-kanban-board-empty {
+    border: 1px dashed color-mix(in oklab, var(--kb-muted) 45%, transparent);
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+    font-size: 0.8125rem;
+    color: var(--kb-muted);
+}
+
+.nk-kanban-col {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 15.5rem;
+    width: 15.5rem;
+    min-height: 7.5rem;
+    padding: 0.5rem;
+    background: var(--kb-lane);
+    border: 1px solid transparent;
+    transition:
+        background-color 160ms var(--nk-ease-standard, ease),
+        border-color 160ms var(--nk-ease-standard, ease),
+        opacity 160ms var(--nk-ease-standard, ease);
+}
+
+.nk-kanban[data-variant="compact"] .nk-kanban-col {
+    flex-basis: 13.25rem;
+    width: 13.25rem;
+    padding: 0.4rem;
+}
+
+.nk-kanban[data-variant="flat"] .nk-kanban-col {
+    background: transparent;
+    padding-inline: 0.15rem;
+}
+
+.nk-kanban[data-variant="outlined"] .nk-kanban-col {
+    background: transparent;
+    border-style: dashed;
+    border-color: var(--kb-edge);
+}
+
+.nk-kanban[data-variant="colorful"] .nk-kanban-col {
+    overflow: hidden;
+    padding-top: 0;
+}
+
+.nk-kanban-col.is-over {
+    background: color-mix(in oklab, var(--color-fg) 5%, var(--kb-lane));
+    border-color: color-mix(in oklab, var(--color-fg) 18%, transparent);
+}
+
+.nk-kanban-col.is-col-over {
+    box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--color-fg) 28%, transparent);
+}
+
+.nk-kanban-col.is-dragging {
+    opacity: 0.45;
+}
+
+.nk-kanban-accent {
+    height: 3px;
+    margin: 0 -0.5rem 0.55rem;
+}
+
+.nk-kanban-dot {
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 999px;
+    flex-shrink: 0;
+}
+
+.nk-kanban-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.2rem 0.35rem 0.55rem;
+}
+
+.nk-kanban-head.is-handle {
+    cursor: grab;
+}
+
+.nk-kanban-head.is-handle:active {
+    cursor: grabbing;
+}
+
+.nk-kanban-heading {
+    min-width: 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.4rem;
+}
+
+.nk-kanban-title {
+    margin: 0;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--color-fg);
+}
+
+.nk-kanban-desc {
+    margin: 0.1rem 0 0;
+    font-size: 0.75rem;
+    line-height: 1.35;
+    color: var(--kb-muted);
+}
+
+.nk-kanban-count {
+    flex-shrink: 0;
+    min-width: 1.25rem;
+    padding-top: 0.05rem;
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.3;
+    text-align: right;
+    color: var(--kb-muted);
+}
+
+.nk-kanban-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.nk-kanban[data-variant="compact"] .nk-kanban-cards {
+    gap: 0.35rem;
+}
+
+.nk-kanban-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 0.7rem 0.75rem 0.65rem;
+    background: var(--kb-card);
+    border: 1px solid var(--kb-edge);
+    text-align: left;
+    transition:
+        border-color 160ms var(--nk-ease-standard, ease),
+        opacity 160ms var(--nk-ease-standard, ease);
+}
+
+.nk-kanban[data-variant="compact"] .nk-kanban-card {
+    padding: 0.55rem 0.6rem;
+}
+
+.nk-kanban-card.is-draggable {
+    cursor: grab;
+}
+
+.nk-kanban-card.is-draggable:active {
+    cursor: grabbing;
+}
+
+.nk-kanban-card.is-clickable {
+    cursor: pointer;
+}
+
+.nk-kanban-card:hover {
+    border-color: color-mix(in oklab, var(--color-fg) 18%, var(--kb-edge));
+}
+
+.nk-kanban-card.is-dragging {
+    opacity: 0.4;
+}
+
+.nk-kanban-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.6rem;
+}
+
+.nk-kanban-card-copy {
+    min-width: 0;
+}
+
+.nk-kanban-card-title {
+    margin: 0;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--color-fg);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.nk-kanban-sub,
+.nk-kanban-body,
+.nk-kanban-footer {
+    margin: 0;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: var(--kb-muted);
+}
+
+.nk-kanban-body {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.nk-kanban-footer {
+    margin-top: 0.1rem;
+    font-size: 0.6875rem;
+}
+
+.nk-kanban-badge {
+    flex-shrink: 0;
+    margin-top: 0.05rem;
+    padding: 0.22rem 0.45rem;
+    border-radius: 999px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--color-fg-secondary);
+    background: color-mix(in oklab, var(--color-fg) 6%, transparent);
+}
+
+.nk-kanban-badge[data-tone="high"],
+.nk-kanban-badge[data-tone="urgent"] {
+    color: var(--color-danger-700);
+    background: color-mix(in oklab, var(--color-danger-500) 14%, transparent);
+}
+
+.nk-kanban-badge[data-tone="low"] {
+    color: var(--color-info-700);
+    background: color-mix(in oklab, var(--color-info-500) 14%, transparent);
+}
+
+.dark .nk-kanban-badge[data-tone="high"],
+.dark .nk-kanban-badge[data-tone="urgent"] {
+    color: var(--color-danger-300);
+}
+
+.dark .nk-kanban-badge[data-tone="low"] {
+    color: var(--color-info-300);
+}
+
+.nk-kanban-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-top: 0.1rem;
+}
+
+.nk-kanban-chip {
+    padding: 0.15rem 0.42rem;
+    border-radius: 999px;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    line-height: 1.3;
+    color: var(--kb-muted);
+    background: color-mix(in oklab, var(--color-fg) 5%, var(--kb-card));
+}
+
+.nk-kanban-empty {
+    margin: 0.15rem 0.15rem 0.35rem;
+    padding: 0.85rem 0.5rem;
+    border: 1px dashed color-mix(in oklab, var(--kb-muted) 40%, transparent);
+    border-radius: 0.7rem;
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--kb-muted);
+}
+
+.nk-kanban-add {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    width: 100%;
+    margin-top: 0.45rem;
+    padding: 0.4rem 0.55rem;
+    border: 0;
+    border-radius: 0.65rem;
+    background: transparent;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--kb-muted);
+    transition: background-color 160ms var(--nk-ease-standard, ease), color 160ms var(--nk-ease-standard, ease);
+}
+
+.nk-kanban-add:hover {
+    background: color-mix(in oklab, var(--color-fg) 5%, transparent);
+    color: var(--color-fg);
+}
+
+.nk-kanban-add svg {
+    width: 0.85rem;
+    height: 0.85rem;
+}
+
+.nk-kanban-person {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-width: 0;
+    margin-top: 0.15rem;
+    padding-right: 3.1rem;
+}
+
+.nk-kanban-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    overflow: hidden;
+    flex-shrink: 0;
+    border-radius: 999px;
+    font-size: 0.5625rem;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.nk-kanban-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.nk-kanban-avatar[data-tone="0"] {
+    color: var(--color-primary-700);
+    background: color-mix(in oklab, var(--color-primary-500) 16%, var(--kb-card));
+}
+
+.nk-kanban-avatar[data-tone="1"] {
+    color: var(--color-info-700);
+    background: color-mix(in oklab, var(--color-info-500) 16%, var(--kb-card));
+}
+
+.nk-kanban-avatar[data-tone="2"] {
+    color: var(--color-success-700, var(--color-fg));
+    background: color-mix(in oklab, var(--color-success-500) 16%, var(--kb-card));
+}
+
+.nk-kanban-avatar[data-tone="3"] {
+    color: var(--color-warning-700, var(--color-fg));
+    background: color-mix(in oklab, var(--color-warning-500) 18%, var(--kb-card));
+}
+
+.nk-kanban-avatar[data-tone="4"] {
+    color: var(--color-danger-700);
+    background: color-mix(in oklab, var(--color-danger-500) 14%, var(--kb-card));
+}
+
+.dark .nk-kanban-avatar[data-tone="0"] { color: var(--color-primary-300); }
+.dark .nk-kanban-avatar[data-tone="1"] { color: var(--color-info-300); }
+.dark .nk-kanban-avatar[data-tone="2"] { color: var(--color-success-300); }
+.dark .nk-kanban-avatar[data-tone="3"] { color: var(--color-warning-300); }
+.dark .nk-kanban-avatar[data-tone="4"] { color: var(--color-danger-300); }
+
+.nk-kanban-person-name {
+    overflow: hidden;
+    font-size: 0.6875rem;
+    line-height: 1.3;
+    color: var(--kb-muted);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nk-kanban-moves {
+    position: absolute;
+    right: 0.4rem;
+    bottom: 0.4rem;
+    display: flex;
+    gap: 0.15rem;
+    opacity: 0;
+    transition: opacity 160ms var(--nk-ease-standard, ease);
+}
+
+.nk-kanban-card:hover .nk-kanban-moves,
+.nk-kanban-card:focus-within .nk-kanban-moves {
+    opacity: 1;
+}
+
+@media (hover: none) {
+    .nk-kanban-moves { opacity: 1; }
+}
+
+.nk-kanban-move {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.35rem;
+    height: 1.35rem;
+    padding: 0;
+    border: 1px solid var(--kb-edge);
+    border-radius: 0.4rem;
+    background: var(--kb-card);
+    color: var(--color-fg-secondary);
+}
+
+.nk-kanban-move:hover {
+    color: var(--color-fg);
+    background: color-mix(in oklab, var(--color-fg) 5%, var(--kb-card));
+}
+
+.nk-kanban-move:focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 1px;
+}
+
+.nk-kanban-move svg {
+    width: 0.8rem;
+    height: 0.8rem;
+}
+
+.nk-kanban-status {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}

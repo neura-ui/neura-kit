@@ -7,7 +7,8 @@ function extractThemeContent(themeCSS: string): string {
 
 export function transformCss(
   code: string,
-  themeCSS: string
+  themeCSS: string,
+  surfaceCSS = ''
 ): TransformResult | null {
   let modified = false;
   let output = code;
@@ -68,6 +69,11 @@ export function transformCss(
 
   if (!output.includes('@custom-variant dark')) {
     output += `\n@custom-variant dark (&:where(.dark, .dark *));\n`;
+    modified = true;
+  }
+
+  if (surfaceCSS.trim()) {
+    output += `\n/* NeuraKit surfaces — generated from appearance */\n${surfaceCSS}\n`;
     modified = true;
   }
 

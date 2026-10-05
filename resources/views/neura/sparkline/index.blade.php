@@ -87,17 +87,6 @@
         default => 'stroke-primary-500',
     };
 
-    $fillClass = match ($color) {
-        'primary' => 'fill-primary-500/15 dark:fill-primary-400/20',
-        'secondary' => 'fill-neutral-500/15 dark:fill-neutral-400/20',
-        'success' => 'fill-green-500/15 dark:fill-green-400/20',
-        'danger' => 'fill-red-500/15 dark:fill-red-400/20',
-        'warning' => 'fill-yellow-500/15 dark:fill-yellow-400/20',
-        'info' => 'fill-blue-500/15 dark:fill-blue-400/20',
-        'fg' => 'fill-fg/10',
-        default => 'fill-primary-500/15 dark:fill-primary-400/20',
-    };
-
     $dotClass = match ($color) {
         'primary' => 'fill-primary-500',
         'secondary' => 'fill-neutral-500',
@@ -116,6 +105,18 @@
             'max' => $dataMax,
         ])
         : __('Empty sparkline');
+
+    $toneClass = match ($color) {
+        'primary' => 'text-primary-500',
+        'secondary' => 'text-neutral-500',
+        'success' => 'text-green-500',
+        'danger' => 'text-red-500',
+        'warning' => 'text-yellow-500',
+        'info' => 'text-blue-500',
+        'fg' => 'text-fg',
+        default => 'text-primary-500',
+    };
+    $gradientId = 'nk-spark-'.substr(md5(uniqid('', true)), 0, 8);
 @endphp
 
 <svg
@@ -125,10 +126,16 @@
     height="{{ $h }}"
     role="img"
     aria-label="{{ $summary }}"
-    {{ $attributes->merge(['class' => 'inline-block overflow-visible']) }}
+    {{ $attributes->merge(['class' => 'inline-block overflow-visible '.$toneClass]) }}
 >
     @if ($count && $fill && $areaPath !== '')
-        <path d="{{ $areaPath }}" class="{{ $fillClass }} stroke-none" />
+        <defs>
+            <linearGradient id="{{ $gradientId }}" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="currentColor" stop-opacity="0.22" />
+                <stop offset="100%" stop-color="currentColor" stop-opacity="0" />
+            </linearGradient>
+        </defs>
+        <path d="{{ $areaPath }}" fill="url(#{{ $gradientId }})" class="stroke-none" />
     @endif
 
     @if ($count && $linePath !== '')

@@ -50,7 +50,7 @@
             x-on:click="toggle()"
             class="flex items-center cursor-pointer"
         >
-            <span class="inline-flex items-center px-1.5 py-0.5 rounded-md text-xs font-medium tabular-nums bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-500/15 transition-colors duration-100">
+            <span class="inline-flex items-center px-1.5 py-0.5 rounded-md text-xs font-medium tabular-nums bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-500/15 transition-colors duration-fast ease-standard">
                 {{ $count }}
             </span>
         </div>
@@ -61,15 +61,17 @@
                 x-anchor.right.offset.3="$refs.popoverTrigger"
                 x-on:click.away="hide()"
                 x-on:keydown.escape="hide()"
-                x-transition:enter="transition ease-out duration-150"
-                x-transition:enter-start="opacity-0 scale-95"
-                x-transition:enter-end="opacity-100 scale-100"
-                x-transition:leave="transition ease-in duration-100"
-                x-transition:leave-start="opacity-100 scale-100"
-                x-transition:leave-end="opacity-0 scale-95"
+                data-side="right"
+                data-align="start"
+                x-transition:enter="nk-menu-motion"
+                x-transition:enter-start="nk-menu-from"
+                x-transition:enter-end="nk-menu-to"
+                x-transition:leave="nk-menu-leaving"
+                x-transition:leave-start="nk-menu-to"
+                x-transition:leave-end="nk-menu-out"
                 style="display:none; z-index: 9999;"
                 @class([
-                    'absolute bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-white/[0.1] min-w-48 max-w-64 max-h-[calc(100vh-2rem)]',
+                    'nk-menu-motion absolute bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-white/[0.1] min-w-48 max-w-64 max-h-[calc(100vh-2rem)]',
                     $popoverRoundedClass,
                     $popoverShadowClass,
                 ])
@@ -80,7 +82,7 @@
                     </div>
                     <div class="space-y-px">
                         @foreach($relatedItems as $item)
-                            <div class="px-2 py-1.5 text-[13px] text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-white/[0.04] rounded-md transition-colors duration-75">
+                            <div class="px-2 py-1.5 text-[13px] text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-white/[0.04] rounded-md transition-colors duration-fast ease-standard">
                                 {{ data_get($item, $popoverAttribute, $item) }}
                             </div>
                         @endforeach

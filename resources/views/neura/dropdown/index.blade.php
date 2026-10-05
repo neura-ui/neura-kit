@@ -8,10 +8,18 @@
     use Neura\Kit\Support\PackResolver;
 
     $disabled = $attributes->has('disabled') && !in_array($attributes->get('disabled'), [false, 0, '0', 'false', ''], true);
+    [$menuSide, $menuAlign] = array_pad(explode('-', $position, 2), 2, 'center');
+    if (! in_array($menuSide, ['top', 'bottom', 'left', 'right'], true)) {
+        $menuSide = 'bottom';
+    }
+    if (! in_array($menuAlign, ['start', 'end', 'center'], true)) {
+        $menuAlign = 'center';
+    }
     $roundedClass = PackResolver::rounded(neura_config('dropdown', 'rounded'));
     $shadowClass = PackResolver::shadow(neura_config('dropdown', 'shadow'));
 
     $defaultPanelClasses = [
+        'nk-menu-motion',
         'isolate',
         'z-50',
         'grid',
@@ -114,12 +122,14 @@
                     x-on:keydown.up.prevent.stop="$focus.prev()"
                     x-on:keydown.home.prevent.stop="$focus.first()"
                     x-on:keydown.end.prevent.stop="$focus.last()"
-                    x-transition:enter="transition ease-out duration-200"
-                    x-transition:enter-start="opacity-0 scale-95"
-                    x-transition:enter-end="opacity-100 scale-100"
-                    x-transition:leave="transition ease-in duration-75"
-                    x-transition:leave-start="opacity-100 scale-100"
-                    x-transition:leave-end="opacity-0 scale-95"
+                    x-transition:enter="nk-menu-motion"
+                    x-transition:enter-start="nk-menu-from"
+                    x-transition:enter-end="nk-menu-to"
+                    x-transition:leave="nk-menu-leaving"
+                    x-transition:leave-start="nk-menu-to"
+                    x-transition:leave-end="nk-menu-out"
+                    data-side="{{ $menuSide }}"
+                    data-align="{{ $menuAlign }}"
                     x-on:click.away="close($refs.button)"
                     x-bind:id="$id('dropdown-panel')"
                     style="display: none; backdrop-filter: blur(64px); -webkit-backdrop-filter: blur(64px); z-index: 9999"

@@ -9,8 +9,8 @@
 
 @php
     $iconClasses = [
-        'flex items-center justify-center rounded-full border-2 z-10',
-        $active ? 'bg-blue-600 border-blue-600 text-white' : ($completed ? 'bg-green-600 border-green-600 text-white' : 'bg-surface border-edge text-fg-muted'),
+        'flex items-center justify-center rounded-full border z-10',
+        $active ? 'bg-fg border-fg text-surface' : ($completed ? 'bg-surface-inset border-edge text-fg' : 'bg-surface border-edge text-fg-muted'),
     ];
 @endphp
 
@@ -18,15 +18,15 @@
     <div class="absolute left-0 top-0">
         @if ($icon)
             <div class="{{ Arr::toCssClasses($iconClasses) }} size-10">
-                <neura::icon :name="$icon" variant="outline" />
+                <neura::icon :name="$icon" variant="outline" class="size-5" />
             </div>
         @else
-            <div class="{{ Arr::toCssClasses($iconClasses) }} size-3"></div>
+            <div class="{{ Arr::toCssClasses($iconClasses) }} size-3 mt-3.5"></div>
         @endif
     </div>
-    
+
     @if ($title || $description || $date || $slot->isNotEmpty())
-        <div class="mt-4">
+        <div class="pt-2">
             @if ($date)
                 <neura::text class="text-xs text-fg-muted mb-1">
                     {{ $date }}

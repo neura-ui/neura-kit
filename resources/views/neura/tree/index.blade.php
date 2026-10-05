@@ -122,7 +122,7 @@
             <button
                 x-show="item.type === 'folder' && hasChildren(item)"
                 @click.stop="toggleExpand(item.id)"
-                class="{{ $sizeConfig['icon'] }} {{ $variantConfig['chevron'] }} shrink-0 flex items-center justify-center rounded transition-all duration-200"
+                class="{{ $sizeConfig['icon'] }} {{ $variantConfig['chevron'] }} shrink-0 flex items-center justify-center rounded transition-all duration-fast ease-standard"
                 :class="{ 'rotate-90': isExpanded(item.id) }"
                 type="button"
                 :aria-label="isExpanded(item.id) ? 'Collapse' : 'Expand'"

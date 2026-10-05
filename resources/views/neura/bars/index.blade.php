@@ -50,11 +50,11 @@
 
     $roundedClass = match ($rounded) {
         'none' => 'rounded-none',
-        'sm' => 'rounded-sm',
-        'md' => 'rounded-md',
-        'lg' => 'rounded-lg',
-        'full' => 'rounded-full',
-        default => 'rounded-sm',
+        'sm' => 'rounded-t-sm',
+        'md' => 'rounded-t-md',
+        'lg' => 'rounded-t-lg',
+        'full' => 'rounded-t-full',
+        default => 'rounded-t-sm',
     };
 
     $defaultBarClass = match ($color) {
@@ -114,7 +114,7 @@
 
             <div class="relative flex w-full flex-1 items-end">
                 <span
-                    class="block w-full {{ $roundedClass }} {{ $barClass }} transition-[height] duration-300 ease-out"
+                    class="block w-full {{ $roundedClass }} {{ $barClass }} transition-[height] duration-spring ease-spring"
                     style="height: {{ $pct }}%"
                     title="{{ $item['label'] ? e($item['label']).': ' : '' }}{{ $item['value'] }}"
                 ></span>

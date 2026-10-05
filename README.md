@@ -1,7 +1,7 @@
 # Neura Kit
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.0.0-green.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-3.0.0-green.svg)](CHANGELOG.md)
 
 Open-source UI component library for **Laravel**, **Livewire**, and **Alpine.js** — forms, tables, modals, toasts, dark mode, and 60+ Blade components with a consistent design system.
 
@@ -11,7 +11,7 @@ Open-source UI component library for **Laravel**, **Livewire**, and **Alpine.js*
 | **Website** | [neuraui.dev](https://neuraui.dev/) |
 | **Changelog** | [CHANGELOG.md](CHANGELOG.md) |
 
-> **2.0** is fully open source (MIT). No license key, activation, or vendor dashboard required.
+> **3.0** is fully open source (MIT). No license key, activation, or vendor dashboard required.
 
 ---
 
@@ -45,7 +45,7 @@ The README covers a quick start. For installation steps, component props, layout
 ### 1. Install the package
 
 ```bash
-composer require neura-ui/neura-kit:^2.0
+composer require neura-ui/neura-kit:^3.0
 ```
 
 ### 2. Register the Vite plugin

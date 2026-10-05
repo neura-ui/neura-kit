@@ -1,0 +1,106 @@
+/* Shown value rolls in the direction of the list. The reel masks the travel. */
+
+.nk-select-value {
+  display: grid;
+  min-width: 0;
+}
+
+.nk-select-reel {
+  display: grid;
+  grid-area: 1 / 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.nk-select-chip {
+  grid-area: 1 / 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nk-select-faces {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.nk-multi {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.nk-multi-slot {
+  display: flex;
+  flex: none;
+  overflow: hidden;
+}
+
+.nk-multi-slot + .nk-multi-slot {
+  margin-left: 0.25rem;
+}
+
+.nk-multi-chip {
+  display: inline-flex;
+  align-items: center;
+  max-width: 9rem;
+  height: 1.25rem;
+  padding: 0 0.45rem;
+  border: 1px solid var(--nk-edge);
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--nk-fg) 7%, transparent);
+  color: var(--nk-fg);
+  font-size: 0.75rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.nk-multi-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nk-multi-count {
+  display: grid;
+  height: 1em;
+  overflow: hidden;
+  line-height: 1;
+}
+
+.nk-multi-count > span {
+  grid-area: 1 / 1;
+}
+
+.nk-select-check {
+  width: 0.7rem;
+  height: 0.7rem;
+}
+
+.nk-select-check path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 16;
+  stroke-dashoffset: 16;
+  animation: nk-select-draw 280ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes nk-select-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nk-select-check path {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}

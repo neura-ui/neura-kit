@@ -35,6 +35,86 @@ class NeuraKitConfig
         ], $options);
     }
 
+    public static function expandingButtonGroup(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'color' => self::GLOBAL,
+                'rounded' => self::GLOBAL,
+                'shadow' => Shadow::NONE->value,
+                'size' => Size::MD->value,
+                'variant' => Variant::SOFT->value,
+            ],
+            'packs' => [
+                'rounders' => Packs\Rounded::class,
+                'shadows' => Packs\Shadow::class,
+                'colors' => Packs\Button\Color::class,
+                'sizes' => Packs\Button\Size::class,
+                'icon-sizes' => Packs\Button\IconSize::class,
+            ],
+        ], $options);
+    }
+
+    public static function confirmMorph(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'color' => Color::DANGER->value,
+                'rounded' => self::GLOBAL,
+                'shadow' => Shadow::NONE->value,
+                'size' => Size::MD->value,
+                'variant' => Variant::OUTLINE->value,
+            ],
+            'packs' => [
+                'rounders' => Packs\Rounded::class,
+                'shadows' => Packs\Shadow::class,
+                'colors' => Packs\Button\Color::class,
+                'sizes' => Packs\Button\Size::class,
+                'icon-sizes' => Packs\Button\IconSize::class,
+            ],
+        ], $options);
+    }
+
+    public static function buttonGroup(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'color' => self::GLOBAL,
+                'rounded' => self::GLOBAL,
+                'shadow' => self::GLOBAL,
+                'size' => Size::SM->value,
+                'variant' => Variant::OUTLINE->value,
+            ],
+            'packs' => [
+                'rounders' => Packs\Rounded::class,
+                'shadows' => Packs\Shadow::class,
+                'colors' => Packs\Button\Color::class,
+                'sizes' => Packs\Button\Size::class,
+                'icon-sizes' => Packs\Button\IconSize::class,
+            ],
+        ], $options);
+    }
+
+    public static function splitButton(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'color' => self::GLOBAL,
+                'rounded' => self::GLOBAL,
+                'shadow' => self::GLOBAL,
+                'size' => Size::SM->value,
+                'variant' => Variant::DARK->value,
+            ],
+            'packs' => [
+                'rounders' => Packs\Rounded::class,
+                'shadows' => Packs\Shadow::class,
+                'colors' => Packs\Button\Color::class,
+                'sizes' => Packs\Button\Size::class,
+                'icon-sizes' => Packs\Button\IconSize::class,
+            ],
+        ], $options);
+    }
+
     public static function badge(array $options = []): array
     {
         return self::mix([
@@ -134,7 +214,7 @@ class NeuraKitConfig
     {
         return self::mix([
             'default' => [
-                'indicator' => 'orb',
+                'indicator' => 'mark',
                 'orbState' => 'working',
                 'orbSize' => 72,
                 'autoHide' => true,
@@ -173,6 +253,63 @@ class NeuraKitConfig
                 'rounders' => Packs\Rounded::class,
                 'sizes' => Packs\Input\Size::class,
                 'colors' => Packs\Input\Color::class,
+            ],
+        ], $options);
+    }
+
+    public static function numberField(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'color' => self::GLOBAL,
+                'rounded' => self::GLOBAL,
+                'shadow' => self::GLOBAL,
+                'size' => Size::MD->value,
+                'variant' => Variant::OUTLINE->value,
+            ],
+            'packs' => [
+                'rounders' => Packs\Rounded::class,
+                'shadows' => Packs\Shadow::class,
+                'colors' => Packs\Button\Color::class,
+                'sizes' => Packs\Button\Size::class,
+            ],
+        ], $options);
+    }
+
+    public static function mentionInput(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'color' => self::GLOBAL,
+                'rounded' => self::GLOBAL,
+                'shadow' => self::GLOBAL,
+                'size' => Size::MD->value,
+                'variant' => Variant::OUTLINE->value,
+            ],
+            'packs' => [
+                'rounders' => Packs\Rounded::class,
+                'shadows' => Packs\Shadow::class,
+                'colors' => Packs\Button\Color::class,
+                'sizes' => Packs\Button\Size::class,
+            ],
+        ], $options);
+    }
+
+    public static function signaturePad(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'color' => self::GLOBAL,
+                'rounded' => self::GLOBAL,
+                'shadow' => self::GLOBAL,
+                'size' => Size::MD->value,
+                'variant' => Variant::OUTLINE->value,
+            ],
+            'packs' => [
+                'rounders' => Packs\Rounded::class,
+                'shadows' => Packs\Shadow::class,
+                'colors' => Packs\Button\Color::class,
+                'sizes' => Packs\Button\Size::class,
             ],
         ], $options);
     }
@@ -616,7 +753,57 @@ class NeuraKitConfig
         ], $options);
     }
 
+    public static function jsonViewer(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'rounded' => self::GLOBAL,
+            ],
+            'packs' => [
+                'rounders' => Packs\Rounded::class,
+            ],
+        ], $options);
+    }
+
     public static function flow(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'rounded' => self::GLOBAL,
+                'shadow' => self::GLOBAL,
+            ],
+            'packs' => [
+                'rounders' => Packs\Rounded::class,
+                'shadows' => Packs\Shadow::class,
+            ],
+        ], $options);
+    }
+
+    public static function activityRings(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'rounded' => self::GLOBAL,
+            ],
+            'packs' => [
+                'rounders' => Packs\Rounded::class,
+            ],
+        ], $options);
+    }
+
+    public static function dateReel(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'rounded' => self::GLOBAL,
+            ],
+            'packs' => [
+                'rounders' => Packs\Rounded::class,
+            ],
+        ], $options);
+    }
+
+    public static function timeDial(array $options = []): array
     {
         return self::mix([
             'default' => [

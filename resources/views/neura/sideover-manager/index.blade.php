@@ -32,10 +32,10 @@
     {{-- Backdrop (mobile) --}}
     <div
         x-show="show && showActiveComponent && !isTransitioning"
-        x-transition:enter="transition-opacity ease-out duration-300"
+        x-transition:enter="transition-opacity ease-enter duration-standard"
         x-transition:enter-start="opacity-0"
         x-transition:enter-end="opacity-100"
-        x-transition:leave="transition-opacity ease-in duration-200"
+        x-transition:leave="transition-opacity ease-standard duration-fast"
         x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0"
         @click="closeSideoverOnClickAway()"
@@ -72,9 +72,9 @@
             data-sideover-side="{{ $side }}"
             x-show="show && showActiveComponent && !isLoading && activeComponent === '{{ $id }}' && !isTransitioning"
             x-on:click.stop
-            x-transition:enter="transition-transform ease-out duration-300" x-transition:enter-start="{{ $translateEnter }}"
+            x-transition:enter="transition-transform ease-enter duration-standard" x-transition:enter-start="{{ $translateEnter }}"
             x-transition:enter-end="{{ $translateEnd }}"
-            x-transition:leave="transition-transform ease-in duration-200" x-transition:leave-start="{{ $translateEnd }}"
+            x-transition:leave="transition-transform ease-standard duration-fast" x-transition:leave-start="{{ $translateEnd }}"
             x-transition:leave-end="{{ $translateEnter }}"
             @if ($customStyle) style="{{ $customStyle }}" @endif
             @class([

@@ -6,130 +6,41 @@
 ])
 
 @php
-    $placement = match($position) {
-        'bottom-left' => 'bottom-0 left-0 pl-4 pb-4',
-        'top-right' => 'top-0 right-0 pr-4 pt-4',
-        'top-left' => 'top-0 left-0 pl-4 pt-4',
-        default => 'bottom-0 right-0 pr-4 pb-4'
-    };
-
+    $positions = ['bottom-right', 'bottom-left', 'top-right', 'top-left'];
+    $position = in_array($position, $positions, true) ? $position : 'bottom-right';
+    $isAlignmentsToBottom = str_starts_with($position, 'bottom');
     $sessionToast = session()->pull('notify');
 
-    $isAlignmentsToBottom = Str::startsWith($position, 'bottom');
+    $config = [
+        'maxToasts' => max(1, (int) $maxToasts),
+        'fromBottom' => $isAlignmentsToBottom,
+        'session' => is_array($sessionToast) ? $sessionToast : null,
+    ];
+
+    $root = [
+        'data-position' => $position,
+        'data-edge' => $isAlignmentsToBottom ? 'bottom' : 'top',
+        'x-data' => 'neuraToast('.json_encode($config).')',
+        'x-on:notify.window' => 'addToast($event.detail)',
+        'x-on:keydown' => 'onKey($event)',
+        'role' => 'region',
+        'aria-label' => 'Notifications',
+        'aria-live' => 'polite',
+        'aria-relevant' => 'additions text',
+    ];
 @endphp
 
-<div
-    x-data="{
-        toasts: [],
-        maxToasts: @js($maxToasts),
-        pausedToastIds: new Set(),
-
-       typeConfig: {
-            info: {
-                textColor: 'text-neutral-600 dark:text-neutral-400', // we're using color-mix for making variants color solid and not transparent
-                background: 'dark:bg-[color-mix(in_oklab,_var(--color-neutral-600)_10%,_var(--color-neutral-900)_90%)] bg-[color-mix(in_oklab,_var(--color-neutral-500)_20%,_var(--color-white)_80%)]',
-                borderColor: 'border-neutral-500/55',
-                ariaLabel: window.t('information'),
-            },
-            success: {
-                textColor: 'text-green-600 dark:text-green-400',
-                background: 'dark:bg-[color-mix(in_oklab,_var(--color-green-600)_10%,_var(--color-neutral-900)_90%)] bg-[color-mix(in_oklab,_var(--color-green-500)_20%,_var(--color-white)_80%)]',
-                borderColor: 'border-green-500/55',
-                ariaLabel: window.t('success'),
-            },
-            error: {
-                textColor: 'text-red-600 dark:text-red-400',
-                background: 'dark:bg-[color-mix(in_oklab,_var(--color-red-600)_10%,_var(--color-neutral-900)_90%)] bg-[color-mix(in_oklab,_var(--color-red-500)_25%,_var(--color-white)_75%)]',
-                borderColor: 'border-red-500/55',
-                ariaLabel: window.t('error'),
-            },
-            warning: {
-                textColor: 'text-yellow-600 dark:text-yellow-400',
-                background: 'dark:bg-[color-mix(in_oklab,_var(--color-yellow-600)_10%,_var(--color-neutral-900)_90%)] bg-[color-mix(in_oklab,_var(--color-yellow-500)_25%,_var(--color-white)_75%)]',
-                borderColor: 'border-yellow-500/55',
-                ariaLabel: window.t('warning'),
-            },
-        },
-
-        init() {
-            // used for toasts used after redirect..., any backend toast.
-            if(@js(filled($sessionToast))){
-                const toast = @js($sessionToast);
-                this.addToast(toast);
-            }
-        },
-
-        addToast(details) {
-            if (!details?.content) return;
-
-            const toast = {
-                id: Date.now() + Math.random(),
-                type: details.type || 'info',
-                content: details.content,
-                duration: details.duration || 4000,
-                showProgress: details.showProgress !== false
-            };
-
-            this.toasts.unshift(toast);
-
-            // Limit number of toasts
-            if (this.toasts.length > this.maxToasts) {
-                this.toasts = this.toasts.slice(0, this.maxToasts);
-            }
-        },
-
-        removeToast(id) {
-            this.toasts = this.toasts.filter(toast => toast.id !== id);
-            this.pausedToastIds.delete(id);
-        },
-
-        pauseFromToast(targetId) {
-            const targetIndex = this.toasts.findIndex(toast => toast.id === targetId);
-
-            if (targetIndex === -1) return;
-
-            // Pause the target toast and all toasts above it (index 0 to targetIndex)
-            this.pausedToastIds.clear();
-
-            for (let i = 0; i <= targetIndex; i++) {
-                this.pausedToastIds.add(this.toasts[i].id);
-            }
-        },
-
-        resumeAllToasts() {
-            this.pausedToastIds.clear();
-        },
-
-        isToastPaused(id) {
-            return this.pausedToastIds.has(id);
-        },
-
-        getToastClasses(type) {
-            const config = this.typeConfig[type] || this.typeConfig.info;
-            return `${config.background} ${config.borderColor}`;
-        },
-
-        getIconColor(type) {
-            const config = this.typeConfig[type] || this.typeConfig.info;
-            return config.textColor;
-        },
-
-        getAriaLabel(type) {
-            const config = this.typeConfig[type] || this.typeConfig.info;
-            return config.ariaLabel;
-        }
-    }"
-    x-on:notify.window="addToast($event.detail)"
-    @class([
-        'fixed flex w-full max-w-xs gap-4 sm:justify-start z-50',
-        'flex-col-reverse' => $isAlignmentsToBottom,
-        'flex-col' => !$isAlignmentsToBottom,
-        $placement
-    ])
-    role="status"
-    aria-live="polite"
->
-    <template x-for="toast in toasts" :key="toast.id">
-        <neura::toast.item/>
-    </template>
+<div {{ $attributes->merge($root)->class(['nk-toast']) }}>
+    <div
+        class="nk-toast-pile"
+        x-ref="pile"
+        x-on:mouseenter="expand(true)"
+        x-on:mouseleave="expand(false)"
+        x-on:focusin="expand(true)"
+        x-on:focusout="onFocusOut($event)"
+    >
+        <template x-for="toast in toasts" :key="toast.id">
+            <neura::toast.item/>
+        </template>
+    </div>
 </div>

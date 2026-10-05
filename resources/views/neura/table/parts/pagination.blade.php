@@ -25,11 +25,11 @@
 
         {{-- Desktop --}}
         <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-            <p class="text-[11px] text-neutral-400 dark:text-neutral-500 tabular-nums">
+            <p class="nk-table-meta">
                 @if ($paginator->firstItem())
-                    <span class="text-neutral-600 dark:text-neutral-300">{{ $paginator->firstItem() }}–{{ $paginator->lastItem() }}</span>
+                    <strong>{{ $paginator->firstItem() }}–{{ $paginator->lastItem() }}</strong>
                     {{ neura_trans('of') }}
-                    <span class="text-neutral-600 dark:text-neutral-300">{{ $paginator->total() }}</span>
+                    <strong>{{ $paginator->total() }}</strong>
                 @else
                     0 {{ neura_trans('results') }}
                 @endif
@@ -38,12 +38,11 @@
             <div class="flex items-center gap-0.5">
                 {{-- Previous --}}
                 @if ($paginator->onFirstPage())
-                    <button disabled class="inline-flex items-center justify-center size-7 rounded-md text-neutral-300 dark:text-neutral-600 cursor-not-allowed">
+                    <button type="button" disabled class="nk-table-iconbtn" aria-label="Previous page">
                         <neura::icon name="chevron-left" class="size-3.5" variant="mini" />
                     </button>
                 @else
-                    <button wire:click="previousPage" wire:loading.attr="disabled"
-                        class="inline-flex items-center justify-center size-7 rounded-md text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-white/[0.06] hover:text-neutral-700 dark:hover:text-neutral-200 transition-colors duration-100">
+                    <button type="button" wire:click="previousPage" wire:loading.attr="disabled" class="nk-table-iconbtn" aria-label="Previous page">
                         <neura::icon name="chevron-left" class="size-3.5" variant="mini" />
                     </button>
                 @endif
@@ -51,7 +50,7 @@
                 {{-- Pages --}}
                 @foreach ($elements as $element)
                     @if (is_string($element))
-                        <span class="inline-flex items-center justify-center size-7 text-[11px] text-neutral-300 dark:text-neutral-600">
+                        <span class="nk-table-page" style="cursor: default; color: var(--nk-fg-disabled)">
                             {{ $element }}
                         </span>
                     @endif
@@ -59,13 +58,11 @@
                     @if (is_array($element))
                         @foreach ($element as $page => $url)
                             @if ($page == $paginator->currentPage())
-                                <button disabled
-                                    class="inline-flex items-center justify-center size-7 rounded-md text-[11px] font-medium bg-neutral-900 dark:bg-white/[0.12] text-white dark:text-neutral-100 tabular-nums">
+                                <button type="button" disabled class="nk-table-page is-current" aria-current="page">
                                     {{ $page }}
                                 </button>
                             @else
-                                <button wire:click="gotoPage({{ $page }})" wire:loading.attr="disabled"
-                                    class="inline-flex items-center justify-center size-7 rounded-md text-[11px] font-medium text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-white/[0.06] hover:text-neutral-700 dark:hover:text-neutral-200 transition-colors duration-100 tabular-nums">
+                                <button type="button" wire:click="gotoPage({{ $page }})" wire:loading.attr="disabled" class="nk-table-page">
                                     {{ $page }}
                                 </button>
                             @endif
@@ -75,12 +72,11 @@
 
                 {{-- Next --}}
                 @if ($paginator->hasMorePages())
-                    <button wire:click="nextPage" wire:loading.attr="disabled"
-                        class="inline-flex items-center justify-center size-7 rounded-md text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-white/[0.06] hover:text-neutral-700 dark:hover:text-neutral-200 transition-colors duration-100">
+                    <button type="button" wire:click="nextPage" wire:loading.attr="disabled" class="nk-table-iconbtn" aria-label="Next page">
                         <neura::icon name="chevron-right" class="size-3.5" variant="mini" />
                     </button>
                 @else
-                    <button disabled class="inline-flex items-center justify-center size-7 rounded-md text-neutral-300 dark:text-neutral-600 cursor-not-allowed">
+                    <button type="button" disabled class="nk-table-iconbtn" aria-label="Next page">
                         <neura::icon name="chevron-right" class="size-3.5" variant="mini" />
                     </button>
                 @endif

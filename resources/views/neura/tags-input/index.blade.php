@@ -51,7 +51,7 @@
         'z-10',
         'inline-block border w-full text-fg disabled:text-fg-muted placeholder-neutral-400 disabled:placeholder-neutral-400/70 dark:placeholder-neutral-500 dark:disabled:placeholder-neutral-600',
         'bg-surface disabled:bg-neutral-50 dark:disabled:bg-neutral-900/60',
-        'disabled:cursor-not-allowed transition-colors duration-150',
+        'disabled:cursor-not-allowed transition-colors duration-fast ease-standard',
         $shadowClass,
         'disabled:shadow-none',
         'focus:ring-offset-0 focus:outline-none',
@@ -425,7 +425,7 @@
     x-modelable="state"
     class="contents"
 >
-    <div {{ $attributes->merge(['class' => 'rounded-box w-full transition duration-75']) }}>
+    <div {{ $attributes->merge(['class' => 'rounded-box w-full transition duration-fast ease-standard']) }}>
 
         @if($showCounter || $showClearAll)
             <div class="flex items-center justify-between p-2 ">
@@ -448,7 +448,7 @@
                         type="button"
                         x-on:click="clearAllTags()"
                         x-bind:disabled="isEmpty()"
-                        class="text-sm hover:opacity-70 transition-opacity text-neutral-400 dark:text-neutral-300 duration-300 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                        class="text-sm hover:opacity-70 transition-opacity text-neutral-400 dark:text-neutral-300 duration-fast ease-standard cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                         <neura::icon name="trash" class="size-5"/>
                     </button>

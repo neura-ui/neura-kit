@@ -18,7 +18,7 @@
     $classes = [
         'inline-block px-3 py-2 w-full text-sm text-fg disabled:text-fg-muted placeholder-neutral-400 disabled:placeholder-neutral-400/70 dark:placeholder-neutral-500 dark:disabled:placeholder-neutral-600',
         'bg-surface disabled:bg-neutral-50 dark:disabled:bg-neutral-900',
-        'disabled:cursor-not-allowed transition-colors duration-150',
+        'disabled:cursor-not-allowed transition-colors duration-fast ease-standard',
         $shadowClass,
         'disabled:shadow-none border',
         $roundedClass,

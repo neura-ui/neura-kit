@@ -29,7 +29,7 @@
 
     $classes = [
         'group flex items-center gap-2',
-        'w-full px-2.5 py-1.5 text-[13px] leading-snug transition-colors duration-100 text-start',
+        'w-full px-2.5 py-1.5 text-[13px] leading-snug transition-colors duration-fast ease-standard text-start',
         'text-fg',
         'rounded-[calc(var(--dropdown-radius)-var(--dropdown-padding))]',
         'opacity-40 cursor-not-allowed text-fg-disabled' => $disabled,

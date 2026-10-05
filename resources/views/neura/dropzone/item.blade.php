@@ -13,7 +13,7 @@
     use Illuminate\Support\Arr;
 
     $itemClasses = Arr::toCssClasses([
-        'group/item flex items-start border transition-colors duration-200 motion-reduce:transition-none',
+        'group/item flex items-start border transition-colors duration-fast ease-standard motion-reduce:transition-none',
         $rounded,
         $sizes['item'],
         $colors['item']['base'],
@@ -37,8 +37,10 @@
 
 <li
     data-slot="dropzone-item"
+    :data-uuid="item.uuid"
     :data-status="item.status"
     :data-kind="item.kind"
+    x-init="enterRow($el)"
     class="{{ $itemClasses }}"
 >
     <template x-if="item.url">
@@ -123,7 +125,7 @@
                 :aria-label="item.name"
             >
                 <div
-                    class="h-full rounded-full transition-[width] duration-300 ease-out motion-reduce:transition-none {{ $colors['bar']['fill'] }}"
+                    class="nk-dz-bar h-full rounded-full {{ $colors['bar']['fill'] }}"
                     :style="`width: ${item.progress}%`"
                 ></div>
             </div>

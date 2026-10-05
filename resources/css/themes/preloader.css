@@ -1,0 +1,313 @@
+/**
+ * Preloader — brand boot.
+ * A hairline orbit around the mark, a light that travels the ring,
+ * and a shimmer on the word. The geometry stays monochrome so it
+ * sits on the same ink as the rest of the system.
+ */
+
+[data-slot='preloader'][data-indicator='mark'] {
+  background-image: radial-gradient(
+    ellipse 42% 34% at 50% 46%,
+    color-mix(in oklch, var(--nk-fg) 5.5%, transparent),
+    transparent 70%
+  );
+}
+
+.nk-preloader-scene {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+  color: var(--nk-fg);
+}
+
+.nk-preloader-stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 9.25rem;
+  height: 9.25rem;
+  animation: nk-preloader-rise 0.7s var(--nk-ease-enter, cubic-bezier(0.16, 1, 0.3, 1)) both;
+}
+
+.nk-preloader.fixed .nk-preloader-stage {
+  width: 11rem;
+  height: 11rem;
+}
+
+.nk-preloader-glow,
+.nk-preloader-orbits,
+.nk-preloader-mark {
+  grid-area: 1 / 1;
+}
+
+.nk-preloader-glow {
+  width: 38%;
+  height: 38%;
+  border-radius: 999px;
+  background: radial-gradient(circle, color-mix(in oklch, currentColor 16%, transparent), transparent 68%);
+  animation: nk-preloader-breathe 3.2s ease-in-out infinite;
+}
+
+.nk-preloader-orbits {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.nk-preloader-ring,
+.nk-preloader-arc {
+  fill: none;
+  stroke: currentColor;
+}
+
+.nk-preloader-ring {
+  stroke-width: 1;
+  opacity: 0.14;
+}
+
+.nk-preloader-ring--dashed {
+  stroke-width: 1;
+  stroke-dasharray: 1.5 5.5;
+  opacity: 0.32;
+  transform-origin: 80px 80px;
+  transform-box: view-box;
+  animation: nk-preloader-spin 22s linear infinite;
+}
+
+.nk-preloader-arc {
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-dasharray: 18 82;
+  transform-origin: 80px 80px;
+  transform-box: view-box;
+  animation: nk-preloader-spin 1.7s linear infinite;
+}
+
+.nk-preloader-arc--reverse {
+  stroke-width: 1;
+  stroke-dasharray: 7 93;
+  opacity: 0.4;
+  animation-duration: 2.6s;
+  animation-direction: reverse;
+}
+
+.nk-preloader-bead {
+  transform-origin: 80px 80px;
+  transform-box: view-box;
+  animation: nk-preloader-spin 3.4s linear infinite;
+}
+
+.nk-preloader-bead circle {
+  fill: currentColor;
+}
+
+.nk-preloader-bead--slow {
+  opacity: 0.4;
+  animation-duration: 5.6s;
+  animation-direction: reverse;
+}
+
+.nk-preloader-mark {
+  display: grid;
+  place-items: center;
+}
+
+.nk-preloader-mark:has(.nk-preloader-logo) {
+  animation: nk-preloader-mark 3.2s ease-in-out infinite;
+}
+
+.nk-preloader-logo {
+  width: 2.65rem;
+  height: auto;
+}
+
+.nk-preloader.fixed .nk-preloader-logo {
+  width: 3.15rem;
+}
+
+.nk-preloader-glyph {
+  width: 2.35rem;
+  height: auto;
+}
+
+.nk-preloader-glyph path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: nk-preloader-draw 2.8s var(--nk-ease-standard, cubic-bezier(0.22, 1, 0.36, 1)) infinite;
+}
+
+.nk-preloader-glyph path:nth-child(2) {
+  animation-delay: 0.12s;
+}
+
+.nk-preloader-glyph path:nth-child(3) {
+  animation-delay: 0.24s;
+}
+
+.nk-preloader-word {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  background-image: linear-gradient(
+    100deg,
+    var(--nk-fg-secondary) 0%,
+    var(--nk-fg-secondary) 32%,
+    var(--nk-fg) 48%,
+    var(--nk-fg) 52%,
+    var(--nk-fg-secondary) 68%,
+    var(--nk-fg-secondary) 100%
+  );
+  background-size: 220% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation:
+    nk-preloader-rise 0.7s var(--nk-ease-enter, cubic-bezier(0.16, 1, 0.3, 1)) 0.08s both,
+    nk-preloader-shimmer 2.4s linear 0.45s infinite;
+}
+
+.nk-preloader-bar {
+  position: relative;
+  width: 4.5rem;
+  height: 1px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--nk-edge);
+}
+
+.nk-preloader-bar > span {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 42%;
+  background: var(--nk-fg);
+  animation: nk-preloader-slide 1.4s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+.nk-preloader-label {
+  margin: -0.25rem 0 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--nk-fg-muted);
+  animation: nk-preloader-rise 0.7s var(--nk-ease-enter, cubic-bezier(0.16, 1, 0.3, 1)) 0.16s both;
+}
+
+@keyframes nk-preloader-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes nk-preloader-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+
+  50% {
+    transform: scale(0.86);
+    opacity: 1;
+  }
+}
+
+@keyframes nk-preloader-mark {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(0.94);
+  }
+}
+
+@keyframes nk-preloader-draw {
+  0% {
+    stroke-dashoffset: 100;
+  }
+
+  46%,
+  68% {
+    stroke-dashoffset: 0;
+  }
+
+  100% {
+    stroke-dashoffset: -100;
+  }
+}
+
+@keyframes nk-preloader-shimmer {
+  0% {
+    background-position: 120% center;
+  }
+
+  100% {
+    background-position: -120% center;
+  }
+}
+
+@keyframes nk-preloader-slide {
+  0% {
+    transform: translateX(-120%);
+  }
+
+  100% {
+    transform: translateX(280%);
+  }
+}
+
+@keyframes nk-preloader-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nk-preloader-stage,
+  .nk-preloader-glow,
+  .nk-preloader-ring--dashed,
+  .nk-preloader-arc,
+  .nk-preloader-bead,
+  .nk-preloader-mark,
+  .nk-preloader-glyph path,
+  .nk-preloader-word,
+  .nk-preloader-bar > span,
+  .nk-preloader-label {
+    animation: none !important;
+  }
+
+  .nk-preloader-glyph path {
+    stroke-dashoffset: 0;
+  }
+
+  .nk-preloader-word {
+    color: var(--nk-fg);
+    background-image: none;
+    -webkit-text-fill-color: var(--nk-fg);
+  }
+
+  .nk-preloader-bar > span {
+    width: 100%;
+    transform: none;
+  }
+}

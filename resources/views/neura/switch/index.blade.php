@@ -51,7 +51,7 @@
     $containerClasses = ['flex items-center gap-x-3', $align === 'left' ? 'flex-row' : 'flex-row-reverse'];
 
     $switchBaseClasses = [
-        'relative inline-flex flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-all duration-200 ease-in-out select-none',
+        'relative inline-flex flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-fast ease-standard select-none',
         'focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:focus:ring-primary-400/20',
         'disabled:cursor-not-allowed disabled:opacity-50',
         $sizeConfig['switch'],
@@ -59,7 +59,7 @@
     ];
 
     $thumbBaseClasses = [
-        'pointer-events-none inline-flex items-center justify-center transform rounded-full ring-0 transition duration-200 ease-in-out',
+        'pointer-events-none inline-flex items-center justify-center transform rounded-full ring-0 transition duration-standard ease-spring',
         $thumbShadowClass,
         $sizeConfig['thumb'],
         $thumbClass,

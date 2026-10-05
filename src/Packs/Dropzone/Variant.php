@@ -57,8 +57,8 @@ class Variant extends BasePack
                 'showTile' => true,
             ],
             'avatar' => [
-                'area' => 'mx-auto size-28 !p-0 !gap-0 border border-dashed border-edge bg-surface overflow-hidden',
-                'tile' => 'size-12 rounded-full',
+                'area' => 'nk-dz-avatar mx-auto !p-0 !gap-0 border-0 bg-transparent overflow-visible',
+                'tile' => '',
                 'wrapper' => 'w-fit mx-auto',
                 'icon' => 'camera',
                 'rounded' => 'rounded-full',

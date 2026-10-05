@@ -140,10 +140,10 @@
     <template x-for="dialog in dialogs" :key="dialog.id">
         <div
             class="fixed inset-0 overflow-y-auto"
-            x-transition:enter="ease-out duration-300"
+            x-transition:enter="ease-enter duration-standard"
             x-transition:enter-start="opacity-0"
             x-transition:enter-end="opacity-100"
-            x-transition:leave="ease-in duration-200"
+            x-transition:leave="ease-standard duration-fast"
             x-transition:leave-start="opacity-100"
             x-transition:leave-end="opacity-0"
         >
@@ -162,10 +162,10 @@
                     :class="getSizeClass(dialog.size)"
                     x-on:click.stop
                     x-on:keydown.escape.window="cancel(dialog.id)"
-                    x-transition:enter="ease-out duration-300"
+                    x-transition:enter="ease-enter duration-standard"
                     x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                     x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
-                    x-transition:leave="ease-in duration-200"
+                    x-transition:leave="ease-standard duration-fast"
                     x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                     x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                 >
@@ -236,7 +236,7 @@
                                     x-bind:disabled="loading[dialog.id]"
                                 >
                                     <span x-show="loading[dialog.id]" class="absolute inset-0 flex items-center justify-center">
-                                        <neura::icon.loading variant="mini" class="size-4" />
+                                        <neura::spinner variant="ring" size="sm" color="current" />
                                     </span>
                                     <span x-bind:class="loading[dialog.id] ? 'opacity-0' : ''" x-text="dialog.confirmText"></span>
                                 </neura::button>
@@ -250,7 +250,7 @@
                                     x-bind:disabled="loading[dialog.id]"
                                 >
                                     <span x-show="loading[dialog.id]" class="absolute inset-0 flex items-center justify-center">
-                                        <neura::icon.loading variant="mini" class="size-4" />
+                                        <neura::spinner variant="ring" size="sm" color="current" />
                                     </span>
                                     <span x-bind:class="loading[dialog.id] ? 'opacity-0' : ''" x-text="dialog.confirmText"></span>
                                 </neura::button>
@@ -264,7 +264,7 @@
                                     x-bind:disabled="loading[dialog.id]"
                                 >
                                     <span x-show="loading[dialog.id]" class="absolute inset-0 flex items-center justify-center">
-                                        <neura::icon.loading variant="mini" class="size-4" />
+                                        <neura::spinner variant="ring" size="sm" color="current" />
                                     </span>
                                     <span x-bind:class="loading[dialog.id] ? 'opacity-0' : ''" x-text="dialog.confirmText"></span>
                                 </neura::button>

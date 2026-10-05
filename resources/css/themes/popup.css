@@ -1,0 +1,115 @@
+/**
+ * Shared open motion for floating panels.
+ *
+ * Menus, popovers and pickers use the same five classes. Scale and translate
+ * are individual transform properties so they compose with the inline
+ * translate that anchors a panel to its trigger.
+ *
+ *   bottom  grows from the top edge
+ *   top     grows from the bottom edge
+ *   left    grows from the right edge
+ *   right   grows from the left edge
+ */
+.nk-menu-motion {
+    transform-origin: top center;
+    transition:
+        opacity 580ms var(--nk-ease-enter),
+        filter 580ms var(--nk-ease-enter);
+}
+
+.nk-menu-motion[data-side="bottom"] { transform-origin: top center; }
+.nk-menu-motion[data-side="bottom"][data-align="start"] { transform-origin: top left; }
+.nk-menu-motion[data-side="bottom"][data-align="end"] { transform-origin: top right; }
+
+.nk-menu-motion[data-side="top"] { transform-origin: bottom center; }
+.nk-menu-motion[data-side="top"][data-align="start"] { transform-origin: bottom left; }
+.nk-menu-motion[data-side="top"][data-align="end"] { transform-origin: bottom right; }
+
+.nk-menu-motion[data-side="left"] { transform-origin: center right; }
+.nk-menu-motion[data-side="left"][data-align="start"] { transform-origin: top right; }
+.nk-menu-motion[data-side="left"][data-align="end"] { transform-origin: bottom right; }
+
+.nk-menu-motion[data-side="right"] { transform-origin: center left; }
+.nk-menu-motion[data-side="right"][data-align="start"] { transform-origin: top left; }
+.nk-menu-motion[data-side="right"][data-align="end"] { transform-origin: bottom left; }
+
+.nk-menu-from,
+.nk-menu-out {
+    opacity: 0;
+    filter: blur(2px);
+}
+
+.nk-menu-to {
+    opacity: 1;
+    filter: blur(0px);
+}
+
+.nk-menu-leaving {
+    transition-duration: 180ms;
+    transition-timing-function: var(--nk-ease-standard);
+}
+
+/**
+ * Tooltips are shorter than menus.
+ * The first one waits, then rises 3px from 0.97 scale.
+ * Within the skip window the next one only fades.
+ * Closing drops the travel and keeps a quick scale.
+ */
+.nk-tooltip {
+    z-index: 80;
+    width: max-content;
+    min-width: 0;
+    max-width: 15rem;
+    padding: 0.3rem 0.55rem;
+    overflow: visible;
+    pointer-events: none;
+    background: var(--nk-fg);
+    color: var(--nk-surface);
+    border: 1px solid color-mix(in oklab, var(--nk-surface) 14%, var(--nk-fg));
+    border-radius: 0.5rem;
+    box-shadow: 0 8px 20px color-mix(in oklab, var(--nk-fg) 14%, transparent);
+    font-size: 0.8125rem;
+    font-weight: 400;
+    line-height: 1.35;
+    white-space: normal;
+}
+
+.nk-menu-motion.nk-tooltip {
+    transition:
+        opacity 160ms var(--nk-ease-enter),
+        scale 160ms var(--nk-ease-enter),
+        translate 160ms var(--nk-ease-enter);
+}
+
+.nk-tooltip.nk-menu-from {
+    opacity: 0;
+    filter: none;
+    scale: 0.97;
+    translate: 0 3px;
+}
+
+.nk-tooltip[data-side="bottom"].nk-menu-from { translate: 0 -3px; }
+.nk-tooltip[data-side="left"].nk-menu-from { translate: 3px 0; }
+.nk-tooltip[data-side="right"].nk-menu-from { translate: -3px 0; }
+.nk-tooltip[data-side="top"].nk-menu-from { translate: 0 3px; }
+
+.nk-tooltip.nk-menu-out,
+.nk-tooltip[data-side].nk-menu-out {
+    opacity: 0;
+    filter: none;
+    scale: 0.98;
+    translate: 0 0;
+}
+
+.nk-tooltip.nk-menu-leaving,
+.nk-menu-motion.nk-tooltip[data-instant] {
+    transition-duration: 90ms;
+    transition-timing-function: var(--nk-ease-standard);
+}
+
+.nk-tooltip[data-instant].nk-menu-from,
+.nk-tooltip[data-instant][data-side].nk-menu-from {
+    scale: 1;
+    translate: 0 0;
+    filter: none;
+}

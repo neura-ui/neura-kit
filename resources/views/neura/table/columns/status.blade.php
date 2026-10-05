@@ -45,7 +45,7 @@
         'blue', 'info' => 'text-blue-700 dark:text-blue-400',
         'purple' => 'text-violet-700 dark:text-violet-400',
         'teal' => 'text-teal-700 dark:text-teal-400',
-        default => 'text-neutral-600 dark:text-neutral-400',
+        default => 'text-fg-secondary',
     };
 @endphp
 

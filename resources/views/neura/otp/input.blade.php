@@ -17,7 +17,7 @@
         $colors['focus'] => !$invalid,
         $colors['invalid'] => $invalid,
         'focus:outline-none',
-        'transition-all duration-200',
+        'transition-all duration-fast ease-standard',
         $shadowClass,
         'disabled:shadow-none disabled:opacity-50 disabled:cursor-not-allowed',
         'border focus:z-10',

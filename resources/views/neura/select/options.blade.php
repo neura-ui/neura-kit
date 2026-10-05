@@ -18,7 +18,7 @@
 >
     <div
         x-show="activePanel === null"
-        x-transition:enter="transition ease-out duration-150"
+        x-transition:enter="transition ease-enter duration-standard"
         x-transition:enter-start="opacity-0 -translate-x-2"
         x-transition:enter-end="opacity-100 translate-x-0"
         data-slot="select-list"
@@ -45,7 +45,7 @@
                         type="button"
                         x-on:click.stop="clearSearch()"
                         x-show="hasSearchValue"
-                        x-transition:enter="transition ease-out duration-100"
+                        x-transition:enter="transition ease-enter duration-fast"
                         x-transition:enter-start="opacity-0 scale-75"
                         x-transition:enter-end="opacity-100 scale-100"
                         class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors size-5 z-20 pointer-events-auto"

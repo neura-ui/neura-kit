@@ -53,6 +53,7 @@ export type DropzoneOptions = {
   autoUpload?: boolean;
   notify?: boolean;
   maxRetries?: number;
+  compactAt?: number | null;
 };
 
 const defaultOptions: Required<DropzoneOptions> = {
@@ -74,6 +75,7 @@ const defaultOptions: Required<DropzoneOptions> = {
   autoUpload: true,
   notify: false,
   maxRetries: 2,
+  compactAt: null,
 };
 
 /* -------------------------------------------------------------------------- */
@@ -436,6 +438,7 @@ export function neuraDropzone(options: DropzoneOptions = {}) {
     notify: config.notify,
     concurrency: Math.max(1, config.concurrency || 1),
     maxRetries: Math.max(0, config.maxRetries),
+    compactAt: config.compactAt,
 
     // Internals
     _files: new Map<string, File>(),
@@ -444,6 +447,10 @@ export function neuraDropzone(options: DropzoneOptions = {}) {
     _running: 0,
     _dragDepth: 0,
     _observer: null as MutationObserver | null,
+    _edgeObserver: null as ResizeObserver | null,
+    _edgeFrame: 0,
+    _enterStagger: 0,
+    _closing: new Set<string>(),
     _syncScheduled: false,
 
     /* ---------------------------------------------------------------- */
@@ -452,6 +459,10 @@ export function neuraDropzone(options: DropzoneOptions = {}) {
 
     get isDragging(): boolean {
       return this._dragDepth > 0;
+    },
+
+    get isCompact(): boolean {
+      return this.compactAt != null && this.previews.length >= this.compactAt;
     },
 
     get invalid(): boolean {
@@ -526,11 +537,16 @@ export function neuraDropzone(options: DropzoneOptions = {}) {
       });
 
       this._observer.observe(flag, { attributes: true, attributeFilter: ['data-invalid'] });
+      (this as any).$nextTick(() => this.bindEdge());
     },
 
     destroy() {
       this._observer?.disconnect();
       this._observer = null;
+      this._edgeObserver?.disconnect();
+      this._edgeObserver = null;
+      if (this._edgeFrame) cancelAnimationFrame(this._edgeFrame);
+      this._edgeFrame = 0;
       this.cancelAll();
       this.revokeAll();
       this._files.clear();
@@ -546,6 +562,7 @@ export function neuraDropzone(options: DropzoneOptions = {}) {
 
       if (!this._hasFiles(event)) return;
       this._dragDepth++;
+      this.syncEdgeMotion();
     },
 
     handleDragOver(event: DragEvent) {
@@ -557,14 +574,17 @@ export function neuraDropzone(options: DropzoneOptions = {}) {
 
       // Some browsers drop `dragenter` when moving fast between children.
       if (this._dragDepth === 0 && this._hasFiles(event)) this._dragDepth = 1;
+      this.syncEdgeMotion();
     },
 
     handleDragLeave() {
       if (this._dragDepth > 0) this._dragDepth--;
+      this.syncEdgeMotion();
     },
 
     handleDrop(event: DragEvent) {
       this._dragDepth = 0;
+      this.syncEdgeMotion();
       if (this.disabled) return;
 
       this.addFiles(Array.from(event.dataTransfer?.files || []));
@@ -582,6 +602,9 @@ export function neuraDropzone(options: DropzoneOptions = {}) {
 
     handlePaste(event: ClipboardEvent) {
       if (this.disabled) return;
+
+      const target = event.target as HTMLElement | null;
+      if (target?.closest('input:not([type=file]), textarea, [contenteditable="true"]')) return;
 
       const files = Array.from(event.clipboardData?.files || []);
       if (files.length === 0) return;
@@ -603,6 +626,7 @@ export function neuraDropzone(options: DropzoneOptions = {}) {
     addFiles(incoming: File[]) {
       if (this.disabled || incoming.length === 0) return;
 
+      this._enterStagger = 0;
       this.rejections = [];
 
       const accepted: File[] = [];
@@ -713,7 +737,40 @@ export function neuraDropzone(options: DropzoneOptions = {}) {
 
     removeByUuid(uuid: string) {
       const item = this.find(uuid);
+      if (!item || this._closing.has(uuid)) return;
+
+      const el = (this as any).$el?.querySelector(`[data-uuid="${uuid}"]`) as HTMLElement | null;
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      if (!el || reduced) {
+        if (reduced && el) {
+          el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 120, fill: 'forwards' })
+            .finished.then(() => this.dropItem(uuid)).catch(() => this.dropItem(uuid));
+          return;
+        }
+        this.dropItem(uuid);
+        return;
+      }
+
+      this._closing.add(uuid);
+      const height = el.offsetHeight;
+      el.style.overflow = 'hidden';
+      el.animate([
+        { height: `${height}px`, opacity: 1, transform: 'none' },
+        { height: '0px', opacity: 0, transform: 'translateY(6px)' },
+      ], { duration: 320, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'forwards' })
+        .finished.then(() => this.dropItem(uuid)).catch(() => this.dropItem(uuid));
+    },
+
+    dropItem(uuid: string) {
+      const item = this.find(uuid);
       if (!item) return;
+
+      const root = (this as any).$el as HTMLElement | undefined;
+      const rows = root ? Array.from(root.querySelectorAll<HTMLElement>('[data-uuid]')) : [];
+      const index = rows.findIndex((row) => row.dataset.uuid === uuid);
+      const neighbor = rows[index + 1] || rows[index - 1];
+      neighbor?.querySelector('button')?.focus();
 
       this.cancel(uuid, { silent: true });
 
@@ -728,7 +785,121 @@ export function neuraDropzone(options: DropzoneOptions = {}) {
       this.announce(t('fileRemoved', '{name} removed', { name: item.name }));
       (this as any).$dispatch?.('dropzone:removed', { uuid, name: item.name });
 
+      this._closing.delete(uuid);
       this.syncModel();
+    },
+
+    bindEdge() {
+      const area = (this as any).$refs?.dropArea as HTMLElement | undefined;
+      const rect = (this as any).$refs?.edgeRect as SVGRectElement | undefined;
+      if (!area || !rect || typeof ResizeObserver === 'undefined') return;
+
+      this.fitEdge();
+      this._edgeObserver = new ResizeObserver(() => this.fitEdge());
+      this._edgeObserver.observe(area);
+    },
+
+    fitEdge() {
+      const area = (this as any).$refs?.dropArea as HTMLElement | undefined;
+      const rect = (this as any).$refs?.edgeRect as SVGRectElement | undefined;
+      const svg = rect?.ownerSVGElement;
+      if (!area || !rect || !svg) return;
+
+      const w = area.clientWidth;
+      const h = area.clientHeight;
+      const radius = parseFloat(getComputedStyle(area).borderTopLeftRadius) || 0;
+      const pad = 1;
+
+      svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+      svg.setAttribute('width', String(w));
+      svg.setAttribute('height', String(h));
+      rect.setAttribute('x', String(pad));
+      rect.setAttribute('y', String(pad));
+      rect.setAttribute('width', String(Math.max(0, w - pad * 2)));
+      rect.setAttribute('height', String(Math.max(0, h - pad * 2)));
+      rect.setAttribute('rx', String(Math.max(0, radius - pad)));
+      rect.setAttribute('ry', String(Math.max(0, radius - pad)));
+    },
+
+    syncEdgeMotion() {
+      if (this.isDragging) this.marchEdge();
+      else this.stopEdge();
+    },
+
+    marchEdge() {
+      if (this._edgeFrame) return;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      const step = (time: number) => {
+        if (!this.isDragging) {
+          this._edgeFrame = 0;
+          return;
+        }
+        const rect = (this as any).$refs?.edgeRect as SVGRectElement | undefined;
+        if (rect) rect.setAttribute('stroke-dashoffset', String(-((time / 28) % 22)));
+        this._edgeFrame = requestAnimationFrame(step);
+      };
+
+      this._edgeFrame = requestAnimationFrame(step);
+    },
+
+    stopEdge() {
+      if (this._edgeFrame) cancelAnimationFrame(this._edgeFrame);
+      this._edgeFrame = 0;
+      const rect = (this as any).$refs?.edgeRect as SVGRectElement | undefined;
+      rect?.setAttribute('stroke-dashoffset', '0');
+    },
+
+    enterRow(el: HTMLElement) {
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const delay = Math.min(this._enterStagger++, 7) * 45;
+
+      requestAnimationFrame(() => {
+        if (!el.isConnected) return;
+        if (reduced) {
+          el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 120, delay, fill: 'both' });
+          return;
+        }
+
+        const height = el.offsetHeight;
+        el.classList.add('is-entering');
+        el.style.overflow = 'hidden';
+        el.animate([
+          { height: '0px', opacity: 0, transform: 'translateY(8px)' },
+          { height: `${height}px`, opacity: 1, transform: 'none' },
+        ], { duration: 420, delay, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'both' })
+          .finished.finally(() => {
+            el.classList.remove('is-entering');
+            el.style.overflow = '';
+            el.style.height = '';
+          });
+      });
+    },
+
+    onListKey(event: KeyboardEvent) {
+      const target = event.target as HTMLElement | null;
+      const row = target?.closest('[data-uuid]') as HTMLElement | null;
+      if (!row) return;
+
+      if (event.key === 'Delete' || event.key === 'Backspace') {
+        if (target?.closest('input, textarea')) return;
+        event.preventDefault();
+        if (row.dataset.uuid) this.removeByUuid(row.dataset.uuid);
+        return;
+      }
+
+      if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+
+      const rows = Array.from(row.parentElement?.querySelectorAll<HTMLElement>('[data-uuid]') || []);
+      const index = rows.indexOf(row);
+      const next = rows[index + (event.key === 'ArrowDown' ? 1 : -1)];
+      if (!next) return;
+
+      event.preventDefault();
+      const label = target?.closest('button')?.getAttribute('aria-label')?.split(' — ')[0];
+      const buttons = Array.from(next.querySelectorAll('button'));
+      const match = buttons.find((button) => label && button.getAttribute('aria-label')?.startsWith(label)) || buttons[0];
+      match?.focus();
     },
 
     clearAll(options: { silent?: boolean } = {}) {
@@ -737,6 +908,7 @@ export function neuraDropzone(options: DropzoneOptions = {}) {
 
       this._files.clear();
       this._queue = [];
+      this._closing.clear();
       this.previews = [];
       this.rejections = [];
 

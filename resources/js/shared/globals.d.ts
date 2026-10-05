@@ -171,7 +171,7 @@ interface CommandSpotlightInstance {
 
     close(): void;
 
-    toggle(): void;
+    toggleOpen(): void;
 }
 
 interface CommandSpotlightManager {
@@ -189,6 +189,7 @@ interface CommandSpotlightManager {
 
 interface AlpineComponent {
     $el: HTMLElement;
+    $root: HTMLElement;
     $refs: Record<string, HTMLElement | null>;
 
     $watch<T = unknown>(prop: string, callback: (value: T) => void): void;
@@ -198,9 +199,13 @@ interface AlpineComponent {
     $nextTick(callback?: () => void): Promise<void>;
 }
 
+/**
+ * `ThisType` gives component methods a `this` that includes Alpine's magics.
+ * The factory does not return those magics: Alpine injects them.
+ */
 type AlpineComponentFactory<T = Record<string, unknown>> = (
     ...args: any[]
-) => T & Partial<AlpineComponent>;
+) => T & ThisType<T & AlpineComponent>;
 
 interface AlpineGlobal {
     data<T = Record<string, unknown>>(
@@ -257,6 +262,11 @@ declare global {
 
         NeuraKit?: NeuraKitAPI;
         NeuraKitToast?: ToastAPI;
+        NeuraKitTooltipWarm?: {
+            warm: boolean;
+            opened(): void;
+            closed(): void;
+        };
         NeuraKitModal?: ModalAPI;
         NeuraKitTranslations?: TranslationsAPI;
         NeuraKitIcons?: { play: (el: Element) => void };

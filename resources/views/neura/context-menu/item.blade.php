@@ -7,7 +7,7 @@
 ])
 
 @php
-    $baseClasses = "w-full flex items-center gap-2 px-2.5 py-1.5 text-[13px] leading-snug text-left rounded-md transition-colors duration-100 cursor-pointer select-none";
+    $baseClasses = "nk-menu-item w-full flex items-center gap-2 px-2.5 py-1.5 text-[13px] leading-snug text-left rounded-md cursor-pointer select-none";
     
     $variantClasses = match($variant) {
         'danger' => 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10',
@@ -20,7 +20,7 @@
     }
 @endphp
 
-<button type="button" 
+<button type="button" role="menuitem"
     @if($disabled) disabled @else @click="close" @endif
     {{ $attributes->merge(['class' => "$baseClasses $variantClasses"]) }}>
     

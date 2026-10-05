@@ -9,10 +9,19 @@
 @php
     use Neura\Kit\Support\PackResolver;
 
+    [$menuSide, $menuAlign] = array_pad(explode('-', $position, 2), 2, 'center');
+    if (! in_array($menuSide, ['top', 'bottom', 'left', 'right'], true)) {
+        $menuSide = 'right';
+    }
+    if (! in_array($menuAlign, ['start', 'end', 'center'], true)) {
+        $menuAlign = 'start';
+    }
+
     $roundedClass = PackResolver::rounded(neura_config('dropdown', 'rounded'));
     $shadowClass = PackResolver::shadow(neura_config('dropdown', 'shadow'));
 
     $panelClasses = [
+        'nk-menu-motion',
         'isolate',
         'z-[60]',
         'grid',
@@ -64,7 +73,7 @@
                 if (el) $focus.focus($focus.within(el).getFirst());
             });
         "
-        {{ $attributes->only(['class'])->merge(['class' => 'flex items-center justify-between gap-2 w-full px-2.5 py-1.5 text-[13px] leading-snug transition-colors duration-100 text-start text-fg rounded-md cursor-pointer ' . ($disabled ? 'opacity-40 cursor-not-allowed' : 'hover:bg-hover focus:bg-hover')]) }}
+        {{ $attributes->only(['class'])->merge(['class' => 'flex items-center justify-between gap-2 w-full px-2.5 py-1.5 text-[13px] leading-snug transition-colors duration-fast ease-standard text-start text-fg rounded-md cursor-pointer ' . ($disabled ? 'opacity-40 cursor-not-allowed' : 'hover:bg-hover focus:bg-hover')]) }}
         tabindex="{{ $disabled ? '-1' : '0' }}"
         role="menuitem"
         aria-haspopup="true"
@@ -93,12 +102,14 @@
         @keydown.up.prevent.stop="$focus.prev()"
         @keydown.home.prevent.stop="$focus.first()"
         @keydown.end.prevent.stop="$focus.last()"
-        x-transition:enter="transition ease-out duration-150"
-        x-transition:enter-start="opacity-0 translate-x-1"
-        x-transition:enter-end="opacity-100 translate-x-0"
-        x-transition:leave="transition ease-in duration-100"
-        x-transition:leave-start="opacity-100 translate-x-0"
-        x-transition:leave-end="opacity-0 translate-x-1"
+        x-transition:enter="nk-menu-motion"
+        x-transition:enter-start="nk-menu-from"
+        x-transition:enter-end="nk-menu-to"
+        x-transition:leave="nk-menu-leaving"
+        x-transition:leave-start="nk-menu-to"
+        x-transition:leave-end="nk-menu-out"
+        data-side="{{ $menuSide }}"
+        data-align="{{ $menuAlign }}"
         style="display: none; backdrop-filter: blur(64px); -webkit-backdrop-filter: blur(64px);"
         role="menu"
         class="{{ Arr::toCssClasses($panelClasses) }}"

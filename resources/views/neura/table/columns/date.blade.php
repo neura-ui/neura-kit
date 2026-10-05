@@ -23,6 +23,6 @@
     }
 @endphp
 
-<div class="text-[13px] text-neutral-500 dark:text-neutral-400 tabular-nums">
+<div class="nk-table-muted">
     {{ $displayValue ?? '—' }}
 </div>

@@ -70,6 +70,7 @@
             ])->values()->all(),
             'operators' => $field['operators'] ?? $operatorSets[$type] ?? $operatorSets['select'],
             'defaultOperator' => $field['defaultOperator'] ?? $defaultOperators[$type] ?? 'is',
+            'hasSwatch' => collect($field['options'] ?? [])->contains(fn ($option) => filled($option['color'] ?? null)),
         ];
     })->values();
 
@@ -105,15 +106,15 @@
     // Selection indicators share the checkbox pack used by inputs / selects.
     $checkboxColors = PackResolver::inputColor('checkbox');
     $checkboxRounded = PackResolver::rounded(neura_config('checkbox', 'rounded'));
-    $checkboxClass = 'flex size-4 shrink-0 items-center justify-center border transition-colors duration-100 '
+    $checkboxClass = 'flex size-4 shrink-0 items-center justify-center border transition-colors duration-fast ease-standard '
         . $checkboxRounded . ' ' . $checkboxColors['border'] . ' ' . $checkboxColors['checked'];
 
     // Menu items round one step tighter than their panel, like dropdown / select.
     $itemRadius = 'rounded-[calc(var(--nk-filter-round)-0.25rem)]';
 
     $segmentClass = 'flex h-full items-center whitespace-nowrap ' . $sizeConfig['segment'];
-    $panelClass = 'absolute start-0 top-full z-50 mt-1 min-w-44 border border-edge backdrop-blur-xl ring-1 ring-black/[0.03] dark:ring-white/[0.04] p-1 ' . $variantConfig['panel'] . ' ' . $roundedClass . ' ' . $shadowClass;
-    $itemClass = 'flex w-full cursor-pointer items-center gap-2 px-2.5 py-1.5 text-start text-[13px] leading-snug text-fg transition-colors duration-100 hover:bg-hover ' . $itemRadius;
+    $panelClass = 'nk-menu-motion absolute start-0 top-full z-50 mt-1 min-w-44 border border-edge backdrop-blur-xl ring-1 ring-black/[0.03] dark:ring-white/[0.04] p-1 ' . $variantConfig['panel'] . ' ' . $roundedClass . ' ' . $shadowClass;
+    $itemClass = 'flex w-full cursor-pointer items-center gap-2 px-2.5 py-1.5 text-start text-[13px] leading-snug text-fg transition-colors duration-fast ease-standard hover:bg-hover ' . $itemRadius;
     $panelSearchClass = 'mb-1 w-full border-0 border-b border-separator bg-transparent px-2 py-1.5 text-sm text-fg placeholder:text-fg-muted focus:outline-none';
 @endphp
 
@@ -353,17 +354,36 @@
             <div class="relative flex items-stretch">
                 <button
                     type="button"
-                    class="{{ $segmentClass }} cursor-pointer text-fg-muted transition-colors duration-100 hover:bg-hover hover:text-fg"
+                    class="{{ $segmentClass }} cursor-pointer text-fg-muted transition-colors duration-fast ease-standard hover:bg-hover hover:text-fg"
                     x-bind:disabled="isDisabled"
                     x-on:click="togglePanel('op:' + filter.id)"
-                    x-text="operatorLabels[filter.operator] ?? filter.operator"
-                ></button>
+                >
+                    <span class="inline-grid justify-items-start">
+                        @foreach ($normalizedFields as $field)
+                            <template x-if="filter.field === '{{ $field['key'] }}'">
+                                <span class="col-start-1 row-start-1 inline-grid justify-items-start invisible" aria-hidden="true">
+                                    @foreach ($field['operators'] as $operator)
+                                        <span class="col-start-1 row-start-1 whitespace-nowrap">{{ $operatorLabels[$operator] ?? $operator }}</span>
+                                    @endforeach
+                                </span>
+                            </template>
+                        @endforeach
+                        <span class="col-start-1 row-start-1 whitespace-nowrap" x-text="operatorLabels[filter.operator] ?? filter.operator"></span>
+                    </span>
+                </button>
 
                 <div
                     class="{{ $panelClass }}"
                     x-cloak
+                    data-side="bottom"
+                    data-align="start"
                     x-show="open === 'op:' + filter.id"
-                    x-transition.opacity.duration.100ms
+                    x-transition:enter="nk-menu-motion"
+                    x-transition:enter-start="nk-menu-from"
+                    x-transition:enter-end="nk-menu-to"
+                    x-transition:leave="nk-menu-leaving"
+                    x-transition:leave-start="nk-menu-to"
+                    x-transition:leave-end="nk-menu-out"
                     x-on:click.outside="if (open === 'op:' + filter.id) closeAll()"
                 >
                     <template x-for="operator in (fieldConfigs[filter.field]?.operators ?? [])" :key="operator">
@@ -373,18 +393,17 @@
                             x-on:click="updateOperator(filter, operator)"
                         >
                             <span x-text="operatorLabels[operator] ?? operator"></span>
-                            <neura::icon name="check" variant="micro" class="size-3.5 text-fg" x-show="filter.operator === operator" />
+                            <neura::icon name="check" variant="micro" class="size-3.5 shrink-0 text-fg" x-bind:class="filter.operator === operator ? 'visible' : 'invisible'" />
                         </button>
                     </template>
                 </div>
             </div>
 
-            {{-- Value editor --}}
-            <template x-if="showValue(filter)">
-                <div class="relative flex items-stretch">
+            {{-- Value editor. Width stays on the longest label for this field. --}}
+            <div class="relative flex items-stretch">
                     {{-- Text input --}}
                     <input
-                        x-show="fieldConfigs[filter.field]?.type === 'text'"
+                        x-show="showValue(filter) && fieldConfigs[filter.field]?.type === 'text'"
                         type="text"
                         class="{{ $segmentClass }} {{ $sizeConfig['input'] }} bg-transparent text-fg placeholder:text-fg-muted focus:outline-none"
                         x-bind:data-filter-input="filter.id"
@@ -394,28 +413,67 @@
                         x-on:input="emit()"
                         x-on:keydown.enter="$event.target.blur()"
                     />
+                    <span
+                        class="{{ $segmentClass }} {{ $sizeConfig['input'] }} text-fg-muted"
+                        x-show="!showValue(filter) && fieldConfigs[filter.field]?.type === 'text'"
+                        x-cloak
+                    >—</span>
 
                     {{-- Select / multiselect trigger --}}
                     <button
                         x-show="fieldConfigs[filter.field]?.type !== 'text'"
                         type="button"
-                        class="{{ $segmentClass }} cursor-pointer text-fg transition-colors duration-100 hover:bg-hover"
-                        x-bind:disabled="isDisabled"
-                        x-on:click="togglePanel('val:' + filter.id)"
+                        class="{{ $segmentClass }} cursor-pointer text-fg transition-colors duration-fast ease-standard hover:bg-hover disabled:cursor-default disabled:hover:bg-transparent"
+                        x-bind:disabled="isDisabled || !showValue(filter)"
+                        x-on:click="if (showValue(filter)) togglePanel('val:' + filter.id)"
                     >
-                        <span
-                            class="size-2 rounded-full"
-                            x-show="valueDotColor(filter)"
-                            x-bind:style="'background-color:' + valueDotColor(filter)"
-                        ></span>
-                        <span x-text="valueLabel(filter)"></span>
+                        <span class="inline-grid justify-items-start">
+                            @foreach ($normalizedFields as $field)
+                                @if ($field['type'] !== 'text')
+                                    <template x-if="filter.field === '{{ $field['key'] }}'">
+                                    <span class="col-start-1 row-start-1 inline-grid justify-items-start invisible" aria-hidden="true">
+                                        @php
+                                            $valueMeasures = collect($field['options'])->pluck('label')
+                                                ->push(__('select'))
+                                                ->when($field['type'] === 'multiselect', fn ($labels) => $labels->push(count($field['options']).' '.__('selectedCount')));
+                                        @endphp
+                                        @foreach ($valueMeasures as $measure)
+                                            <span class="col-start-1 row-start-1 inline-flex items-center whitespace-nowrap {{ $sizeConfig['gap'] }}">
+                                                @if ($field['hasSwatch'])
+                                                    <span class="size-2 shrink-0"></span>
+                                                @endif
+                                                <span>{{ $measure }}</span>
+                                            </span>
+                                        @endforeach
+                                    </span>
+                                    </template>
+                                @endif
+                            @endforeach
+                            <span class="col-start-1 row-start-1 inline-flex items-center whitespace-nowrap {{ $sizeConfig['gap'] }}">
+                                <template x-if="fieldConfigs[filter.field]?.hasSwatch">
+                                    <span
+                                        class="size-2 shrink-0 rounded-full"
+                                        x-bind:class="valueDotColor(filter) ? '' : 'invisible'"
+                                        x-bind:style="valueDotColor(filter) ? 'background-color:' + valueDotColor(filter) : ''"
+                                    ></span>
+                                </template>
+                                <span x-text="showValue(filter) ? valueLabel(filter) : '—'"></span>
+                            </span>
+                        </span>
                     </button>
 
                     <div
                         class="{{ $panelClass }} w-52"
                         x-cloak
+                        data-side="bottom"
+                        data-align="start"
                         x-show="open === 'val:' + filter.id"
-                        x-transition.opacity.duration.100ms
+                        x-transition:enter="nk-menu-motion"
+                        x-transition:enter-start="nk-menu-from"
+                        x-transition:enter-end="nk-menu-to"
+                        x-transition:leave="nk-menu-leaving"
+                        x-transition:leave-start="nk-menu-to"
+                        x-transition:leave-end="nk-menu-out"
                         x-on:click.outside="if (open === 'val:' + filter.id) closeAll()"
                     >
                         @foreach ($normalizedFields as $field)
@@ -457,7 +515,7 @@
                                                 <span class="grow">{{ $option['label'] }}</span>
 
                                                 @if ($field['type'] !== 'multiselect')
-                                                    <neura::icon name="check" variant="micro" class="size-3.5 text-fg" x-show="filter.values.includes({{ Js::from($option['value']) }})" />
+                                                    <neura::icon name="check" variant="micro" class="size-3.5 shrink-0 text-fg" x-bind:class="filter.values.includes({{ Js::from($option['value']) }}) ? 'visible' : 'invisible'" />
                                                 @endif
                                             </button>
                                         @endforeach
@@ -467,12 +525,11 @@
                         @endforeach
                     </div>
                 </div>
-            </template>
 
             {{-- Remove --}}
             <button
                 type="button"
-                class="flex cursor-pointer items-center {{ $roundedEnd }} {{ $sizeConfig['remove'] }} text-fg-muted transition-colors duration-100 hover:bg-hover hover:text-fg"
+                class="flex cursor-pointer items-center {{ $roundedEnd }} {{ $sizeConfig['remove'] }} text-fg-muted transition-colors duration-fast ease-standard hover:bg-hover hover:text-fg"
                 x-bind:disabled="isDisabled"
                 x-bind:aria-label="'Remove ' + (fieldConfigs[filter.field]?.label ?? filter.field) + ' filter'"
                 x-on:click="removeFilter(filter.id)"
@@ -505,8 +562,15 @@
         <div
             class="{{ $panelClass }} w-56"
             x-cloak
+            data-side="bottom"
+            data-align="start"
             x-show="open === 'menu'"
-            x-transition.opacity.duration.100ms
+            x-transition:enter="nk-menu-motion"
+            x-transition:enter-start="nk-menu-from"
+            x-transition:enter-end="nk-menu-to"
+            x-transition:leave="nk-menu-leaving"
+            x-transition:leave-start="nk-menu-to"
+            x-transition:leave-end="nk-menu-out"
             x-on:click.outside="if (open === 'menu') closeAll()"
         >
             {{-- Root: field list --}}
@@ -556,7 +620,7 @@
                         <div class="mb-1 flex items-center gap-1 border-b border-separator pb-1.5">
                             <button
                                 type="button"
-                                class="flex cursor-pointer items-center rounded p-1 text-fg-muted transition-colors duration-100 hover:bg-hover hover:text-fg"
+                                class="flex cursor-pointer items-center rounded p-1 text-fg-muted transition-colors duration-fast ease-standard hover:bg-hover hover:text-fg"
                                 aria-label="Back"
                                 x-on:click="menuField = null; valueSearch = ''"
                             >

@@ -69,7 +69,7 @@
         'relative flex items-center justify-center overflow-hidden',
         $roundedClass,
         $shadowClass,
-        'transition-all duration-200',
+        'transition-all duration-fast ease-standard',
         'ring-1 ring-black/5 dark:ring-white/10',
         'hover:shadow-md hover:ring-black/10 dark:hover:ring-white/15' => $href,
         $avatarSize,
@@ -115,7 +115,7 @@
     $badgeClasses = Arr::toCssClasses([
         'absolute z-10',
         'ring-2 ring-white dark:ring-neutral-900',
-        'transition-transform duration-200',
+        'transition-transform duration-fast ease-standard',
         'flex items-center justify-center tabular-nums',
         $badgePositionClass,
         $badgeColorClass,

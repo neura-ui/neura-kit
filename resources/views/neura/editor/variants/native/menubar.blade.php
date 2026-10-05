@@ -103,8 +103,15 @@
                 <div
                     x-show="open"
                     x-cloak
-                    x-transition.opacity
-                    class="nk-editor-menu absolute left-0 top-full z-40 mt-1.5 w-56"
+                    data-side="bottom"
+                    data-align="start"
+                    x-transition:enter="nk-menu-motion"
+                    x-transition:enter-start="nk-menu-from"
+                    x-transition:enter-end="nk-menu-to"
+                    x-transition:leave="nk-menu-leaving"
+                    x-transition:leave-start="nk-menu-to"
+                    x-transition:leave-end="nk-menu-out"
+                    class="nk-menu-motion nk-editor-menu absolute left-0 top-full z-40 mt-1.5 w-56"
                 >
                     @foreach($items as $index => $item)
                         @if(isset($item['children']))
@@ -133,7 +140,15 @@
                                 <div
                                     x-show="sub === {{ $index }}"
                                     x-cloak
-                                    class="nk-editor-menu absolute left-full top-0 z-50 -mt-1 ml-1 w-40"
+                                    data-side="right"
+                                    data-align="start"
+                                    x-transition:enter="nk-menu-motion"
+                                    x-transition:enter-start="nk-menu-from"
+                                    x-transition:enter-end="nk-menu-to"
+                                    x-transition:leave="nk-menu-leaving"
+                                    x-transition:leave-start="nk-menu-to"
+                                    x-transition:leave-end="nk-menu-out"
+                                    class="nk-menu-motion nk-editor-menu absolute left-full top-0 z-50 -mt-1 ml-1 w-40"
                                 >
                                     @foreach($item['children'] as $child)
                                         <button

@@ -23,7 +23,7 @@
     @endif
     x-bind:disabled="isDisabled"
     @if (filled($label)) aria-label="{{ $label }}" title="{{ $label }}" @endif
-    {{ $attributes->merge(['class' => 'border bg-surface text-fg-muted hover:text-fg hover:bg-hover px-3 flex items-center justify-center gap-1.5 text-sm shrink-0 cursor-pointer transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed focus:ring-offset-0 focus:outline-none ' . $shadowClass . ' ' . $roundedClass . ' ' . $selectColors['border'] . ' ' . $selectColors['focus']]) }}>
+    {{ $attributes->merge(['class' => 'border bg-surface text-fg-muted hover:text-fg hover:bg-hover px-3 flex items-center justify-center gap-1.5 text-sm shrink-0 cursor-pointer transition-colors duration-fast ease-standard disabled:opacity-50 disabled:cursor-not-allowed focus:ring-offset-0 focus:outline-none ' . $shadowClass . ' ' . $roundedClass . ' ' . $selectColors['border'] . ' ' . $selectColors['focus']]) }}>
     @if (filled($displayIcon))
         <neura::icon :name="$displayIcon" :variant="$iconVariant" class="size-[1.10rem]!" />
     @endif

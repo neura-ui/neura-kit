@@ -9,6 +9,7 @@
     'trigger' => null,
     'placeholder' => null,
     'size' => 'md',
+    'multiple' => false,
 ])
 @php
     use Neura\Kit\Support\PackResolver;
@@ -41,17 +42,37 @@
         type="button"
         aria-haspopup="listbox"
         data-slot="select-control"
-        {{ $attributes->merge(['class' => 'border bg-surface truncate text-fg disabled:text-fg-muted disabled:bg-neutral-50 dark:disabled:bg-neutral-900/60 disabled:shadow-none text-start transition-colors duration-150 col-span-4 col-start-1 row-start-1 justify-self-stretch disabled:opacity-50 disabled:cursor-not-allowed flex cursor-pointer overflow-hidden whitespace-nowrap focus:ring-offset-0 focus:outline-none ' . $sizeClasses . ' ' . $shadowClass . ' ' . $roundedClass . (!$invalid ? ' ' . $selectColors['border'] . ' ' . $selectColors['focus'] : ' ' . $selectColors['invalid']) . ' ' . $triggerClass]) }}
+        {{ $attributes->merge(['class' => 'border bg-surface truncate text-fg disabled:text-fg-muted disabled:bg-neutral-50 dark:disabled:bg-neutral-900/60 disabled:shadow-none text-start transition-colors duration-fast ease-standard col-span-4 col-start-1 row-start-1 justify-self-stretch disabled:opacity-50 disabled:cursor-not-allowed flex cursor-pointer overflow-hidden whitespace-nowrap focus:ring-offset-0 focus:outline-none ' . $sizeClasses . ' ' . $shadowClass . ' ' . $roundedClass . (!$invalid ? ' ' . $selectColors['border'] . ' ' . $selectColors['focus'] : ' ' . $selectColors['invalid']) . ' ' . $triggerClass]) }}
 
         x-bind:aria-activedescendant="!isSearchable && activeIndex !== null ? 'option-' + activeIndex : null"
         @disabled($disabled)
     >
-        <span
-            class="truncate block w-full text-fg-muted"
-            x-bind:class="hasSelection ? 'text-fg' : 'text-fg-muted'"
-        >
-            <span x-text="label">{{ $ssrLabel }}</span>
-        </span>
+        @if ($multiple)
+            <span class="nk-select-faces">
+                <span
+                    class="nk-select-value text-fg-muted"
+                    x-show="chipCount === 0"
+                    x-bind:class="hasSelection ? 'text-fg' : 'text-fg-muted'"
+                >
+                    <span class="sr-only" x-text="placeholder">{{ $ssrLabel }}</span>
+                    <span class="nk-select-reel" aria-hidden="true">
+                        <span class="nk-select-chip is-current">{{ $ssrLabel }}</span>
+                    </span>
+                </span>
+                <span class="nk-multi" x-ref="multiChips" x-show="chipCount > 0" aria-hidden="true"></span>
+                <span class="sr-only" x-show="chipCount > 0" x-text="label"></span>
+            </span>
+        @else
+            <span
+                class="nk-select-value truncate block w-full text-fg-muted"
+                x-bind:class="hasSelection ? 'text-fg' : 'text-fg-muted'"
+            >
+                <span class="sr-only" x-text="label">{{ $ssrLabel }}</span>
+                <span class="nk-select-reel" x-ref="valueReel" aria-hidden="true">
+                    <span class="nk-select-chip is-current">{{ $ssrLabel }}</span>
+                </span>
+            </span>
+        @endif
     </button>
 
     @if (filled($iconAfter))

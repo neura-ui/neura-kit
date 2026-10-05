@@ -102,13 +102,15 @@
 
     <div
         x-show="open"
-        x-transition:enter="transition ease-out duration-200"
-        x-transition:enter-start="opacity-0 translate-y-1"
-        x-transition:enter-end="opacity-100 translate-y-0"
-        x-transition:leave="transition ease-in duration-150"
-        x-transition:leave-start="opacity-100 translate-y-0"
-        x-transition:leave-end="opacity-0 translate-y-1"
-        class="absolute z-50 mt-2 top-full left-0 w-auto shadow-xl rounded-box"
+        x-transition:enter="nk-menu-motion"
+        x-transition:enter-start="nk-menu-from"
+        x-transition:enter-end="nk-menu-to"
+        x-transition:leave="nk-menu-leaving"
+        x-transition:leave-start="nk-menu-to"
+        x-transition:leave-end="nk-menu-out"
+        data-side="bottom"
+        data-align="start"
+        class="nk-menu-motion absolute z-50 mt-2 top-full left-0 w-auto shadow-xl rounded-box"
         x-cloak
         @click.stop
     >

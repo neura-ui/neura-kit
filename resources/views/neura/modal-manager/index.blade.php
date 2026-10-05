@@ -28,8 +28,8 @@
 
     <div class="flex min-h-full items-center justify-center p-4">
         <div x-show="isLoading" class="relative flex w-fit justify-center">
-            <div class="bg-surface-raised backdrop-blur-xl p-8 {{ $modalRoundedClass }} {{ $modalShadowClass }}">
-                <neura::icon.loading data-slot="loading-indicator" class="text-fg-secondary" />
+            <div class="bg-surface-raised text-fg-secondary backdrop-blur-xl p-8 {{ $modalRoundedClass }} {{ $modalShadowClass }}">
+                <neura::spinner variant="ring" size="md" color="current" data-slot="loading-indicator" />
             </div>
         </div>
 
@@ -59,8 +59,8 @@
                 @endphp
                 <div wire:key="{{ $id }}" x-ref="{{ $id }}" data-modal-id="{{ $id }}"
                     x-show="activeComponent === '{{ $id }}' && !isTransitioning" x-on:click.stop
-                    x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95"
-                    x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-150"
+                    x-transition:enter="transition ease-enter duration-standard" x-transition:enter-start="opacity-0 scale-95"
+                    x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-standard duration-fast"
                     x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
                     @if ($customStyle) style="{{ $customStyle }}" @endif
                     class="

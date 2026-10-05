@@ -111,8 +111,8 @@ type PinchState = {
     startZoom: number;
 };
 
-const DEFAULT_NODE_W = 92;
-const DEFAULT_NODE_H = 92;
+const DEFAULT_NODE_W = 208;
+const DEFAULT_NODE_H = 64;
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 function uid(prefix = 'e'): string {
@@ -271,7 +271,7 @@ function createNeuraFlow(config: FlowConfig = {}) {
     const fitOnInit = config.fitViewOnInit ?? config.autoCenter ?? true;
 
     const initialNodes = (config.nodes ?? []).map((n, i) =>
-                normalizeNode(n, i, { w: nodeW, h: nodeH, colGap: 200, rowGap: 160 }),
+                normalizeNode(n, i, { w: nodeW, h: nodeH, colGap: 288, rowGap: 120 }),
     );
     const initialEdges = (config.edges ?? []).map((e) => normalizeEdge(e as any, edgeType));
 
@@ -723,8 +723,12 @@ function createNeuraFlow(config: FlowConfig = {}) {
         },
 
         nodeStyle(node: FlowNode): string {
+            const w = node.width ?? this.defaultNodeWidth;
+            const h = node.height ?? this.defaultNodeHeight;
             return [
                 `transform: translate3d(${node.position.x}px, ${node.position.y}px, 0)`,
+                `width:${w}px`,
+                `height:${h}px`,
                 `--flow-accent: ${this.nodeAccent(node)}`,
             ].join(';');
         },
@@ -735,7 +739,7 @@ function createNeuraFlow(config: FlowConfig = {}) {
         },
 
         nodeAccent(node: FlowNode): string {
-            return (node.data?.color as string) || '#ff6d5a';
+            return (node.data?.color as string) || 'var(--color-primary-500)';
         },
 
         isTrigger(node: FlowNode): boolean {

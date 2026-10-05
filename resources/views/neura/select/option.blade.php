@@ -56,7 +56,7 @@
     class="
         rounded-[calc(var(--popup-round)-var(--popup-padding))] col-span-full grid grid-cols-subgrid items-center
         focus:bg-active w-full {{ $optionSizeClasses }}
-        self-center cursor-pointer hover:bg-hover transition-colors duration-100
+        self-center cursor-pointer hover:bg-hover transition-colors duration-fast ease-standard
     ">
     <div class="flex items-center gap-1.5 min-w-0">
         @if ($multiple)
@@ -65,21 +65,20 @@
                 aria-hidden="true"
                 x-bind:data-checked="isSelected(@js($value)) ? true : null"
                 @class([
-                    'flex items-center justify-center size-4 shrink-0 border overflow-hidden pointer-events-none transition-all duration-150',
+                    'flex items-center justify-center size-4 shrink-0 border overflow-hidden pointer-events-none transition-all duration-fast ease-standard',
                     $checkboxRounded,
                     $checkboxColors['border'],
                     $checkboxColors['checked'],
                 ])
             >
                 <span
-                    class="flex items-center justify-center"
+                    class="flex items-center justify-center text-white"
                     x-show="isSelected(@js($value))"
-                    x-transition:enter="transition-all duration-150"
-                    x-transition:enter-start="opacity-0 scale-50"
-                    x-transition:enter-end="opacity-100 scale-100"
                     style="display:none"
                 >
-                    <neura::icon name="check" variant="micro" class="size-2.5 text-white" />
+                    <svg class="nk-select-check" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                        <path d="M3.5 8.2 6.4 11.1 12.5 4.8" />
+                    </svg>
                 </span>
             </span>
         @endif

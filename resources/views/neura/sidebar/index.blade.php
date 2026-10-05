@@ -12,7 +12,7 @@
 ])
 
 @php
-    $sidebarClasses = 'isolate [grid-area:sidebar] z-40 bg-surface backdrop-blur-xl lg:block border-r border-separator transition-[width] duration-500 overflow-x-visible' . ($scrollable ? ' !overflow-y-auto' : '');
+    $sidebarClasses = 'isolate [grid-area:sidebar] z-40 bg-surface backdrop-blur-xl lg:block border-r border-separator transition-[width] duration-considered ease-standard overflow-x-visible' . ($scrollable ? ' !overflow-y-auto' : '');
 @endphp
 
 <div
@@ -154,7 +154,7 @@
                     x-bind:data-collapsable="collapsable"
                     class="
                         [&:not([data-collapsable=true])]:hidden
-                        opacity-0 group-hover:opacity-100 transition-opacity duration-150
+                        opacity-0 group-hover:opacity-100 transition-opacity duration-fast ease-standard
                         in-[:has([data-collapsed]_&)_&]:group-hover:inline-flex
                         in-[:has([data-collapsed]_&)]:hidden
                     "

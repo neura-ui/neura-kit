@@ -39,6 +39,31 @@ export const FEATURES: readonly Feature[] = [
         load: () => Promise.resolve(), // eager via app.ts
     },
     {
+        name: 'action-button',
+        tokens: ['neuraActionButton'],
+        load: () => import('../features/actions/action-button'),
+    },
+    {
+        name: 'split-button',
+        tokens: ['neuraSplitButton'],
+        load: () => import('../features/actions/split-button'),
+    },
+    {
+        name: 'button-group',
+        tokens: ['neuraButtonGroup'],
+        load: () => import('../features/actions/button-group'),
+    },
+    {
+        name: 'expanding-button-group',
+        tokens: ['neuraExpandingGroup'],
+        load: () => import('../features/actions/expanding-button-group'),
+    },
+    {
+        name: 'confirm-morph',
+        tokens: ['neuraConfirmMorph'],
+        load: () => import('../features/actions/confirm-morph'),
+    },
+    {
         name: 'command',
         tokens: ['CommandSpotlight'],
         load: () => import('../features/overlays/command'),
@@ -64,6 +89,36 @@ export const FEATURES: readonly Feature[] = [
         load: () => import('../features/forms/phone-input'),
     },
     {
+        name: 'number-field',
+        tokens: ['neuraNumberField'],
+        load: () => import('../features/forms/number-field'),
+    },
+    {
+        name: 'mention-input',
+        tokens: ['neuraMentionInput'],
+        load: () => import('../features/forms/mention-input'),
+    },
+    {
+        name: 'signature-pad',
+        tokens: ['neuraSignaturePad'],
+        load: () => import('../features/forms/signature-pad'),
+    },
+    {
+        name: 'time-dial',
+        tokens: ['neuraTimeDial'],
+        load: () => import('../features/forms/time-dial'),
+    },
+    {
+        name: 'date-reel',
+        tokens: ['neuraDateReel'],
+        load: () => import('../features/forms/date-reel'),
+    },
+    {
+        name: 'activity-rings',
+        tokens: ['neuraActivityRings'],
+        load: () => import('../features/data/activity-rings'),
+    },
+    {
         name: 'dropzone',
         tokens: ['neuraDropzone'],
         load: () => import('../features/forms/dropzone'),
@@ -77,6 +132,11 @@ export const FEATURES: readonly Feature[] = [
         name: 'tree',
         tokens: ['neuraTree'],
         load: () => import('../features/data/tree'),
+    },
+    {
+        name: 'json-viewer',
+        tokens: ['neuraJsonViewer'],
+        load: () => import('../features/data/json-viewer'),
     },
     {
         name: 'rule-builder',

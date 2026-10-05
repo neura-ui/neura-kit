@@ -28,8 +28,8 @@
     $fontClass = $isCompact ? 'font-semibold' : 'font-medium';
     $iconClass = $isCompact ? 'size-3.5 shrink-0 text-fg-disabled' : 'size-4 shrink-0 text-fg-disabled';
     $chevronClass = $isCompact
-        ? 'size-3 shrink-0 text-fg-disabled transition-transform duration-200'
-        : 'size-3.5 shrink-0 text-fg-disabled transition-transform duration-200';
+        ? 'size-3 shrink-0 text-fg-disabled transition-transform duration-fast ease-standard'
+        : 'size-3.5 shrink-0 text-fg-disabled transition-transform duration-fast ease-standard';
 @endphp
 
 @if ($hasLabel)
@@ -46,7 +46,7 @@
                     {{ $fontClass }} uppercase tracking-wider
                     text-fg-muted
                     hover:text-neutral-700 dark:hover:text-neutral-300
-                    transition-colors duration-150
+                    transition-colors duration-fast ease-standard
                     cursor-pointer rounded-md
                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50
                 "

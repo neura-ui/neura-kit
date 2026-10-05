@@ -13,14 +13,14 @@
     $data = is_array($data) ? $data : json_decode($data, true) ?? [];
     $options = is_array($options) ? $options : json_decode($options, true) ?? [];
 
-    $isRadial = in_array($type, ['pie', 'doughnut'], true);
+    $isRadial = in_array($type, ['pie', 'doughnut', 'donut', 'waffle', 'slope'], true);
 
     $defaultOptions = [
-        'showLegend' => true,
+        'showLegend' => $type !== 'slope',
         'showGrid' => ! $isRadial,
         'showTooltip' => true,
         'plugins' => [
-            'legend' => ['display' => true],
+            'legend' => ['display' => $type !== 'slope'],
             'tooltip' => true,
         ],
         'scales' => [
@@ -32,7 +32,7 @@
 
     $chartRoundedClass = PackResolver::rounded(neura_config('chart', 'rounded'));
     $chartShadowClass = PackResolver::shadow(neura_config('chart', 'shadow'));
-    $chartContainerClass = "{$chartRoundedClass} border border-black/[0.06] dark:border-white/[0.08] bg-surface p-5 ring-1 ring-black/[0.02] dark:ring-white/[0.02] {$chartShadowClass}";
+    $chartContainerClass = "{$chartRoundedClass} border border-edge bg-surface p-4 {$chartShadowClass}";
 
     $variantClasses = match ($variant) {
         'card' => $chartContainerClass,
@@ -48,5 +48,5 @@
     style="height: {{ $height }};"
     {{ $attributes }}
 >
-    <canvas x-ref="chartCanvas" id="{{ $chartId }}"></canvas>
+    <canvas x-ref="chartCanvas" id="{{ $chartId }}" class="block max-w-full"></canvas>
 </div>

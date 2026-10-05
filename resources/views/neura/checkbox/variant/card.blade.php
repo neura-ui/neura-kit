@@ -40,7 +40,7 @@
         x-on:keydown.space.prevent="toggle()"
         x-on:keydown.enter.prevent="toggle()" @endif
     tabindex="{{ $disabled ? '-1' : '0' }}" role="checkbox" @class([
-        'isolate grid grid-cols-[auto_1fr_auto] items-center transition-all duration-200 cursor-pointer select-none',
+        'isolate grid grid-cols-[auto_1fr_auto] items-center transition-all duration-fast ease-standard cursor-pointer select-none',
         'rounded-xl border',
         'bg-transparent',
         'border-neutral-200 dark:border-white/[0.10]',
@@ -54,7 +54,7 @@
     ])>
 
     @if ($icon)
-        <div class="flex items-center justify-center size-9 rounded-lg bg-neutral-100 dark:bg-white/[0.06] text-fg-secondary shrink-0 transition-colors duration-200"
+        <div class="flex items-center justify-center size-9 rounded-lg bg-neutral-100 dark:bg-white/[0.06] text-fg-secondary shrink-0 transition-colors duration-fast ease-standard"
             x-bind:class="(_checked && !_indeterminate) ? '!bg-primary-100 dark:!bg-primary-500/10 !text-primary-600 dark:!text-primary-400' : ''"
         >
             <neura::icon name="{{ $icon }}" variant="{{ $iconVariant }}" class="size-5" />

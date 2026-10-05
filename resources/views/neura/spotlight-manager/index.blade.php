@@ -32,10 +32,10 @@
     <div
         x-show="isOpen"
         x-cloak
-        x-transition:enter="ease-out duration-300"
+        x-transition:enter="ease-enter duration-standard"
         x-transition:enter-start="opacity-0"
         x-transition:enter-end="opacity-100"
-        x-transition:leave="ease-in duration-200"
+        x-transition:leave="ease-standard duration-fast"
         x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0"
         @click="$wire.close()"
@@ -47,10 +47,10 @@
     <div
         x-show="isOpen"
         x-cloak
-        x-transition:enter="ease-out duration-300"
+        x-transition:enter="ease-enter duration-standard"
         x-transition:enter-start="opacity-0 scale-95 -translate-y-8"
         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-        x-transition:leave="ease-in duration-200"
+        x-transition:leave="ease-standard duration-fast"
         x-transition:leave-start="opacity-100 scale-100 translate-y-0"
         x-transition:leave-end="opacity-0 scale-95 -translate-y-8"
         x-trap.inert.noscroll="isOpen"
@@ -73,7 +73,7 @@
                 <div class="relative shrink-0 size-5 text-fg-disabled">
                     <div
                         x-show="isModeAvailable('search') && mode === 'search'"
-                        x-transition:enter="transition ease-out duration-150"
+                        x-transition:enter="transition ease-enter duration-standard"
                         x-transition:enter-start="opacity-0 scale-90"
                         x-transition:enter-end="opacity-100 scale-100"
                         class="absolute inset-0 flex items-center justify-center"
@@ -82,7 +82,7 @@
                     </div>
                     <div
                         x-show="isModeAvailable('command') && mode === 'command'"
-                        x-transition:enter="transition ease-out duration-150"
+                        x-transition:enter="transition ease-enter duration-standard"
                         x-transition:enter-start="opacity-0 scale-90"
                         x-transition:enter-end="opacity-100 scale-100"
                         class="absolute inset-0 flex items-center justify-center"
@@ -91,7 +91,7 @@
                     </div>
                     <div
                         x-show="isModeAvailable('ai') && mode === 'ai'"
-                        x-transition:enter="transition ease-out duration-150"
+                        x-transition:enter="transition ease-enter duration-standard"
                         x-transition:enter-start="opacity-0 scale-90"
                         x-transition:enter-end="opacity-100 scale-100"
                         class="absolute inset-0 flex items-center justify-center"
@@ -119,7 +119,7 @@
 
                 {{-- Loading --}}
                 <div x-show="isLoading" x-transition class="shrink-0">
-                    <x-neura::spinner size="sm" color="primary" />
+                    <x-neura::spinner size="sm" variant="ring" color="primary" />
                 </div>
 
                 {{-- Mode Tabs + ESC --}}
@@ -142,7 +142,7 @@
                                 :class="mode === m.value
                                     ? 'bg-active text-fg shadow-sm'
                                     : 'text-fg-muted hover:text-fg'"
-                                class="inline-flex items-center gap-1.5 px-2.5 text-xs font-medium rounded-[5px] transition-colors duration-150"
+                                class="inline-flex items-center gap-1.5 px-2.5 text-xs font-medium rounded-[5px] transition-colors duration-fast ease-standard"
                                 :title="m.label + ' (' + m.shortcut + ')'"
                             >
                                 <span x-html="getIconSvg(m.icon)" class="size-3 shrink-0"></span>
@@ -178,10 +178,10 @@
                 {{-- Results (Search & Command modes) --}}
                 <div
                     x-show="mode !== 'ai'"
-                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter="transition ease-enter duration-standard"
                     x-transition:enter-start="opacity-0"
                     x-transition:enter-end="opacity-100"
-                    x-transition:leave="transition ease-in duration-150"
+                    x-transition:leave="transition ease-standard duration-fast"
                     x-transition:leave-start="opacity-100"
                     x-transition:leave-end="opacity-0"
                     class="col-start-1 row-start-1 max-h-[50vh] overflow-y-auto overscroll-contain"
@@ -293,10 +293,10 @@
                 {{-- AI Response Area --}}
                 <div
                     x-show="isModeAvailable('ai') && mode === 'ai'"
-                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter="transition ease-enter duration-standard"
                     x-transition:enter-start="opacity-0"
                     x-transition:enter-end="opacity-100"
-                    x-transition:leave="transition ease-in duration-150"
+                    x-transition:leave="transition ease-standard duration-fast"
                     x-transition:leave-start="opacity-100"
                     x-transition:leave-end="opacity-0"
                     class="col-start-1 row-start-1 max-h-[50vh] overflow-y-auto overscroll-contain"

@@ -91,7 +91,7 @@
             </template>
             <template x-if="done">
                 <svg
-                    class="nk-tr-chevron size-3 shrink-0 text-fg-muted transition-transform duration-200"
+                    class="nk-tr-chevron size-3 shrink-0 text-fg-muted transition-transform duration-fast ease-standard"
                     :class="open && 'nk-tr-chevron--open'"
                     viewBox="0 0 24 24"
                     aria-hidden="true"
@@ -110,7 +110,7 @@
 
         <div
             x-ref="viewport"
-            class="nk-tr-viewport overflow-hidden transition-[height,margin] duration-200 ease-out"
+            class="nk-tr-viewport overflow-hidden transition-[height,margin] duration-standard ease-standard"
             :class="scrollable && 'nk-tr-viewport--scroll overflow-y-auto'"
             :style="{
                 height: viewH + 'px',
@@ -122,7 +122,7 @@
         >
             <div
                 x-ref="stream"
-                class="nk-tr-stream flex flex-col transition-transform duration-200 ease-out"
+                class="nk-tr-stream flex flex-col transition-transform duration-fast ease-standard"
                 :style="{
                     gap: gap + 'px',
                     transform: 'translateY(' + translate + 'px)',

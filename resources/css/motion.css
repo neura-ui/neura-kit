@@ -1,0 +1,80 @@
+/**
+ * Motion tokens.
+ *
+ * Durations and easings follow one scale so hover, panels and reveals
+ * share the same timing. Springs live in resources/js/shared/motion-tokens.ts.
+ *
+ *   --duration-fast        160ms  hover, color, small state
+ *   --duration-standard    240ms  panels and menus
+ *   --duration-considered  480ms  rare introductory reveals
+ *   --duration-spring      580ms  gentle settle, paired with --ease-spring
+ */
+:root {
+  --nk-ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+  --nk-ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+  --nk-ease-spring: linear(
+    0,
+    0.0258,
+    0.09,
+    0.1763,
+    0.2732,
+    0.3724,
+    0.4683,
+    0.5573,
+    0.6376,
+    0.7082,
+    0.7689,
+    0.8202,
+    0.8628,
+    0.8976,
+    0.9256,
+    0.9476,
+    0.9648,
+    0.9778,
+    0.9875,
+    0.9945,
+    0.9994,
+    1.0026,
+    1.0047,
+    1.0058,
+    1.0062,
+    1.0062,
+    1.0059,
+    1.0055,
+    1.0049,
+    1.0043,
+    1.0036,
+    1.0031,
+    1.0025,
+    1.002,
+    1.0016,
+    1.0013,
+    1
+  );
+
+  --nk-duration-fast: 160ms;
+  --nk-duration-standard: 240ms;
+  --nk-duration-considered: 480ms;
+  --nk-duration-spring: 580ms;
+}
+
+/*
+ * Tailwind emits easing utilities from @theme, but skips duration
+ * utilities whose value is a var(). These utilities keep the names
+ * (`duration-fast`, …) wired to the tokens above.
+ */
+@utility duration-fast {
+  transition-duration: var(--nk-duration-fast);
+}
+
+@utility duration-standard {
+  transition-duration: var(--nk-duration-standard);
+}
+
+@utility duration-considered {
+  transition-duration: var(--nk-duration-considered);
+}
+
+@utility duration-spring {
+  transition-duration: var(--nk-duration-spring);
+}

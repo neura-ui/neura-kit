@@ -17,7 +17,7 @@
             <x-neura::icon name="sparkles" variant="solid" class="size-4 text-white" />
         </div>
         <div class="flex-1 pt-1">
-            <x-neura::spinner size="xs" variant="dots" color="primary" />
+            <x-neura::spinner size="xs" variant="ring" color="primary" />
             <p class="text-xs text-neutral-500 mt-2">{{ __('aiThinking') }}</p>
         </div>
     </div>

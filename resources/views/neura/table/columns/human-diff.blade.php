@@ -4,10 +4,10 @@
     'row' => null,
 ])
 
-<div class="text-[13px] text-neutral-500 dark:text-neutral-400">
+<div class="nk-table-muted">
     @if($value)
         {{ Carbon::make($value)->diffForHumans() }}
     @else
-        <span class="text-neutral-300 dark:text-neutral-600">—</span>
+        <span class="nk-table-dash">—</span>
     @endif
 </div>

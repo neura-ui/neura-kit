@@ -23,7 +23,7 @@
                         'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300': isFocused(index),
                         'bg-transparent hover:bg-neutral-50 dark:hover:bg-neutral-800/50': !isFocused(index)
                     }"
-                    class="px-3 py-2 {{ $optionRoundedClass }} cursor-pointer transition-all duration-150 text-sm font-medium text-neutral-700 dark:text-neutral-200 group"
+                    class="px-3 py-2 {{ $optionRoundedClass }} cursor-pointer transition-all duration-fast ease-standard text-sm font-medium text-neutral-700 dark:text-neutral-200 group"
                     role="option" :aria-selected="isFocused(index)">
                     <div class="flex items-center justify-between gap-2">
                         <span x-text="option.label" class="truncate flex-1"></span>

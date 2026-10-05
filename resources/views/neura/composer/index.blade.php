@@ -36,7 +36,7 @@
         $inputColors['border'],
         $composerRoundedClass,
         $composerShadowClass,
-        'transition-colors duration-150',
+        'transition-colors duration-fast ease-standard',
         'outline-none ring-offset-0',
         'focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-500/25',
         'dark:focus-within:border-primary-400 dark:focus-within:ring-primary-400/25',
@@ -49,7 +49,7 @@
         '[&_[data-nk-emoji-picker]]:shrink-0',
         '[&_button]:size-8 [&_button]:shrink-0 [&_button]:rounded-lg',
         '[&_button]:text-fg-muted [&_button]:hover:text-fg [&_button]:hover:bg-hover',
-        '[&_button]:transition-colors [&_button]:duration-150',
+        '[&_button]:transition-colors [&_button]:duration-fast',
         '[&_button]:focus-visible:outline-none [&_button]:focus-visible:ring-2 [&_button]:focus-visible:ring-primary/25',
     ]);
 

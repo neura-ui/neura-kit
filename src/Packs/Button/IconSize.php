@@ -32,11 +32,11 @@ class IconSize extends BasePack
     public static function orb(): array
     {
         return [
-            'xs' => 14,
-            'sm' => 16,
-            'md' => 18,
-            'lg' => 20,
-            'xl' => 24,
+            'xs' => 18,
+            'sm' => 20,
+            'md' => 22,
+            'lg' => 24,
+            'xl' => 28,
         ];
     }
 }

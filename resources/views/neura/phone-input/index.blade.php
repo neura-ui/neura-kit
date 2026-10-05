@@ -67,7 +67,7 @@
 
     {{-- Main input container --}}
     <div @class([
-        'isolate relative flex items-stretch w-full disabled:shadow-none transition-colors duration-200',
+        'isolate relative flex items-stretch w-full disabled:shadow-none transition-colors duration-fast ease-standard',
         $roundedClass,
     ])>
         {{-- Country selector button --}}
@@ -77,7 +77,7 @@
             :disabled="isDisabled"
             @class([
                 'flex items-center gap-1.5 px-3 border border-r-0 bg-surface',
-                'hover:bg-hover transition-colors duration-150',
+                'hover:bg-hover transition-colors duration-fast ease-standard',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0',
                 'disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-neutral-50 dark:disabled:bg-neutral-900/60',
                 $inputColors['border'] => !$invalid,
@@ -101,7 +101,7 @@
                 ></span>
             @endif
             
-            <svg class="w-4 h-4 text-neutral-400 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 text-neutral-400 transition-transform duration-fast ease-standard" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
             </svg>
         </button>
@@ -124,7 +124,7 @@
                 'placeholder-neutral-400 disabled:placeholder-neutral-400/70',
                 'dark:placeholder-neutral-500 dark:disabled:placeholder-neutral-600',
                 'bg-surface disabled:bg-neutral-50 dark:disabled:bg-neutral-900/60',
-                'disabled:cursor-not-allowed transition-colors duration-150',
+                'disabled:cursor-not-allowed transition-colors duration-fast ease-standard',
                 $shadowClass,
                 'disabled:shadow-none',
                 'focus:ring-offset-0 focus:outline-none',
@@ -143,7 +143,7 @@
     {{-- Validation message --}}
     <div 
         x-show="validationMessage && touched"
-        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter="transition ease-enter duration-standard"
         x-transition:enter-start="opacity-0 -translate-y-1"
         x-transition:enter-end="opacity-100 translate-y-0"
         class="mt-1 text-xs"
@@ -155,15 +155,17 @@
     {{-- Country dropdown --}}
     <div
         x-show="open"
-        x-transition:enter="transition ease-out duration-200"
-        x-transition:enter-start="opacity-0 scale-95"
-        x-transition:enter-end="opacity-100 scale-100"
-        x-transition:leave="transition ease-in duration-150"
-        x-transition:leave-start="opacity-100 scale-100"
-        x-transition:leave-end="opacity-0 scale-95"
+        data-side="bottom"
+        data-align="start"
+        x-transition:enter="nk-menu-motion"
+        x-transition:enter-start="nk-menu-from"
+        x-transition:enter-end="nk-menu-to"
+        x-transition:leave="nk-menu-leaving"
+        x-transition:leave-start="nk-menu-to"
+        x-transition:leave-end="nk-menu-out"
         x-cloak
         @class([
-            'absolute z-50 mt-1 w-72 max-h-80 overflow-hidden bg-surface border border-edge',
+            'nk-menu-motion absolute z-50 mt-1 w-72 max-h-80 overflow-hidden bg-surface border border-edge',
             $popupRoundedClass,
             $popupShadowClass,
         ])
@@ -202,7 +204,7 @@
                                 'bg-primary-50 dark:bg-primary-950': focusedIndex === getCountryIndex(country.code),
                                 'bg-primary-100 dark:bg-primary-900': selectedCountry?.code === country.code
                             }"
-                            class="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-hover transition-colors duration-150"
+                            class="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-hover transition-colors duration-fast ease-standard"
                         >
                             <span class="text-lg" x-text="country.flag"></span>
                             <span class="flex-1 text-sm text-fg" x-text="country.name"></span>
@@ -223,7 +225,7 @@
                         'bg-primary-50 dark:bg-primary-950': focusedIndex === index + (search ? 0 : preferredCountriesList.length),
                         'bg-primary-100 dark:bg-primary-900': selectedCountry?.code === country.code
                     }"
-                    class="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-hover transition-colors duration-150"
+                    class="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-hover transition-colors duration-fast ease-standard"
                 >
                     <span class="text-lg" x-text="country.flag"></span>
                     <span class="flex-1 text-sm text-fg" x-text="country.name"></span>

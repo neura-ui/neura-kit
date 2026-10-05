@@ -12,6 +12,7 @@ class Size extends BasePack
             'xs' => [
                 'chip' => 'h-6 text-xs',
                 'segment' => 'gap-1 px-2',
+                'gap' => 'gap-1',
                 'icon' => 'size-3',
                 'remove' => 'px-1',
                 'input' => 'w-28',
@@ -19,6 +20,7 @@ class Size extends BasePack
             'sm' => [
                 'chip' => 'h-8 text-sm',
                 'segment' => 'gap-1.5 px-2.5',
+                'gap' => 'gap-1.5',
                 'icon' => 'size-3.5',
                 'remove' => 'px-1.5',
                 'input' => 'w-32',
@@ -26,6 +28,7 @@ class Size extends BasePack
             'md' => [
                 'chip' => 'h-10 text-sm',
                 'segment' => 'gap-2 px-3',
+                'gap' => 'gap-2',
                 'icon' => 'size-4',
                 'remove' => 'px-2',
                 'input' => 'w-36',
@@ -33,6 +36,7 @@ class Size extends BasePack
             'lg' => [
                 'chip' => 'h-12 text-base',
                 'segment' => 'gap-2 px-3.5',
+                'gap' => 'gap-2',
                 'icon' => 'size-4',
                 'remove' => 'px-2.5',
                 'input' => 'w-40',
@@ -40,6 +44,7 @@ class Size extends BasePack
             'xl' => [
                 'chip' => 'h-14 text-lg',
                 'segment' => 'gap-2.5 px-4',
+                'gap' => 'gap-2.5',
                 'icon' => 'size-5',
                 'remove' => 'px-3',
                 'input' => 'w-44',

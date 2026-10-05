@@ -1,0 +1,221 @@
+/* Date reel — phone wheels under one glass lens */
+
+.nk-date-reel {
+    container-type: inline-size;
+    position: relative;
+    width: min(100%, 26rem);
+    --reel-row: 36px;
+    --reel-size: 0.9375rem;
+    color: var(--color-fg);
+}
+
+@container (min-width: 26rem) {
+    .nk-date-reel {
+        --reel-row: 42px;
+        --reel-size: 1.0625rem;
+    }
+}
+
+.nk-reel-title {
+    margin: 0 0 0.2rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+.nk-reel-summary {
+    margin: 0 0 0.85rem;
+    font-size: 1.45rem;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+}
+
+.nk-reel-stage {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    gap: 0.15rem;
+    height: calc(var(--reel-row) * 7);
+    overflow: hidden;
+    touch-action: pan-x;
+    user-select: none;
+    mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 82%, transparent);
+}
+
+.nk-reel-lens {
+    position: absolute;
+    z-index: 1;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: var(--reel-row);
+    margin-top: calc(var(--reel-row) * -0.5);
+    border-radius: 0.65rem;
+    background: color-mix(in oklab, var(--color-fg) 5%, var(--color-surface));
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-fg) 8%, transparent);
+    pointer-events: none;
+}
+
+.nk-reel {
+    position: relative;
+    z-index: 2;
+    flex: 0.7 1 3.4rem;
+    min-width: 0;
+    height: 100%;
+    overflow: hidden;
+    cursor: grab;
+    touch-action: pan-x;
+    outline: none;
+}
+
+.nk-reel[data-reel="day"] {
+    flex: 1.5 1 8.5rem;
+}
+
+.nk-reel[data-reel="month"] {
+    flex: 1.35 1 7rem;
+}
+
+.nk-reel[data-reel="year"] {
+    flex: 0.9 1 4.4rem;
+}
+
+.nk-date-reel.is-dragging .nk-reel {
+    cursor: grabbing;
+}
+
+.nk-reel-drum,
+.nk-reel-clip {
+    position: absolute;
+    inset: 0;
+}
+
+.nk-reel-clip {
+    top: 50%;
+    right: 0;
+    bottom: auto;
+    left: 0;
+    height: var(--reel-row);
+    margin-top: calc(var(--reel-row) * -0.5);
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.nk-reel-item,
+.nk-reel-lens-text {
+    position: absolute;
+    left: 0;
+    right: 0;
+    display: grid;
+    place-items: center;
+    font-size: var(--reel-size);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+.nk-reel-item {
+    top: 50%;
+    height: var(--reel-row);
+    margin-top: calc(var(--reel-row) * -0.5);
+    color: var(--color-fg-secondary);
+    font-weight: 500;
+}
+
+.nk-reel-lens-text {
+    inset: 0;
+    color: var(--color-fg);
+    font-weight: 600;
+}
+
+.nk-reel:focus-visible .nk-reel-lens-text {
+    color: var(--color-primary-600);
+}
+
+.nk-reel-lens-text.is-dim {
+    opacity: 0.38;
+}
+
+.nk-reel-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.55rem 0.4rem;
+    margin-top: 0.9rem;
+}
+
+.nk-reel-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.nk-reel-chip {
+    border: 1px solid var(--color-edge);
+    background: transparent;
+    color: var(--color-fg-secondary);
+    padding: 0.32rem 0.7rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.nk-reel-chip[aria-pressed="true"] {
+    background: color-mix(in oklab, var(--color-primary-500) 14%, var(--color-surface));
+    border-color: color-mix(in oklab, var(--color-primary-500) 42%, var(--color-edge));
+    color: var(--color-fg);
+}
+
+.nk-reel-chip:focus-visible,
+.nk-reel-confirm:focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
+}
+
+.nk-reel-confirm {
+    margin-left: auto;
+    border: 0;
+    background: var(--color-primary-600);
+    color: var(--color-fg-on-emphasis);
+    min-height: 2.25rem;
+    padding: 0.4rem 0.95rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.nk-reel-confirm:disabled {
+    cursor: progress;
+}
+
+.nk-reel-confirm-grid {
+    display: inline-grid;
+}
+
+.nk-reel-confirm-grid > * {
+    grid-area: 1 / 1;
+}
+
+.nk-reel-sizer {
+    visibility: hidden;
+}
+
+@container (max-width: 30rem) {
+    .nk-reel-confirm {
+        width: 100%;
+        margin-left: 0;
+        min-height: 2.75rem;
+    }
+}
+
+.nk-date-reel-status {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}

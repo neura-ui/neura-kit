@@ -21,17 +21,19 @@
     <template x-teleport="body">
         <div x-show="isOpen" 
              x-ref="menu"
-             x-transition:enter="transition ease-out duration-100"
-             x-transition:enter-start="opacity-0 scale-95"
-             x-transition:enter-end="opacity-100 scale-100"
-             x-transition:leave="transition ease-in duration-75"
-             x-transition:leave-start="opacity-100 scale-100"
-             x-transition:leave-end="opacity-0 scale-95"
+             x-transition:enter="nk-menu-motion"
+             x-transition:enter-start="nk-menu-from"
+             x-transition:enter-end="nk-menu-to"
+             x-transition:leave="nk-menu-leaving"
+             x-transition:leave-start="nk-menu-to"
+             x-transition:leave-end="nk-menu-out"
+             data-side="bottom"
+             data-align="start"
              @click.stop=""
              @contextmenu.prevent="" 
              @keydown.escape.window="close"
              @class([
-                 'fixed z-50 min-w-[180px] bg-surface-raised backdrop-blur-xl border border-black/[0.06] dark:border-white/[0.08] ring-1 ring-black/[0.02] dark:ring-white/[0.03] p-1 overflow-hidden',
+                 'nk-menu-motion fixed z-50 min-w-[180px] bg-surface-raised backdrop-blur-xl border border-black/[0.06] dark:border-white/[0.08] ring-1 ring-black/[0.02] dark:ring-white/[0.03] p-1 overflow-hidden',
                  $menuRoundedClass,
                  $menuShadowClass,
              ])

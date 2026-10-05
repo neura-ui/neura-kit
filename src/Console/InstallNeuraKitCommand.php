@@ -12,18 +12,19 @@ class InstallNeuraKitCommand extends Command
 
     public function handle(): int
     {
-        $viteConfigPath = base_path('vite.config.js');
+        $viteConfigPath = $this->resolveViteConfigPath();
 
-        if (! file_exists($viteConfigPath)) {
-            $this->error('vite.config.js not found!');
+        if ($viteConfigPath === null) {
+            $this->error('No vite.config.js or vite.config.ts found.');
 
             return self::FAILURE;
         }
 
+        $viteConfigName = basename($viteConfigPath);
         $viteConfig = file_get_contents($viteConfigPath);
 
         if (str_contains($viteConfig, 'neuraKit()')) {
-            $this->info('Neura Kit is already configured in vite.config.js');
+            $this->info("Neura Kit is already configured in {$viteConfigName}");
 
             return self::SUCCESS;
         }
@@ -49,7 +50,7 @@ class InstallNeuraKitCommand extends Command
         $viteConfig = $this->ensureImport($viteConfig, $pluginImport);
 
         if ($viteConfig === null) {
-            $this->error('Could not automatically configure vite.config.js. Please add manually:');
+            $this->error("Could not automatically configure {$viteConfigName}. Please add manually:");
             $this->line('');
             $this->line("1. Add import: {$pluginImport}");
             $this->line('2. Add plugin: neuraKit()');
@@ -60,7 +61,7 @@ class InstallNeuraKitCommand extends Command
         $viteConfig = $this->ensurePluginUsage($viteConfig);
 
         if ($viteConfig === null) {
-            $this->error('Could not automatically configure vite.config.js. Please add manually:');
+            $this->error("Could not automatically configure {$viteConfigName}. Please add manually:");
             $this->line('');
             $this->line("1. Add import: {$pluginImport}");
             $this->line('2. Add plugin: neuraKit()');
@@ -70,7 +71,7 @@ class InstallNeuraKitCommand extends Command
 
         file_put_contents($viteConfigPath, $viteConfig);
 
-        $this->info('✅ Neura Kit has been automatically configured in vite.config.js');
+        $this->info("✅ Neura Kit has been automatically configured in {$viteConfigName}");
 
         $this->configureTailwindSource();
 
@@ -116,6 +117,19 @@ class InstallNeuraKitCommand extends Command
         file_put_contents($cssPath, implode("\n", $lines));
 
         $this->info('✅ Tailwind source directive added to app.css');
+    }
+
+    private function resolveViteConfigPath(): ?string
+    {
+        foreach (['vite.config.js', 'vite.config.mjs', 'vite.config.ts', 'vite.config.mts'] as $file) {
+            $path = base_path($file);
+
+            if (file_exists($path)) {
+                return $path;
+            }
+        }
+
+        return null;
     }
 
     private function ensureImport(string $viteConfig, string $pluginImport): ?string

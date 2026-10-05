@@ -1,9 +1,9 @@
 /**
  * Native chart engine — zero-dependency canvas rendering.
- * Supports: line, bar, pie, doughnut.
+ * Supports: line, bar, pie, doughnut, donut, waffle, slope.
  */
 
-export type NativeChartType = 'line' | 'bar' | 'pie' | 'doughnut';
+export type NativeChartType = 'line' | 'bar' | 'pie' | 'doughnut' | 'donut' | 'waffle' | 'slope';
 
 export interface NativeDataset {
   label?: string;
@@ -48,6 +48,12 @@ export interface NativeChartOptions {
   fillOpacity?: number;
   cutout?: number;
   colors?: string[];
+  title?: string;
+  startLabel?: string;
+  endLabel?: string;
+  unit?: string;
+  rows?: number;
+  columns?: number;
 }
 
 export interface NativeChartConfig {
@@ -86,7 +92,7 @@ export interface LayoutResult {
   }>;
 }
 
-export const SUPPORTED_TYPES: NativeChartType[] = ['line', 'bar', 'pie', 'doughnut'];
+export const SUPPORTED_TYPES: NativeChartType[] = ['line', 'bar', 'pie', 'doughnut', 'donut', 'waffle', 'slope'];
 
 export function isNativeChartType(type: string): type is NativeChartType {
   return (SUPPORTED_TYPES as string[]).includes(type);

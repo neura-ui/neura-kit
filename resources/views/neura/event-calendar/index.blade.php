@@ -701,10 +701,16 @@
             <template x-if="moreDay">
                 <div>
                     <div class="fixed inset-0 z-30" x-on:click="moreDay = null"></div>
-                    <div class="absolute z-40 w-64 rounded-lg border border-edge bg-surface-raised p-2 shadow-lg ring-1 ring-black/5 dark:ring-white/10"
+                    <div class="nk-menu-motion absolute z-40 w-64 rounded-lg border border-edge bg-surface-raised p-2 shadow-lg ring-1 ring-black/5 dark:ring-white/10"
+                        data-side="bottom"
+                        data-align="start"
                         x-bind:style="`left:${Math.max(8, Math.min(moreDay.x, $refs.stage.clientWidth - 264))}px; top:${Math.max(8, Math.min(moreDay.y, $refs.stage.clientHeight - 268))}px`"
-                        x-transition:enter="transition ease-out duration-150"
-                        x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
+                        x-transition:enter="nk-menu-motion"
+                        x-transition:enter-start="nk-menu-from"
+                        x-transition:enter-end="nk-menu-to"
+                        x-transition:leave="nk-menu-leaving"
+                        x-transition:leave-start="nk-menu-to"
+                        x-transition:leave-end="nk-menu-out">
                         <div class="flex items-center justify-between px-1.5 pb-2">
                             <span class="text-sm font-semibold text-fg" x-text="moreDay.label"></span>
                             <button type="button" class="rounded p-0.5 text-fg-muted hover:bg-hover hover:text-fg"

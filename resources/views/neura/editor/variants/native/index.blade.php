@@ -231,7 +231,7 @@
                     @for($col = 1; $col <= 10; $col++)
                         <button
                             type="button"
-                            class="size-4 rounded-[2px] border border-edge bg-surface transition-colors duration-75 hover:border-primary/60 hover:bg-primary/25"
+                            class="size-4 rounded-[2px] border border-edge bg-surface transition-colors duration-fast ease-standard hover:border-primary/60 hover:bg-primary/25"
                             :class="{
                                 'bg-primary! border-primary! ring-1 ring-primary/50': gridRows >= {{ $row }} && gridCols >= {{ $col }},
                                 'bg-primary/45! border-primary/70!': gridRows > 0 && ({{ $row }} === gridRows || {{ $col }} === gridCols) && (gridRows < {{ $row }} || gridCols < {{ $col }}),
@@ -262,8 +262,15 @@
     <div
         x-show="tableMenuOpen"
         x-cloak
-        x-transition.opacity
-        class="nk-editor-menu absolute z-40 w-52"
+        data-side="bottom"
+        data-align="start"
+        x-transition:enter="nk-menu-motion"
+        x-transition:enter-start="nk-menu-from"
+        x-transition:enter-end="nk-menu-to"
+        x-transition:leave="nk-menu-leaving"
+        x-transition:leave-start="nk-menu-to"
+        x-transition:leave-end="nk-menu-out"
+        class="nk-menu-motion nk-editor-menu absolute z-40 w-52"
         x-bind:style="`left: ${tableMenuX}px; top: ${tableMenuY}px`"
         x-on:click.outside="tableMenuOpen = false"
     >
@@ -314,8 +321,15 @@
     <div
         x-show="linkOpen"
         x-cloak
-        x-transition.opacity
-        class="absolute inset-x-0 bottom-12 z-30 mx-auto w-full max-w-md"
+        data-side="top"
+        data-align="center"
+        x-transition:enter="nk-menu-motion"
+        x-transition:enter-start="nk-menu-from"
+        x-transition:enter-end="nk-menu-to"
+        x-transition:leave="nk-menu-leaving"
+        x-transition:leave-start="nk-menu-to"
+        x-transition:leave-end="nk-menu-out"
+        class="nk-menu-motion absolute inset-x-0 bottom-12 z-30 mx-auto w-full max-w-md"
         x-on:click.outside="linkOpen = false"
     >
         <div class="nk-editor-dialog mx-auto w-full max-w-md">

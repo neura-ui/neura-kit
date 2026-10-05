@@ -62,8 +62,16 @@
 
     <div
         x-show="isOpen"
-        x-transition.scale.origin.top
+        data-side="bottom"
+        data-align="center"
+        x-transition:enter="nk-menu-motion"
+        x-transition:enter-start="nk-menu-from"
+        x-transition:enter-end="nk-menu-to"
+        x-transition:leave="nk-menu-leaving"
+        x-transition:leave-start="nk-menu-to"
+        x-transition:leave-end="nk-menu-out"
         @class([
+            'nk-menu-motion',
             'relative w-full max-w-[640px] overflow-hidden bg-surface-raised backdrop-blur-xl border border-edge',
             $commandRoundedClass,
             $commandShadowClass,

@@ -2,7 +2,8 @@
     'autofocus' => false,
     'variant' => 'default', // tooltip | menu | compact | default
     'size' => 'md',         // xs | sm | md | lg
-    'align' => 'left',      // left | right
+    'align' => 'left',      // left | right | start | end | center
+    'side' => 'bottom',     // top | bottom | left | right
 ])
 
 @php
@@ -57,11 +58,19 @@
     $roundedClass = PackResolver::rounded(neura_config('popup', 'rounded'));
     $shadowClass = PackResolver::shadow(neura_config('popup', 'shadow'));
 
+    $menuSide = in_array($side, ['top', 'bottom', 'left', 'right'], true) ? $side : 'bottom';
+    $menuAlign = match ($align) {
+        'right', 'end' => 'end',
+        'center' => 'center',
+        default => 'start',
+    };
+
     $v = $variants[$variant] ?? $variants['default'];
     $s = $sizes[$size] ?? $sizes['md'];
 
     $containerClass = Arr::toCssClasses([
-        'absolute z-50',
+        'nk-menu-motion absolute z-50',
+        $variant === 'tooltip' ? 'nk-tooltip' : null,
         $align === 'right' ? 'right-0' : 'left-0',
 
         $s['padding'],
@@ -101,12 +110,19 @@
         "
     @endif
     {{ $attributes->merge(['class' => $containerClass]) }}
-    x-transition:enter="transition ease-out duration-150"
-    x-transition:enter-start="opacity-0 -translate-y-1 scale-[0.97]"
-    x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-    x-transition:leave="transition ease-in duration-100"
-    x-transition:leave-start="opacity-100 translate-y-0 scale-100"
-    x-transition:leave-end="opacity-0 -translate-y-1 scale-[0.97]"
+    data-side="{{ $menuSide }}"
+    data-align="{{ $menuAlign }}"
+    @if ($variant === 'tooltip')
+        role="tooltip"
+        x-bind:id="$id('nk-tooltip')"
+        x-bind:data-instant="instant ? '' : null"
+    @endif
+    x-transition:enter="nk-menu-motion"
+    x-transition:enter-start="nk-menu-from"
+    x-transition:enter-end="nk-menu-to"
+    x-transition:leave="nk-menu-leaving"
+    x-transition:leave-start="nk-menu-to"
+    x-transition:leave-end="nk-menu-out"
     style="display:none;"
     x-cloak
 >

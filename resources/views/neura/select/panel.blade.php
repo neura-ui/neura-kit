@@ -9,7 +9,7 @@
     $backLabel = $backLabel ?? ucfirst(neura_trans('back'));
 @endphp
 
-<div x-show="activePanel === @js($name)" x-transition:enter="transition ease-out duration-150"
+<div x-show="activePanel === @js($name)" x-transition:enter="transition ease-enter duration-standard"
     x-transition:enter-start="opacity-0 translate-x-2" x-transition:enter-end="opacity-100 translate-x-0"
     style="display:none" x-cloak data-slot="select-panel" data-panel="{{ $name }}"
     {{ $attributes->merge(['class' => 'min-w-0']) }}>

@@ -6,27 +6,25 @@ import {
   type NativeChartType,
 } from './native';
 
-declare global {
-  interface Window {
-    Alpine: {
-      data(name: string, fn: (...args: unknown[]) => unknown): void;
-      $watch: (property: string, callback: (value: unknown) => void) => void;
-      $nextTick: (callback: () => void) => void;
-    };
-  }
-}
-
 function resolveNativeOptions(type: NativeChartType, options: Record<string, any> | null | undefined) {
   const opts = options ?? {};
   return {
     showLegend: opts.plugins?.legend?.display !== false && opts.showLegend !== false,
     showGrid: opts.scales?.y?.grid?.display !== false && opts.showGrid !== false,
     showTooltip: opts.plugins?.tooltip !== false && opts.showTooltip !== false,
-    cutout: type === 'doughnut' ? (opts.cutout ?? 0.55) : 0,
-    lineWidth: opts.elements?.line?.borderWidth ?? opts.lineWidth ?? 2,
+    cutout: type === 'doughnut' || type === 'donut' ? (opts.cutout ?? 0.64) : 0,
+    startLabel: String(opts.startLabel ?? 'Start'),
+    endLabel: String(opts.endLabel ?? 'End'),
+    unit: String(opts.unit ?? ''),
+    rows: Number(opts.rows ?? 10),
+    columns: Number(opts.columns ?? 10),
+    lineWidth: opts.elements?.line?.borderWidth ?? opts.lineWidth ?? 2.25,
     pointRadius: opts.elements?.point?.radius ?? opts.pointRadius ?? 0,
-    barGap: opts.barGap ?? 0.28,
-    fillOpacity: opts.fillOpacity ?? 0.12,
+    barGap: opts.barGap ?? 0.34,
+    fillOpacity: opts.fillOpacity ?? 0.22,
+    title: opts.plugins?.title?.display
+      ? String(opts.plugins.title.text ?? '')
+      : String(opts.title ?? ''),
   };
 }
 
@@ -52,7 +50,7 @@ if (typeof document !== 'undefined') {
 
             if (!isNativeChartType(type)) {
               console.warn(
-                `[neura-chart] Unsupported type "${type}". Supported: line, bar, pie, doughnut.`
+                `[neura-chart] Unsupported type "${type}". Supported: line, bar, pie, doughnut, donut, waffle, slope.`
               );
               return;
             }

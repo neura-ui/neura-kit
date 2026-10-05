@@ -5,51 +5,66 @@
 <div
     x-data="{
         tooltipEl: null,
+        showTimer: null,
 
         showTooltip() {
-            if (this.tooltipEl) return; // Prevent duplicates
+            if (this.tooltipEl || this.showTimer) return;
+            if (!this.$data.collapsedSidebar) return;
 
-            if(!this.$data.collapsedSidebar) return; // show tooltips only when it collapsed, if expanded return
+            const warm = !!window.NeuraKitTooltipWarm?.warm;
+            this.showTimer = setTimeout(() => {
+                this.showTimer = null;
+                this.mountTooltip();
+            }, warm ? 0 : 250);
+        },
 
-            const rect = this.$el.getBoundingClientRect()
+        mountTooltip() {
+            if (this.tooltipEl || !this.$data.collapsedSidebar) return;
 
-            this.tooltipEl = document.createElement('div')
-            this.tooltipEl.className =
-                'fixed z-[99999] px-2 py-2 mx-1 text-sm rounded-md shadow-md bg-surface-inset dark:text-white text-black whitespace-nowrap pointer-events-none opacity-0 transition-opacity duration-150'
-            this.tooltipEl.textContent = @js($tooltip)
-            // show it only when collapsed
+            const rect = this.$el.getBoundingClientRect();
+            const instant = !!window.NeuraKitTooltipWarm?.warm;
+            const tip = document.createElement('div');
+            tip.className = 'nk-tooltip nk-menu-motion nk-menu-from fixed';
+            tip.dataset.side = 'right';
+            tip.dataset.align = 'center';
+            if (instant) tip.dataset.instant = '';
+            tip.setAttribute('role', 'tooltip');
+            tip.textContent = @js($tooltip);
+            document.body.appendChild(tip);
 
-            // Simple positioning with bounds check
-            let left = rect.right + 8
-            let top = rect.top + rect.height / 2
-
-            document.body.appendChild(this.tooltipEl)
-
-            // Check if it goes off-screen
-            const tooltipRect = this.tooltipEl.getBoundingClientRect()
-            if (left + tooltipRect.width > window.innerWidth) {
-                left = rect.left - tooltipRect.width - 8 // Show on left instead
+            const tipRect = tip.getBoundingClientRect();
+            let left = rect.right + 8;
+            if (left + tipRect.width > window.innerWidth) {
+                tip.dataset.side = 'left';
+                left = rect.left - tipRect.width - 8;
             }
 
-            this.tooltipEl.style.left = `${left}px`
-            this.tooltipEl.style.top = `${top}px`
-            this.tooltipEl.style.transform = 'translateY(-50%)'
+            tip.style.left = `${left}px`;
+            tip.style.top = `${rect.top + rect.height / 2}px`;
+            tip.style.transform = 'translateY(-50%)';
+            this.tooltipEl = tip;
+            window.NeuraKitTooltipWarm?.opened();
 
             requestAnimationFrame(() => {
-                if (this.tooltipEl) this.tooltipEl.style.opacity = '1'
-            })
+                requestAnimationFrame(() => {
+                    if (!this.tooltipEl) return;
+                    this.tooltipEl.classList.remove('nk-menu-from');
+                    this.tooltipEl.classList.add('nk-menu-to');
+                });
+            });
         },
 
         hideTooltip() {
-            if (!this.tooltipEl) return
+            clearTimeout(this.showTimer);
+            this.showTimer = null;
+            if (!this.tooltipEl) return;
 
-            this.tooltipEl.style.opacity = '0'
-
-            // Wait for transition to complete
-            setTimeout(() => {
-                this.tooltipEl?.remove()
-                this.tooltipEl = null
-            }, 150)
+            const tip = this.tooltipEl;
+            this.tooltipEl = null;
+            tip.classList.remove('nk-menu-to', 'nk-menu-from');
+            tip.classList.add('nk-menu-leaving', 'nk-menu-out');
+            window.NeuraKitTooltipWarm?.closed();
+            setTimeout(() => tip.remove(), 100);
         }
     }"
     x-on:mouseenter="showTooltip()"
