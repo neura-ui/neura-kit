@@ -18,6 +18,7 @@
     }
 
     $roundedClass = PackResolver::rounded(neura_config('dropdown', 'rounded'));
+    $radius = PackResolver::radiusValue(neura_config('dropdown', 'rounded'));
     $shadowClass = PackResolver::shadow(neura_config('dropdown', 'shadow'));
 
     $panelClasses = [
@@ -110,7 +111,7 @@
         x-transition:leave-end="nk-menu-out"
         data-side="{{ $menuSide }}"
         data-align="{{ $menuAlign }}"
-        style="display: none; backdrop-filter: blur(64px); -webkit-backdrop-filter: blur(64px);"
+        style="display: none; --dropdown-radius: {{ $radius }}"
         role="menu"
         class="{{ Arr::toCssClasses($panelClasses) }}"
     >

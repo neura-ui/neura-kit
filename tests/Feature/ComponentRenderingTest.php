@@ -50,8 +50,8 @@ class ComponentRenderingTest extends TestCase
         $this->assertStringContainsString('data-slot="loading-indicator"', $html);
         $this->assertStringContainsString('data-engine="css"', $html);
         $this->assertStringContainsString('data-variant="S3"', $html);
-        $this->assertStringDoesNotContainString('animate-spin', $html);
-        $this->assertStringDoesNotContainString('data-nk-orb', $html);
+        $this->assertStringNotContainsString('animate-spin', $html);
+        $this->assertStringNotContainsString('data-nk-orb', $html);
     }
 
     public function test_button_loading_spinner_indicator_renders_by_default()
@@ -60,7 +60,7 @@ class ComponentRenderingTest extends TestCase
 
         $this->assertStringContainsString('data-slot="loading-indicator"', $html);
         $this->assertStringContainsString('animate-spin', $html);
-        $this->assertStringDoesNotContainString('data-nk-orb', $html);
+        $this->assertStringNotContainsString('data-nk-orb', $html);
     }
 
     public function test_modal_manager_component_renders()

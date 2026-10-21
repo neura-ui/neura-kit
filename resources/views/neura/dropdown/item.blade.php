@@ -31,7 +31,7 @@
         'group flex items-center gap-2',
         'w-full px-2.5 py-1.5 text-[13px] leading-snug transition-colors duration-fast ease-standard text-start',
         'text-fg',
-        'rounded-[calc(var(--dropdown-radius)-var(--dropdown-padding))]',
+        'rounded-[max(0px,calc(var(--dropdown-radius,var(--radius-lg))_-_var(--dropdown-padding,0px)))]',
         'opacity-40 cursor-not-allowed text-fg-disabled' => $disabled,
         $variantClasses . ' cursor-pointer' => !$disabled,
     ];

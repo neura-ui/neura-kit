@@ -33,3 +33,21 @@ export function onAlpineInit(register: () => void): void {
 export function hasAlpineStarted(): boolean {
     return alpineStarted;
 }
+
+/**
+ * Hand Alpine over as soon as it exists, and before it walks the page.
+ *
+ * Livewire's script defines `window.Alpine` before this deferred module runs,
+ * so the usual path is immediate. Setups that load Livewire later still get
+ * the call on `alpine:init`, which Alpine fires ahead of its first walk.
+ */
+export function withAlpine(register: (alpine: Window['Alpine']) => void): void {
+    if (typeof window === 'undefined') return;
+
+    if (window.Alpine) {
+        register(window.Alpine);
+        return;
+    }
+
+    document.addEventListener('alpine:init', () => register(window.Alpine), { once: true });
+}

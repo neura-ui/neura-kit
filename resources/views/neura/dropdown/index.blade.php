@@ -16,6 +16,7 @@
         $menuAlign = 'center';
     }
     $roundedClass = PackResolver::rounded(neura_config('dropdown', 'rounded'));
+    $radius = PackResolver::radiusValue(neura_config('dropdown', 'rounded'));
     $shadowClass = PackResolver::shadow(neura_config('dropdown', 'shadow'));
 
     $defaultPanelClasses = [
@@ -132,7 +133,7 @@
                     data-align="{{ $menuAlign }}"
                     x-on:click.away="close($refs.button)"
                     x-bind:id="$id('dropdown-panel')"
-                    style="display: none; backdrop-filter: blur(64px); -webkit-backdrop-filter: blur(64px); z-index: 9999"
+                    style="display: none; z-index: 9999; --dropdown-radius: {{ $radius }}"
                     role="menu"
                     {{ $menu->attributes->merge(['class' => Arr::toCssClasses($defaultPanelClasses)]) }}
                 >

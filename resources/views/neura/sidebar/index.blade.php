@@ -12,7 +12,15 @@
 ])
 
 @php
-    $sidebarClasses = 'isolate [grid-area:sidebar] z-40 bg-surface backdrop-blur-xl lg:block border-r border-separator transition-[width] duration-considered ease-standard overflow-x-visible' . ($scrollable ? ' !overflow-y-auto' : '');
+    /*
+     * A column that fills its grid row: the brand keeps its height and the
+     * content takes the rest. Only the content scrolls, so the brand stays in
+     * place without being sticky and never adds its height on top of the menu.
+     * With sticky-header off, the brand scrolls away with the content instead.
+     */
+    $sidebarClasses = 'isolate [grid-area:sidebar] z-40 flex flex-col self-stretch min-h-0 bg-surface backdrop-blur-xl border-r border-separator transition-[width] duration-considered ease-standard overflow-x-visible';
+
+    $hasBrand = filled($brand);
 @endphp
 
 <div
@@ -59,30 +67,27 @@
 
                 @if ($scrollToActive)
                     this.$nextTick(() => {
-                        const activeLink = this.$el.querySelector('[data-active-link]');
-                        if (activeLink) {
-                            const sidebar = this.$el;
-                            const linkTop = activeLink.offsetTop;
-                            const linkHeight = activeLink.offsetHeight;
-                            const sidebarHeight = sidebar.clientHeight;
-                            const sidebarScrollTop = sidebar.scrollTop;
-                            
-                            // Check if the active link is already visible in the viewport
-                            const linkBottom = linkTop + linkHeight;
-                            const viewportTop = sidebarScrollTop;
-                            const viewportBottom = sidebarScrollTop + sidebarHeight;
-                            
-                            // Only scroll if the link is not fully visible
-                            const isFullyVisible = linkTop >= viewportTop && linkBottom <= viewportBottom;
-                            
-                            if (!isFullyVisible) {
-                                // Scroll directly to the item position, ensuring it's visible
-                                // Position the item near the top with some padding
-                                const scrollTop = linkTop - 20;
-                                
-                                sidebar.scrollTop = Math.max(0, scrollTop);
-                            }
+                        const link = this.$el.querySelector('[data-active-link]');
+                        if (!link) return;
+
+                        // The nearest box that actually scrolls: the content
+                        // column, or the app's own scroller inside it.
+                        let scroller = link.parentElement;
+                        while (scroller && this.$el.contains(scroller)) {
+                            const overflow = getComputedStyle(scroller).overflowY;
+                            if ((overflow === 'auto' || overflow === 'scroll') && scroller.scrollHeight > scroller.clientHeight) break;
+                            scroller = scroller.parentElement;
                         }
+                        if (!scroller || !this.$el.contains(scroller)) return;
+
+                        const box = scroller.getBoundingClientRect();
+                        const rect = link.getBoundingClientRect();
+
+                        // Leave it alone when it is already fully visible.
+                        if (rect.top >= box.top && rect.bottom <= box.bottom) return;
+
+                        // Bring it near the top, with a little room above.
+                        scroller.scrollTop = Math.max(0, scroller.scrollTop + rect.top - box.top - 20);
                     });
                 @endif
 
@@ -125,50 +130,21 @@
     "
     @endif
 >
-    @if(filled($brand))
-        <div
-            @class([
-
-                "justify-between items-center group w-full
-                [:not(:has([data-collapsed]_&))_&]:flex
-                min-h-[var(--header-height)]
-                [:not(:has([data-collapsed]_&))_&]:px-4
-                mx-auto flex-shrink-0",
-
-                'sticky z-10 top-0 bg-surface backdrop-blur-xl' => $stickyHeader,
-            ])
-        >
-            <div
-                @class([
-                    "[:not(:has([data-collapsed]_&))_&]:mx-auto grow
-                    [:has([data-collapsed]_&)_&]:[&_[data-slot=brand-name]]:hidden",
-                    "[:has([data-collapsed]_&)_&]:group-hover:hidden" => $collapsable
-                ])
-                data-slot="sidebar-brand"
-            >
-                {{ $brand }}
-            </div>
-
-            @if ($collapsable)
-                <neura::sidebar.toggle
-                    x-bind:data-collapsable="collapsable"
-                    class="
-                        [&:not([data-collapsable=true])]:hidden
-                        opacity-0 group-hover:opacity-100 transition-opacity duration-fast ease-standard
-                        in-[:has([data-collapsed]_&)_&]:group-hover:inline-flex
-                        in-[:has([data-collapsed]_&)]:hidden
-                    "
-                />
-            @endif
-        </div>
+    @if ($hasBrand && $stickyHeader)
+        <neura::sidebar.brand :collapsable="$collapsable">{{ $brand }}</neura::sidebar.brand>
     @endif
 
     <div
         @class([
-            'flex flex-col min-h-0 h-full',
-            'z-0' => $stickyHeader,
+            'flex flex-col flex-1 min-h-0',
+            'overflow-y-auto overflow-x-hidden' => $scrollable,
         ])
+        data-slot="sidebar-content"
     >
+        @if ($hasBrand && ! $stickyHeader)
+            <neura::sidebar.brand :collapsable="$collapsable">{{ $brand }}</neura::sidebar.brand>
+        @endif
+
         {{ $slot }}
     </div>
 </div>

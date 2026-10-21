@@ -366,6 +366,43 @@
   --color-edge: oklch(1 0 0 / 0.08);
 }
 
+/*
+ * Floating panels belong to the page, not to the chrome they open from.
+ * A menu that is not teleported still sits inside the themed sidebar or
+ * header, and the themes above only remap part of the scale: under contrast
+ * it got the header's light text on the page's light raised surface.
+ * Re-deriving every token from --nk-* gives the panel the page palette, light
+ * or dark, the same as a teleported one. The layer lets utilities on the panel
+ * still win.
+ */
+@layer components {
+  :is(.nk-layout--contrast, .nk-layout--muted, .nk-layout--accent)
+    :is([data-slot="sidebar"], [data-slot="header"], [data-slot="main"])
+    .nk-menu-motion {
+    --color-surface: var(--nk-surface);
+    --color-surface-raised: var(--nk-surface-raised);
+    --color-surface-inset: var(--nk-surface-inset);
+    --color-hover: var(--nk-hover);
+    --color-active: var(--nk-active);
+    --color-edge: var(--nk-edge);
+    --color-edge-hover: var(--nk-edge-hover);
+    --color-edge-focus: var(--nk-edge-focus);
+    --color-separator: var(--nk-separator);
+    --color-fg: var(--nk-fg);
+    --color-fg-secondary: var(--nk-fg-secondary);
+    --color-fg-muted: var(--nk-fg-muted);
+    --color-fg-disabled: var(--nk-fg-disabled);
+    color-scheme: light;
+    color: var(--nk-fg);
+  }
+
+  .dark :is(.nk-layout--contrast, .nk-layout--muted, .nk-layout--accent)
+    :is([data-slot="sidebar"], [data-slot="header"], [data-slot="main"])
+    .nk-menu-motion {
+    color-scheme: dark;
+  }
+}
+
 /**
  * ============================================================================
  * Sideover Push Layout

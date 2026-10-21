@@ -72,7 +72,7 @@ class LivewireComponentsTest extends TestCase
             'components' => $components,
         ]);
 
-        $this->assertStringContainsString('livewire', $html);
+        $this->assertStringContainsString('wire:id', $html);
     }
 
     public function test_modal_manager_has_wire_key()

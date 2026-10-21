@@ -39,24 +39,50 @@ function triggerOf(panel: HTMLElement): HTMLElement | null {
     return null;
 }
 
-function scales(panel: HTMLElement): { x: number; y: number; radius: string; origin: string } {
+/**
+ * The corner radius an element actually paints, in px.
+ *
+ * A pill computes to `calc(infinity * 1px)` (about 3.4e7px) and a percentage
+ * resolves against the box, so both are brought back to what is drawn: never
+ * more than half the shorter side. Layout sizes are used, not the bounding
+ * box, so a scale already running on the element does not shrink the cap.
+ */
+function paintedRadius(el: HTMLElement): number {
+    const value = getComputedStyle(el).borderTopLeftRadius;
+    const amount = parseFloat(value);
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+        return 0;
+    }
+
+    const side = Math.min(el.offsetWidth, el.offsetHeight);
+    const px = value.trim().endsWith('%') ? (amount / 100) * side : amount;
+
+    return Math.min(px, side / 2);
+}
+
+function scales(panel: HTMLElement): { x: number; y: number; from: string; to: string; origin: string } {
     const trigger = triggerOf(panel);
     const panelBox = panel.getBoundingClientRect();
-    const endRadius = getComputedStyle(panel).borderTopLeftRadius || '8px';
+    const to = `${paintedRadius(panel)}px`;
 
     if (!trigger || panelBox.width < 8 || panelBox.height < 8) {
-        return { x: 0.92, y: 0.7, radius: endRadius, origin: '' };
+        return { x: 0.92, y: 0.7, from: to, to, origin: '' };
     }
 
     const triggerBox = trigger.getBoundingClientRect();
     const x = clamp(triggerBox.width / panelBox.width, 0.42, 1);
     const y = clamp(triggerBox.height / panelBox.height, 0.22, 1);
-    const triggerRadius = parseFloat(getComputedStyle(trigger).borderTopLeftRadius) || triggerBox.height / 2;
-    const radius = `${triggerRadius / Math.min(x, y)}px`;
+
+    // The scale shrinks the panel's corners with it, by x across and y down.
+    // Dividing each axis back out makes the first frame's corners the
+    // trigger's own, whatever its shape.
+    const corner = paintedRadius(trigger);
+    const from = `${corner / x}px / ${corner / y}px`;
     const originX = Math.abs(1 - x) < 0.001 ? panelBox.width / 2 : (triggerBox.left - panelBox.left) / (1 - x);
     const originY = Math.abs(1 - y) < 0.001 ? panelBox.height / 2 : (triggerBox.top - panelBox.top) / (1 - y);
 
-    return { x, y, radius, origin: `${originX}px ${originY}px` };
+    return { x, y, from, to, origin: `${originX}px ${originY}px` };
 }
 
 function running(panel: HTMLElement): Animation | null {
@@ -89,19 +115,18 @@ function play(panel: HTMLElement, opening: boolean) {
 
         running(panel)?.cancel();
 
-        const { x, y, radius, origin } = scales(panel);
-        const endRadius = getComputedStyle(panel).borderTopLeftRadius || '8px';
-        const from = `${x} ${y}`;
+        const { x, y, from, to, origin } = scales(panel);
+        const folded = `${x} ${y}`;
         const originFrame = origin ? { transformOrigin: origin } : {};
         const animation = panel.animate(
             opening
                 ? [
-                    { scale: from, borderRadius: radius, ...originFrame },
-                    { scale: '1 1', borderRadius: endRadius, ...originFrame },
+                    { scale: folded, borderRadius: from, ...originFrame },
+                    { scale: '1 1', borderRadius: to, ...originFrame },
                 ]
                 : [
-                    { scale: currentScale, borderRadius: endRadius, ...originFrame },
-                    { scale: from, borderRadius: radius, ...originFrame },
+                    { scale: currentScale, borderRadius: to, ...originFrame },
+                    { scale: folded, borderRadius: from, ...originFrame },
                 ],
             {
                 duration: opening ? OPEN : CLOSE,

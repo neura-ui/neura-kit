@@ -7,6 +7,9 @@
  * clipboard — is small and globally reachable from user code, so it stays in
  * the entry chunk.
  *
+ * The overlay managers, the orb and the rule builder are not listed either:
+ * app.ts imports them eagerly, so their factories exist before Alpine starts.
+ *
  * `tokens` are matched against the text of `x-data` attributes, which is how
  * Alpine-driven components announce themselves. `selector` covers the features
  * driven by markup alone.
@@ -19,25 +22,15 @@ export interface Feature {
     readonly tokens?: readonly string[];
     /** Markup that requires the feature even without an Alpine factory. */
     readonly selector?: string;
+    /**
+     * Substrings the raw HTML must contain for the feature to be present, so a
+     * Livewire response can be ruled out without parsing it. Defaults to `tokens`.
+     */
+    readonly hints?: readonly string[];
     readonly load: () => Promise<unknown>;
 }
 
 export const FEATURES: readonly Feature[] = [
-    {
-        name: 'modal',
-        tokens: ['modalManager'],
-        load: () => Promise.resolve(), // eager via app.ts
-    },
-    {
-        name: 'sideover',
-        tokens: ['sideoverManager'],
-        load: () => Promise.resolve(), // eager via app.ts
-    },
-    {
-        name: 'spotlight',
-        tokens: ['neuraSpotlight'],
-        load: () => Promise.resolve(), // eager via app.ts
-    },
     {
         name: 'action-button',
         tokens: ['neuraActionButton'],
@@ -139,11 +132,6 @@ export const FEATURES: readonly Feature[] = [
         load: () => import('../features/data/json-viewer'),
     },
     {
-        name: 'rule-builder',
-        tokens: ['neuraRuleBuilder'],
-        load: () => Promise.resolve(), // eager via app.ts
-    },
-    {
         name: 'thinking-state',
         tokens: ['neuraThinkingState'],
         load: () => import('../features/ai/thinking-state'),
@@ -174,69 +162,86 @@ export const FEATURES: readonly Feature[] = [
         load: () => import('../features/flow'),
     },
     {
-        name: 'orb',
-        tokens: ['neuraOrb'],
-        load: () => Promise.resolve(), // eager via app.ts (preloader)
-    },
-    {
         name: 'layout',
         selector: '[data-slot="col"],[data-slot="grid"],[data-slot="stack"],[data-slot="box"]',
+        hints: ['data-slot="col"', 'data-slot="grid"', 'data-slot="stack"', 'data-slot="box"'],
         load: () => import('../components'),
     },
 ];
 
 /**
- * Collect every `x-data` expression under `root`, including the ones parked
- * inside <template> elements that Alpine will stamp out later — querySelectorAll
- * does not descend into template content, so those need walking by hand.
+ * `root` plus the content of every <template> beneath it, at any depth.
+ * querySelectorAll does not descend into template content, and Alpine stamps
+ * those (x-if, x-for, x-teleport) later, so they are walked by hand.
  */
-function readXData(root: ParentNode): string {
-    const expressions: string[] = [];
+function scopes(root: ParentNode): ParentNode[] {
+    const found: ParentNode[] = [root];
 
-    const collect = (scope: ParentNode): void => {
+    for (let i = 0; i < found.length; i++) {
+        for (const template of found[i].querySelectorAll('template')) {
+            found.push(template.content);
+        }
+    }
+
+    return found;
+}
+
+/** Matches a factory name as a whole identifier, so `contextMenu` skips `contextMenuOpen`. */
+const factoryPatterns = new Map<string, RegExp>();
+
+function factoryPattern(token: string): RegExp {
+    let pattern = factoryPatterns.get(token);
+
+    if (!pattern) {
+        pattern = new RegExp(`(?:^|[^\\w$])${token}(?![\\w$])`);
+        factoryPatterns.set(token, pattern);
+    }
+
+    return pattern;
+}
+
+/** Whether an `x-data` expression calls one of the feature's factories. */
+export function usesFactory(feature: Feature, expression: string): boolean {
+    return Boolean(feature.tokens?.some((token) => factoryPattern(token).test(expression)));
+}
+
+function present(feature: Feature, roots: readonly ParentNode[]): boolean {
+    return roots.some((scope) => {
+        if (feature.selector && scope.querySelector(feature.selector)) return true;
+        if (!feature.tokens) return false;
+
         for (const el of scope.querySelectorAll('[x-data]')) {
-            expressions.push(el.getAttribute('x-data') ?? '');
+            if (usesFactory(feature, el.getAttribute('x-data') ?? '')) return true;
         }
-        for (const template of scope.querySelectorAll('template')) {
-            collect(template.content);
-        }
-    };
 
-    collect(root);
-
-    return expressions.join('\n');
+        return false;
+    });
 }
 
-export function matches(feature: Feature, root: ParentNode, xData: string): boolean {
-    if (feature.tokens?.some((token) => xData.includes(token))) return true;
+/** The features, among `candidates`, that the markup under `root` needs. */
+export function detect(root: ParentNode, candidates: readonly Feature[] = FEATURES): Feature[] {
+    const roots = scopes(root);
 
-    return Boolean(feature.selector && root.querySelector(feature.selector));
+    return candidates.filter((feature) => present(feature, roots));
 }
 
-export function detect(root: ParentNode): Feature[] {
-    const xData = readXData(root);
+/**
+ * The features, among `candidates`, that an HTML string needs.
+ *
+ * Most Livewire responses mention none of the features that are still
+ * missing, so a substring pass rules them out before anything is parsed.
+ * The rest is parsed into an inert <template>: scripts do not run and images
+ * do not load, and only real `x-data` attributes count, not code samples.
+ */
+export function detectHtml(html: string, candidates: readonly Feature[] = FEATURES): Feature[] {
+    const hinted = candidates.filter((feature) =>
+        (feature.hints ?? feature.tokens ?? []).some((hint) => html.includes(hint)),
+    );
 
-    return FEATURES.filter((feature) => matches(feature, root, xData));
-}
+    if (hinted.length === 0) return [];
 
-/** The elements a feature is responsible for, used to recover from a late load. */
-export function elementsFor(feature: Feature): HTMLElement[] {
-    const elements = new Set<HTMLElement>();
+    const template = document.createElement('template');
+    template.innerHTML = html;
 
-    if (feature.tokens) {
-        for (const el of document.querySelectorAll<HTMLElement>('[x-data]')) {
-            const expression = el.getAttribute('x-data') ?? '';
-            if (feature.tokens.some((token) => expression.includes(token))) {
-                elements.add(el);
-            }
-        }
-    }
-
-    if (feature.selector) {
-        for (const el of document.querySelectorAll<HTMLElement>(feature.selector)) {
-            elements.add(el);
-        }
-    }
-
-    return [...elements];
+    return detect(template.content, hinted);
 }

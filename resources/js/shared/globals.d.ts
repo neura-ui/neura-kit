@@ -217,7 +217,9 @@ interface AlpineGlobal {
 
     magic(name: string, factory: () => unknown): void;
 
-    /* Used by the feature loader to rebuild a subtree whose factory arrived late. */
+    /* Used by the feature loader to hold, then start, components whose factory is on its way. */
+    interceptInit?(callback: (el: Element, skip: () => void) => void): void;
+
     initTree?(el: Element): void;
 
     destroyTree?(el: Element): void;

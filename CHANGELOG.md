@@ -6,6 +6,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [3.1.0] - 2026-10-21
+
+### Fixed
+
+- **Feature loader and Livewire responses**: A component that first appeared in a Livewire response (lazy component, `@if` branch, card opened in place) started without its script: `neuraActionButton is not defined`, then `state` / `run is not defined`. The loader now scans each response's HTML in Livewire's `payload.intercept` hook (Livewire 3 and 4, including v4 island fragments) and loads the missing features before the response is morphed in
+- **Feature loader guard**: A component Alpine reaches before its chunk has landed is held like `x-ignore` and started once its factory exists, instead of throwing. Elements carrying `wire:` attributes cannot be held safely; they are rebuilt when their feature arrives, and a Livewire component root is never torn down
+- **Feature loader repair**: The late-load repair no longer runs `destroyTree` on every col, grid, stack and box (that feature is not Alpine-driven), which destroyed nested Livewire components. Factory names match whole identifiers, so `contextMenu` no longer matches `contextMenuOpen`
+- **Sidebar**: The brand sat above a child that was already as tall as the sidebar, so the sidebar overflowed by one header and showed a scrollbar. The sidebar is a column that stretches to its grid row: the brand stays in place and only the menu scrolls. The brand row shows the sidebar's background instead of painting `bg-surface` over a custom one. `scroll-to-active` scrolls the box that actually scrolls
+- **Collapsed rail**: The brand is centred over the icons instead of stretching full width, and hovering the brand row swaps the mark for the expand button in the same place
+- **Dropdown radius**: Items used `calc(var(--dropdown-radius) - …)` with a variable that was never set, so they rendered square. The panel now defines `--dropdown-radius` from its rounded token. The unused 64px backdrop blur on the opaque panel is gone
+- **Menu morph**: The open motion copied the trigger's radius, and a pill reports `calc(infinity * 1px)`, so the panel stayed a capsule until the end. The start radius is the one the trigger actually paints. A square trigger no longer animates from a pill
+- **Layout themes**: A menu that was not teleported out of a contrast sidebar or header got the header's light text on the page's light surface. Floating panels keep the page palette under every layout theme, in light and dark
+
 ## [3.0.0] - 2026-10-05
 
 ### Added

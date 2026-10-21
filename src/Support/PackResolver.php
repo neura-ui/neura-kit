@@ -123,6 +123,19 @@ class PackResolver
     }
 
     /**
+     * The CSS length behind a rounded token, for a component that derives
+     * inner radii from its own (a menu item inset by the menu's padding).
+     */
+    public static function radiusValue(?string $value): string
+    {
+        return match ($token = self::roundedToken($value)) {
+            'none' => '0px',
+            'full' => 'calc(infinity * 1px)',
+            default => "var(--radius-{$token})",
+        };
+    }
+
+    /**
      * Leading / trailing rounded utilities.
      * All branches return complete class literals so Tailwind can scan them.
      *

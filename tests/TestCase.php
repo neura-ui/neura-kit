@@ -9,9 +9,13 @@ abstract class TestCase extends OrchestraTestCase
 {
     protected function getPackageProviders($app)
     {
-        $providers = [
-            NeuraKitServiceProvider::class,
-        ];
+        $providers = [];
+
+        if (class_exists(\Livewire\LivewireServiceProvider::class)) {
+            $providers[] = \Livewire\LivewireServiceProvider::class;
+        }
+
+        $providers[] = NeuraKitServiceProvider::class;
 
         if (class_exists(\BladeUI\Icons\BladeIconsServiceProvider::class)) {
             $providers[] = \BladeUI\Icons\BladeIconsServiceProvider::class;
@@ -42,6 +46,11 @@ abstract class TestCase extends OrchestraTestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        if (class_exists(\Livewire\Livewire::class)) {
+            \Livewire\Livewire::component('test-component', TestLivewireStub::class);
+            \Livewire\Livewire::component('test-livewire-component', TestLivewireStub::class);
+        }
 
         $this->loadRoutesFrom();
 
@@ -81,5 +90,13 @@ abstract class TestCase extends OrchestraTestCase
             \Illuminate\Support\Facades\Route::post('/editor/import', \Neura\Kit\Actions\Editor\ImportDocument::class)
                 ->name('neura-kit.editor.import');
         });
+    }
+}
+
+class TestLivewireStub extends \Livewire\Component
+{
+    public function render(): string
+    {
+        return '<div>stub</div>';
     }
 }
