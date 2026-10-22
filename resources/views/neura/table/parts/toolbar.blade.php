@@ -58,6 +58,37 @@
             </neura::dropdown>
         @endif
 
+        @if ($this->hasFilterableColumns())
+            @php($activeFilterCount = $this->activeFilterCount())
+            <neura::dropdown position="bottom-end">
+                <x-slot:button>
+                    <button type="button" class="nk-table-iconbtn nk-table-filterbtn" aria-label="{{ neura_trans('filters') }}">
+                        <neura::icon name="funnel" class="size-4" />
+                        @if ($activeFilterCount > 0)
+                            <span class="nk-table-filtercount">{{ $activeFilterCount }}</span>
+                        @endif
+                    </button>
+                </x-slot:button>
+
+                <x-slot:menu class="min-w-64!">
+                    <div class="grid gap-3 p-2">
+                        @foreach ($this->getFilterableColumns() as $column)
+                            <div class="grid gap-1.5">
+                                <span class="nk-table-filterlabel">{{ $column->label }}</span>
+                                <neura::table.parts.filter-input :column="$column" />
+                            </div>
+                        @endforeach
+
+                        @if ($activeFilterCount > 0)
+                            <neura::button wire:click="clearFilters" variant="ghost" size="sm" class="w-full justify-center">
+                                {{ neura_trans('clearFilters') }}
+                            </neura::button>
+                        @endif
+                    </div>
+                </x-slot:menu>
+            </neura::dropdown>
+        @endif
+
         @if (count($columns) > 1)
             <neura::dropdown position="bottom-end">
                 <x-slot:button>

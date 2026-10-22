@@ -37,13 +37,14 @@
     @case('boolean')
         <neura::select
             wire:model.live="{{ $wireModel }}"
-            placeholder="{{ __('Select') }} {{ $column->label }}"
+            placeholder="{{ neura_trans('select') }} {{ $column->label }}"
             clearable
             size="md"
         >
-            <neura::select.option value="">{{ __('All') }}</neura::select.option>
-            <neura::select.option value="1">{{ neura_trans('yes') }}</neura::select.option>
-            <neura::select.option value="0">{{ neura_trans('no') }}</neura::select.option>
+            <neura::select.option value="">{{ neura_trans('all') }}</neura::select.option>
+            @foreach($column->filterOptions ?: ['1' => neura_trans('yes'), '0' => neura_trans('no')] as $value => $label)
+                <neura::select.option value="{{ $value }}">{{ $label }}</neura::select.option>
+            @endforeach
         </neura::select>
         @break
 

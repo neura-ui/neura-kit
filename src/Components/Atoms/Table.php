@@ -266,7 +266,15 @@ abstract class Table extends Component
 
     public function hasActiveFilters(): bool
     {
-        return count(array_filter($this->filters)) > 0;
+        return $this->activeFilterCount() > 0;
+    }
+
+    /**
+     * Filters holding a value. A boolean filter set to "0" counts: it keeps the false rows.
+     */
+    public function activeFilterCount(): int
+    {
+        return count(array_filter($this->filters, fn ($value) => ! blank($value)));
     }
 
     /* -----------------------------------------------------------------
@@ -446,14 +454,27 @@ abstract class Table extends Component
                 continue;
             }
 
-            $wrapped = $query->getGrammar()->wrap($key);
-
-            is_string($value)
-                ? $query->whereRaw("LOWER($wrapped) LIKE ?", ['%'.Str::lower($value).'%'])
-                : $query->where($key, $value);
+            $this->applyFilter($query, $column->filterType ?? 'text', $key, $value);
         }
 
         return $query;
+    }
+
+    /**
+     * A select keeps the rows holding exactly the chosen option, a boolean the rows matching
+     * "1" or "0", a date the rows of that day. Only a text filter matches part of the value,
+     * whatever its case.
+     */
+    protected function applyFilter($query, string $type, string $key, mixed $value): void
+    {
+        match ($type) {
+            'select' => is_array($value) ? $query->whereIn($key, $value) : $query->where($key, $value),
+            'boolean' => $query->where($key, filter_var($value, FILTER_VALIDATE_BOOLEAN)),
+            'date' => $query->whereDate($key, $value),
+            default => is_string($value)
+                ? $query->whereRaw('LOWER('.$query->getGrammar()->wrap($key).') LIKE ?', ['%'.Str::lower($value).'%'])
+                : $query->where($key, $value),
+        };
     }
 
     protected function applySearch($query)

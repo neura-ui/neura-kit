@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [3.1.2] - 2026-10-22
+
+### Fixed
+
+- **Table filters**: A `select` filter matched part of the value, whatever its case (`LOWER(column) LIKE '%value%'`), so "Active" also kept the "Inactive" rows, and on PostgreSQL a filter on a boolean column failed (`lower(boolean)` does not exist). A `select` filter now keeps the rows holding exactly the chosen option, a `boolean` filter the rows matching "1" or "0", and a `date` filter the rows of that day. Only a `text` filter still matches part of the value. A column's own filter query (`filterable('select', $options, fn ($query, $value, $key) => …)`) still takes precedence
+- **Table filter menu**: Filterable columns had no field to filter with since the table redesign: `table.parts.filter-input` was rendered nowhere. The toolbar has a filter menu again (funnel button next to the columns menu) with one field per filterable column, the number of active filters on the button, and a "Clear filters" action
+- **Table active filters**: A boolean filter set to "0" did not count as active, because the count used `array_filter()`. `activeFilterCount()` counts every filter holding a value, and `hasActiveFilters()` reads it
+- **Boolean filter labels**: A `boolean` filter takes its options from the column (`filterable('boolean', ['1' => 'Media buyer', '0' => 'Publisher'])`) and falls back to Yes / No. Its placeholder and "All" option use the package translations
+
+## [3.1.1] - 2026-10-22
+
 ### Fixed
 
 - **Select and Livewire morphs**: The trigger's label is written by the component, but the server renders the placeholder there, so every Livewire update of the parent put "Select" back over the chosen value until the options were rebuilt. The label (and the chips of a multiple select) are now `wire:ignore`: the morph leaves them to the component
