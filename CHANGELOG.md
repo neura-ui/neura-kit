@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.1.4] - 2026-10-22
+
+### Fixed
+
+- **Switch and wire:model**: A switch bound with `wire:model` or `x-model` always started off, because its Alpine state took the `checked` prop and never read the bound value: a form defaulting to `true`, or a record saved as `true`, showed the switch off. The switch is now `x-modelable` on `checked`, like the other bindable inputs, so it starts from the bound value and writes back to it
 
 ## [3.1.2] - 2026-10-22
 

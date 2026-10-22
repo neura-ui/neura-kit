@@ -99,6 +99,17 @@ class ComponentRenderingTest extends TestCase
     }
 
     /**
+     * A switch bound with wire:model or x-model starts from the bound value: without
+     * x-modelable it always started off, whatever the value.
+     */
+    public function test_switch_starts_from_its_bound_value()
+    {
+        $html = Blade::render('<x-neura::switch wire:model="form.active" label="Active" />');
+
+        $this->assertMatchesRegularExpression('/wire:model="form\.active"[^>]*x-modelable="checked"|x-modelable="checked"[^>]*wire:model="form\.active"/', $html);
+    }
+
+    /**
      * The select writes the chosen label itself, so a Livewire morph must leave that part alone,
      * and the muted placeholder colour must give way once a value is chosen.
      */
