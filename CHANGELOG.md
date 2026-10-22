@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Select and Livewire morphs**: The trigger's label is written by the component, but the server renders the placeholder there, so every Livewire update of the parent put "Select" back over the chosen value until the options were rebuilt. The label (and the chips of a multiple select) are now `wire:ignore`: the morph leaves them to the component
+- **Select colour**: A chosen value kept the placeholder's muted colour, because `x-bind:class` in string form only added `text-fg` next to the static `text-fg-muted`. The binding is now an object, which removes the muted class once a value is chosen
+- **Select listeners**: Each select registered a Livewire `commit` hook that was never removed (and ran before the morph, so it rebuilt nothing useful), and its document `click` and window `resize` listeners were never removed either. The options are now watched by a `MutationObserver` that also sees relabelled options, and `destroy()` removes the observer and the listeners
+
 ## [3.1.0] - 2026-10-21
 
 ### Fixed

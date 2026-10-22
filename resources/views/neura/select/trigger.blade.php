@@ -52,23 +52,26 @@
                 <span
                     class="nk-select-value text-fg-muted"
                     x-show="chipCount === 0"
-                    x-bind:class="hasSelection ? 'text-fg' : 'text-fg-muted'"
+                    x-bind:class="{ 'text-fg': hasSelection, 'text-fg-muted': !hasSelection }"
                 >
                     <span class="sr-only" x-text="placeholder">{{ $ssrLabel }}</span>
                     <span class="nk-select-reel" aria-hidden="true">
                         <span class="nk-select-chip is-current">{{ $ssrLabel }}</span>
                     </span>
                 </span>
-                <span class="nk-multi" x-ref="multiChips" x-show="chipCount > 0" aria-hidden="true"></span>
+                {{-- Built by the component: a Livewire morph must not put the server's empty list back. --}}
+                <span class="nk-multi" x-ref="multiChips" x-show="chipCount > 0" aria-hidden="true" wire:ignore></span>
                 <span class="sr-only" x-show="chipCount > 0" x-text="label"></span>
             </span>
         @else
+            {{-- The object form removes the static muted colour once a value is chosen; a string would only add text-fg next to it. --}}
             <span
                 class="nk-select-value truncate block w-full text-fg-muted"
-                x-bind:class="hasSelection ? 'text-fg' : 'text-fg-muted'"
+                x-bind:class="{ 'text-fg': hasSelection, 'text-fg-muted': !hasSelection }"
             >
                 <span class="sr-only" x-text="label">{{ $ssrLabel }}</span>
-                <span class="nk-select-reel" x-ref="valueReel" aria-hidden="true">
+                {{-- The component writes the chosen label here: a Livewire morph must not put the server's placeholder back. --}}
+                <span class="nk-select-reel" x-ref="valueReel" aria-hidden="true" wire:ignore>
                     <span class="nk-select-chip is-current">{{ $ssrLabel }}</span>
                 </span>
             </span>

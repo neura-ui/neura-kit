@@ -92,46 +92,31 @@
             });
         });
 
-        // Listen for Livewire updates and rebuild options immediately
-        if (typeof Livewire !== 'undefined' && Livewire.hook) {
-            Livewire.hook('commit', ({ component, commit, respond }) => {
-                if (component.el === this.$root || component.el.contains(this.$el)) {
-                    this.$nextTick(() => {
-                        this.rebuildOptions();
-                    });
-                }
-            });
-        }
+        // Rebuild when the options change: a Livewire morph adds, removes or relabels them. The
+        // observer sees the DOM after the morph, so no Livewire hook is needed (one per select,
+        // never removed, used to pile up and fire before the morph anyway).
+        const isOption = (node) => node.nodeType === 1 && node.getAttribute('data-slot') === 'option';
+        const observer = new MutationObserver((mutations) => {
+            const optionsChanged = mutations.some((mutation) => mutation.type === 'attributes'
+                ? isOption(mutation.target)
+                : [...mutation.addedNodes, ...mutation.removedNodes].some(isOption));
 
-        // Watch for DOM changes (when Livewire updates the options list)
-        this.$nextTick(() => {
-            const optionsContainer = this.$el;
-
-            const observer = new MutationObserver((mutations) => {
-                // Check if options were added/removed
-                const hasOptionChanges = mutations.some(mutation => {
-                    const addedNodes = Array.from(mutation.addedNodes).some(node =>
-                        node.nodeType === 1 && node.hasAttribute('data-slot') && node.getAttribute('data-slot') === 'option'
-                    );
-                    const removedNodes = Array.from(mutation.removedNodes).some(node =>
-                        node.nodeType === 1 && node.hasAttribute('data-slot') && node.getAttribute('data-slot') === 'option'
-                    );
-                    return addedNodes || removedNodes;
-                });
-
-                if (hasOptionChanges) {
-                    // Rebuild immediately when options change
-                    this.$nextTick(() => {
-                        this.rebuildOptions();
-                    });
-                }
-            });
-
-            observer.observe(optionsContainer, {
-                childList: true,
-                subtree: true
-            });
+            if (optionsChanged) {
+                this.$nextTick(() => this.rebuildOptions());
+            }
         });
+
+        observer.observe(this.$el, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['data-value', 'data-label', 'hidden'],
+        });
+
+        this.__cleanup = ((cleanup) => () => {
+            cleanup();
+            observer.disconnect();
+        })(this.__cleanup);
 
         // Filter options based on search
         this.$watch('search', (val) => {
@@ -146,6 +131,10 @@
                 });
             }
         });
+    },
+
+    destroy() {
+        this.__cleanup?.();
     },
 
     rebuildOptions() {

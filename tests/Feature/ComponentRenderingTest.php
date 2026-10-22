@@ -98,6 +98,26 @@ class ComponentRenderingTest extends TestCase
         }
     }
 
+    /**
+     * The select writes the chosen label itself, so a Livewire morph must leave that part alone,
+     * and the muted placeholder colour must give way once a value is chosen.
+     */
+    public function test_select_keeps_its_chosen_label_through_livewire_morphs()
+    {
+        if (! class_exists(\BladeUI\Heroicons\BladeHeroiconsServiceProvider::class)) {
+            $this->markTestSkipped('Heroicons package is not installed');
+
+            return;
+        }
+
+        $html = Blade::render('<x-neura::select name="status"><x-neura::select.option value="Active" label="Active" /></x-neura::select>');
+
+        $this->assertMatchesRegularExpression('/x-ref="valueReel"[^>]*wire:ignore/', $html);
+        $this->assertStringContainsString("{ 'text-fg': hasSelection, 'text-fg-muted': !hasSelection }", $html);
+        $this->assertStringContainsString('destroy()', $html);
+        $this->assertStringNotContainsString("Livewire.hook('commit'", $html);
+    }
+
     public function test_input_component_renders()
     {
         $html = Blade::render('<x-neura::input name="email" type="email" />');
