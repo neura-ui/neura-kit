@@ -1,0 +1,377 @@
+/**
+ * Native map.
+ *
+ * The map paints everything from its look's variables: the water is the viewport, the land,
+ * lakes and graticule are SVG shapes, the labels and markers are placed layers. A shape that
+ * carries a value is filled by the script, mixing `--nk-map-fill` with the land.
+ */
+.nk-map {
+  --nk-map-fill: var(--color-primary-500, var(--color-primary));
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.nk-map-viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--nk-map-water);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+  outline: none;
+  transition: background var(--nk-duration-standard) var(--nk-ease-standard);
+}
+
+.nk-map-viewport:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--nk-edge-focus);
+}
+
+.nk-map-viewport.is-dragging {
+  cursor: grabbing;
+}
+
+/* Each layer is its own stacking context: shapes, cities, labels, markers, then bubbles. */
+.nk-map-world {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.nk-map-land,
+.nk-map-lake,
+.nk-map-graticule,
+.nk-map-shape {
+  vector-effect: non-scaling-stroke;
+  stroke-linejoin: round;
+  transition:
+    fill var(--nk-duration-standard) var(--nk-ease-standard),
+    stroke var(--nk-duration-standard) var(--nk-ease-standard);
+}
+
+.nk-map-land.is-hidden {
+  display: none;
+}
+
+.nk-map-land {
+  fill: var(--nk-map-land);
+  stroke: var(--nk-map-border);
+  stroke-width: 0.6;
+  pointer-events: visiblePainted;
+  cursor: pointer;
+}
+
+/* The zones of a focused country's cities, split by lines of the halo colour. */
+.nk-map-zone {
+  stroke: var(--nk-map-halo);
+  stroke-width: 1.25;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  pointer-events: visiblePainted;
+  cursor: pointer;
+  transition:
+    fill var(--nk-duration-standard) var(--nk-ease-standard),
+    filter var(--nk-duration-fast) linear;
+}
+
+.nk-map-zone:hover {
+  filter: brightness(0.93) saturate(1.2);
+}
+
+/* On a dark look, or a page in dark mode under the looks that follow it, a hovered zone lights up. */
+.nk-map-viewport[data-theme="dark"] .nk-map-zone:hover,
+.dark .nk-map-viewport[data-theme="auto"] .nk-map-zone:hover {
+  filter: brightness(1.18) saturate(1.1);
+}
+
+.nk-map-outline {
+  fill: none;
+  stroke: var(--nk-map-border);
+  stroke-width: 1;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.nk-map-lake {
+  fill: var(--nk-map-water);
+  stroke: var(--nk-map-border);
+  stroke-width: 0.4;
+  pointer-events: none;
+}
+
+.nk-map-graticule {
+  fill: none;
+  stroke: var(--nk-map-graticule);
+  stroke-width: 1;
+  pointer-events: none;
+}
+
+.nk-map-dot {
+  fill: var(--nk-map-dot);
+}
+
+.nk-map-shape {
+  fill: transparent;
+  stroke: var(--nk-map-fill);
+  stroke-width: 1.25;
+  pointer-events: visiblePainted;
+  cursor: pointer;
+}
+
+.nk-map-shape.is-line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  pointer-events: visibleStroke;
+}
+
+.nk-map-land.is-hover,
+.nk-map-shape.is-hover {
+  stroke: var(--nk-fg);
+  stroke-width: 1.5;
+}
+
+.nk-map-viewport[data-theme="dark"] .nk-map-land.is-hover,
+.nk-map-viewport[data-theme="dark"] .nk-map-shape.is-hover {
+  stroke: #fff;
+}
+
+.nk-map-cities,
+.nk-map-labels,
+.nk-map-markers {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.nk-map-cities {
+  z-index: 1;
+}
+
+.nk-map-labels {
+  z-index: 2;
+}
+
+.nk-map-markers {
+  z-index: 3;
+}
+
+.nk-map-city {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--nk-map-city-size);
+  height: var(--nk-map-city-size);
+  margin: calc(var(--nk-map-city-size) / -2) 0 0 calc(var(--nk-map-city-size) / -2);
+  padding: 0;
+  border: 1.5px solid var(--nk-map-halo);
+  border-radius: 999px;
+  background: var(--nk-map-city);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--nk-map-city) 22%, transparent);
+  pointer-events: auto;
+  cursor: pointer;
+  transition:
+    scale var(--nk-duration-fast) var(--nk-ease-standard),
+    background var(--nk-duration-standard) var(--nk-ease-standard);
+}
+
+.nk-map-city:hover,
+.nk-map-city:focus-visible {
+  scale: 1.3;
+  outline: none;
+}
+
+.nk-map-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  translate: -50% -50%;
+  color: var(--nk-map-label);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 16px;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  text-shadow:
+    0 0 2px var(--nk-map-halo),
+    0 0 2px var(--nk-map-halo),
+    0 0 4px var(--nk-map-halo);
+}
+
+/* A city's name starts beside its dot, in the look's strong ink. */
+.nk-map-label.is-city {
+  translate: 0 -50%;
+  color: var(--nk-map-ink);
+}
+
+.nk-map-marker {
+  --nk-map-marker: var(--nk-map-fill);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  padding: 0;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: var(--nk-map-marker);
+  box-shadow:
+    0 1px 3px rgb(0 0 0 / 0.35),
+    0 0 0 4px color-mix(in oklab, var(--nk-map-marker) 25%, transparent);
+  pointer-events: auto;
+  cursor: pointer;
+  transition: scale var(--nk-duration-fast) var(--nk-ease-standard);
+}
+
+.nk-map-marker:hover,
+.nk-map-marker:focus-visible {
+  scale: 1.25;
+  outline: none;
+}
+
+.nk-map-tooltip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 5;
+  margin: 16px 0 0 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--nk-fg);
+  color: var(--nk-surface);
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.nk-map-popup {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 4;
+  max-width: 240px;
+  padding: 8px 10px;
+  translate: -50% calc(-100% - 14px);
+  border: 1px solid var(--nk-edge);
+  border-radius: 8px;
+  background: var(--nk-surface-raised);
+  color: var(--nk-fg);
+  font-size: 13px;
+  line-height: 1.4;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.14);
+  user-select: text;
+  -webkit-user-select: text;
+  cursor: auto;
+}
+
+.nk-map-controls,
+.nk-map-styles {
+  position: absolute;
+  top: 10px;
+  z-index: 6;
+  border: 1px solid var(--nk-edge);
+  border-radius: 8px;
+  background: var(--nk-surface-raised);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+}
+
+.nk-map-controls {
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.nk-map-control {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  color: var(--nk-fg-secondary);
+  transition: background var(--nk-duration-fast) linear, color var(--nk-duration-fast) linear;
+}
+
+.nk-map-control + .nk-map-control {
+  border-top: 1px solid var(--nk-edge);
+}
+
+.nk-map-control:hover {
+  background: var(--nk-hover);
+  color: var(--nk-fg);
+}
+
+.nk-map-styles {
+  left: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  max-width: calc(100% - 64px);
+  padding: 2px;
+}
+
+.nk-map-style {
+  padding: 4px 9px;
+  border-radius: 6px;
+  color: var(--nk-fg-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  transition: background var(--nk-duration-fast) linear, color var(--nk-duration-fast) linear;
+}
+
+.nk-map-style:hover {
+  color: var(--nk-fg);
+}
+
+.nk-map-style.is-active {
+  background: var(--nk-active);
+  color: var(--nk-fg);
+}
+
+.nk-map-status {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  z-index: 6;
+  color: var(--nk-fg-secondary);
+}
+
+/* Drawn inside the viewport, in the look's own colours. */
+.nk-map-credit {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 6;
+  padding: 2px 6px;
+  border-top-left-radius: 6px;
+  background: color-mix(in oklab, var(--nk-map-halo) 82%, transparent);
+  color: var(--nk-map-label);
+  cursor: auto;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.nk-map-credit a {
+  color: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nk-map-viewport,
+  .nk-map-land,
+  .nk-map-lake,
+  .nk-map-graticule,
+  .nk-map-shape,
+  .nk-map-marker,
+  .nk-map-city,
+  .nk-map-zone {
+    transition: none;
+  }
+}

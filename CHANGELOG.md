@@ -8,6 +8,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.1.5] - 2026-10-22
+
+### Added
+
+- **Native map**: New `neura::map` component, drawn by the kit itself with no map library and no tile provider. Only open data comes from outside: Natural Earth (public domain) by default, through config `map.datasets`, which may point at files the application serves. The map draws the water, the land, the lakes, the graticule and the country labels (placed with Natural Earth's label points and ranks, none overlapping), and fetches the finer resolution of a dataset once the zoom asks for it (1:110m, then 1:50m from `map.detail_zoom`). Pan by dragging (with inertia), zoom with the wheel, a double click, a pinch or the keyboard; zoom buttons and a credit sit over it
+- **Map looks**: Six looks the map paints itself (`map-style`): `standard` (follows the kit's tokens, light and dark), `dark`, `atlas`, `blueprint`, `paper` and `dots` (the land as a dot pattern). `:map-styles` offers a switcher between several. Each look carries its own `label` and stronger `ink` colours on its own `halo`, so country and city names stay legible on dark looks and on a page in dark mode, and the Natural Earth credit is drawn in the look's colours. Looks are a pack (`Packs\Map\Style`), so an application adds its own
+- **Map data**: `:values` colours the countries by value (joined on `ISO_A2_EH`, then `ISO_A2`…), with a tooltip; `:markers` places markers with a popup (markers and city dots are placed with `translate`, so their hover `scale` never moves them); `geojson` draws a GeoJSON or TopoJSON overlay (TopoJSON decoded natively); `fit` frames the data. The markers and values travel in a `data-map` attribute, so a Livewire update redraws them without touching the map. Events: `map-click`, `map-feature-click`, `map-marker-click`, `map-city-click`, `map-move`, `map-style`
+- **One country and its cities**: `country="FR"` draws that country alone, framed on its mainland, with its cities from Natural Earth's populated places (1:50m, then 1:10m from zoom 6): each city in its own colour (spread by the golden angle) and sized by its population, or coloured by `:city-values` keyed by city name (accents and case aside). City names sit beside their dot, on its left when the right has no room. The country is split into the zones of its cities, the part of it closer to each (a Voronoi diagram computed by the map, clipped to the country's shape, islands included), each zone in a lighter shade of its city or coloured by its value, with lines between them; `:zones="false"` keeps the dots alone
+
+### Changed
+
+- **Modal manager motion**: Opening a modal over another one hid the first, waited 180ms on the bare backdrop, then zoomed the next one in; going back did the same. Stacked panels now cross at once: the current panel slides out to one side while the next slides in from the other, and going back plays it in reverse (`data-stack="forward|back"` on the dialog, `nk-modal-step-*` classes). The panel leaving is centred over the one arriving, so the dialog never jumps
+- **Modal open and close**: The backdrop appeared and vanished at once, and a panel zoomed twice on open (the dialog and the panel both scaled). The backdrop now fades in and out (`nk-modal-fade-*`), the dialog alone zooms in on the first open and out on the last close (`nk-modal-zoom-*`), and the manager tears down after that motion (260ms)
+- **Panels removed mid-motion**: The server destroys a closed modal, and the next render removed its panel while it was still sliding or zooming out. A panel that is leaving is now kept until its motion has ended (Livewire `morph.removing`). With reduced motion, the panels only fade
+
+- **Sideover manager motion**: The same as modals: opening a sideover over another one no longer waits 180ms with the backdrop blinking. The next panel slides in from its edge over the current one, which eases back toward the page and fades, and going back plays it in reverse (`nk-sideover-*` classes, `data-stack` on the manager). The last panel slides back out to its edge without being cut: the manager holds until the slide has ended, and a panel the server removes mid-slide is kept until it has ended
+
+### Fixed
+
+- **Modal and sideover stacks after going back**: When the server confirmed the previous modal or sideover before the 180ms wait ended, the manager took it for a new one and pushed the closed one onto the stack, so a later close went back to a destroyed one. Going back now switches at once, and the confirmation finds the previous one already active
+
 ## [3.1.4] - 2026-10-22
 
 ### Fixed

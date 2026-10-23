@@ -27,11 +27,13 @@
     ];
 @endphp
 <div x-data="sideoverManager()" x-show="show" x-cloak class="fixed inset-0 z-[9998] pointer-events-none"
+    x-transition:leave="nk-sideover-hold" x-transition:leave-start="" x-transition:leave-end=""
+    x-bind:data-stack="stackDirection"
     @sideover-close.window="setShow(false)" @keydown.escape.window="show && closeSideoverOnEscape()">
 
     {{-- Backdrop (mobile) --}}
     <div
-        x-show="show && showActiveComponent && !isTransitioning"
+        x-show="show && showActiveComponent"
         x-transition:enter="transition-opacity ease-enter duration-standard"
         x-transition:enter-start="opacity-0"
         x-transition:enter-end="opacity-100"
@@ -47,8 +49,6 @@
             $attrs = $component['sideoverAttributes'] ?? [];
             $side = $attrs['side'] ?? 'right';
             $isRight = $side === 'right';
-            $translateEnter = $isRight ? 'translate-x-full' : '-translate-x-full';
-            $translateEnd = 'translate-x-0';
 
             if (isset($attrs['widthClass'])) {
                 $widthClass = $attrs['widthClass'];
@@ -70,12 +70,12 @@
         <div wire:key="{{ $id }}" x-ref="{{ $id }}" data-sideover-id="{{ $id }}"
             data-sideover-push-width="{{ $pushWidth }}"
             data-sideover-side="{{ $side }}"
-            x-show="show && showActiveComponent && !isLoading && activeComponent === '{{ $id }}' && !isTransitioning"
+            x-show="show && showActiveComponent && !isLoading && activeComponent === '{{ $id }}'"
             x-on:click.stop
-            x-transition:enter="transition-transform ease-enter duration-standard" x-transition:enter-start="{{ $translateEnter }}"
-            x-transition:enter-end="{{ $translateEnd }}"
-            x-transition:leave="transition-transform ease-standard duration-fast" x-transition:leave-start="{{ $translateEnd }}"
-            x-transition:leave-end="{{ $translateEnter }}"
+            x-transition:enter="nk-sideover-enter" x-transition:enter-start="nk-sideover-enter-from"
+            x-transition:enter-end="nk-sideover-enter-to"
+            x-transition:leave="nk-sideover-leave" x-transition:leave-start="nk-sideover-leave-from"
+            x-transition:leave-end="nk-sideover-leave-to"
             @if ($customStyle) style="{{ $customStyle }}" @endif
             @class([
                 'pointer-events-auto fixed inset-y-0 flex flex-col bg-surface backdrop-blur-xl border-separator',

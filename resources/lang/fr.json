@@ -274,5 +274,16 @@
     "jsonKey": "clé",
     "jsonItems": "éléments",
     "jsonItem": "élément",
-    "jsonLabel": "JSON"
+    "jsonLabel": "JSON",
+    "map": "Carte",
+    "zoomIn": "Zoom avant",
+    "zoomOut": "Zoom arrière",
+    "mapStyle": "Style de carte",
+    "noData": "Aucune donnée",
+    "mapStyleStandard": "Standard",
+    "mapStyleDark": "Sombre",
+    "mapStyleAtlas": "Atlas",
+    "mapStyleBlueprint": "Plan",
+    "mapStylePaper": "Papier",
+    "mapStyleDots": "Points"
 }

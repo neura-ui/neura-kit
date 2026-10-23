@@ -26,6 +26,9 @@
 @import './themes/toast.css';
 @import './themes/table.css';
 @import './themes/popup.css';
+@import './themes/modal.css';
+@import './themes/sideover.css';
+@import './themes/map.css';
 @import './themes/calendar.css';
 @import './themes/preloader.css';
 @import './motion.css';

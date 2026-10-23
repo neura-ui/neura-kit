@@ -143,6 +143,31 @@ if (!isBrowser) {
         // Livewire navigation can replace DOM: invalidate cached wire:id/element
         document.addEventListener('livewire:navigated', () => ModalManagerCache.invalidate(), { passive: true });
 
+        // The server destroys a closed modal, and the manager's next render removes its panel
+        // while it may still be animating: sliding out of the stack, or zooming out with the
+        // whole dialog on the last close. Such a panel is kept until its animation has ended.
+        const PANEL_LEAVE_MS = 300;
+        const keepAnimatingPanels = () => {
+            (window as any).Livewire?.hook?.('morph.removing', ({ el, skip }: { el: Element; skip: () => void }) => {
+                if (!(el instanceof HTMLElement) || !el.dataset.modalId) return;
+
+                const leaving =
+                    el.classList.contains('nk-modal-step-leave') ||
+                    el.parentElement?.classList.contains('nk-modal-zoom-leave');
+
+                if (!leaving) return;
+
+                skip();
+                window.setTimeout(() => el.remove(), PANEL_LEAVE_MS);
+            });
+        };
+
+        if ((window as any).Livewire?.hook) {
+            keepAnimatingPanels();
+        } else {
+            document.addEventListener('livewire:init', keepAnimatingPanels, { once: true });
+        }
+
         // If you dispatch "modal-close" from anywhere, keep it supported
         window.addEventListener(
             'modal-close',
@@ -166,7 +191,8 @@ if (!isBrowser) {
                 activeComponent: null as string | null,
                 showActiveComponent: false,
                 isLoading: false,
-                isTransitioning: false,
+                // Which way the stack moves, for the panels' slide: null outside the stack
+                stackDirection: null as 'forward' | 'back' | null,
 
                 // Stack to track modal history
                 _modalStack: [] as Array<{ id: string; attrs: ModalAttrs | null }>,
@@ -174,15 +200,13 @@ if (!isBrowser) {
                 _cleanupId: 0,
                 _cleanupTimeout: null as number | null,
                 _loadingTimeout: null as number | null,
-                _transitionTimeout: null as number | null,
                 _prevFocus: null as HTMLElement | null,
                 _focusStack: [] as HTMLElement[],
                 _main: document.querySelector<HTMLElement>('[data-slot="main"], main, [data-slot="layout"]'),
 
-                // Keep this aligned to your CSS transition duration (ms)
-                _teardownDelayMs: 200,
+                // Keep this above the overlay's leave transition (--nk-duration-standard, 240ms)
+                _teardownDelayMs: 260,
                 _loadingDelayMs: 150,
-                _transitionDelayMs: 180, // Time to wait for fade-out before showing next modal
 
                 init() {
                     // Toggle inert + scroll lock + focus restore
@@ -221,9 +245,8 @@ if (!isBrowser) {
 
                         clearTimeout(this._cleanupTimeout!);
                         clearTimeout(this._loadingTimeout!);
-                        clearTimeout(this._transitionTimeout!);
 
-                        // If there's already an active modal, animate transition
+                        // If there's already an active modal, the next one slides in over it
                         if (this.activeComponent && this.activeComponent !== id) {
                             this._modalStack.push({
                                 id: this.activeComponent,
@@ -232,24 +255,22 @@ if (!isBrowser) {
                             // Save current focus for this modal
                             this._focusStack.push(document.activeElement as HTMLElement);
 
-                            // Start transition: hide current modal first
-                            this.isTransitioning = true;
+                            // Switch at once: the current panel slides out while the next slides in
+                            this.stackDirection = 'forward';
+                            this.activeComponent = id;
+                            this._attrs = attrs ? { id, attrs } : null;
+                            this.showActiveComponent = true;
+                            this.isLoading = false;
 
-                            // After fade-out, switch to new modal
-                            this._transitionTimeout = window.setTimeout(() => {
-                                this.activeComponent = id;
-                                this._attrs = attrs ? { id, attrs } : null;
-                                this.isTransitioning = false;
-                                this.showActiveComponent = true;
-                                this.isLoading = false;
-
-                                // Focus after transition complete
-                                this.$nextTick(() => {
-                                    requestAnimationFrame(() => this.focusModal());
-                                });
-                            }, this._transitionDelayMs);
+                            this.$nextTick(() => {
+                                requestAnimationFrame(() => this.focusModal());
+                            });
                         } else {
-                            // First modal or same modal - no transition needed
+                            // First modal (it zooms in) or same modal - no transition needed
+                            if (this.activeComponent !== id) {
+                                this.stackDirection = null;
+                            }
+
                             this.activeComponent = id;
                             this._attrs = attrs ? { id, attrs } : null;
                             this.showActiveComponent = true;
@@ -276,31 +297,24 @@ if (!isBrowser) {
                     };
 
                     const uiClose = (_e?: CustomEvent<UiCloseDetail>) => {
-                        clearTimeout(this._transitionTimeout!);
-
                         // Check if there are modals in the stack to go back to
                         if (this._modalStack.length > 0) {
                             const previousModal = this._modalStack.pop()!;
                             const previousFocus = this._focusStack.pop();
-                            
-                            // Start transition: hide current modal first
-                            this.isTransitioning = true;
 
-                            // After fade-out, switch to previous modal
-                            this._transitionTimeout = window.setTimeout(() => {
-                                this.activeComponent = previousModal.id;
-                                this._attrs = previousModal.attrs ? { id: previousModal.id, attrs: previousModal.attrs } : null;
-                                this.isTransitioning = false;
+                            // Switch at once: the current panel slides out while the previous slides back in
+                            this.stackDirection = 'back';
+                            this.activeComponent = previousModal.id;
+                            this._attrs = previousModal.attrs ? { id: previousModal.id, attrs: previousModal.attrs } : null;
 
-                                // Restore focus to previous modal
-                                this.$nextTick(() => {
-                                    if (previousFocus) {
-                                        requestAnimationFrame(() => previousFocus.focus?.());
-                                    } else {
-                                        this.focusModal();
-                                    }
-                                });
-                            }, this._transitionDelayMs);
+                            // Restore focus to previous modal
+                            this.$nextTick(() => {
+                                if (previousFocus) {
+                                    requestAnimationFrame(() => previousFocus.focus?.());
+                                } else {
+                                    this.focusModal();
+                                }
+                            });
                         } else {
                             // No more modals in stack, close completely
                             this.setShow(false);
@@ -324,9 +338,7 @@ if (!isBrowser) {
                     if (!value) {
                         this.showActiveComponent = false;
                         this.isLoading = false;
-                        this.isTransitioning = false;
                         clearTimeout(this._loadingTimeout!);
-                        clearTimeout(this._transitionTimeout!);
 
                         // Clear the stack when completely closing
                         this._modalStack = [];
@@ -338,6 +350,7 @@ if (!isBrowser) {
                             if (this._cleanupId === id) {
                                 this.activeComponent = null;
                                 this._attrs = null;
+                                this.stackDirection = null;
                             }
                         }, this._teardownDelayMs);
                     }

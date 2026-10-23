@@ -143,6 +143,8 @@ return [
 
     'chart' => Config::chart(),
 
+    'map' => Config::map(),
+
     'sparkline' => Config::sparkline(),
 
     'bars' => Config::bars(),

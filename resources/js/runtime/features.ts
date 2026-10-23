@@ -152,6 +152,11 @@ export const FEATURES: readonly Feature[] = [
         load: () => import('../features/chart'),
     },
     {
+        name: 'map',
+        tokens: ['neuraMap'],
+        load: () => import('../features/data/map'),
+    },
+    {
         name: 'editor',
         tokens: ['nativeEditor'],
         load: () => import('../features/editor'),

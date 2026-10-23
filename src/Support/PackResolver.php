@@ -17,6 +17,7 @@ use Neura\Kit\Packs\IconStack;
 use Neura\Kit\Packs\Input;
 use Neura\Kit\Packs\Callout;
 use Neura\Kit\Packs\Link;
+use Neura\Kit\Packs\Map;
 use Neura\Kit\Packs\Navlist;
 use Neura\Kit\Packs\Orb;
 use Neura\Kit\Packs\Navbar;
@@ -432,6 +433,61 @@ class PackResolver
         $sizes = Filters\Size::default();
 
         return $sizes[$size] ?? $sizes['sm'];
+    }
+
+    /**
+     * Every look of the native map, by name.
+     *
+     * @return array<string, array<string, string|null>>
+     */
+    public static function mapStyles(): array
+    {
+        return self::packAll('map', 'styles') ?: Map\Style::all();
+    }
+
+    /**
+     * The name of a map look, an unknown one falling back to the configured default.
+     */
+    public static function mapStyleName(?string $style): string
+    {
+        $styles = self::mapStyles();
+        $default = Config::get('neura-kit.map.default.style') ?: 'standard';
+
+        if ($style !== null && isset($styles[$style])) {
+            return $style;
+        }
+
+        return isset($styles[$default]) ? $default : array_key_first($styles);
+    }
+
+    /**
+     * The resolutions of a dataset the map names (`countries`), coarsest first, each with the
+     * zoom it is drawn from; a URL is one resolution of its own.
+     *
+     * @return list<array{url: string, from: float}>
+     */
+    public static function mapDataset(string $dataset): array
+    {
+        $datasets = Config::get('neura-kit.map.datasets') ?: \Neura\Kit\NeuraKitConfig::map()['datasets'];
+        $detailZoom = (float) (self::mapSetting('detail_zoom') ?? 4);
+        $levels = array_values((array) ($datasets[$dataset] ?? $dataset));
+
+        return array_map(
+            fn (string|array $level, int $index): array => [
+                'url' => is_array($level) ? (string) $level['url'] : $level,
+                'from' => (float) (is_array($level) && isset($level['from']) ? $level['from'] : ($index === 0 ? 0 : $detailZoom + ($index - 1) * 2)),
+            ],
+            $levels,
+            array_keys($levels),
+        );
+    }
+
+    /**
+     * A map setting (`detail_zoom`, `credit`), falling back to the kit's defaults.
+     */
+    public static function mapSetting(string $key): mixed
+    {
+        return Config::get("neura-kit.map.{$key}") ?? \Neura\Kit\NeuraKitConfig::map()[$key] ?? null;
     }
 
     public static function filtersVariant(?string $variant): array

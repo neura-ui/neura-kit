@@ -1,0 +1,65 @@
+/**
+ * Sideover manager motion.
+ *
+ * The first panel slides in from its edge and the last one slides back out while the backdrop
+ * fades; the manager holds until that motion has ended. Between stacked panels the backdrop
+ * stays: the next panel slides in from the edge over the current one, which eases back toward
+ * the page and fades, and going back plays it in reverse.
+ */
+.nk-sideover-hold {
+  transition: opacity var(--nk-duration-standard) linear;
+}
+
+.nk-sideover-enter {
+  transition:
+    transform var(--nk-duration-standard) var(--nk-ease-enter),
+    opacity var(--nk-duration-standard) var(--nk-ease-enter);
+}
+
+.nk-sideover-leave {
+  transition:
+    transform var(--nk-duration-standard) var(--nk-ease-standard),
+    opacity var(--nk-duration-standard) var(--nk-ease-standard);
+}
+
+[data-sideover-side="right"].nk-sideover-enter-from,
+[data-sideover-side="right"].nk-sideover-leave-to {
+  transform: translateX(100%);
+}
+
+[data-sideover-side="left"].nk-sideover-enter-from,
+[data-sideover-side="left"].nk-sideover-leave-to {
+  transform: translateX(-100%);
+}
+
+.nk-sideover-enter-to,
+.nk-sideover-leave-from {
+  transform: none;
+}
+
+[data-stack="forward"] > [data-sideover-side="right"].nk-sideover-leave-to,
+[data-stack="back"] > [data-sideover-side="right"].nk-sideover-enter-from {
+  opacity: 0;
+  transform: translateX(-2rem);
+}
+
+[data-stack="forward"] > [data-sideover-side="left"].nk-sideover-leave-to,
+[data-stack="back"] > [data-sideover-side="left"].nk-sideover-enter-from {
+  opacity: 0;
+  transform: translateX(2rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nk-sideover-enter,
+  .nk-sideover-leave {
+    transition-property: opacity;
+  }
+
+  [data-sideover-side].nk-sideover-enter-from,
+  [data-sideover-side].nk-sideover-leave-to,
+  [data-stack] > [data-sideover-side].nk-sideover-enter-from,
+  [data-stack] > [data-sideover-side].nk-sideover-leave-to {
+    opacity: 0;
+    transform: none;
+  }
+}

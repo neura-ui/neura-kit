@@ -704,6 +704,49 @@ class NeuraKitConfig
         ], $options);
     }
 
+    /**
+     * The native map: its default look, and the open datasets it draws. A dataset lists its
+     * resolutions, coarsest first; a finer one is drawn from `detail_zoom`, or from its own
+     * `from` zoom. Natural Earth is public domain; the URLs may point at a copy the application
+     * serves itself.
+     */
+    public static function map(array $options = []): array
+    {
+        $naturalEarth = 'https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@v5.1.2/geojson/%s.geojson';
+
+        return self::mix([
+            'default' => [
+                'style' => 'standard',
+                'rounded' => self::GLOBAL,
+                'shadow' => self::GLOBAL,
+            ],
+            'detail_zoom' => 4,
+            'datasets' => [
+                'countries' => [
+                    sprintf($naturalEarth, 'ne_110m_admin_0_countries'),
+                    sprintf($naturalEarth, 'ne_50m_admin_0_countries'),
+                ],
+                'lakes' => [
+                    sprintf($naturalEarth, 'ne_110m_lakes'),
+                    sprintf($naturalEarth, 'ne_50m_lakes'),
+                ],
+                'places' => [
+                    sprintf($naturalEarth, 'ne_50m_populated_places_simple'),
+                    ['url' => sprintf($naturalEarth, 'ne_10m_populated_places_simple'), 'from' => 6],
+                ],
+            ],
+            'credit' => [
+                'text' => 'Natural Earth',
+                'url' => 'https://www.naturalearthdata.com',
+            ],
+            'packs' => [
+                'styles' => Packs\Map\Style::class,
+                'rounders' => Packs\Rounded::class,
+                'shadows' => Packs\Shadow::class,
+            ],
+        ], $options);
+    }
+
     public static function chart(array $options = []): array
     {
         return self::mix([

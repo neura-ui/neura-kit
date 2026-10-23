@@ -23,6 +23,9 @@
     $modalShadowClass = PackResolver::shadow(neura_config('modal', 'shadow'));
 @endphp
 <div x-data="modalManager()" x-show="show" x-cloak class="fixed inset-0 z-[9999] overflow-y-auto"
+    x-transition:enter="nk-modal-fade-enter" x-transition:enter-start="nk-modal-fade-out"
+    x-transition:enter-end="nk-modal-fade-in" x-transition:leave="nk-modal-fade-leave"
+    x-transition:leave-start="nk-modal-fade-in" x-transition:leave-end="nk-modal-fade-out"
     @modal-close.window="setShow(false)" @keydown.escape.window="show && closeModalOnEscape()">
     <div class="fixed inset-0 bg-surface-overlay" @click="closeModalOnClickAway()" aria-hidden="true"></div>
 
@@ -33,9 +36,12 @@
             </div>
         </div>
 
-        <div x-show="show && showActiveComponent && !isLoading" x-transition @click="closeModalOnClickAway()"
+        <div x-show="show && showActiveComponent && !isLoading" @click="closeModalOnClickAway()"
+            x-transition:enter="nk-modal-zoom-enter" x-transition:enter-start="nk-modal-zoom-out"
+            x-transition:enter-end="nk-modal-zoom-in" x-transition:leave="nk-modal-zoom-leave"
+            x-transition:leave-start="nk-modal-zoom-in" x-transition:leave-end="nk-modal-zoom-out"
             class="relative flex w-full justify-center" x-trap.inert.noscroll="show && showActiveComponent"
-            role="dialog" aria-modal="true" tabindex="-1">
+            x-bind:data-stack="stackDirection" role="dialog" aria-modal="true" tabindex="-1">
             @foreach ($components as $id => $component)
                 @php
                     $attrs = $component['modalAttributes'] ?? [];
@@ -58,10 +64,10 @@
                     }
                 @endphp
                 <div wire:key="{{ $id }}" x-ref="{{ $id }}" data-modal-id="{{ $id }}"
-                    x-show="activeComponent === '{{ $id }}' && !isTransitioning" x-on:click.stop
-                    x-transition:enter="transition ease-enter duration-standard" x-transition:enter-start="opacity-0 scale-95"
-                    x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-standard duration-fast"
-                    x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+                    x-show="activeComponent === '{{ $id }}'" x-on:click.stop
+                    x-transition:enter="nk-modal-step-enter" x-transition:enter-start="nk-modal-step-enter-from"
+                    x-transition:enter-end="nk-modal-step-enter-to" x-transition:leave="nk-modal-step-leave"
+                    x-transition:leave-start="nk-modal-step-leave-from" x-transition:leave-end="nk-modal-step-leave-to"
                     @if ($customStyle) style="{{ $customStyle }}" @endif
                     class="
                         w-full

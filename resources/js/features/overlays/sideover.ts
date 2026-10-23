@@ -153,6 +153,24 @@ if (!isBrowser) {
             unpushLayout();
         }, { passive: true });
 
+        // The server destroys a closed sideover, and the manager's next render removes its panel
+        // while it may still be sliding out. Such a panel is kept until its slide has ended.
+        const PANEL_LEAVE_MS = 300;
+        const keepSlidingPanels = () => {
+            (window as any).Livewire?.hook?.('morph.removing', ({ el, skip }: { el: Element; skip: () => void }) => {
+                if (!(el instanceof HTMLElement) || !el.dataset.sideoverId || !el.classList.contains('nk-sideover-leave')) return;
+
+                skip();
+                window.setTimeout(() => el.remove(), PANEL_LEAVE_MS);
+            });
+        };
+
+        if ((window as any).Livewire?.hook) {
+            keepSlidingPanels();
+        } else {
+            document.addEventListener('livewire:init', keepSlidingPanels, { once: true });
+        }
+
         window.addEventListener(
             'sideover-close',
             (e: Event) => {
@@ -172,20 +190,20 @@ if (!isBrowser) {
                 activeComponent: null as string | null,
                 showActiveComponent: false,
                 isLoading: false,
-                isTransitioning: false,
+                // Which way the stack moves, for the panels' slide: null outside the stack
+                stackDirection: null as 'forward' | 'back' | null,
 
                 _sideoverStack: [] as Array<{ id: string; attrs: SideoverAttrs | null }>,
                 _attrs: null as { id: string; attrs: SideoverAttrs } | null,
                 _cleanupId: 0,
                 _cleanupTimeout: null as number | null,
                 _loadingTimeout: null as number | null,
-                _transitionTimeout: null as number | null,
                 _prevFocus: null as HTMLElement | null,
                 _focusStack: [] as HTMLElement[],
 
-                _teardownDelayMs: 200,
+                // Keep this above the panels' leave transition (--nk-duration-standard, 240ms)
+                _teardownDelayMs: 260,
                 _loadingDelayMs: 150,
-                _transitionDelayMs: 180,
 
                 init() {
                     this.$watch('show', (open: boolean) => {
@@ -225,7 +243,6 @@ if (!isBrowser) {
 
                         clearTimeout(this._cleanupTimeout!);
                         clearTimeout(this._loadingTimeout!);
-                        clearTimeout(this._transitionTimeout!);
 
                         if (this.activeComponent && this.activeComponent !== id) {
                             this._sideoverStack.push({
@@ -233,19 +250,22 @@ if (!isBrowser) {
                                 attrs: this._attrs?.attrs ?? null
                             });
                             this._focusStack.push(document.activeElement as HTMLElement);
-                            this.isTransitioning = true;
 
-                            this._transitionTimeout = window.setTimeout(() => {
-                                this.activeComponent = id;
-                                this._attrs = attrs ? { id, attrs } : null;
-                                this.isTransitioning = false;
-                                this.showActiveComponent = true;
-                                this.isLoading = false;
-                                this.$nextTick(() => {
-                                    requestAnimationFrame(() => this.focusSideover());
-                                });
-                            }, this._transitionDelayMs);
+                            // Switch at once: the next panel slides in over the current one
+                            this.stackDirection = 'forward';
+                            this.activeComponent = id;
+                            this._attrs = attrs ? { id, attrs } : null;
+                            this.showActiveComponent = true;
+                            this.isLoading = false;
+                            this.$nextTick(() => {
+                                requestAnimationFrame(() => this.focusSideover());
+                            });
                         } else {
+                            // First panel (it slides in from its edge) or same panel
+                            if (this.activeComponent !== id) {
+                                this.stackDirection = null;
+                            }
+
                             this.activeComponent = id;
                             this._attrs = attrs ? { id, attrs } : null;
                             this.isLoading = false;
@@ -270,25 +290,21 @@ if (!isBrowser) {
                     };
 
                     const uiClose = (_e?: CustomEvent<UiCloseDetail>) => {
-                        clearTimeout(this._transitionTimeout!);
-
                         if (this._sideoverStack.length > 0) {
                             const previous = this._sideoverStack.pop()!;
                             const previousFocus = this._focusStack.pop();
-                            this.isTransitioning = true;
 
-                            this._transitionTimeout = window.setTimeout(() => {
-                                this.activeComponent = previous.id;
-                                this._attrs = previous.attrs ? { id: previous.id, attrs: previous.attrs } : null;
-                                this.isTransitioning = false;
-                                this.$nextTick(() => {
-                                    if (previousFocus) {
-                                        requestAnimationFrame(() => previousFocus.focus?.());
-                                    } else {
-                                        this.focusSideover();
-                                    }
-                                });
-                            }, this._transitionDelayMs);
+                            // Switch at once: the current panel slides out and reveals the previous one
+                            this.stackDirection = 'back';
+                            this.activeComponent = previous.id;
+                            this._attrs = previous.attrs ? { id: previous.id, attrs: previous.attrs } : null;
+                            this.$nextTick(() => {
+                                if (previousFocus) {
+                                    requestAnimationFrame(() => previousFocus.focus?.());
+                                } else {
+                                    this.focusSideover();
+                                }
+                            });
                         } else {
                             this.setShow(false);
                         }
@@ -307,11 +323,11 @@ if (!isBrowser) {
                     this.show = value;
 
                     if (!value) {
+                        // The last panel slides back out to its edge, whatever the stack did before
+                        this.stackDirection = null;
                         this.showActiveComponent = false;
                         this.isLoading = false;
-                        this.isTransitioning = false;
                         clearTimeout(this._loadingTimeout!);
-                        clearTimeout(this._transitionTimeout!);
                         this._sideoverStack = [];
                         this._focusStack = [];
 

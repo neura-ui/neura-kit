@@ -1,0 +1,94 @@
+/**
+ * Modal manager motion, in three layers.
+ *
+ * The overlay fades the backdrop in and out. The dialog zooms out of the backdrop on the first
+ * open and back into it on the last close. Between stacked panels the backdrop and the dialog
+ * stay: opening the next panel pushes the current one aside while the next slides in from the
+ * other side, and going back plays it in reverse. The panel leaving is taken out of the flow and
+ * centred over the one arriving, so the two cross without a gap and without a jump.
+ */
+.nk-modal-fade-enter {
+  transition: opacity var(--nk-duration-standard) var(--nk-ease-enter);
+}
+
+.nk-modal-fade-leave {
+  transition: opacity var(--nk-duration-standard) var(--nk-ease-standard);
+}
+
+.nk-modal-fade-out {
+  opacity: 0;
+}
+
+.nk-modal-fade-in {
+  opacity: 1;
+}
+
+.nk-modal-zoom-enter {
+  transition:
+    opacity var(--nk-duration-standard) var(--nk-ease-enter),
+    transform var(--nk-duration-standard) var(--nk-ease-enter);
+}
+
+.nk-modal-zoom-leave {
+  transition:
+    opacity var(--nk-duration-standard) var(--nk-ease-standard),
+    transform var(--nk-duration-standard) var(--nk-ease-standard);
+}
+
+.nk-modal-zoom-out {
+  opacity: 0;
+  transform: scale(0.96);
+}
+
+.nk-modal-zoom-in {
+  opacity: 1;
+  transform: none;
+}
+
+.nk-modal-step-enter {
+  transition:
+    opacity var(--nk-duration-standard) var(--nk-ease-enter),
+    transform var(--nk-duration-standard) var(--nk-ease-enter);
+}
+
+.nk-modal-step-leave {
+  transition:
+    opacity var(--nk-duration-standard) var(--nk-ease-standard),
+    transform var(--nk-duration-standard) var(--nk-ease-standard);
+}
+
+[data-stack] > .nk-modal-step-leave {
+  position: absolute;
+  inset-inline: 0;
+  top: 50%;
+  margin-inline: auto;
+  translate: 0 -50%;
+  pointer-events: none;
+}
+
+[data-stack="forward"] > .nk-modal-step-enter-from,
+[data-stack="back"] > .nk-modal-step-leave-to {
+  opacity: 0;
+  transform: translateX(2rem);
+}
+
+[data-stack="forward"] > .nk-modal-step-leave-to,
+[data-stack="back"] > .nk-modal-step-enter-from {
+  opacity: 0;
+  transform: translateX(-2rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nk-modal-zoom-enter,
+  .nk-modal-zoom-leave,
+  .nk-modal-step-enter,
+  .nk-modal-step-leave {
+    transition-property: opacity;
+  }
+
+  .nk-modal-zoom-out,
+  [data-stack] > .nk-modal-step-enter-from,
+  [data-stack] > .nk-modal-step-leave-to {
+    transform: none;
+  }
+}
