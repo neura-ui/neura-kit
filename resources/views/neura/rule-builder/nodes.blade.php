@@ -70,8 +70,9 @@
                 x-cloak
                 x-text="({{ $parentExpr }}).combinator === 'or' ? label('or') : label('and')"
                 x-on:click="toggleCombinator(({{ $parentExpr }}).id)"
+                x-bind:class="combinatorFixed() && 'pointer-events-none'"
                 x-bind:disabled="isDisabled || ({{ $parentExpr }}).locked"
-                x-bind:title="label('toggleCombinator')"
+                x-bind:title="combinatorFixed() ? null : label('toggleCombinator')"
             ></button>
         </div>
 
@@ -135,18 +136,18 @@
                         </div>
                     </template>
 
-                    <template x-if="needsValue(item.operator) && fieldConfig(item.field) && fieldConfig(item.field).type === 'text'">
+                    <template x-if="needsValue(item.operator) && !isListOperator(item.operator) && fieldConfig(item.field) && fieldConfig(item.field).type === 'text'">
                         <input
                             type="text"
                             class="{{ $controlClass }} min-w-28 rounded-md border border-edge/80 bg-surface text-fg placeholder:text-fg-muted focus:outline-none focus:ring-1 focus:ring-fg/15"
                             x-bind:placeholder="fieldConfig(item.field)?.placeholder || label('selectValue')"
                             x-bind:value="item.values[0] ?? ''"
-                            x-on:input="setTextValue(item.id, $event.target.value)"
+                            x-on:input.stop="setTextValue(item.id, $event.target.value)"
                             x-bind:disabled="isDisabled"
                         />
                     </template>
 
-                    <template x-if="needsValue(item.operator) && fieldConfig(item.field) && fieldConfig(item.field).type === 'number'">
+                    <template x-if="needsValue(item.operator) && !isListOperator(item.operator) && fieldConfig(item.field) && fieldConfig(item.field).type === 'number'">
                         <input
                             type="number"
                             step="any"
@@ -154,7 +155,7 @@
                             class="{{ $controlClass }} min-w-24 rounded-md border border-edge/80 bg-surface text-fg placeholder:text-fg-muted focus:outline-none focus:ring-1 focus:ring-fg/15"
                             x-bind:placeholder="fieldConfig(item.field)?.placeholder || label('selectValue')"
                             x-bind:value="item.values[0] ?? ''"
-                            x-on:input="setTextValue(item.id, $event.target.value)"
+                            x-on:input.stop="setTextValue(item.id, $event.target.value)"
                             x-bind:disabled="isDisabled"
                         />
                     </template>
@@ -164,9 +165,35 @@
                             type="date"
                             class="{{ $controlClass }} min-w-36 rounded-md border border-edge/80 bg-surface text-fg placeholder:text-fg-muted focus:outline-none focus:ring-1 focus:ring-fg/15"
                             x-bind:value="item.values[0] ?? ''"
-                            x-on:input="setTextValue(item.id, $event.target.value)"
+                            x-on:input.stop="setTextValue(item.id, $event.target.value)"
                             x-bind:disabled="isDisabled"
                         />
+                    </template>
+
+                    {{-- Free list of values (is any of / is not any of) for a text or number field --}}
+                    <template x-if="isListOperator(item.operator) && ['text', 'number'].includes(fieldConfig(item.field)?.type)">
+                        <div class="flex min-w-0 flex-wrap items-center gap-1">
+                            <template x-for="val in item.values" :key="String(val)">
+                                <span class="{{ $chipClass }} inline-flex items-center rounded-md border border-edge/80 bg-surface text-fg">
+                                    <span x-text="val"></span>
+                                    <button type="button" class="ms-0.5 text-fg-muted hover:text-fg disabled:opacity-40" x-on:click="removeMultiValue(item.id, val)" x-bind:disabled="isDisabled">
+                                        <neura::icon name="x-mark" class="size-3" />
+                                    </button>
+                                </span>
+                            </template>
+                            <input
+                                x-bind:type="fieldConfig(item.field)?.type === 'number' ? 'number' : 'text'"
+                                step="any"
+                                class="{{ $controlClass }} min-w-28 rounded-md border border-dashed border-edge bg-surface text-fg placeholder:text-fg-muted focus:border-solid focus:outline-none focus:ring-1 focus:ring-fg/15"
+                                x-bind:placeholder="fieldConfig(item.field)?.placeholder || label('addValue')"
+                                x-bind:value="chipDraft[item.id] ?? ''"
+                                x-on:input.stop="chipDraft[item.id] = $event.target.value"
+                                x-on:keydown="onListKeydown(item.id, $event)"
+                                x-on:blur="addListValues(item.id, $event.target.value); $event.target.value = ''"
+                                x-on:paste.prevent="addListValues(item.id, $event.clipboardData.getData('text')); $event.target.value = ''"
+                                x-bind:disabled="isDisabled"
+                            />
+                        </div>
                     </template>
 
                     {{-- Single option (or none): nothing to choose, so render the value as text --}}
@@ -257,11 +284,12 @@
                         type="button"
                         class="inline-flex items-center gap-1 rounded-md border border-edge bg-surface px-2 py-1 text-xs font-semibold text-fg hover:bg-hover disabled:opacity-50"
                         x-on:click="toggleCombinator(item.id)"
+                        x-bind:class="combinatorFixed() && 'pointer-events-none'"
                         x-bind:disabled="isDisabled || item.locked"
-                        x-bind:title="label('toggleCombinator')"
+                        x-bind:title="combinatorFixed() ? null : label('toggleCombinator')"
                     >
                         <span x-text="item.combinator === 'or' ? label('or') : label('and')"></span>
-                        <neura::icon name="chevron-down" class="size-3 text-fg-muted" />
+                        <neura::icon name="chevron-down" class="size-3 text-fg-muted" x-show="!combinatorFixed()" />
                     </button>
                     <span class="text-xs text-fg-muted" x-text="label('groupLabel', { count: countConditions(item) })"></span>
                     <button

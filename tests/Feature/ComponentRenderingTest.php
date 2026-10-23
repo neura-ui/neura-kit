@@ -196,6 +196,73 @@ class ComponentRenderingTest extends TestCase
         }
     }
 
+    public function test_rule_builder_can_hold_conditions_only_with_one_combinator()
+    {
+        if (! class_exists(\BladeUI\Heroicons\BladeHeroiconsServiceProvider::class)) {
+            $this->markTestSkipped('Heroicons package is not installed');
+
+            return;
+        }
+
+        try {
+            $html = Blade::render(<<<'BLADE'
+                <x-neura::rule-builder
+                    :then="false"
+                    :combinators="['and']"
+                    :max-depth="1"
+                    :fields="[
+                        ['key' => 'age', 'label' => 'Age', 'type' => 'number', 'operators' => ['at_least', 'at_most']],
+                        ['key' => 'zip', 'label' => 'Zip code', 'type' => 'text', 'operators' => ['is_any_of', 'is_not_any_of']],
+                    ]"
+                />
+            BLADE);
+
+            $this->assertStringNotContainsString('nk-rule-builder-then', $html);
+            $this->assertStringNotContainsString('addGroup(value.when.id)', $html);
+            $this->assertStringContainsString('combinators', $html);
+            $this->assertStringContainsString('onListKeydown', $html);
+            $this->assertStringContainsString(__('atLeast'), html_entity_decode($html));
+        } catch (\Exception $e) {
+            if (str_contains($e->getMessage(), 'heroicons') || str_contains($e->getMessage(), 'Svg by Name')) {
+                $this->markTestSkipped('Heroicons components not properly registered: '.$e->getMessage());
+            } else {
+                throw $e;
+            }
+        }
+    }
+
+    public function test_filters_offer_number_and_free_list_fields()
+    {
+        if (! class_exists(\BladeUI\Heroicons\BladeHeroiconsServiceProvider::class)) {
+            $this->markTestSkipped('Heroicons package is not installed');
+
+            return;
+        }
+
+        try {
+            $html = Blade::render(<<<'BLADE'
+                <x-neura::filters
+                    :fields="[
+                        ['key' => 'age', 'label' => 'Age', 'type' => 'number', 'operators' => ['at_least']],
+                        ['key' => 'zip', 'label' => 'Zip code', 'type' => 'tags'],
+                    ]"
+                    :value="[['field' => 'zip', 'values' => ['75', '92']]]"
+                />
+            BLADE);
+
+            $this->assertStringContainsString('data-filter-tags', $html);
+            $this->assertStringContainsString('at_least', $html);
+            $this->assertStringContainsString('is_any_of', $html);
+            $this->assertStringContainsString(__('atLeast'), html_entity_decode($html));
+        } catch (\Exception $e) {
+            if (str_contains($e->getMessage(), 'heroicons') || str_contains($e->getMessage(), 'Svg by Name')) {
+                $this->markTestSkipped('Heroicons components not properly registered: '.$e->getMessage());
+            } else {
+                throw $e;
+            }
+        }
+    }
+
     public function test_thinking_state_component_renders()
     {
         $html = Blade::render('<x-neura::thinking-state label="Thinking" />');

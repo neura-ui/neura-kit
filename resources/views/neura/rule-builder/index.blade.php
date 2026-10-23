@@ -4,6 +4,8 @@
     'fields' => [],
     'actions' => [],
     'maxDepth' => null,
+    'then' => true,
+    'combinators' => ['and', 'or'],
     'disabled' => false,
     'size' => neura_config('rule-builder', 'size'),
     'rounded' => neura_config('rule-builder', 'rounded'),
@@ -16,6 +18,8 @@
     use Neura\Kit\Support\PackResolver;
 
     $disabled = filled($disabled) && $disabled;
+    $then = filled($then) && $then;
+    $combinators = array_values(array_intersect(['and', 'or'], (array) $combinators)) ?: ['and', 'or'];
     $maxDepth = (int) ($maxDepth ?? neura_config('rule-builder', 'max-depth') ?? 3);
     if ($maxDepth < 1) {
         $maxDepth = 3;
@@ -34,6 +38,8 @@
         'ends_with' => __('endsWith'),
         'greater_than' => __('greaterThan'),
         'less_than' => __('lessThan'),
+        'at_least' => __('atLeast'),
+        'at_most' => __('atMost'),
         'empty' => __('isEmpty'),
         'not_empty' => __('isNotEmpty'),
     ];
@@ -69,8 +75,11 @@
                 'color' => $option['color'] ?? null,
                 'icon' => $option['icon'] ?? null,
             ])->values()->all(),
-            'operators' => $field['operators'] ?? $operatorSets[$type] ?? $operatorSets['select'],
-            'defaultOperator' => $field['defaultOperator'] ?? $defaultOperators[$type] ?? 'is',
+            'operators' => $operators = array_values($field['operators'] ?? $operatorSets[$type] ?? $operatorSets['select']),
+            // A field that narrows its operators starts on the first of them, unless its type's
+            // default is among them.
+            'defaultOperator' => $field['defaultOperator']
+                ?? (in_array($defaultOperators[$type] ?? 'is', $operators, true) ? ($defaultOperators[$type] ?? 'is') : ($operators[0] ?? 'is')),
         ];
     })->values()->all();
 
@@ -113,6 +122,7 @@
         'removeGroup' => __('removeGroup'),
         'removeAction' => __('removeAction'),
         'toggleCombinator' => __('toggleCombinator'),
+        'addValue' => __('addValue'),
     ];
 
     $sizeConfig = PackResolver::ruleBuilderSize($size);
@@ -130,6 +140,7 @@
         'fields' => $normalizedFields,
         'actions' => $normalizedActions,
         'maxDepth' => $maxDepth,
+        'combinators' => $combinators,
         'disabled' => $disabled,
         'labels' => $labels,
         'operatorLabels' => $operatorLabels,
@@ -149,9 +160,11 @@
 
     {{-- WHEN --}}
     <section class="nk-rule-builder-when">
+        @if ($then)
         <header class="mb-3">
             <h3 class="text-sm font-semibold tracking-tight text-fg" x-text="label('when')"></h3>
         </header>
+        @endif
 
         <div class="flex flex-col" x-data="{ parent: value.when }">
             @include('neura::rule-builder.nodes', [
@@ -178,6 +191,7 @@
                     <neura::icon name="plus" class="{{ $iconClass }}" />
                     <span x-text="label('addRule')"></span>
                 </button>
+                @if ($maxDepth > 1)
                 <button
                     type="button"
                     class="inline-flex items-center gap-1.5 rounded-lg border border-edge bg-surface-raised px-2.5 py-1.5 text-sm text-fg hover:bg-hover disabled:opacity-40"
@@ -187,11 +201,13 @@
                     <neura::icon name="plus" class="{{ $iconClass }}" />
                     <span x-text="label('addGroup')"></span>
                 </button>
+                @endif
             </div>
         </div>
     </section>
 
     {{-- THEN --}}
+    @if ($then)
     <section class="nk-rule-builder-then mt-8 border-t border-separator pt-6">
         <header class="mb-4">
             <h3 class="text-sm font-semibold tracking-tight text-fg" x-text="label('then')"></h3>
@@ -237,4 +253,5 @@
             </div>
         </div>
     </section>
+    @endif
 </div>

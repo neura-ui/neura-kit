@@ -36,6 +36,8 @@
         'not_contains' => __('notContains'),
         'starts_with' => __('startsWith'),
         'ends_with' => __('endsWith'),
+        'at_least' => __('atLeast'),
+        'at_most' => __('atMost'),
         'empty' => __('isEmpty'),
         'not_empty' => __('isNotEmpty'),
     ];
@@ -44,12 +46,16 @@
         'select' => ['is', 'is_not', 'empty', 'not_empty'],
         'multiselect' => ['is_any_of', 'is_not_any_of', 'includes_all', 'excludes_all', 'empty', 'not_empty'],
         'text' => ['contains', 'not_contains', 'starts_with', 'ends_with', 'is', 'empty', 'not_empty'],
+        'number' => ['is', 'is_not', 'at_least', 'at_most', 'empty', 'not_empty'],
+        'tags' => ['is_any_of', 'is_not_any_of', 'empty', 'not_empty'],
     ];
 
     $defaultOperators = [
         'select' => 'is',
         'multiselect' => 'is_any_of',
         'text' => 'contains',
+        'number' => 'is',
+        'tags' => 'is_any_of',
     ];
 
     $normalizedFields = collect($fields)->map(function ($field) use ($operatorSets, $defaultOperators) {
@@ -68,8 +74,11 @@
                 'color' => $option['color'] ?? null,
                 'icon' => $option['icon'] ?? null,
             ])->values()->all(),
-            'operators' => $field['operators'] ?? $operatorSets[$type] ?? $operatorSets['select'],
-            'defaultOperator' => $field['defaultOperator'] ?? $defaultOperators[$type] ?? 'is',
+            'operators' => $operators = array_values($field['operators'] ?? $operatorSets[$type] ?? $operatorSets['select']),
+            // A field that narrows its operators starts on the first of them, unless its type's
+            // default is among them.
+            'defaultOperator' => $field['defaultOperator']
+                ?? (in_array($defaultOperators[$type] ?? 'is', $operators, true) ? ($defaultOperators[$type] ?? 'is') : ($operators[0] ?? 'is')),
             'hasSwatch' => collect($field['options'] ?? [])->contains(fn ($option) => filled($option['color'] ?? null)),
         ];
     })->values();
@@ -128,6 +137,7 @@
         isDisabled: {{ Js::from($disabled) }},
         selectLabel: {{ Js::from(__('select')) }},
         selectedLabel: {{ Js::from(__('selectedCount')) }},
+        typedTypes: ['text', 'number'],
         open: null,
         menuField: null,
         menuSearch: '',
@@ -221,7 +231,46 @@
 
             const filter = this.addFilter(key);
             this.closeAll();
+
+            if (config.type === 'tags') {
+                this.open = 'val:' + filter.id;
+                this.$nextTick(() => this.$root.querySelector(`[data-filter-tags='${filter.id}']`)?.focus());
+                return;
+            }
+
             this.$nextTick(() => this.$root.querySelector(`[data-filter-input='${filter.id}']`)?.focus());
+        },
+
+        isTyped(filter) {
+            return this.typedTypes.includes(this.fieldConfigs[filter.field]?.type);
+        },
+
+        {{-- Free values (tags fields): typed or pasted, split on commas, semicolons or lines --}}
+        addTagValues(filter, raw) {
+            const added = String(raw ?? '')
+                .split(/[,;\n]/)
+                .map(part => part.trim())
+                .filter(part => part !== '' && ! filter.values.includes(part));
+            if (! added.length) return;
+            filter.values = [...filter.values, ...new Set(added)];
+            this.emit();
+        },
+
+        removeTagValue(filter, value) {
+            filter.values = filter.values.filter(v => v !== value);
+            this.emit();
+        },
+
+        onTagKeydown(filter, event) {
+            if (event.key === 'Enter' || event.key === ',' || event.key === ';') {
+                event.preventDefault();
+                this.addTagValues(filter, event.target.value);
+                event.target.value = '';
+                return;
+            }
+            if (event.key === 'Backspace' && event.target.value === '' && filter.values.length) {
+                this.removeTagValue(filter, filter.values[filter.values.length - 1]);
+            }
         },
 
         addFilter(key, values = []) {
@@ -301,6 +350,11 @@
 
         valueLabel(filter) {
             const config = this.fieldConfigs[filter.field];
+            if (config?.type === 'tags') {
+                if (! filter.values.length) return this.selectLabel;
+                if (filter.values.length <= 2) return filter.values.join(', ');
+                return filter.values.length + ' ' + this.selectedLabel;
+            }
             const selected = (config?.options ?? []).filter(o => filter.values.includes(o.value));
             if (! selected.length) return this.selectLabel;
             if (selected.length === 1) return selected[0].label;
@@ -403,25 +457,26 @@
             <div class="relative flex items-stretch">
                     {{-- Text input --}}
                     <input
-                        x-show="showValue(filter) && fieldConfigs[filter.field]?.type === 'text'"
-                        type="text"
+                        x-show="showValue(filter) && isTyped(filter)"
+                        x-bind:type="fieldConfigs[filter.field]?.type === 'number' ? 'number' : 'text'"
+                        step="any"
                         class="{{ $segmentClass }} {{ $sizeConfig['input'] }} bg-transparent text-fg placeholder:text-fg-muted focus:outline-none"
                         x-bind:data-filter-input="filter.id"
                         x-bind:placeholder="fieldConfigs[filter.field]?.placeholder ?? ''"
                         x-bind:disabled="isDisabled"
                         x-model="filter.values[0]"
-                        x-on:input="emit()"
+                        x-on:input.stop="emit()"
                         x-on:keydown.enter="$event.target.blur()"
                     />
                     <span
                         class="{{ $segmentClass }} {{ $sizeConfig['input'] }} text-fg-muted"
-                        x-show="!showValue(filter) && fieldConfigs[filter.field]?.type === 'text'"
+                        x-show="!showValue(filter) && isTyped(filter)"
                         x-cloak
                     >—</span>
 
                     {{-- Select / multiselect trigger --}}
                     <button
-                        x-show="fieldConfigs[filter.field]?.type !== 'text'"
+                        x-show="! isTyped(filter)"
                         type="button"
                         class="{{ $segmentClass }} cursor-pointer text-fg transition-colors duration-fast ease-standard hover:bg-hover disabled:cursor-default disabled:hover:bg-transparent"
                         x-bind:disabled="isDisabled || !showValue(filter)"
@@ -429,7 +484,7 @@
                     >
                         <span class="inline-grid justify-items-start">
                             @foreach ($normalizedFields as $field)
-                                @if ($field['type'] !== 'text')
+                                @if (! in_array($field['type'], ['text', 'number'], true))
                                     <template x-if="filter.field === '{{ $field['key'] }}'">
                                     <span class="col-start-1 row-start-1 inline-grid justify-items-start invisible" aria-hidden="true">
                                         @php
@@ -477,10 +532,40 @@
                         x-on:click.outside="if (open === 'val:' + filter.id) closeAll()"
                     >
                         @foreach ($normalizedFields as $field)
-                            @if (! empty($field['options']))
+                            @if ($field['type'] === 'tags')
+                                <div x-show="filter.field === '{{ $field['key'] }}'">
+                                    <input
+                                        x-on:input.stop
+                                        type="text"
+                                        class="{{ $panelSearchClass }}"
+                                        placeholder="{{ $field['placeholder'] ?? __('addValue') }}"
+                                        x-bind:data-filter-tags="filter.id"
+                                        x-on:click.stop
+                                        x-on:keydown="onTagKeydown(filter, $event)"
+                                        x-on:paste.prevent="addTagValues(filter, $event.clipboardData.getData('text'))"
+                                    />
+
+                                    <div class="max-h-64 overflow-y-auto">
+                                        <template x-for="value in filter.values" :key="String(value)">
+                                            <div class="{{ $itemClass }} cursor-default justify-between hover:bg-transparent">
+                                                <span class="min-w-0 truncate" x-text="value"></span>
+                                                <button
+                                                    type="button"
+                                                    class="flex shrink-0 cursor-pointer items-center rounded p-0.5 text-fg-muted transition-colors duration-fast ease-standard hover:bg-hover hover:text-fg"
+                                                    x-bind:aria-label="'Remove ' + value"
+                                                    x-on:click.stop="removeTagValue(filter, value)"
+                                                >
+                                                    <neura::icon name="x-mark" variant="micro" class="size-3.5" />
+                                                </button>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            @elseif (! empty($field['options']))
                                 <div x-show="filter.field === '{{ $field['key'] }}'">
                                     @if ($field['searchable'])
                                         <input
+                                            x-on:input.stop
                                             type="text"
                                             class="{{ $panelSearchClass }}"
                                             placeholder="{{ __('search') }}..."
@@ -582,7 +667,7 @@
                         placeholder="{{ __('filter') }}..."
                         x-ref="menuSearchInput"
                         x-model="menuSearch"
-                        x-on:input="highlightedField = visibleFieldKeys[0] ?? null"
+                        x-on:input.stop="highlightedField = visibleFieldKeys[0] ?? null"
                         x-on:keydown.arrow-down.prevent="moveHighlight(1)"
                         x-on:keydown.arrow-up.prevent="moveHighlight(-1)"
                         x-on:keydown.enter.prevent="highlightedField && chooseField(highlightedField)"
@@ -631,6 +716,7 @@
 
                         @if ($field['searchable'])
                             <input
+                                x-on:input.stop
                                 type="text"
                                 class="{{ $panelSearchClass }}"
                                 placeholder="{{ __('search') }}..."

@@ -99,7 +99,7 @@
                                 class="{{ $controlClass }} min-w-28 rounded-md border border-edge/80 bg-surface text-fg placeholder:text-fg-muted focus:outline-none focus:ring-1 focus:ring-fg/15"
                                 x-bind:placeholder="param.placeholder || param.label"
                                 x-bind:value="action.params[param.key] ?? ''"
-                                x-on:input="setActionParam('{{ $branch }}', action.id, param.key, $event.target.value)"
+                                x-on:input.stop="setActionParam('{{ $branch }}', action.id, param.key, $event.target.value)"
                                 x-bind:disabled="isDisabled"
                             />
                         </template>

@@ -70,6 +70,7 @@ export type RuleBuilderConfig = {
     fields: FieldConfig[];
     actions: ActionDef[];
     maxDepth: number;
+    combinators?: Combinator[];
     disabled: boolean;
     labels: Record<string, string>;
     operatorLabels: Record<string, string>;
@@ -84,16 +85,26 @@ type DragState = {
     overId: string | null;
 };
 
+const LIST_OPERATORS = ['is_any_of', 'is_not_any_of', 'includes_all', 'excludes_all'];
+
+function allowedCombinator(wanted: unknown, combinators: Combinator[]): Combinator {
+    if ((wanted === 'and' || wanted === 'or') && combinators.includes(wanted)) {
+        return wanted;
+    }
+
+    return combinators.includes('and') ? 'and' : combinators[0] ?? 'and';
+}
+
 function uid(prefix = 'rb'): string {
     return prefix + Math.random().toString(36).slice(2, 10);
 }
 
-function emptyValue(): RuleBuilderValue {
+function emptyValue(combinators: Combinator[] = ['and', 'or']): RuleBuilderValue {
     return {
         when: {
             id: uid('g'),
             kind: 'group',
-            combinator: 'and',
+            combinator: allowedCombinator('and', combinators),
             children: [],
         },
         then: {
@@ -138,6 +149,7 @@ function normalizeGroup(
     fields: Record<string, FieldConfig>,
     depth = 0,
     maxDepth = 3,
+    combinators: Combinator[] = ['and', 'or'],
 ): GroupNode {
     const children = Array.isArray(raw?.children)
         ? raw!.children!
@@ -147,7 +159,7 @@ function normalizeGroup(
                           return null;
                       }
 
-                      return normalizeGroup(child as GroupNode, fields, depth + 1, maxDepth);
+                      return normalizeGroup(child as GroupNode, fields, depth + 1, maxDepth, combinators);
                   }
 
                   return normalizeRule(child as RuleNode, fields);
@@ -158,7 +170,7 @@ function normalizeGroup(
     return {
         id: raw?.id ?? uid('g'),
         kind: 'group',
-        combinator: raw?.combinator === 'or' ? 'or' : 'and',
+        combinator: allowedCombinator(raw?.combinator, combinators),
         children,
         locked: Boolean(raw?.locked),
     };
@@ -187,13 +199,14 @@ function normalizeValue(
     fields: Record<string, FieldConfig>,
     actions: ActionDef[],
     maxDepth: number,
+    combinators: Combinator[] = ['and', 'or'],
 ): RuleBuilderValue {
     if (!raw || typeof raw !== 'object') {
-        return emptyValue();
+        return emptyValue(combinators);
     }
 
     return {
-        when: normalizeGroup(raw.when ?? emptyValue().when, fields, 0, maxDepth),
+        when: normalizeGroup(raw.when ?? emptyValue(combinators).when, fields, 0, maxDepth, combinators),
         then: {
             ifTrue: Array.isArray(raw.then?.ifTrue)
                 ? raw.then!.ifTrue!.map((a) => normalizeAction(a, actions))
@@ -221,14 +234,21 @@ if (typeof window !== 'undefined') {
                 const fieldConfigs = Object.fromEntries(fieldList.map((f) => [f.key, f])) as Record<string, FieldConfig>;
                 const actions = Array.isArray(config.actions) ? config.actions : [];
                 const maxDepth = Number(config.maxDepth) > 0 ? Number(config.maxDepth) : 3;
+                const combinators: Combinator[] = Array.isArray(config.combinators) && config.combinators.length
+                    ? config.combinators.filter((c): c is Combinator => c === 'and' || c === 'or')
+                    : ['and', 'or'];
+                // The bound value as last read from or written to the model. Kept outside the
+                // reactive state so that syncFromModel() only reruns when the model changes.
+                let lastModelJson: string | null = null;
 
                 return {
-                    value: normalizeValue(config.value, fieldConfigs, actions, maxDepth),
+                    value: normalizeValue(config.value, fieldConfigs, actions, maxDepth, combinators),
                     fieldConfigs,
                     fieldsList: fieldList.map((f) => ({ key: f.key, label: f.label, icon: f.icon ?? null })),
                     actions,
                     actionMap: Object.fromEntries(actions.map((a) => [a.key, a])) as Record<string, ActionDef>,
                     maxDepth,
+                    combinators,
                     isDisabled: Boolean(config.disabled),
                     labels: config.labels ?? {},
                     operatorLabels: config.operatorLabels ?? {},
@@ -254,6 +274,7 @@ if (typeof window !== 'undefined') {
 
                     emit() {
                         const snapshot = cloneValue(this.value);
+                        lastModelJson = JSON.stringify(snapshot);
                         (this as any).$dispatch('rule-builder-changed', { value: snapshot });
                         (this as any).$root?._x_model?.set(snapshot);
 
@@ -279,7 +300,13 @@ if (typeof window !== 'undefined') {
                             return;
                         }
                         if (next === undefined || next === null) return;
-                        if (JSON.stringify(next) === JSON.stringify(this.value)) return;
+
+                        // Compare with what the model last held, not with this.value: a local
+                        // change is still being published, and must not be undone by the model.
+                        const nextJson = JSON.stringify(next);
+                        if (nextJson === lastModelJson) return;
+                        lastModelJson = nextJson;
+                        if (nextJson === JSON.stringify(this.value)) return;
 
                         this.syncing = true;
                         this.value = normalizeValue(
@@ -287,6 +314,7 @@ if (typeof window !== 'undefined') {
                             this.fieldConfigs,
                             this.actions,
                             this.maxDepth,
+                            this.combinators,
                         );
                         queueMicrotask(() => {
                             this.syncing = false;
@@ -377,7 +405,7 @@ if (typeof window !== 'undefined') {
                         return {
                             id: uid('g'),
                             kind: 'group',
-                            combinator: 'or',
+                            combinator: allowedCombinator('or', this.combinators),
                             children: [this.defaultRule()],
                         };
                     },
@@ -417,8 +445,13 @@ if (typeof window !== 'undefined') {
                     toggleCombinator(groupId: string) {
                         if (this.isDisabled) return;
                         const group = this.findGroup(groupId);
-                        if (!group || group.locked) return;
+                        if (!group || group.locked || this.combinatorFixed()) return;
                         group.combinator = group.combinator === 'and' ? 'or' : 'and';
+                    },
+
+                    /** One combinator allowed: groups keep it, nothing toggles. */
+                    combinatorFixed(): boolean {
+                        return this.combinators.length < 2;
                     },
 
                     setField(ruleId: string, field: string) {
@@ -442,6 +475,8 @@ if (typeof window !== 'undefined') {
                         rule.operator = operator;
                         if (operator === 'empty' || operator === 'not_empty') {
                             rule.values = [];
+                        } else if (!this.isListOperator(operator) && rule.values.length > 1) {
+                            rule.values = rule.values.slice(0, 1);
                         } else if (rule.values.length === 0) {
                             const single = singleOptionValue(this.fieldConfig(rule.field));
                             if (single !== null) {
@@ -491,6 +526,44 @@ if (typeof window !== 'undefined') {
 
                     needsValue(operator: string): boolean {
                         return operator !== 'empty' && operator !== 'not_empty';
+                    },
+
+                    /** Operators that take several values: a free field lists them as chips. */
+                    isListOperator(operator: string): boolean {
+                        return LIST_OPERATORS.includes(operator);
+                    },
+
+                    /** Add the values typed or pasted in a free list, split on commas, semicolons or lines. */
+                    addListValues(ruleId: string, raw: string) {
+                        if (this.isDisabled) return;
+                        const parent = this.findParent(ruleId);
+                        const rule = parent?.children.find((c) => c.id === ruleId);
+                        if (!rule || rule.kind !== 'rule' || rule.locked) return;
+                        const added = String(raw ?? '')
+                            .split(/[,;\n]/)
+                            .map((part) => part.trim())
+                            .filter((part) => part !== '' && !rule.values.includes(part));
+                        if (added.length) {
+                            rule.values = [...rule.values, ...new Set(added)];
+                        }
+                        this.chipDraft[ruleId] = '';
+                    },
+
+                    onListKeydown(ruleId: string, event: KeyboardEvent) {
+                        const input = event.target as HTMLInputElement;
+                        if (event.key === 'Enter' || event.key === ',' || event.key === ';') {
+                            event.preventDefault();
+                            this.addListValues(ruleId, input.value);
+                            input.value = '';
+                            return;
+                        }
+                        if (event.key === 'Backspace' && input.value === '') {
+                            const parent = this.findParent(ruleId);
+                            const rule = parent?.children.find((c) => c.id === ruleId);
+                            if (rule && rule.kind === 'rule' && rule.values.length) {
+                                this.removeMultiValue(ruleId, rule.values[rule.values.length - 1]);
+                            }
+                        }
                     },
 
                     addAction(branch: 'ifTrue' | 'ifFalse') {

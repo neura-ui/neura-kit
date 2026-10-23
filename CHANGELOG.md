@@ -8,6 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [3.1.6] - 2026-10-23
+
+### Added
+
+- **Rule builder, conditions only**: `:then="false"` leaves the "Then" section out (and the "When" title with it), for a list of conditions alone. `:combinators="['and']"` (or `['or']`) fixes how conditions combine: groups keep that combinator and its chip no longer toggles. With `:max-depth="1"` the "Add group" button is gone
+- **At least, at most**: Two operators, `at_least` (≥) and `at_most` (≤), for the rule builder and the filters, labelled in English and French. A field opts in through its `operators`
+- **Free lists of values**: A `text` or `number` field of the rule builder under a list operator (`is_any_of`, `is_not_any_of`, `includes_all`, `excludes_all`) takes its values as chips: typed then Enter, a comma or a semicolon, or pasted (split on commas, semicolons and lines); Backspace in the empty field removes the last one
+- **Filters, number and tags fields**: The filters take a `number` field (a numeric input; operators `is`, `is_not`, `at_least`, `at_most`, `empty`, `not_empty`) and a `tags` field, a free list of values typed or pasted in its panel (operators `is_any_of`, `is_not_any_of`, `empty`, `not_empty`); the chip shows the values, or their count past two
+
+### Fixed
+
+- **Rule builder bound to a model**: With `x-model` or `wire:model`, a change in the builder (a rule added, a field or an operator picked) was undone at once: the effect that reads the bound value ran before the change was published, found the old value and put it back. The builder now takes the bound value only when the model itself changes
+- **Typing inside filters or a rule builder bound to a model**: The `input` event of a field inside the component (a text or number value, a search) bubbled up to its root, where `x-model` and `wire:model` listen, and replaced the bound value with that field's text. Those events now stop at the field, as they do in the tags input
+- **Default operator of a narrowed field**: A field that lists its own `operators` still started on its type's default (`contains` for text, `is` for a number) even when that one was not in its list. It now starts on the first operator of its list unless it sets `defaultOperator`
+
 ## [3.1.5] - 2026-10-22
 
 ### Added
