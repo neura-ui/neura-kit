@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [3.1.8] - 2026-10-29
+### Fixed
+- **Date and time picker placement**: The popups always opened below their field, past the bottom of the window when there was no room. They are now anchored like the dropdown: below the field, or above it when the window has no room left below, and kept inside it sideways
+
 ## [3.1.7] - 2026-10-28
 ### Added
 

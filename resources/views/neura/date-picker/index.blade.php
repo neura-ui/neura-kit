@@ -239,7 +239,9 @@
         x-transition:leave-end="nk-menu-out"
         data-side="bottom"
         data-align="start"
-        class="nk-menu-motion absolute z-50 mt-2 top-full left-0 w-max shadow-xl rounded-box"
+        {{-- Anchored to the field: below it, or above when the window has no room left below --}}
+        x-anchor.bottom-start.offset.8="$el.previousElementSibling"
+        class="nk-menu-motion z-50 w-max shadow-xl rounded-box"
         x-cloak
         @click.stop
     >
