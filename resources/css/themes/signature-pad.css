@@ -1,10 +1,20 @@
+/*
+ * Signature pad, on the design tokens: the pad is a field (surface, edge,
+ * primary focus), the toolbar follows the rounded token and the button
+ * group's highlight, and the inks come from the palette. Black ink is the
+ * foreground, so a signature stays readable when the theme switches.
+ * Exports keep fixed print inks (PRINT in signature-pad.ts).
+ */
 .nk-sign {
-    --nk-sign-paper: #f6f4ef;
-    --nk-sign-ink: #1c1917;
-    --nk-sign-blue: #1d4ed8;
-    --nk-sign-violet: #6d28d9;
-    --nk-sign-line: color-mix(in oklab, #1c1917 28%, transparent);
-    --nk-sign-muted: color-mix(in oklab, #1c1917 58%, transparent);
+    --nk-sign-paper: var(--color-surface);
+    --nk-sign-ink: var(--color-fg);
+    --nk-sign-blue: var(--color-blue-700);
+    --nk-sign-violet: var(--color-violet-700);
+    --nk-sign-line: var(--color-edge);
+    --nk-sign-muted: var(--color-fg-muted);
+    /* Set inline from the rounded token; the controls sit inside it. */
+    --nk-sign-radius: 0.5rem;
+    --nk-sign-inset: 0.15rem;
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
@@ -13,12 +23,8 @@
 }
 
 .dark .nk-sign {
-    --nk-sign-paper: #141311;
-    --nk-sign-ink: #f6f4ef;
-    --nk-sign-blue: #93c5fd;
-    --nk-sign-violet: #c4b5fd;
-    --nk-sign-line: color-mix(in oklab, #f6f4ef 28%, transparent);
-    --nk-sign-muted: color-mix(in oklab, #f6f4ef 62%, transparent);
+    --nk-sign-blue: var(--color-blue-300);
+    --nk-sign-violet: var(--color-violet-300);
 }
 
 .nk-sign-pad {
@@ -26,26 +32,17 @@
     width: 100%;
     aspect-ratio: 600 / 260;
     overflow: hidden;
-    background:
-        linear-gradient(180deg, color-mix(in oklab, white 55%, transparent), transparent 28%),
-        var(--nk-sign-paper);
-    border: 1px solid color-mix(in oklab, var(--nk-sign-ink) 14%, var(--color-edge, var(--nk-edge, oklch(0.85 0 0))));
-    box-shadow:
-        inset 0 1px 0 color-mix(in oklab, white 70%, transparent),
-        0 1px 2px color-mix(in oklab, var(--nk-sign-ink) 5%, transparent),
-        0 10px 28px color-mix(in oklab, var(--nk-sign-ink) 5%, transparent);
+    /* No box-shadow here: the shadow pack class on the pad sets it. */
+    background: var(--nk-sign-paper);
+    border: 1px solid var(--color-edge);
+    transition: border-color var(--nk-duration-fast) var(--nk-ease-standard);
     touch-action: none;
     cursor: crosshair;
     user-select: none;
 }
 
-.dark .nk-sign-pad {
-    background:
-        linear-gradient(180deg, color-mix(in oklab, white 8%, transparent), transparent 28%),
-        var(--nk-sign-paper);
-    box-shadow:
-        inset 0 1px 0 color-mix(in oklab, white 8%, transparent),
-        0 10px 28px color-mix(in oklab, black 28%, transparent);
+.nk-sign-pad:hover {
+    border-color: var(--color-edge-hover);
 }
 
 .nk-sign[data-variant='ghost'] .nk-sign-pad {
@@ -53,7 +50,7 @@
 }
 
 .nk-sign[data-variant='soft'] .nk-sign-pad {
-    background: color-mix(in oklab, var(--nk-tone, var(--color-primary-600)) 8%, var(--nk-sign-paper));
+    background: color-mix(in oklab, var(--nk-tone, var(--color-primary-600)) 6%, var(--nk-sign-paper));
 }
 
 .nk-sign[data-disabled] .nk-sign-pad {
@@ -65,8 +62,11 @@
     outline: none;
 }
 
+/* The field focus of the inputs: the tone on the border and a soft ring around it. */
 .nk-sign-pad:focus-visible {
-    box-shadow: 0 0 0 2px var(--nk-sign-paper), 0 0 0 4px var(--nk-tone, var(--color-primary-600));
+    border-color: var(--nk-tone, var(--color-primary-500));
+    outline: 2px solid color-mix(in oklab, var(--nk-tone, var(--color-primary-500)) 25%, transparent);
+    outline-offset: 0;
 }
 
 .nk-sign-stage,
@@ -147,6 +147,20 @@
     pointer-events: none;
 }
 
+/* Strokes carry their ink name; the colour follows the theme live. */
+.nk-sign-svg [data-ink],
+.nk-sign-nib-dot {
+    fill: var(--nk-sign-ink);
+}
+
+.nk-sign-svg [data-ink='blue'] {
+    fill: var(--nk-sign-blue);
+}
+
+.nk-sign-svg [data-ink='violet'] {
+    fill: var(--nk-sign-violet);
+}
+
 .nk-sign-tools {
     display: flex;
     flex-wrap: wrap;
@@ -171,20 +185,21 @@
     position: relative;
     display: inline-flex;
     gap: 0.1rem;
-    padding: 0.15rem;
-    border: 1px solid var(--color-edge, var(--nk-edge, oklch(0.85 0 0)));
-    border-radius: 999px;
-    background: var(--nk-surface-raised, #fff);
+    padding: var(--nk-sign-inset);
+    border: 1px solid var(--color-edge);
+    border-radius: var(--nk-sign-radius);
+    background: var(--color-surface);
+    color: var(--color-fg-secondary);
 }
 
+/* The button group's highlight: the current colour, faint. */
 .nk-sign-glide {
     position: absolute;
     top: 0;
     left: 0;
     z-index: 0;
-    border-radius: 999px;
-    background: color-mix(in oklab, var(--nk-fg) 7%, var(--nk-surface-raised, transparent));
-    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--nk-fg) 8%, transparent);
+    border-radius: max(0px, calc(var(--nk-sign-radius) - var(--nk-sign-inset) - 1px));
+    background: color-mix(in oklch, var(--color-fg) 12%, transparent);
     pointer-events: none;
 }
 
@@ -197,13 +212,31 @@
     place-items: center;
     width: 1.85rem;
     height: 1.85rem;
-    border-radius: 999px;
-    color: color-mix(in oklab, var(--nk-fg) 78%, transparent);
+    border-radius: max(0px, calc(var(--nk-sign-radius) - var(--nk-sign-inset) - 1px));
+    color: inherit;
+    transition:
+        color var(--nk-duration-fast) var(--nk-ease-standard),
+        background-color var(--nk-duration-fast) var(--nk-ease-standard);
+}
+
+.nk-sign-width[aria-checked='true'] {
+    color: var(--color-fg);
+}
+
+/* Ghost icon buttons. */
+.nk-sign-tool {
+    border-radius: var(--nk-sign-radius);
+    color: var(--color-fg-muted);
 }
 
 .nk-sign-tool:hover:not(:disabled) {
-    color: var(--nk-fg);
-    background: color-mix(in oklab, var(--nk-fg) 8%, transparent);
+    color: var(--color-fg);
+    background: var(--color-hover);
+}
+
+.nk-sign button:focus-visible {
+    outline: 2px solid var(--color-edge-focus);
+    outline-offset: 1px;
 }
 
 .nk-sign[data-size='xs'] .nk-sign-swatch,
@@ -227,15 +260,14 @@
 }
 
 .nk-sign-swatch:hover,
-.nk-sign-width:hover,
-.nk-sign-tool:hover,
-.nk-sign-export:hover {
-    background: color-mix(in oklab, currentColor 8%, transparent);
+.nk-sign-width:hover {
+    background: var(--color-hover);
 }
 
 .nk-sign-tool:disabled,
-.nk-sign-export:disabled {
-    opacity: 0.35;
+.nk-sign .nk-sign-export:disabled {
+    color: var(--color-fg-disabled);
+    background: transparent;
     cursor: not-allowed;
 }
 
@@ -249,7 +281,7 @@
     height: 0.8rem;
     border-radius: 999px;
     background: var(--nk-sign-ink);
-    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--nk-sign-ink) 20%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-fg) 16%, transparent);
 }
 
 .nk-sign-dot[data-ink='blue'] {
@@ -294,19 +326,24 @@
     color: var(--nk-sign-muted);
 }
 
+/* Outline buttons. */
 .nk-sign .nk-sign-export {
     height: 1.85rem;
     padding: 0 0.7rem;
-    border: 1px solid var(--color-edge, var(--nk-edge, oklch(0.85 0 0)));
-    border-radius: 999px;
-    background: var(--nk-surface-raised, #fff);
-    color: var(--nk-fg);
+    border: 1px solid var(--color-edge);
+    border-radius: var(--nk-sign-radius);
+    background: var(--color-surface);
+    color: var(--color-fg);
     font-size: 0.75rem;
-    font-weight: 600;
+    font-weight: 500;
+    transition:
+        border-color var(--nk-duration-fast) var(--nk-ease-standard),
+        background-color var(--nk-duration-fast) var(--nk-ease-standard);
 }
 
 .nk-sign .nk-sign-export:hover:not(:disabled) {
-    background: color-mix(in oklab, var(--nk-fg) 6%, var(--nk-surface-raised, #fff));
+    border-color: var(--color-edge-hover);
+    background: var(--color-hover);
 }
 
 .nk-sign-note {

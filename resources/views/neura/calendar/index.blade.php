@@ -72,23 +72,7 @@
     $calendarRoundedClass = PackResolver::rounded(neura_config('popup', 'rounded'));
     $calendarShadowClass = PackResolver::shadow(neura_config('popup', 'shadow'));
 
-    $selectedColor = PackResolver::buttonColor('primary', 'dark');
-    $selectedBase = trim(str_replace(
-        ' shadow-sm',
-        '',
-        $selectedColor['base'] ?? 'bg-primary-900 text-white dark:bg-primary-100 dark:text-primary-900',
-    ));
-    $selectedBg = [];
-    $selectedText = [];
-    foreach (preg_split('/\s+/', $selectedBase) as $part) {
-        if (str_contains($part, 'bg-')) {
-            $selectedBg[] = $part;
-        } elseif (str_contains($part, 'text-')) {
-            $selectedText[] = $part;
-        }
-    }
-    $daySelectedBgClasses = implode(' ', $selectedBg) ?: 'bg-primary-900 dark:bg-primary-100';
-    $daySelectedTextClasses = implode(' ', $selectedText) ?: 'text-white dark:text-primary-900';
+    [$daySelectedBgClasses, $daySelectedTextClasses] = PackResolver::selectionClasses();
 @endphp
 
 <div
@@ -97,8 +81,9 @@
         isMultiple: {{ json_encode($multiple) }},
         isRange: {{ json_encode($range) }},
         isDisabled: {{ json_encode($disabled) }},
-        minDate: {{ $minDate ? json_encode($minDate) : 'null' }},
-        maxDate: {{ $maxDate ? json_encode($maxDate) : 'null' }},
+        {{-- Days only: compared as YYYY-MM-DD strings, a min of 2026-10-27T09:30 would disable the 27th itself --}}
+        minDate: {{ $minDate ? json_encode($toDateStr($minDate)) : 'null' }},
+        maxDate: {{ $maxDate ? json_encode($toDateStr($maxDate)) : 'null' }},
         disabledDates: {{ json_encode($disabledDates) }},
         disabledDaysOfWeek: {{ json_encode(array_map('intval', (array) $disabledDaysOfWeek)) }},
         locale: {{ json_encode($locale) }},
@@ -118,6 +103,7 @@
         monthNames: [],
         yearOptions: [],
         ready: false,
+        lastEmitted: null,
 
         init() {
             this.selectedDate = this.normalizeValue(this.selectedDate);
@@ -163,6 +149,17 @@
                     this.selectedDate = normalized;
                     return;
                 }
+
+                {{--
+                    A value set from outside after init (wire:model, x-model) shows its month.
+                    The calendar's own picks are left alone: a range end chosen two months on
+                    must not jump back to the start.
+                --}}
+                if (JSON.stringify(value) !== this.lastEmitted) {
+                    const anchor = this.parseDate(this.anchorDate());
+                    if (anchor) this.showMonth(anchor.getFullYear(), anchor.getMonth());
+                }
+
                 this.buildMonths();
                 this.$nextTick(() => this.syncSelection(true));
             });
@@ -411,6 +408,7 @@
         },
 
         emitSelection() {
+            this.lastEmitted = JSON.stringify(this.selectedDate);
             this.$dispatch('date-selected', {
                 date: this.selectedDate,
                 dates: this.isRange
@@ -433,11 +431,18 @@
             const outer = days.getBoundingClientRect();
             const inner = button.getBoundingClientRect();
 
+            {{--
+                Layout pixels, not screen pixels: the popup scales while it opens, and a box
+                measured mid-scale left the highlight small and off its day for good.
+            --}}
+            const scaleX = days.offsetWidth ? outer.width / days.offsetWidth : 1;
+            const scaleY = days.offsetHeight ? outer.height / days.offsetHeight : 1;
+
             return {
-                x: inner.left - outer.left + days.scrollLeft,
-                y: inner.top - outer.top + days.scrollTop,
-                w: inner.width,
-                h: inner.height,
+                x: (inner.left - outer.left) / scaleX + days.scrollLeft,
+                y: (inner.top - outer.top) / scaleY + days.scrollTop,
+                w: inner.width / scaleX,
+                h: inner.height / scaleY,
             };
         },
 
@@ -875,8 +880,14 @@
         @endif
     @endif
 
+    {{--
+        An aside (such as the date picker's time column) sits beside the months, below them on
+        narrow screens. A grid, not a flex row: a stretched grid item has a definite height, so
+        the aside can fill the months' height without adding its own.
+    --}}
     <div @class([
         'bg-surface-raised border border-edge p-3 w-fit',
+        'grid gap-3 sm:grid-cols-[auto_auto]' => isset($aside),
         $calendarRoundedClass,
         $calendarShadowClass,
     ])>
@@ -1157,5 +1168,11 @@
                 </div>
             </div>
         </div>
+
+        @isset($aside)
+            <div {{ $aside->attributes->class('flex min-h-0 flex-col border-t border-separator pt-3 sm:border-t-0 sm:border-s sm:pt-0 sm:ps-3') }} data-slot="calendar-aside">
+                {{ $aside }}
+            </div>
+        @endisset
     </div>
 </div>

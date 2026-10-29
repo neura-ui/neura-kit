@@ -24,6 +24,7 @@ use Neura\Kit\Packs\Navbar;
 use Neura\Kit\Packs\Rounded;
 use Neura\Kit\Packs\Shadow;
 use Neura\Kit\Packs\Tabs;
+use Neura\Kit\Packs\TimePicker;
 use Neura\Kit\Packs\Wizard;
 
 class PackResolver
@@ -121,6 +122,38 @@ class PackResolver
         }
 
         return Rounded::get($value) ? $value : 'lg';
+    }
+
+    /**
+     * Background and text classes for a selected cell (a calendar day, a time
+     * option), taken from the primary dark button so a selection reads like one.
+     *
+     * @return array{0: string, 1: string}
+     */
+    public static function selectionClasses(): array
+    {
+        $color = self::buttonColor('primary', 'dark');
+        $base = trim(str_replace(
+            ' shadow-sm',
+            '',
+            $color['base'] ?? 'bg-primary-900 text-white dark:bg-primary-100 dark:text-primary-900',
+        ));
+
+        $background = [];
+        $text = [];
+
+        foreach (preg_split('/\s+/', $base) as $part) {
+            if (str_contains($part, 'bg-')) {
+                $background[] = $part;
+            } elseif (str_contains($part, 'text-')) {
+                $text[] = $part;
+            }
+        }
+
+        return [
+            implode(' ', $background) ?: 'bg-primary-900 dark:bg-primary-100',
+            implode(' ', $text) ?: 'text-white dark:text-primary-900',
+        ];
     }
 
     /**
@@ -504,6 +537,14 @@ class PackResolver
         $sizes = RuleBuilder\Size::default();
 
         return $sizes[$size] ?? $sizes['sm'];
+    }
+
+    public static function timePickerSize(?string $size): array
+    {
+        $size = $size ?: self::componentDefault('time-picker', 'size') ?: 'md';
+        $sizes = self::packAll('time-picker', 'sizes') ?: TimePicker\Size::all();
+
+        return $sizes[$size] ?? $sizes['md'];
     }
 
     public static function eventCalendarSize(?string $size): array

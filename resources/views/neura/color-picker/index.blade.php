@@ -129,11 +129,12 @@
             </label>
         @endif
 
+        {{-- The palette grows out of the field, not out of the swatch button or the hint --}}
         <div @class([
             'isolate',
             'relative flex items-stretch w-full disabled:shadow-none transition-colors duration-fast ease-standard',
             $roundedClass,
-        ])>
+        ]) data-menu-trigger>
             <div
                 @class([
                     'w-full grid isolate',

@@ -71,10 +71,12 @@
         $roundedClass,
     ])>
         {{-- Country selector button --}}
+        {{-- The country list grows out of this button, not out of the whole field --}}
         <button
             type="button"
             x-on:click="toggleDropdown()"
             :disabled="isDisabled"
+            data-menu-trigger
             @class([
                 'flex items-center gap-1.5 px-3 border border-r-0 bg-surface',
                 'hover:bg-hover transition-colors duration-fast ease-standard',

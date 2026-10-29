@@ -161,6 +161,8 @@ return [
 
     'date-reel' => Config::dateReel(),
 
+    'time-picker' => Config::timePicker(),
+
     'activity-rings' => Config::activityRings(),
 
     'event-calendar' => Config::eventCalendar(),

@@ -1,5 +1,5 @@
 import { onAlpineInit } from '../../../runtime/alpine';
-import { NativeMap, type Levels, type MapMarker, type MapStyle } from './NativeMap';
+import { NativeMap, type Levels, type MapDetail, type MapDivisions, type MapMarker, type MapStyle } from './NativeMap';
 
 /**
  * `neura::map`: the Alpine side of the native map. The viewport is left alone by Livewire
@@ -17,6 +17,7 @@ interface MapConfig {
   land: Levels | null;
   lakes: Levels | null;
   overlay: Levels | null;
+  divisions: MapDivisions | null;
   country: string | null;
   cities: Levels | null;
   zones: boolean;
@@ -35,22 +36,28 @@ interface MapData {
   markers: MapMarker[];
   values: Record<string, number>;
   cityValues: Record<string, number>;
+  colors: Record<string, string>;
+  details: Record<string, MapDetail>;
+  selected: string[];
 }
 
 function readData(el: HTMLElement): MapData {
   try {
     const data = JSON.parse(el.dataset.map ?? '{}');
 
-    const record = (value: unknown): Record<string, number> =>
-      value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, number>) : {};
+    const record = <T>(value: unknown): Record<string, T> =>
+      value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, T>) : {};
 
     return {
       markers: Array.isArray(data.markers) ? data.markers : [],
-      values: record(data.values),
-      cityValues: record(data.cityValues),
+      values: record<number>(data.values),
+      cityValues: record<number>(data.cityValues),
+      colors: record<string>(data.colors),
+      details: record<MapDetail>(data.details),
+      selected: Array.isArray(data.selected) ? data.selected.map(String) : [],
     };
   } catch {
-    return { markers: [], values: {}, cityValues: {} };
+    return { markers: [], values: {}, cityValues: {}, colors: {}, details: {}, selected: [] };
   }
 }
 
@@ -64,6 +71,8 @@ if (typeof document !== 'undefined') {
         style: config.style,
         loading: false,
         failed: false,
+        /** The division opened by a click, while its own divisions are shown. */
+        drilled: null as { key: string; name: string | null } | null,
 
         init(): void {
           const root = (this as any).$el as HTMLElement;
@@ -81,6 +90,7 @@ if (typeof document !== 'undefined') {
               land: config.land,
               lakes: config.lakes,
               overlay: config.overlay,
+              divisions: config.divisions,
               country: config.country,
               cities: config.cities,
               zones: config.zones,
@@ -98,6 +108,10 @@ if (typeof document !== 'undefined') {
                 this.loading = Boolean(detail.busy);
               } else if (event === 'error') {
                 this.failed = true;
+              } else if (event === 'drill') {
+                this.drilled = { key: String(detail.key), name: (detail.name as string | null) ?? null };
+              } else if (event === 'undrill') {
+                this.drilled = null;
               }
 
               (this as any).$dispatch(`map-${event}`, detail);
@@ -106,6 +120,9 @@ if (typeof document !== 'undefined') {
 
           map.setValues(data.values);
           map.setCityValues(data.cityValues);
+          map.setColors(data.colors);
+          map.setDetails(data.details);
+          map.setSelected(data.selected);
           map.setMarkers(data.markers);
 
           // A focused country is framed on its mainland once its shape has loaded.
@@ -118,6 +135,9 @@ if (typeof document !== 'undefined') {
 
             map?.setValues(next.values);
             map?.setCityValues(next.cityValues);
+            map?.setColors(next.colors);
+            map?.setDetails(next.details);
+            map?.setSelected(next.selected);
             map?.setMarkers(next.markers);
           });
           observer.observe(root, { attributes: true, attributeFilter: ['data-map'] });
@@ -139,6 +159,10 @@ if (typeof document !== 'undefined') {
 
         fit(): void {
           map?.fit();
+        },
+
+        back(): void {
+          map?.back();
         },
 
         useStyle(name: string): void {

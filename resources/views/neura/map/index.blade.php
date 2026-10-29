@@ -2,7 +2,7 @@
     'center' => [20, 0],
     'zoom' => 2,
     'minZoom' => 1,
-    'maxZoom' => 7,
+    'maxZoom' => null,
     'mapStyle' => null,
     'mapStyles' => null,
     'land' => 'countries',
@@ -24,6 +24,13 @@
     'height' => '420px',
     'variant' => 'card',
     'label' => null,
+    'divisions' => null,
+    'drillDown' => null,
+    'labelKey' => 'code',
+    'colors' => [],
+    'details' => [],
+    'selected' => [],
+    'highlight' => null,
 ])
 
 @php
@@ -57,7 +64,29 @@
     };
 
     $country = $country ? strtoupper((string) $country) : null;
-    $cities ??= $country ? 'places' : false;
+
+    // Subdivisions of the focused country (`states`, `adm1`…`adm5`), prepared server-side on first use.
+    $divisionLevels = \Neura\Kit\Services\Map\DivisionStore::LEVELS;
+    $divisions = $country && in_array($divisions, $divisionLevels, true) ? $divisions : null;
+    $drillDown = $divisions && in_array($drillDown, $divisionLevels, true) && $drillDown !== $divisions ? $drillDown : null;
+    $divisionConfig = $divisions ? [
+        'url' => route('neura-kit.map.divisions', [$country, $divisions]),
+        'level' => $divisions,
+        'drill' => $drillDown ? route('neura-kit.map.divisions', [$country, $drillDown]).'?of='.$divisions.'&within=__KEY__' : null,
+        'labels' => in_array($labelKey, ['code', 'name'], true) ? $labelKey : false,
+    ] : null;
+    $maxZoom ??= $drillDown ? 11 : 7;
+
+    // The colour of a hovered or selected division: a palette name (`orange`, `warning-600`) or any CSS colour.
+    $highlightStyle = '';
+    if (is_string($highlight) && $highlight !== '') {
+        $highlightValue = preg_match('/^([a-z]+)(?:-(\d{2,3}))?$/', $highlight, $match)
+            ? (isset($match[2]) ? "var(--color-{$match[1]}-{$match[2]})" : "var(--color-{$match[1]}-500, var(--color-{$match[1]}))")
+            : $highlight;
+        $highlightStyle = ' --nk-map-highlight: '.e($highlightValue).';';
+    }
+    $cities ??= $country && ! $divisions ? 'places' : false;
+    $zones = $zones && ! $divisions;
 
     $styles = PackResolver::mapStyles();
     $current = PackResolver::mapStyleName($mapStyle);
@@ -92,6 +121,7 @@
         'land' => $levels($land),
         'lakes' => $levels($lakes),
         'overlay' => $levels($geojson),
+        'divisions' => $divisionConfig,
         'country' => $country,
         'cities' => $levels($cities === true ? 'places' : $cities),
         'zones' => (bool) $zones && $country !== null,
@@ -104,13 +134,21 @@
         'nameKeys' => $nameKey ? (array) $nameKey : [...($language === 'EN' ? [] : ["NAME_{$language}"]), 'NAME', 'name', 'ADMIN'],
         'locale' => $locale,
         'noData' => neura_trans('noData'),
-        'credit' => $land || $lakes ? PackResolver::mapSetting('credit') : null,
+        'credit' => $land || $lakes ? (function () use ($drillDown, $divisions) {
+            $credit = PackResolver::mapSetting('credit');
+            $usesBoundaries = str_starts_with((string) $drillDown, 'adm') || str_starts_with((string) $divisions, 'adm');
+
+            return $usesBoundaries && $credit ? [...$credit, 'text' => $credit['text'].' · '.(PackResolver::mapSetting('divisions')['credit']['text'] ?? 'geoBoundaries')] : $credit;
+        })() : null,
     ];
 
     $data = [
         'markers' => array_values((array) $markers),
         'values' => (object) (array) $values,
         'cityValues' => (object) (array) $cityValues,
+        'colors' => (object) (array) $colors,
+        'details' => (object) (array) $details,
+        'selected' => array_values((array) $selected),
     ];
 
 
@@ -128,7 +166,7 @@
     data-nk-map
     data-map="{{ json_encode($data) }}"
     x-data="neuraMap(@js($config))"
-    style="height: {{ $height }};"
+    style="height: {{ $height }};{!! $highlightStyle !!}"
 >
     <div
         x-ref="viewport"
@@ -149,6 +187,13 @@
                 <neura::icon name="minus" class="size-4" />
             </button>
         </div>
+    @endif
+
+    @if ($drillDown)
+        <button type="button" class="nk-map-back" x-show="drilled" x-cloak x-on:click="back()">
+            <neura::icon name="arrow-left" class="size-4" />
+            <span x-text="drilled?.name"></span>
+        </button>
     @endif
 
     @if (count($offered) > 1)

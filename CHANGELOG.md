@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [3.1.7] - 2026-10-28
+### Added
+
+- **Date picker with time**: `time` puts a time column next to the calendar, in the same popup: hours, minutes and, on a 12-hour clock, AM / PM. The value is a local `YYYY-MM-DDTHH:mm` string, like the date reel. `hour-cycle` (12, 24, or the locale's by default), `minute-step` (1, 5, 10, 15, 30) and `default-time` (HH:mm). Picking a date first fills in `default-time`, else the current time rounded up to the step; picking a time first lands on today. A `min-date` / `max-date` with a time also limits the hours of its own day. Arrow keys, Home and End move through a column. Range and multiple stay date-only. A date-only value coming in is shown as is and never rewritten on load
+- **Time picker**: New `neura::time-picker` — hour and minute columns (AM / PM on a 12-hour clock) in a popup. A single time (`'09:00'`), `range` for From – To in one field (`['start' => …, 'end' => …]`), `multiple` for several times, and `range multiple` for several slots (opening hours, shifts) added and removed in the same field. To never goes before From, and moving From keeps the slot's length. Other keys of a slot (a weekday, an id) are kept, so row objects bind as they are. `HH:mm:ss` values are read as `HH:mm` and never rewritten on load. `hour-cycle`, `minute-step`, `min`, `max`, `locale`, `name` (hidden inputs), EN / FR strings
+- **Time picker config**: `config('neura-kit.time-picker')` (`Config::timePicker()`) with `size` (sm, md, lg — pack `Packs\TimePicker\Size`: field size, option height, column width, list height), `rounded` and `shadow` (global by default). The date picker's time side shares the columns and their size
+- **Calendar aside slot**: `<x-slot:aside>` renders beside the months inside the calendar card (below them on narrow screens), filling the calendar's height without adding to it
+
+### Fixed
+
+- **Calendar month on external values**: A value set after init (`wire:model`, `x-model`) left the calendar on the current month, so a picker bound to next month's date opened with nothing selected. The calendar now shows the month of a value set from outside; its own picks never move the view
+- **Calendar selection after opening**: The selected-day highlight was measured while the popup scaled open and stayed small and off its day. Positions are now taken in layout pixels
+- **Calendar min / max with a time**: `min-date="2026-10-27T09:30"` disabled the 27th itself (string comparison). Bounds are compared by day
+- **Signature pad colors**: The pad had its own palette (a cream paper, a stone ink, raw hex blue and violet, a glass gradient) and its own shadow, which also overrode the shadow pack. It now uses the design tokens: the pad is a field (surface, edge, hover edge, the inputs' focus border and ring), the toolbar follows the rounded token with the button group's highlight, ghost tools and outline export buttons, and muted text uses `fg-muted`. Black ink is the foreground and blue / violet come from the palette. Strokes are colored by ink name in CSS instead of a fixed `fill`, so a signature drawn in light mode stays readable after switching to dark. Exports keep their print inks
+- **Popup open motion origin**: A popup grew out of the first button inside the element before it, so the color picker unfolded from its swatch icon at the right end of the field (and the emoji picker from its icon). A field now opens its popup from the whole field, and `data-menu-trigger` names the trigger explicitly when it matters: the color picker's field, the phone input's country button
+- **Date picker popup width**: The popup shrank to the input's container and squeezed the calendar inside narrow fields. It now takes its own width
+
 ## [3.1.6] - 2026-10-23
 
 ### Added

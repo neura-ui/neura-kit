@@ -46,6 +46,8 @@
     $toneStyle = $color !== '' && $color !== 'neutral'
         ? "--nk-tone: var(--color-{$color}-600); --nk-tone-strong: var(--color-{$color}-900); --nk-tone-soft: var(--color-{$color}-100);"
         : '';
+    // The toolbar controls follow the same rounded token as the pad.
+    $toneStyle .= ' --nk-sign-radius: '.PackResolver::radiusValue($rounded).';';
 
     $inks = ['black', 'blue', 'violet'];
     $nibs = ['fine', 'medium', 'bold'];

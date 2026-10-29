@@ -156,6 +156,11 @@ class NeuraKitServiceProvider extends ServiceProvider
 
             Route::post('/editor/import', Actions\Editor\ImportDocument::class)
                 ->name('neura-kit.editor.import');
+
+            // Subdivisions of a country, prepared from open data the first time it is asked for.
+            Route::get('/map/divisions/{country}/{level}', Actions\Map\GetMapDivisions::class)
+                ->where(['country' => '[A-Za-z]{2,3}', 'level' => 'states|adm[1-5]'])
+                ->name('neura-kit.map.divisions');
         });
     }
 

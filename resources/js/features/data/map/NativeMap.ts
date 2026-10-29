@@ -46,6 +46,19 @@ export interface MapMarker {
 /** A dataset in its resolutions, coarsest first, each drawn from its zoom. */
 export type Levels = Array<{ source: string | Record<string, unknown>; from: number }>;
 
+/** The subdivisions of the focused country, and the finer ones a click opens. */
+export interface MapDivisions {
+  url: string;
+  level: string;
+  /** Where a division's own divisions come from, `__KEY__` standing for its key. */
+  drill: string | null;
+  /** What a division's label shows: its code (`18`), its name, or nothing. */
+  labels: 'code' | 'name' | false;
+}
+
+/** The tooltip of a division: a line, lines, or a title over lines. */
+export type MapDetail = string | string[] | { title?: string; lines?: string[] };
+
 export interface MapOptions {
   center: LatLng;
   zoom: number;
@@ -55,6 +68,7 @@ export interface MapOptions {
   land: Levels | null;
   lakes: Levels | null;
   overlay: Levels | null;
+  divisions: MapDivisions | null;
   /** The ISO code of the one country to draw, the others left out. */
   country: string | null;
   /** The populated places to draw, those of the country when one is focused. */
@@ -76,7 +90,7 @@ export interface MapOptions {
 
 export type MapEmit = (event: string, detail: Record<string, unknown>) => void;
 
-type LayerName = 'graticule' | 'land' | 'lakes' | 'overlay';
+type LayerName = 'graticule' | 'land' | 'lakes' | 'overlay' | 'divisions' | 'children';
 
 interface Shape {
   el: SVGPathElement;
@@ -84,6 +98,8 @@ interface Shape {
   layer: Layer;
   key: string | null;
   name: string | null;
+  /** Every handle the data may use for the shape, upper-cased: key, code, name. */
+  aliases: string[];
 }
 
 interface Layer {
@@ -175,7 +191,13 @@ export class NativeMap {
   private projectedShifts = '';
   private shapeByElement = new WeakMap<Element, Shape>();
   private values: Record<string, number> = {};
+  private colors: Record<string, string> = {};
+  private details: Record<string, MapDetail> = {};
+  private selected = new Set<string>();
+  private drilled: Shape | null = null;
   private labels: Label[] = [];
+  private landLabels: Label[] = [];
+  private divisionLabels: Label[] = [];
   private cities: City[] = [];
   private cityByElement = new WeakMap<Element, City>();
   private zones: Array<{ el: SVGPathElement; cell: Point[] }> = [];
@@ -239,6 +261,8 @@ export class NativeMap {
       land: this.layer('land', 'nk-map-land', true, options.land ?? []),
       lakes: this.layer('lakes', 'nk-map-lake', false, options.lakes ?? []),
       overlay: this.layer('overlay', 'nk-map-shape', true, options.overlay ?? []),
+      divisions: this.layer('divisions', 'nk-map-division', true, options.divisions ? [{ source: options.divisions.url, from: 0 }] : []),
+      children: this.layer('children', 'nk-map-division is-child', true, []),
     };
 
     this.zoneGroup = document.createElementNS(SVG, 'g');
@@ -313,6 +337,28 @@ export class NativeMap {
     this.paint();
   }
 
+  /** Colours by division (key, code or name): a palette name (`success`, `red-500`) or any CSS colour. */
+  setColors(colors: Record<string, string>): void {
+    this.colors = this.byHandle(colors);
+    this.paint();
+  }
+
+  /** Tooltip lines by division (key, code or name). */
+  setDetails(details: Record<string, MapDetail>): void {
+    this.details = this.byHandle(details);
+  }
+
+  /** The divisions drawn as selected. */
+  setSelected(keys: string[]): void {
+    this.selected = new Set((keys ?? []).map((key) => String(key).toUpperCase()));
+    this.paint();
+  }
+
+  /** Leave the division the map has opened, back to the whole country. */
+  back(): void {
+    this.undrill();
+  }
+
   /** Values by city name, accents and case aside. */
   setCityValues(values: Record<string, number>): void {
     this.cityValues = Object.fromEntries(
@@ -334,7 +380,7 @@ export class NativeMap {
    * Frame the data: the overlay, the shapes that carry a value and the markers, or the given
    * box. Before the data has loaded, the map frames it as soon as it arrives.
    */
-  fit(bounds: Bounds | null = null, padding = 32): void {
+  fit(bounds: Bounds | null = null, padding = 32, maxZoom = 6): void {
     const box = bounds ?? this.dataBounds();
 
     if (!box || this.width === 0 || this.height === 0) {
@@ -352,7 +398,7 @@ export class NativeMap {
     const spanY = Math.max(southEast.y - northWest.y, 1e-9);
     const zoom = Math.log2(Math.min((this.width - padding * 2) / spanX, (this.height - padding * 2) / spanY));
 
-    this.zoom = this.clampZoom(Math.min(zoom, 6));
+    this.zoom = this.clampZoom(Math.min(zoom, maxZoom));
     this.center = unproject((northWest.x + southEast.x) / 2, (northWest.y + southEast.y) / 2, 0);
     this.normalizeCenter();
     this.render();
@@ -404,8 +450,15 @@ export class NativeMap {
       layer.loading.add(wanted);
       this.setBusy(1);
 
-      loadGeo(layer.levels[wanted].source)
+      const source = layer.levels[wanted].source;
+
+      loadGeo(source)
         .then((features) => {
+          // The division opened may have changed, or closed, while this was on its way.
+          if (layer.levels[wanted]?.source !== source) {
+            return;
+          }
+
           if (this.wantedLevel(layer) === wanted || layer.level === -1) {
             this.setShapes(layer, features, wanted);
           }
@@ -650,7 +703,13 @@ export class NativeMap {
       .filter((feature) => feature.polygons.length > 0 || feature.lines.length > 0)
       .map((feature) => {
         const el = document.createElementNS(SVG, 'path');
-        const shape: Shape = { el, feature, layer, key: this.featureKey(feature), name: this.featureName(feature) };
+        const division = layer.name === 'divisions' || layer.name === 'children';
+        const key = division && feature.properties.key ? String(feature.properties.key).toUpperCase() : this.featureKey(feature);
+        const name = division && typeof feature.properties.name === 'string' ? feature.properties.name : this.featureName(feature);
+        const aliases = division
+          ? [...new Set([key, feature.properties.code, name].filter((handle) => handle !== null && handle !== undefined && handle !== '').map((handle) => String(handle).toUpperCase()))]
+          : key !== null ? [key] : [];
+        const shape: Shape = { el, feature, layer, key, name, aliases };
         const outOfFocus = layer.name === 'land' && this.options.country !== null && shape.key !== this.options.country;
 
         el.setAttribute('class', feature.polygons.length > 0 ? layer.shapeClass : `${layer.shapeClass} is-line`);
@@ -667,6 +726,10 @@ export class NativeMap {
 
     if (layer.name === 'land') {
       this.buildLabels(layer.shapes);
+    }
+
+    if (layer.name === 'divisions' || layer.name === 'children') {
+      this.buildDivisionLabels();
     }
 
     if (this.projectedZoom !== null) {
@@ -894,7 +957,7 @@ export class NativeMap {
       el.setAttribute('class', layer.shapeClass);
       layer.group.appendChild(el);
 
-      return { el, feature, layer, key: null, name: null };
+      return { el, feature, layer, key: null, name: null, aliases: [] };
     });
   }
 
@@ -932,16 +995,32 @@ export class NativeMap {
    * without a value keeps the look's land (or dots).
    */
   private paint(): void {
-    const shapes = [...this.layers.land.shapes, ...this.layers.overlay.shapes];
+    const shapes = [
+      ...this.layers.land.shapes,
+      ...this.layers.overlay.shapes,
+      ...this.layers.divisions.shapes,
+      ...this.layers.children.shapes,
+    ];
     const values = shapes
-      .map((shape) => (shape.key !== null ? this.values[shape.key] : undefined))
+      .map((shape) => this.lookup(this.values, shape))
       .filter((value): value is number => Number.isFinite(value));
     const min = Math.min(...values);
     const max = Math.max(...values);
     const dots = this.style.land === 'dots';
 
     for (const shape of shapes) {
-      const value = shape.key !== null ? this.values[shape.key] : undefined;
+      const value = this.lookup(this.values, shape);
+      const color = this.lookup(this.colors, shape);
+
+      shape.el.classList.toggle('is-selected', shape.aliases.some((handle) => this.selected.has(handle)));
+
+      // A colour of its own (a status) wins over the scale of values.
+      if (color !== undefined) {
+        shape.el.classList.add('has-value');
+        shape.el.style.fill = this.cssColor(color);
+
+        continue;
+      }
 
       if (value === undefined || !Number.isFinite(value)) {
         shape.el.classList.remove('has-value');
@@ -963,16 +1042,17 @@ export class NativeMap {
   }
 
   private buildLabels(shapes: Shape[]): void {
-    this.labels.forEach((label) => label.el.remove());
+    this.landLabels.forEach((label) => label.el.remove());
 
-    // Focused on a country, its cities carry the labels.
+    // Focused on a country, its cities (or its divisions) carry the labels.
     if (!this.options.labels || this.options.country !== null) {
-      this.labels = [];
+      this.landLabels = [];
+      this.combineLabels();
 
       return;
     }
 
-    this.labels = shapes
+    this.landLabels = shapes
       .filter((shape) => shape.name !== null)
       .map((shape) => {
         const properties = shape.feature.properties;
@@ -996,6 +1076,51 @@ export class NativeMap {
       })
       .filter((label) => Number.isFinite(label.at.lat) && Number.isFinite(label.at.lng))
       .sort((a, b) => a.rank - b.rank || a.from - b.from);
+
+    this.combineLabels();
+  }
+
+  /**
+   * The divisions' labels, at the point the server chose inside each: their code or name,
+   * the larger divisions placed first. An opened division gives way to its own divisions.
+   */
+  private buildDivisionLabels(): void {
+    this.divisionLabels.forEach((label) => label.el.remove());
+
+    const mode = this.options.divisions?.labels ?? false;
+    const shapes = mode === false ? [] : [
+      ...(this.drilled ? [] : this.layers.divisions.shapes),
+      ...this.layers.children.shapes,
+    ];
+
+    this.divisionLabels = shapes
+      .map((shape) => {
+        const properties = shape.feature.properties;
+        const text = shape.layer.name === 'divisions' && mode === 'code' && properties.code ? String(properties.code) : shape.name ?? '';
+        const box = featureBounds([shape.feature]);
+        const el = document.createElement('div');
+
+        el.className = `nk-map-label is-division${shape.layer.name === 'children' ? ' is-child' : ''}`;
+        el.textContent = text;
+        el.hidden = true;
+        this.labelPane.appendChild(el);
+
+        return {
+          el,
+          at: { lat: Number(properties.LABEL_Y), lng: Number(properties.LABEL_X) },
+          from: 0,
+          // Larger first: the rank is the negative area of the box.
+          rank: box ? -Math.abs((box.east - box.west) * (box.north - box.south)) : 0,
+          width: this.textWidth(text),
+        };
+      })
+      .filter((label) => label.el.textContent !== '' && Number.isFinite(label.at.lat) && Number.isFinite(label.at.lng));
+
+    this.combineLabels();
+  }
+
+  private combineLabels(): void {
+    this.labels = [...this.divisionLabels, ...this.landLabels].sort((a, b) => a.rank - b.rank || a.from - b.from);
   }
 
   /**
@@ -1130,12 +1255,143 @@ export class NativeMap {
     }
 
     const hasValues = Object.keys(this.values).length > 0;
-    const value = shape.key !== null ? this.values[shape.key] : undefined;
+    const value = this.lookup(this.values, shape);
     const figure = value !== undefined && Number.isFinite(value) ? this.numbers.format(value) : this.options.noData;
+    const division = shape.layer.name === 'divisions' || shape.layer.name === 'children';
+    const detail = this.lookup(this.details, shape);
 
-    this.tooltip.textContent = hasValues ? `${shape.name} · ${figure}` : shape.name;
+    if (division || detail !== undefined) {
+      const code = shape.feature.properties.code;
+      const title = (detail && typeof detail === 'object' && !Array.isArray(detail) ? detail.title : undefined)
+        ?? (code ? `${shape.name} (${code})` : shape.name);
+      const lines = detail === undefined ? [] : typeof detail === 'string' ? [detail] : Array.isArray(detail) ? detail : detail.lines ?? [];
+      const rows = [...(hasValues ? [figure] : []), ...lines];
+      const heading = document.createElement('div');
+
+      heading.className = 'nk-map-tooltip-title';
+      heading.textContent = title;
+
+      this.tooltip.replaceChildren(heading, ...rows.map((line) => {
+        const row = document.createElement('div');
+
+        row.className = 'nk-map-tooltip-line';
+        row.textContent = String(line);
+
+        return row;
+      }));
+      this.tooltip.classList.toggle('is-rich', rows.length > 0);
+    } else {
+      this.tooltip.classList.remove('is-rich');
+      this.tooltip.textContent = hasValues ? `${shape.name} · ${figure}` : shape.name;
+    }
+
     this.tooltip.hidden = false;
-    this.tooltip.style.transform = `translate3d(${at.x}px, ${at.y}px, 0)`;
+    this.placeTooltip(at);
+  }
+
+  /**
+   * Beside the pointer, below and to the right, or flipped to the other side where the
+   * tooltip would leave the map (which clips it).
+   */
+  private placeTooltip(at: Point): void {
+    const gap = { x: 12, y: 16 };
+    const width = this.tooltip.offsetWidth;
+    const height = this.tooltip.offsetHeight;
+    let x = at.x + gap.x;
+    let y = at.y + gap.y;
+
+    if (x + width > this.width - 8) {
+      x = Math.max(8, at.x - gap.x - width);
+    }
+
+    if (y + height > this.height - 8) {
+      y = Math.max(8, at.y - gap.x - height);
+    }
+
+    this.tooltip.style.margin = '0';
+    this.tooltip.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+  }
+
+  /** The first entry of a record the shape answers to, by key, code or name. */
+  private lookup<T>(record: Record<string, T>, shape: Shape): T | undefined {
+    for (const handle of shape.aliases) {
+      if (record[handle] !== undefined) {
+        return record[handle];
+      }
+    }
+
+    return undefined;
+  }
+
+  private byHandle<T>(record: Record<string, T>): Record<string, T> {
+    return Object.fromEntries(Object.entries(record ?? {}).map(([key, value]) => [String(key).toUpperCase(), value]));
+  }
+
+  /** A palette name (`success`, `red`, `red-500`) as its theme colour, anything else as written. */
+  private cssColor(color: string): string {
+    const match = /^([a-z]+)(?:-(\d{2,3}))?$/.exec(color.trim());
+
+    if (!match || ['transparent', 'currentcolor', 'inherit', 'none'].includes(match[1])) {
+      return color;
+    }
+
+    return match[2] ? `var(--color-${match[1]}-${match[2]})` : `var(--color-${match[1]}-500, var(--color-${match[1]}))`;
+  }
+
+  /** Open a division: its own divisions load, the map frames it. */
+  private drill(shape: Shape): void {
+    const template = this.options.divisions?.drill;
+    const key = String(shape.feature.properties.key ?? shape.key ?? '');
+
+    if (!template || key === '') {
+      return;
+    }
+
+    this.drilled?.el.classList.remove('is-drilled');
+    this.drilled = shape;
+    shape.el.classList.add('is-drilled');
+    this.viewport.dataset.drilled = '';
+
+    const children = this.layers.children;
+
+    children.group.replaceChildren();
+    children.shapes = [];
+    children.level = -1;
+    children.levels = [{ source: template.replace('__KEY__', encodeURIComponent(key)), from: 0 }];
+
+    this.buildDivisionLabels();
+
+    const bounds = featureBounds([shape.feature]);
+
+    if (bounds) {
+      this.fit(bounds, 24, this.options.maxZoom);
+    }
+
+    this.emit('drill', { key, name: shape.name });
+    this.render();
+  }
+
+  private undrill(): void {
+    if (!this.drilled) {
+      return;
+    }
+
+    this.drilled.el.classList.remove('is-drilled');
+    this.drilled = null;
+    delete this.viewport.dataset.drilled;
+
+    const children = this.layers.children;
+
+    children.group.replaceChildren();
+    children.shapes = [];
+    children.level = -1;
+    children.levels = [];
+
+    this.buildDivisionLabels();
+    this.hover(null, null);
+    this.fit();
+    this.emit('undrill', {});
+    this.render();
   }
 
   private showCityTooltip(city: City, at: Point): void {
@@ -1145,7 +1401,7 @@ export class NativeMap {
 
     this.tooltip.textContent = hasValues ? `${city.name} · ${figure}` : city.region ? `${city.name} · ${city.region}` : city.name;
     this.tooltip.hidden = false;
-    this.tooltip.style.transform = `translate3d(${at.x}px, ${at.y}px, 0)`;
+    this.placeTooltip(at);
   }
 
   private featureKey(feature: GeoFeature): string | null {
@@ -1462,9 +1718,27 @@ export class NativeMap {
         layer: shape.layer.name,
         key: shape.key,
         name: shape.name,
-        value: shape.key !== null ? this.values[shape.key] ?? null : null,
+        value: this.lookup(this.values, shape) ?? null,
         properties: shape.feature.properties,
       });
+
+      if (shape.layer.name === 'divisions' || shape.layer.name === 'children') {
+        const properties = shape.feature.properties;
+
+        this.emit('division-click', {
+          key: properties.key ?? shape.key,
+          code: properties.code ?? null,
+          name: shape.name,
+          level: properties.level ?? null,
+          parent: properties.parent ?? null,
+          value: this.lookup(this.values, shape) ?? null,
+          properties,
+        });
+
+        if (shape.layer.name === 'divisions') {
+          this.drill(shape);
+        }
+      }
     }
 
     this.emit('click', { lat: position.lat, lng: wrapLongitude(position.lng) });
@@ -1504,6 +1778,7 @@ export class NativeMap {
       this.zoomOut();
     } else if (event.key === 'Escape') {
       this.closePopup();
+      this.undrill();
     } else if (pan[event.key]) {
       event.preventDefault();
 

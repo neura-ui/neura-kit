@@ -15,11 +15,37 @@ function clamp(value: number, min: number, max: number): number {
     return Math.min(max, Math.max(min, value));
 }
 
+/** A form control: its popup belongs to the whole field, not to an icon button inside it. */
+const FIELD = 'input:not([type="hidden"]), textarea, select, [data-slot="control"]';
+
+/**
+ * The box a panel grows out of.
+ *
+ * A component can name it with `data-menu-trigger`, which wins over anything
+ * in between (a hint under a field, for one). Otherwise it is the closest
+ * earlier sibling: a field as a whole, else the button it holds, else the
+ * sibling itself. Picking the first button inside a field made the color
+ * picker unfold from the little swatch icon at its right end.
+ */
 function triggerOf(panel: HTMLElement): HTMLElement | null {
+    for (let sibling = panel.previousElementSibling; sibling; sibling = sibling.previousElementSibling) {
+        const marked = sibling.matches('[data-menu-trigger]')
+            ? sibling
+            : sibling.querySelector('[data-menu-trigger]');
+
+        if (marked instanceof HTMLElement) {
+            return marked;
+        }
+    }
+
     let sibling = panel.previousElementSibling;
 
     while (sibling) {
         if (sibling instanceof HTMLElement) {
+            if (sibling.getBoundingClientRect().height > 0 && (sibling.matches(FIELD) || sibling.querySelector(FIELD))) {
+                return sibling;
+            }
+
             const button = sibling.matches('button, a, [role="button"]')
                 ? sibling
                 : sibling.querySelector('button, a, [role="button"]');

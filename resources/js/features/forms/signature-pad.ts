@@ -278,13 +278,6 @@ onAlpineInit(() => {
             this._glideObserver?.disconnect();
         },
 
-        screenInk(color: Ink): string {
-            const pad = this.$refs.pad as HTMLElement | undefined;
-            if (!pad) return PRINT[color];
-            const token = color === 'black' ? '--nk-sign-ink' : `--nk-sign-${color}`;
-            return getComputedStyle(pad).getPropertyValue(token).trim() || PRINT[color];
-        },
-
         placeGlide(group: HTMLElement | undefined, glide: HTMLElement | undefined, animate: boolean) {
             if (!group || !glide) return;
             const active = group.querySelector<HTMLElement>('[aria-checked="true"]');
@@ -336,7 +329,6 @@ onAlpineInit(() => {
             if (last && Math.hypot(point.x - last.x, point.y - last.y) < 0.45) return;
             this._current.push(point);
             this._live?.setAttribute('d', strokePath(this._current, NIB_SIZE[this.nib as Nib]));
-            this._live?.setAttribute('fill', this.screenInk(this.ink as Ink));
         },
 
         start(event: PointerEvent) {
@@ -348,7 +340,7 @@ onAlpineInit(() => {
             this._pointer = event.pointerId;
             this._current = [];
             const path = document.createElementNS(SVG_NS, 'path');
-            path.setAttribute('fill', this.screenInk(this.ink as Ink));
+            path.setAttribute('data-ink', this.ink);
             (this.$refs.ink as SVGGElement).append(path);
             this._live = path;
             const coalesced = event.getCoalescedEvents?.() ?? [];
@@ -511,25 +503,25 @@ onAlpineInit(() => {
                 }
                 ink.replaceChildren();
                 let tip: Point | null = null;
-                let tipColor = PRINT.black;
+                let tipInk: Ink = 'black';
                 for (const piece of schedule) {
                     if (elapsed + 0.01 < piece.start) break;
                     const local = piece.duration <= 0 ? 1 : Math.min(1, (elapsed - piece.start) / piece.duration);
                     const count = Math.max(1, Math.ceil(piece.stroke.points.length * local));
                     const partial = piece.stroke.points.slice(0, count);
                     const path = document.createElementNS(SVG_NS, 'path');
-                    path.setAttribute('fill', this.screenInk(piece.stroke.color));
+                    path.setAttribute('data-ink', piece.stroke.color);
                     path.setAttribute('d', strokePath(partial, NIB_SIZE[piece.stroke.width]));
                     ink.append(path);
                     if (local < 1) {
                         tip = partial[partial.length - 1];
-                        tipColor = this.screenInk(piece.stroke.color);
+                        tipInk = piece.stroke.color;
                     }
                 }
                 if (tip) {
                     nib.setAttribute('cx', String(tip.x));
                     nib.setAttribute('cy', String(tip.y));
-                    nib.setAttribute('fill', tipColor);
+                    nib.setAttribute('data-ink', tipInk);
                     nib.style.opacity = '1';
                 } else {
                     nib.style.opacity = '0';
@@ -556,7 +548,7 @@ onAlpineInit(() => {
             ink.style.opacity = '';
             for (const stroke of this.strokes) {
                 const path = document.createElementNS(SVG_NS, 'path');
-                path.setAttribute('fill', this.screenInk(stroke.color));
+                path.setAttribute('data-ink', stroke.color);
                 path.setAttribute('d', strokePath(stroke.points, NIB_SIZE[stroke.width]));
                 ink.append(path);
             }

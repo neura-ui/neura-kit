@@ -739,6 +739,23 @@ class NeuraKitConfig
                 'text' => 'Natural Earth',
                 'url' => 'https://www.naturalearthdata.com',
             ],
+            /*
+             * Subdivisions of a country (`divisions` on the map), cut from worldwide open data
+             * the first time a country is asked for, then served from `path` (storage by
+             * default). `states` is Natural Earth admin-1 with ISO 3166-2 codes; adm1 to adm5
+             * come from geoBoundaries, country by country. `precision` is the decimals kept
+             * (4 is about 11 m).
+             */
+            'divisions' => [
+                'path' => null,
+                'precision' => 4,
+                'states' => 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_admin_1_states_provinces.geojson',
+                'boundaries' => 'https://www.geoboundaries.org/api/current/gbOpen/%s/ADM%d/',
+                'credit' => [
+                    'text' => 'geoBoundaries',
+                    'url' => 'https://www.geoboundaries.org',
+                ],
+            ],
             'packs' => [
                 'styles' => Packs\Map\Style::class,
                 'rounders' => Packs\Rounded::class,
@@ -842,6 +859,22 @@ class NeuraKitConfig
             ],
             'packs' => [
                 'rounders' => Packs\Rounded::class,
+            ],
+        ], $options);
+    }
+
+    public static function timePicker(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'size' => Size::MD->value,
+                'rounded' => self::GLOBAL,
+                'shadow' => self::GLOBAL,
+            ],
+            'packs' => [
+                'rounders' => Packs\Rounded::class,
+                'shadows' => Packs\Shadow::class,
+                'sizes' => Packs\TimePicker\Size::class,
             ],
         ], $options);
     }
