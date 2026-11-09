@@ -367,7 +367,7 @@
         if (view) this.view = view;
     },
     setView(v) { if (this.availableViews.includes(v)) this.view = v; },
-    viewLabel(v) { return { month: '{{ $viewLabels['month'] }}', week: '{{ $viewLabels['week'] }}', day: '{{ $viewLabels['day'] }}', agenda: '{{ $viewLabels['agenda'] }}' } [v]; },
+    viewLabel(v) { return { month: @js($viewLabels['month']), week: @js($viewLabels['week']), day: @js($viewLabels['day']), agenda: @js($viewLabels['agenda']) } [v]; },
 
     scrollGrid() {
         const el = this.$refs.gridScroll;

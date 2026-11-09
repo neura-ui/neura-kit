@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.2.1] - 2026-11-09
+### Fixed
+- **Translations with an apostrophe broke Alpine expressions**: the spotlight's label ("Demander à l'IA"), the flow's output port and activate / deactivate titles, the emoji picker's "No selection" and the event calendar's view names were echoed between single quotes in a script string; the browser turns Blade's `&#039;` back into `'` before Alpine reads the attribute, so the string ended early — "Uncaught SyntaxError: Unexpected identifier 'IA'" on every page with `@neuraKit`, in French. They now go through `@js()`, and a test keeps translations out of quoted script strings in the kit's views
+
 ## [3.2.0] - 2026-11-09
 ### Added
 - **File manager: a fresher look**: each type in a tinted badge (a picture shows itself in it), a Type column (sortable), dates said the way people say them ("5 minutes ago", "yesterday", "Nov 3", the year when it is not this one) with the full date on hover, a "…" button on each row for its menu, and a details panel to match. The selection, focus, drop cues, chips and progress use an accent colour: `color`, from `config('neura-kit.file-manager.default.color')` or the prop, the theme's `primary` by default (`info`, `success`… or any kit colour); type badges keep their own hues. The toolbar's labels and controls follow the file manager's own width, not the screen's

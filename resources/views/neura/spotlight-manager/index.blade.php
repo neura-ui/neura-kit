@@ -57,7 +57,7 @@
         class="fixed inset-x-0 top-[10vh] sm:top-[15vh] z-[9999] flex justify-center px-4"
         role="dialog"
         aria-modal="true"
-        :aria-label="mode === 'ai' ? '{{ __('askAi') }}' : '{{ __('search') }}'"
+        :aria-label="mode === 'ai' ? @js(__('askAi')) : @js(__('search'))"
     >
         <div
             @click.stop

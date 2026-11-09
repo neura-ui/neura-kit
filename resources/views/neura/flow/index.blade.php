@@ -318,7 +318,7 @@
                                 data-handle="source"
                                 data-channel="main"
                                 :data-handle-id="out.id"
-                                :title="out.label || '{{ __('Output') }}'"
+                                :title="out.label || @js(__('Output'))"
                                 x-show="nodesConnectable"
                                 :style="handleSourceStyle(node, out.id)"
                                 @pointerdown.stop.prevent="onHandlePointerDown($event, node.id, out.id, 'source')"
@@ -382,7 +382,7 @@
                             <button type="button" class="flow-action" title="{{ __('Run step') }}" @click.stop="runNode(node.id)">
                                 <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M5 3.6v8.8a.6.6 0 0 0 .9.5l7-4.4a.6.6 0 0 0 0-1L5.9 3.1a.6.6 0 0 0-.9.5Z"/></svg>
                             </button>
-                            <button type="button" class="flow-action" :title="isDisabled(node) ? '{{ __('Activate') }}' : '{{ __('Deactivate') }}'" @click.stop="toggleNode(node.id)">
+                            <button type="button" class="flow-action" :title="isDisabled(node) ? @js(__('Activate')) : @js(__('Deactivate'))" @click.stop="toggleNode(node.id)">
                                 <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 2.5v5M4.6 4.4a5 5 0 1 0 6.8 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
                             </button>
                             <button type="button" class="flow-action" title="{{ __('Delete') }}" @click.stop="removeNode(node.id)">

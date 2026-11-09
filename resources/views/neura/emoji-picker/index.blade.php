@@ -242,7 +242,7 @@
 
         @unless ($isButton)
             <div class="mt-2 flex items-center justify-between gap-2 border-t border-separator pt-2 px-0.5">
-                <span class="text-xs text-fg-muted truncate" x-text="value || '{{ __('No selection') }}'"></span>
+                <span class="text-xs text-fg-muted truncate" x-text="value || @js(__('No selection'))"></span>
                 <button
                     type="button"
                     class="text-xs text-fg-muted hover:text-fg transition-colors"
