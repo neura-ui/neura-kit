@@ -1,0 +1,482 @@
+/*
+ * Breadcrumbs, on the design tokens. Separators are drawn after each item but the last
+ * (chevron and arrow as masks in the text colour, slash, dot and pipe as glyphs or bars),
+ * so the "…" item and folded items need no markup of their own. The variant on the nav
+ * (data-variant) restyles the links; the current page (aria-current) takes the trail's
+ * colour (--nk-bc-tone). A responsive trail shows its back link alone in data-mode="back".
+ */
+.nk-bc {
+    --nk-bc-gap: 0.375rem;
+    --nk-bc-icon: 1rem;
+    --nk-bc-chip: 1.75rem;
+    --nk-bc-radius: 0.5rem;
+    --nk-bc-tone: var(--color-fg);
+    --nk-bc-on-tone: var(--color-surface);
+    --nk-bc-sep: color-mix(in oklab, var(--color-fg) 30%, transparent);
+    min-width: 0;
+    color: var(--color-fg-secondary);
+}
+
+.nk-bc-list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--nk-bc-gap);
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+/* A responsive trail stays on one line, so it can tell when it no longer fits. */
+.nk-bc[data-responsive] .nk-bc-list {
+    flex-wrap: nowrap;
+    white-space: nowrap;
+}
+
+.nk-bc-item {
+    position: relative;
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: var(--nk-bc-gap);
+    min-width: 0;
+}
+
+.nk-bc-item[hidden] {
+    display: none;
+}
+
+.nk-bc-link,
+.nk-bc-text {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375em;
+    min-width: 0;
+    border-radius: var(--nk-bc-radius);
+    color: inherit;
+    text-decoration: none;
+    transition:
+        color var(--nk-duration-fast) var(--nk-ease-standard),
+        background-color var(--nk-duration-fast) var(--nk-ease-standard);
+}
+
+.nk-bc-link:hover {
+    color: var(--color-fg);
+}
+
+.nk-bc :is(a, button):focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
+}
+
+.nk-bc [aria-current='page'] {
+    color: var(--nk-bc-tone);
+    font-weight: 600;
+}
+
+.nk-bc[data-tinted] [aria-current='page'] {
+    padding: 0.1875em 0.5625em;
+    background: color-mix(in oklab, var(--nk-bc-tone) 12%, transparent);
+}
+
+.nk-bc-label {
+    max-width: var(--nk-bc-truncate, none);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nk-bc-icon {
+    width: var(--nk-bc-icon);
+    height: var(--nk-bc-icon);
+    flex: none;
+}
+
+.nk-bc-avatar {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: calc(var(--nk-bc-icon) + 0.375rem);
+    height: calc(var(--nk-bc-icon) + 0.375rem);
+    overflow: hidden;
+    border-radius: 0.375rem;
+    font-size: 0.625rem;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.nk-bc-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.nk-bc-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    flex: none;
+    border-radius: 9999px;
+}
+
+/* Separators. */
+.nk-bc-item:not(:last-child)::after {
+    flex: none;
+    pointer-events: none;
+}
+
+.nk-bc-item:is([data-sep='chevron'], [data-sep='arrow']):not(:last-child)::after {
+    content: '';
+    width: calc(var(--nk-bc-icon) * 0.875);
+    height: calc(var(--nk-bc-icon) * 0.875);
+    background: var(--nk-bc-sep);
+    mask: var(--nk-bc-sep-mask) center / contain no-repeat;
+}
+
+.nk-bc-item[data-sep='chevron'] {
+    --nk-bc-sep-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 3.5 10.5 8 6 12.5'/%3E%3C/svg%3E");
+}
+
+.nk-bc-item[data-sep='arrow'] {
+    --nk-bc-sep-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 8h10M9 4l4 4-4 4'/%3E%3C/svg%3E");
+}
+
+[dir='rtl'] .nk-bc-item:is([data-sep='chevron'], [data-sep='arrow'])::after,
+[dir='rtl'] .nk-bc-back svg {
+    scale: -1 1;
+}
+
+.nk-bc-item[data-sep='slash']:not(:last-child)::after {
+    content: '/';
+    margin-inline: 0.125em;
+    color: var(--nk-bc-sep);
+    font-size: 1.1em;
+    font-weight: 300;
+}
+
+.nk-bc-item[data-sep='dot']:not(:last-child)::after {
+    content: '';
+    width: 0.25rem;
+    height: 0.25rem;
+    margin-inline: 0.125em;
+    border-radius: 9999px;
+    background: var(--nk-bc-sep);
+}
+
+.nk-bc-item[data-sep='pipe']:not(:last-child)::after {
+    content: '';
+    width: 1px;
+    height: 1em;
+    margin-inline: 0.125em;
+    background: var(--nk-bc-sep);
+}
+
+.nk-bc-sep {
+    display: inline-flex;
+    color: var(--nk-bc-sep);
+}
+
+.nk-bc-item:last-child > .nk-bc-sep {
+    display: none;
+}
+
+/* "…" and the switcher. */
+.nk-bc-ellipsis,
+.nk-bc-switch {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: calc(var(--nk-bc-radius) * 0.75);
+    background: transparent;
+    color: var(--color-fg-muted);
+    cursor: pointer;
+    transition:
+        color var(--nk-duration-fast) var(--nk-ease-standard),
+        background-color var(--nk-duration-fast) var(--nk-ease-standard);
+}
+
+.nk-bc-ellipsis {
+    width: calc(var(--nk-bc-icon) + 0.875rem);
+    height: calc(var(--nk-bc-icon) + 0.5rem);
+}
+
+.nk-bc-switch {
+    width: calc(var(--nk-bc-icon) + 0.375rem);
+    height: calc(var(--nk-bc-icon) + 0.625rem);
+    margin-inline-start: calc(var(--nk-bc-gap) * -0.5);
+}
+
+.nk-bc-ellipsis svg,
+.nk-bc-switch svg {
+    width: var(--nk-bc-icon);
+    height: var(--nk-bc-icon);
+}
+
+.nk-bc-ellipsis:hover,
+.nk-bc-switch:hover,
+.nk-bc-ellipsis[aria-expanded='true'],
+.nk-bc-switch[aria-expanded='true'] {
+    background: var(--color-hover);
+    color: var(--color-fg);
+}
+
+.nk-bc-menu {
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 13rem;
+    max-width: 20rem;
+    max-height: 20rem;
+    overflow-y: auto;
+    padding: 0.375rem;
+    border: 1px solid var(--color-edge);
+    border-radius: var(--nk-bc-radius);
+    background: var(--color-surface-raised);
+    box-shadow: 0 12px 32px color-mix(in oklab, var(--color-fg) 12%, transparent);
+    color: var(--color-fg);
+    font-weight: 400;
+    white-space: nowrap;
+}
+
+.nk-bc-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2rem;
+    padding-block: 0;
+    padding-inline: calc(0.625rem + var(--nk-bc-depth, 0) * 0.75rem) 0.625rem;
+    border-radius: max(0.25rem, calc(var(--nk-bc-radius) - 0.25rem));
+    color: var(--color-fg-secondary);
+    text-decoration: none;
+}
+
+a.nk-bc-option:hover,
+a.nk-bc-option:focus-visible {
+    background: var(--color-hover);
+    color: var(--color-fg);
+    outline: none;
+}
+
+.nk-bc-option[aria-current='true'] {
+    color: var(--color-fg);
+    font-weight: 500;
+}
+
+.nk-bc-option-label {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nk-bc-option-meta {
+    color: var(--color-fg-muted);
+    font-size: 0.85em;
+}
+
+.nk-bc-branch,
+.nk-bc-check {
+    width: 0.875rem;
+    height: 0.875rem;
+    flex: none;
+}
+
+.nk-bc-branch {
+    color: var(--color-fg-muted);
+}
+
+.nk-bc-search {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2rem;
+    margin-bottom: 0.25rem;
+    padding: 0 0.625rem;
+    border-bottom: 1px solid var(--color-edge);
+    color: var(--color-fg-muted);
+}
+
+.nk-bc-search svg {
+    width: 0.875rem;
+    height: 0.875rem;
+    flex: none;
+}
+
+.nk-bc-search input {
+    flex: 1;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-fg);
+    font: inherit;
+    outline: none;
+}
+
+.nk-bc-menu-footer {
+    margin-top: 0.25rem;
+    padding-top: 0.25rem;
+    border-top: 1px solid var(--color-edge);
+}
+
+/* The back link of a narrow responsive trail. */
+.nk-bc-back {
+    display: none;
+    align-items: center;
+    gap: 0.375em;
+    min-width: 0;
+    color: var(--color-fg-secondary);
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.nk-bc-back:hover {
+    color: var(--color-fg);
+}
+
+.nk-bc[data-mode='back'] .nk-bc-list {
+    display: none;
+}
+
+.nk-bc[data-mode='back'] .nk-bc-back {
+    display: inline-flex;
+}
+
+.nk-bc-actions {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Ghost: links lift on a soft background. */
+.nk-bc[data-variant='ghost'] {
+    --nk-bc-gap: 0.125rem;
+}
+
+.nk-bc[data-variant='ghost'] :is(.nk-bc-link, .nk-bc-text) {
+    padding: 0.25em 0.5em;
+}
+
+.nk-bc[data-variant='ghost'] .nk-bc-link:hover {
+    background: var(--color-hover);
+}
+
+/* Pills: every item a chip, the current one filled. */
+.nk-bc[data-variant='pills'] :is(.nk-bc-link, .nk-bc-text) {
+    height: var(--nk-bc-chip);
+    padding: 0 0.75em;
+    border-radius: 9999px;
+    background: var(--color-surface-inset);
+}
+
+.nk-bc[data-variant='pills'] .nk-bc-link:hover {
+    background: color-mix(in oklab, var(--color-fg) 10%, var(--color-surface-inset));
+}
+
+.nk-bc[data-variant='pills'] [aria-current='page'] {
+    background: var(--nk-bc-tone);
+    color: var(--nk-bc-on-tone);
+    font-weight: 500;
+}
+
+/* Steps: arrow-shaped segments nested into each other, no separators. */
+.nk-bc[data-variant='steps'] {
+    --nk-bc-gap: 0;
+}
+
+.nk-bc[data-variant='steps'] .nk-bc-item::after {
+    display: none;
+}
+
+.nk-bc[data-variant='steps'] .nk-bc-item + .nk-bc-item {
+    margin-inline-start: -0.5rem;
+}
+
+.nk-bc[data-variant='steps'] :is(.nk-bc-link, .nk-bc-text) {
+    height: calc(var(--nk-bc-chip) + 0.25rem);
+    padding: 0 1.375rem 0 1.5rem;
+    border-radius: 0;
+    background: var(--color-surface-inset);
+    clip-path: polygon(0 0, calc(100% - 0.75rem) 0, 100% 50%, calc(100% - 0.75rem) 100%, 0 100%, 0.75rem 50%);
+}
+
+.nk-bc[data-variant='steps'] .nk-bc-item:first-child :is(.nk-bc-link, .nk-bc-text) {
+    padding-inline-start: 0.875rem;
+    border-radius: var(--nk-bc-radius) 0 0 var(--nk-bc-radius);
+    clip-path: polygon(0 0, calc(100% - 0.75rem) 0, 100% 50%, calc(100% - 0.75rem) 100%, 0 100%);
+}
+
+.nk-bc[data-variant='steps'] .nk-bc-item:last-child :is(.nk-bc-link, .nk-bc-text) {
+    padding-inline-end: 1rem;
+    border-radius: 0 var(--nk-bc-radius) var(--nk-bc-radius) 0;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 0.75rem 50%);
+}
+
+.nk-bc[data-variant='steps'] .nk-bc-link:hover {
+    background: color-mix(in oklab, var(--color-fg) 10%, var(--color-surface-inset));
+}
+
+.nk-bc[data-variant='steps'] [aria-current='page'] {
+    background: var(--nk-bc-tone);
+    color: var(--nk-bc-on-tone);
+}
+
+.nk-bc[data-variant='steps'] .nk-bc-more {
+    padding: 0 0.75rem 0 1.25rem;
+}
+
+/* Contained: the trail in a bar, actions at its end. */
+.nk-bc[data-variant='contained'] {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    min-height: calc(var(--nk-bc-chip) + 1rem);
+    padding: 0.375rem 0.5rem 0.375rem 0.875rem;
+    border: 1px solid var(--color-edge);
+    border-radius: var(--nk-bc-radius);
+    background: color-mix(in oklab, var(--color-surface-inset) 45%, var(--color-surface));
+}
+
+.nk-bc[data-variant='contained'] .nk-bc-list {
+    flex: 1;
+}
+
+/* Underline: the current page carries a line in the trail's colour. */
+.nk-bc[data-variant='underline'] {
+    --nk-bc-gap: 0.625rem;
+}
+
+.nk-bc[data-variant='underline'] :is(.nk-bc-link, .nk-bc-text) {
+    padding-block: 0.375em;
+    border-radius: 0;
+}
+
+.nk-bc[data-variant='underline'] .nk-bc-link:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--nk-bc-sep);
+    text-underline-offset: 0.35em;
+}
+
+.nk-bc[data-variant='underline'] [aria-current='page'] {
+    padding-bottom: calc(0.375em - 2px);
+    border-bottom: 2px solid var(--nk-bc-tone);
+}
+
+.nk-bc[data-variant='underline'][data-tinted] [aria-current='page'] {
+    border-radius: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .nk-bc-link,
+    .nk-bc-text,
+    .nk-bc-ellipsis,
+    .nk-bc-switch {
+        transition: none;
+    }
+}

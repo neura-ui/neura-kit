@@ -2,6 +2,11 @@
 @import './themes/flow.css';
 @import './themes/kanban.css';
 @import './themes/time-dial.css';
+@import './themes/time-grid.css';
+@import './themes/file-manager.css';
+@import './themes/slider.css';
+@import './themes/rating.css';
+@import './themes/recurrence.css';
 @import './themes/date-reel.css';
 @import './themes/activity-rings.css';
 @import './themes/json-viewer.css';
@@ -26,6 +31,8 @@
 @import './themes/toast.css';
 @import './themes/table.css';
 @import './themes/popup.css';
+@import './themes/hover.css';
+@import './themes/breadcrumbs.css';
 @import './themes/modal.css';
 @import './themes/sideover.css';
 @import './themes/map.css';

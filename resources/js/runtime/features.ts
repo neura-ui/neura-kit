@@ -102,6 +102,41 @@ export const FEATURES: readonly Feature[] = [
         load: () => import('../features/forms/time-dial'),
     },
     {
+        name: 'natural-date',
+        tokens: ['neuraNaturalDate'],
+        load: () => import('../features/forms/natural-date'),
+    },
+    {
+        name: 'time-grid',
+        tokens: ['neuraTimeGrid'],
+        load: () => import('../features/forms/time-grid'),
+    },
+    {
+        name: 'recurrence',
+        tokens: ['neuraRecurrence'],
+        load: () => import('../features/forms/recurrence'),
+    },
+    {
+        name: 'slider',
+        tokens: ['neuraSlider'],
+        load: () => import('../features/forms/slider'),
+    },
+    {
+        name: 'rating',
+        tokens: ['neuraRating'],
+        load: () => import('../features/forms/rating'),
+    },
+    {
+        name: 'hover',
+        tokens: ['neuraTooltip', 'neuraHoverCard'],
+        load: () => import('../features/overlays/hover'),
+    },
+    {
+        name: 'breadcrumbs',
+        tokens: ['neuraBreadcrumbs'],
+        load: () => import('../features/overlays/breadcrumbs'),
+    },
+    {
         name: 'date-reel',
         tokens: ['neuraDateReel'],
         load: () => import('../features/forms/date-reel'),

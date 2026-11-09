@@ -24,6 +24,10 @@ class Size extends BasePack
                 'thumb' => 'size-8',
                 'body' => 'min-h-56',
                 'panel' => 'w-64',
+                'sidebar' => 'w-48',
+                'chip' => 'h-7 px-2.5 text-xs gap-1.5',
+                'badge' => 'size-6',
+                'badgeIcon' => 'size-3.5',
             ],
             'md' => [
                 'media' => 'h-20',
@@ -40,6 +44,10 @@ class Size extends BasePack
                 'thumb' => 'size-10',
                 'body' => 'min-h-72',
                 'panel' => 'w-72',
+                'sidebar' => 'w-56',
+                'chip' => 'h-7 px-3 text-xs gap-1.5',
+                'badge' => 'size-8',
+                'badgeIcon' => 'size-4',
             ],
             'lg' => [
                 'media' => 'h-24',
@@ -56,6 +64,10 @@ class Size extends BasePack
                 'thumb' => 'size-12',
                 'body' => 'min-h-96',
                 'panel' => 'w-80',
+                'sidebar' => 'w-64',
+                'chip' => 'h-8 px-3.5 text-sm gap-2',
+                'badge' => 'size-9',
+                'badgeIcon' => 'size-[1.125rem]',
             ],
         ];
     }

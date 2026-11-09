@@ -1,0 +1,178 @@
+/*
+ * Tooltip parts and the hover card. The tooltip itself is the shared .nk-tooltip (popup.css):
+ * this adds the light variant, the keyboard keys and the arrow, which follows the side the
+ * tip landed on (data-side, updated when x-anchor flips it).
+ */
+.nk-tooltip[data-keys] {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.nk-tooltip[data-variant='light'] {
+    background: var(--color-surface-raised);
+    color: var(--color-fg);
+    border-color: var(--color-edge);
+    box-shadow: 0 8px 24px color-mix(in oklab, var(--color-fg) 10%, transparent);
+}
+
+.nk-tooltip-keys {
+    display: inline-flex;
+    gap: 0.1875rem;
+}
+
+.nk-tooltip-keys kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.15rem;
+    height: 1.15rem;
+    padding: 0 0.25rem;
+    border-radius: 0.25rem;
+    background: color-mix(in oklab, currentColor 16%, transparent);
+    font: 500 0.6875rem/1 var(--font-mono, ui-monospace, monospace);
+}
+
+.nk-tooltip-arrow {
+    position: absolute;
+    width: 0.5rem;
+    height: 0.5rem;
+    background: inherit;
+    border: inherit;
+    border-width: 0;
+    rotate: 45deg;
+    pointer-events: none;
+}
+
+.nk-tooltip[data-side='top'] .nk-tooltip-arrow {
+    bottom: -0.3125rem;
+    left: calc(50% - 0.25rem);
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+}
+
+.nk-tooltip[data-side='bottom'] .nk-tooltip-arrow {
+    top: -0.3125rem;
+    left: calc(50% - 0.25rem);
+    border-top-width: 1px;
+    border-left-width: 1px;
+}
+
+.nk-tooltip[data-side='left'] .nk-tooltip-arrow {
+    right: -0.3125rem;
+    top: calc(50% - 0.25rem);
+    border-top-width: 1px;
+    border-right-width: 1px;
+}
+
+.nk-tooltip[data-side='right'] .nk-tooltip-arrow {
+    left: -0.3125rem;
+    top: calc(50% - 0.25rem);
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+}
+
+.nk-tooltip:is([data-side='top'], [data-side='bottom'])[data-align='start'] .nk-tooltip-arrow {
+    left: 0.75rem;
+}
+
+.nk-tooltip:is([data-side='top'], [data-side='bottom'])[data-align='end'] .nk-tooltip-arrow {
+    left: auto;
+    right: 0.75rem;
+}
+
+.nk-tooltip:is([data-side='left'], [data-side='right'])[data-align='start'] .nk-tooltip-arrow {
+    top: 0.5rem;
+}
+
+.nk-tooltip:is([data-side='left'], [data-side='right'])[data-align='end'] .nk-tooltip-arrow {
+    top: auto;
+    bottom: 0.5rem;
+}
+
+.nk-hover-card-trigger {
+    display: inline;
+}
+
+.nk-hover-card-anchor {
+    display: inline;
+}
+
+.nk-hover-card {
+    max-width: calc(100vw - 1rem);
+    border: 1px solid var(--color-edge);
+    background: var(--color-surface-raised);
+    color: var(--color-fg);
+    font-size: 0.875rem;
+    line-height: 1.4;
+    text-align: start;
+    white-space: normal;
+}
+
+.nk-hover-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+}
+
+.nk-hover-card-titles {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.nk-hover-card-title {
+    overflow: hidden;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nk-hover-card-subtitle {
+    color: var(--color-fg-muted);
+    font-size: 0.8125rem;
+}
+
+.nk-hover-card-aside {
+    flex: none;
+}
+
+.nk-hover-card-stats {
+    display: grid;
+    grid-template-columns: repeat(var(--nk-hover-card-columns, 3), minmax(0, 1fr));
+    gap: 0.5rem;
+}
+
+.nk-hover-card-stat {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: 0.5rem 0.625rem;
+    border-radius: 0.5rem;
+    background: var(--color-surface-inset);
+}
+
+.nk-hover-card-stat-label {
+    overflow: hidden;
+    color: var(--color-fg-muted);
+    font-size: 0.6875rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nk-hover-card-stat-value {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.nk-hover-card-footer {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.nk-hover-card-footer > * {
+    flex: 1;
+    justify-content: center;
+}

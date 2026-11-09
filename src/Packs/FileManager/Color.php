@@ -28,26 +28,26 @@ class Color extends BasePack
              */
             'head' => 'border-edge bg-surface',
 
-            'dropping' => 'data-[dropping]:ring-4 data-[dropping]:ring-primary-500/15 data-[dropping]:border-primary-400',
+            'dropping' => 'data-[dropping]:ring-4 data-[dropping]:ring-[var(--nk-fm-accent-soft)] data-[dropping]:border-[var(--nk-fm-accent-edge)]',
 
             // Sortable drag affordances on rows / tiles (`data-drop`, `data-dragging`).
             'drop' => [
-                'before' => 'data-[drop=before]:shadow-[inset_0_2px_0_0] data-[drop=before]:shadow-primary-500',
-                'after' => 'data-[drop=after]:shadow-[inset_0_-2px_0_0] data-[drop=after]:shadow-primary-500',
-                'inside' => 'data-[drop=inside]:bg-primary-50 data-[drop=inside]:ring-2 data-[drop=inside]:ring-inset data-[drop=inside]:ring-primary-400/50 dark:data-[drop=inside]:bg-primary-950/40',
+                'before' => 'data-[drop=before]:shadow-[inset_0_2px_0_0_var(--nk-fm-accent)]',
+                'after' => 'data-[drop=after]:shadow-[inset_0_-2px_0_0_var(--nk-fm-accent)]',
+                'inside' => 'data-[drop=inside]:bg-[var(--nk-fm-accent-soft)] data-[drop=inside]:ring-2 data-[drop=inside]:ring-inset data-[drop=inside]:ring-[var(--nk-fm-accent-edge)]',
                 'dragging' => 'data-[dragging]:opacity-40 data-[dragging]:cursor-grabbing',
             ],
 
             'entry' => [
                 'base' => 'text-fg-secondary hover:bg-hover',
-                'selected' => 'data-[selected]:bg-primary-50 data-[selected]:text-fg dark:data-[selected]:bg-primary-950/50',
-                'focused' => 'data-[focused]:ring-2 data-[focused]:ring-inset data-[focused]:ring-primary-500/45',
+                'selected' => 'data-[selected]:bg-[var(--nk-fm-accent-soft)] data-[selected]:text-[var(--nk-fm-accent-ink)] data-[selected]:shadow-[inset_0_0_0_1px_var(--nk-fm-accent-edge)]',
+                'focused' => 'data-[focused]:ring-2 data-[focused]:ring-inset data-[focused]:ring-[var(--nk-fm-accent)]/60',
             ],
 
             'tile' => [
                 'base' => 'border-edge bg-surface hover:border-edge-hover hover:bg-hover',
-                'selected' => 'data-[selected]:border-primary-400 data-[selected]:bg-primary-50/70 dark:data-[selected]:border-primary-500/70 dark:data-[selected]:bg-primary-950/40',
-                'focused' => 'data-[focused]:ring-2 data-[focused]:ring-primary-500/40',
+                'selected' => 'data-[selected]:border-[var(--nk-fm-accent)] data-[selected]:bg-[var(--nk-fm-accent-soft)] data-[selected]:shadow-[0_0_0_1px_var(--nk-fm-accent)]',
+                'focused' => 'data-[focused]:ring-2 data-[focused]:ring-[var(--nk-fm-accent)]/60',
             ],
 
             'kind' => 'text-fg-muted group-data-[kind=folder]/entry:text-info-500 group-data-[kind=image]/entry:text-primary-500 group-data-[kind=pdf]/entry:text-danger-500 group-data-[kind=sheet]/entry:text-success-500 group-data-[kind=archive]/entry:text-warning-500 group-data-[kind=video]/entry:text-info-400 group-data-[kind=audio]/entry:text-success-400',
@@ -61,7 +61,7 @@ class Color extends BasePack
                 'active' => 'bg-surface text-fg shadow-xs ring-1 ring-edge',
             ],
 
-            'selection' => 'border-primary-200 bg-primary-50 text-fg dark:border-primary-800/60 dark:bg-primary-950/50',
+            'selection' => 'border-[var(--nk-fm-accent-edge)] bg-[var(--nk-fm-accent-soft)] text-fg',
 
             'status' => 'border-edge bg-surface-raised text-fg-muted',
         ];

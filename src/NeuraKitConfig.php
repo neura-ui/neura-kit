@@ -616,6 +616,8 @@ class NeuraKitConfig
                 'sortable' => true,
                 'rounded' => self::GLOBAL,
                 'shadow' => self::GLOBAL,
+                // Selection, focus, active chips, progress: the theme's primary unless set.
+                'color' => Color::PRIMARY->value,
             ],
             'packs' => [
                 'shadows' => Packs\Shadow::class,
@@ -831,10 +833,17 @@ class NeuraKitConfig
             'default' => [
                 'rounded' => self::GLOBAL,
                 'shadow' => self::GLOBAL,
+                // Look of the flow, and the node shape and card style when a node names none (packs below).
+                'theme' => 'classic',
+                'shape' => 'card',
+                'variant' => 'elevated',
             ],
             'packs' => [
                 'rounders' => Packs\Rounded::class,
                 'shadows' => Packs\Shadow::class,
+                'themes' => Packs\Flow\Theme::class,
+                'shapes' => Packs\Flow\Shape::class,
+                'variants' => Packs\Flow\Variant::class,
             ],
         ], $options);
     }
@@ -875,6 +884,158 @@ class NeuraKitConfig
                 'rounders' => Packs\Rounded::class,
                 'shadows' => Packs\Shadow::class,
                 'sizes' => Packs\TimePicker\Size::class,
+            ],
+        ], $options);
+    }
+
+    /**
+     * The calendar (and the date picker's): `natural` adds a field above the months where a
+     * date is typed in plain words ("next Friday", "du 3 au 7 mars").
+     */
+    public static function calendar(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'natural' => false,
+            ],
+            'packs' => [],
+        ], $options);
+    }
+
+    public static function timeGrid(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'size' => Size::MD->value,
+                'rounded' => self::GLOBAL,
+                'color' => Color::PRIMARY->value,
+            ],
+            'packs' => [
+                'rounders' => Packs\Rounded::class,
+                'sizes' => Packs\TimeGrid\Size::class,
+            ],
+        ], $options);
+    }
+
+    /**
+     * Breadcrumbs: `variant` (default, ghost, pills, steps, contained, underline), `separator`
+     * (chevron, slash, dot, arrow, pipe, or an icon name), `color` of the current item,
+     * `maxItems` to fold the middle of long trails, `responsive` to fold it, then keep only a
+     * back link, when the trail does not fit.
+     */
+    public static function breadcrumbs(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'variant' => 'default',
+                'separator' => 'chevron',
+                'size' => Size::MD->value,
+                'color' => 'neutral',
+                'rounded' => self::GLOBAL,
+                'maxItems' => null,
+                'itemsBefore' => 1,
+                'itemsAfter' => 2,
+                'responsive' => true,
+            ],
+            'packs' => [
+                'rounders' => Packs\Rounded::class,
+                'sizes' => Packs\Breadcrumbs\Size::class,
+            ],
+        ], $options);
+    }
+
+    /**
+     * Slider and range slider. Track, thumb and text come from the size pack, the radius
+     * of the track and the thumbs from `rounded`, the fill from `color`.
+     */
+    public static function slider(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'size' => Size::MD->value,
+                'rounded' => Rounded::FULL->value,
+                'color' => Color::PRIMARY->value,
+            ],
+            'packs' => [
+                'rounders' => Packs\Rounded::class,
+                'sizes' => Packs\Slider\Size::class,
+            ],
+        ], $options);
+    }
+
+    public static function rating(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'size' => Size::MD->value,
+                'color' => Color::AMBER->value,
+                'icon' => 'star',
+            ],
+            'packs' => [
+                'sizes' => Packs\Rating\Size::class,
+            ],
+        ], $options);
+    }
+
+    /**
+     * Tooltip: `delay` is the wait before the first one opens (the next ones in a toolbar
+     * open at once), `variant` dark or light.
+     */
+    public static function tooltip(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'rounded' => self::GLOBAL,
+                'variant' => 'dark',
+                'position' => 'top',
+                'arrow' => true,
+                'delay' => 250,
+            ],
+            'packs' => [
+                'rounders' => Packs\Rounded::class,
+            ],
+        ], $options);
+    }
+
+    /**
+     * Hover card: `delay` is the wait before it opens, `closeDelay` the time the pointer
+     * has to reach the card before it closes.
+     */
+    public static function hoverCard(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'size' => Size::MD->value,
+                'rounded' => self::GLOBAL,
+                'shadow' => Shadow::LG->value,
+                'position' => 'bottom-start',
+                'delay' => 300,
+                'closeDelay' => 150,
+            ],
+            'packs' => [
+                'rounders' => Packs\Rounded::class,
+                'shadows' => Packs\Shadow::class,
+                'sizes' => Packs\HoverCard\Size::class,
+            ],
+        ], $options);
+    }
+
+    /**
+     * Recurrence editor: `natural` adds the field where the repetition is typed in plain
+     * words, `preview` is the number of upcoming dates listed (0 hides them).
+     */
+    public static function recurrence(array $options = []): array
+    {
+        return self::mix([
+            'default' => [
+                'size' => Size::MD->value,
+                'rounded' => self::GLOBAL,
+                'natural' => true,
+                'preview' => 5,
+            ],
+            'packs' => [
+                'rounders' => Packs\Rounded::class,
+                'sizes' => Packs\Recurrence\Size::class,
             ],
         ], $options);
     }

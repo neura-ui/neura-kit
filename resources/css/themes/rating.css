@@ -1,0 +1,99 @@
+/*
+ * Rating: each star is a muted base with the coloured star on top, cut to the part filled
+ * (--nk-rating-fill), so 4.3 or a half note draw the same way as whole ones.
+ */
+.nk-rating {
+    --nk-rating-icon: 1.5rem;
+    --nk-rating-tone: var(--color-amber-500, var(--color-amber));
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    min-width: 0;
+}
+
+.nk-rating-body {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.375rem 0.625rem;
+}
+
+.nk-rating-stars {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 0.375rem;
+    outline: none;
+}
+
+.nk-rating-stars:focus-visible {
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--nk-rating-tone) 35%, transparent);
+}
+
+.nk-rating-star {
+    --nk-rating-fill: 0%;
+    position: relative;
+    display: inline-flex;
+    width: var(--nk-rating-icon);
+    height: var(--nk-rating-icon);
+    flex: none;
+}
+
+.nk-rating:not([data-readonly], [data-disabled]) .nk-rating-star {
+    cursor: pointer;
+    transition: scale var(--nk-duration-fast) var(--nk-ease-standard);
+}
+
+@media (hover: hover) {
+    .nk-rating:not([data-readonly], [data-disabled]) .nk-rating-star:hover {
+        scale: 1.12;
+    }
+}
+
+.nk-rating-star svg {
+    width: var(--nk-rating-icon);
+    height: var(--nk-rating-icon);
+    flex: none;
+}
+
+.nk-rating-base {
+    color: color-mix(in oklab, var(--color-fg) 13%, transparent);
+}
+
+.nk-rating-fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    display: flex;
+    width: var(--nk-rating-fill);
+    overflow: hidden;
+    color: var(--nk-rating-tone);
+    pointer-events: none;
+}
+
+[dir='rtl'] .nk-rating-fill {
+    inset: 0 0 0 auto;
+    justify-content: flex-end;
+}
+
+.nk-rating-value {
+    color: var(--color-fg);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.nk-rating-caption {
+    color: var(--color-fg-muted);
+}
+
+.nk-rating[data-disabled] .nk-rating-body {
+    opacity: 0.55;
+}
+
+.nk-rating[data-invalid] .nk-rating-base {
+    color: color-mix(in oklab, var(--color-danger-500) 35%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .nk-rating-star {
+        transition: none;
+    }
+}

@@ -41,13 +41,13 @@
                     </template>
 
                     <template x-if="!detailed.thumbnail">
-                        <svg class="size-12 text-fg-muted" aria-hidden="true">
-                            <use :href="`#{{ $sprite }}-${icon(detailed)}`" />
-                        </svg>
+                        <span class="nk-fm-badge size-16 rounded-2xl" :data-kind="detailed.kind" aria-hidden="true">
+                            <svg class="size-8"><use :href="`#{{ $sprite }}-${icon(detailed)}`" /></svg>
+                        </span>
                     </template>
 
                     <p class="w-full break-words {{ $sizes['label'] }} font-medium text-fg" x-text="detailed.name"></p>
-                    <p class="{{ $sizes['meta'] }} uppercase tracking-wide text-fg-muted" x-text="detailed.extension || detailed.kind"></p>
+                    <p class="{{ $sizes['meta'] }} uppercase tracking-wide text-fg-muted" x-text="detailed.extension || detailed.typeLabel"></p>
                 </div>
 
                 <dl class="space-y-2">
@@ -57,11 +57,11 @@
                     </div>
                     <div class="flex items-baseline justify-between gap-3">
                         <dt class="{{ $sizes['meta'] }} text-fg-muted">{{ neura_trans('modified') }}</dt>
-                        <dd class="{{ $sizes['meta'] }} font-medium text-fg" x-text="detailed.modifiedLabel"></dd>
+                        <dd class="{{ $sizes['meta'] }} font-medium text-fg" x-text="detailed.modifiedTitle || detailed.modifiedLabel"></dd>
                     </div>
                     <div class="flex items-baseline justify-between gap-3">
                         <dt class="{{ $sizes['meta'] }} text-fg-muted">{{ neura_trans('type') }}</dt>
-                        <dd class="{{ $sizes['meta'] }} font-medium capitalize text-fg" x-text="detailed.kind"></dd>
+                        <dd class="{{ $sizes['meta'] }} font-medium text-fg" x-text="detailed.typeLabel"></dd>
                     </div>
                     <div class="flex items-baseline justify-between gap-3">
                         <dt class="{{ $sizes['meta'] }} shrink-0 text-fg-muted">{{ neura_trans('path') }}</dt>

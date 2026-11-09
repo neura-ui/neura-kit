@@ -12,14 +12,23 @@ import {
   el,
   emptyParagraph,
   isElement,
+  isEmptyBlock,
   tag,
   unwrap,
 } from './dom';
 import { BLOCKS, type Alignment, type BlockName } from './schema';
-import { blockId, setCaret } from './selection';
+import { blockId, blockParts, PART_ATTR, setCaret } from './selection';
+
+/**
+ * Blocks that hold running text and take a paragraph style or a list. Table
+ * cells and images are blocks too, but turning one into a heading or a list
+ * item would take it out of its table or its figure.
+ */
+const TEXT_BLOCKS = new Set(['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'pre', 'li']);
+const isTextBlock = (block: HTMLElement): boolean => TEXT_BLOCKS.has(tag(block)) && !block.closest('figure');
 
 /** Attributes that survive a block being retyped. */
-const CARRIED_ATTRS = ['data-nk-id', 'data-nk-align', 'data-nk-indent', 'data-nk-spacing', 'style'];
+const CARRIED_ATTRS = ['data-nk-id', 'data-nk-align', 'data-nk-indent', 'data-nk-spacing', 'style', 'data-suggest-split', 'data-suggest-join', 'data-suggest-style'];
 
 /** Which schema block an element currently represents. */
 export function blockNameOf(element: HTMLElement): BlockName | null {
@@ -66,7 +75,7 @@ function retag(element: HTMLElement, name: BlockName): HTMLElement {
 export function setBlockType(root: HTMLElement, range: Range, name: BlockName): void {
   for (const block of blocksInRange(range, root)) {
     // List items keep their `<li>` shell — Docs styles the text, not the bullet.
-    if (tag(block) === 'li') continue;
+    if (tag(block) === 'li' || !isTextBlock(block)) continue;
     if (blockNameOf(block) === name) continue;
     retag(block, name);
   }
@@ -82,14 +91,129 @@ function listOf(block: HTMLElement, root: HTMLElement): HTMLElement | null {
   return null;
 }
 
-/** Whether the whole selection already sits in a list of `listTag`. */
+const CHECKLIST_ATTR = 'data-checklist';
+const CHECKED_ATTR = 'data-checked';
+
+/** Whether a list is a checklist: a bulleted list whose items are ticked or not. */
+export function isChecklist(list: Element | null): boolean {
+  return !!list && tag(list) === 'ul' && list.hasAttribute(CHECKLIST_ATTR);
+}
+
+/** Make a list a plain list again, dropping the ticks. */
+function unmarkChecklist(list: HTMLElement): void {
+  list.removeAttribute(CHECKLIST_ATTR);
+  for (const item of Array.from(list.children)) item.removeAttribute(CHECKED_ATTR);
+}
+
+/** Whether the whole selection already sits in a list of `listTag` (a checklist is not a bulleted list). */
 export function inList(root: HTMLElement, range: Range, listTag: 'ul' | 'ol'): boolean {
   const blocks = blocksInRange(range, root);
   if (blocks.length === 0) return false;
   return blocks.every((block) => {
     const list = listOf(block, root);
-    return !!list && tag(list) === listTag;
+    return !!list && tag(list) === listTag && !isChecklist(list);
   });
+}
+
+/**
+ * How a numbered list counts, level by level: `decimal` (1. a. i., the
+ * default), `paren` (1) a) i)), `outline` (1. 1.1. 1.1.1.), or letters and
+ * roman numerals first.
+ */
+export const NUMBERINGS = ['decimal', 'paren', 'outline', 'upper-alpha', 'lower-alpha', 'upper-roman', 'lower-roman'] as const;
+export type Numbering = (typeof NUMBERINGS)[number];
+
+/** The outermost numbered list around a block, where its numbering is set. */
+function outerList(block: HTMLElement, root: HTMLElement): HTMLElement | null {
+  let list = listOf(block, root);
+  let outer: HTMLElement | null = null;
+  while (list && tag(list) === 'ol') {
+    outer = list;
+    const item = list.parentElement;
+    list = item && tag(item) === 'li' ? listOf(item, root) : null;
+  }
+  return outer;
+}
+
+/** The numbering of the list around the caret, or null outside a numbered list. */
+export function numberingAt(root: HTMLElement, range: Range): Numbering | null {
+  const block = blocksInRange(range, root)[0];
+  const list = block ? outerList(block, root) : null;
+  if (!list) return null;
+  const numbering = list.getAttribute('data-numbering') as Numbering | null;
+  return numbering && NUMBERINGS.includes(numbering) ? numbering : 'decimal';
+}
+
+/**
+ * Number the selection's lists one way — every part of a list a page cut. Not
+ * in a numbered list yet, the selection becomes one.
+ */
+export function setNumbering(root: HTMLElement, range: Range, numbering: Numbering): void {
+  if (!inList(root, range, 'ol')) toggleList(root, range, 'ol');
+  const lists = new Set<HTMLElement>();
+  for (const block of blocksInRange(range, root)) {
+    const list = outerList(block, root);
+    if (!list) continue;
+    const id = list.getAttribute('data-nk-id');
+    for (const part of id ? blockParts(root, id) : [list]) lists.add(part);
+  }
+  for (const list of lists) {
+    if (numbering === 'decimal') list.removeAttribute('data-numbering');
+    else list.setAttribute('data-numbering', numbering);
+  }
+}
+
+/** Whether the whole selection sits in checklists. */
+export function inChecklist(root: HTMLElement, range: Range): boolean {
+  const blocks = blocksInRange(range, root);
+  return blocks.length > 0 && blocks.every((block) => isChecklist(listOf(block, root)));
+}
+
+/**
+ * Turn the selected blocks into a checklist, or back into paragraphs when they
+ * already are one. A bulleted or numbered list becomes a checklist in place.
+ */
+export function toggleChecklist(root: HTMLElement, range: Range, checked = false): void {
+  const blocks = blocksInRange(range, root);
+  if (blocks.length === 0) return;
+
+  if (inChecklist(root, range)) {
+    for (const block of blocks) listOf(block, root)?.removeAttribute(CHECKLIST_ATTR);
+    for (const block of blocks) block.removeAttribute(CHECKED_ATTR);
+    liftFromList(root, blocks);
+    return;
+  }
+
+  const inBullets = blocks.every((block) => {
+    const list = listOf(block, root);
+    return !!list && tag(list) === 'ul';
+  });
+  // Building the list replaces the blocks, which can leave the range behind; the new
+  // items keep the blocks' ids, so they are found by those.
+  const ids = blocks.map((block) => blockId(block));
+  if (!inBullets) toggleList(root, range, 'ul');
+
+  const items = ids
+    .map((id) => root.querySelector<HTMLElement>(`[data-nk-id="${CSS.escape(id)}"]`))
+    .filter((item): item is HTMLElement => !!item);
+
+  for (const block of items) {
+    const list = listOf(block, root);
+    if (!list || tag(list) !== 'ul') continue;
+    list.setAttribute(CHECKLIST_ATTR, '');
+    for (const item of Array.from(list.children)) {
+      if (tag(item) === 'li' && !item.hasAttribute(CHECKED_ATTR)) item.setAttribute(CHECKED_ATTR, 'false');
+    }
+    if (checked && tag(block) === 'li') block.setAttribute(CHECKED_ATTR, 'true');
+  }
+}
+
+/** Tick or untick a checklist item, every page part of it included. */
+export function toggleChecked(root: HTMLElement, item: HTMLElement): void {
+  const next = item.getAttribute(CHECKED_ATTR) === 'true' ? 'false' : 'true';
+  const id = item.getAttribute('data-nk-id');
+  const parts = id ? blockParts(root, id) : [item];
+  for (const part of parts.length ? parts : [item]) part.setAttribute(CHECKED_ATTR, next);
 }
 
 /**
@@ -97,7 +221,7 @@ export function inList(root: HTMLElement, range: Range, listTag: 'ul' | 'ol'): b
  * already that kind of list. Consecutive blocks join one list.
  */
 export function toggleList(root: HTMLElement, range: Range, listTag: 'ul' | 'ol'): void {
-  const blocks = blocksInRange(range, root);
+  const blocks = blocksInRange(range, root).filter(isTextBlock);
   if (blocks.length === 0) return;
 
   if (inList(root, range, listTag)) {
@@ -112,8 +236,17 @@ export function toggleList(root: HTMLElement, range: Range, listTag: 'ul' | 'ol'
   for (const block of blocks) {
     const existing = listOf(block, root);
 
+    // A checklist asked to be a bulleted list loses its ticks.
+    if (existing && listTag === 'ul' && isChecklist(existing)) {
+      unmarkChecklist(existing);
+      list = existing;
+      previous = block;
+      continue;
+    }
+
     // Already a list, wrong kind — retag the container in place.
     if (existing && tag(existing) !== listTag) {
+      unmarkChecklist(existing);
       const replacement = doc.createElement(listTag);
       replacement.setAttribute('data-nk-id', existing.getAttribute('data-nk-id') ?? blockId(existing));
       while (existing.firstChild) replacement.appendChild(existing.firstChild);
@@ -272,7 +405,7 @@ export function currentLineSpacing(root: HTMLElement, range: Range): number {
 }
 
 /** Insert a node after the block holding the caret, then return it. */
-function insertAfterCaret(root: HTMLElement, range: Range, node: HTMLElement): HTMLElement {
+export function insertAfterCaret(root: HTMLElement, range: Range, node: HTMLElement): HTMLElement {
   const block = closestBlock(range.startContainer, root);
   const host = block?.closest('[data-nk-content]') ?? root;
   const anchor = block && block.parentNode === host ? block : host.lastElementChild;
@@ -284,25 +417,79 @@ function insertAfterCaret(root: HTMLElement, range: Range, node: HTMLElement): H
   return node;
 }
 
-export function insertHorizontalRule(root: HTMLElement, range: Range): void {
+/**
+ * Put an object (an image, a table, a rule, a page break) where the caret is,
+ * as a word processor does: in an empty paragraph it goes before it; at the
+ * start of a paragraph, before it; at its end, after it, with a new paragraph;
+ * in the middle, between its two halves. Returns the block where writing goes
+ * on, after the object.
+ *
+ * In a list or a table the object goes after it, and a paragraph cut across
+ * two pages is not cut again: it goes after that paragraph.
+ */
+export function placeObject(root: HTMLElement, range: Range, node: HTMLElement): HTMLElement {
   const doc = root.ownerDocument!;
-  const rule = insertAfterCaret(root, range, doc.createElement('hr'));
-  const paragraph = emptyParagraph(doc);
-  rule.parentNode?.insertBefore(paragraph, rule.nextSibling);
-  blockId(paragraph);
+  const block = closestBlock(range.startContainer, root);
+  const host = block?.closest<HTMLElement>('[data-nk-content]') ?? null;
+  blockId(node);
+
+  if (!block || !host || block.parentElement !== host || !isTextBlock(block) || block.hasAttribute(PART_ATTR)) {
+    insertAfterCaret(root, range, node);
+    const paragraph = emptyParagraph(doc);
+    node.after(paragraph);
+    blockId(paragraph);
+    return paragraph;
+  }
+
+  if (isEmptyBlock(block)) {
+    block.before(node);
+    return block;
+  }
+
+  const before = doc.createRange();
+  before.selectNodeContents(block);
+  before.setEnd(range.startContainer, range.startOffset);
+  const at = before.toString().length;
+
+  if (at === 0) {
+    block.before(node);
+    return block;
+  }
+
+  if (at >= (block.textContent ?? '').length) {
+    block.after(node);
+    const paragraph = emptyParagraph(doc);
+    node.after(paragraph);
+    blockId(paragraph);
+    return paragraph;
+  }
+
+  // In the middle: the text after the caret becomes a block of its own, after the object.
+  const tail = doc.createRange();
+  tail.setStart(range.startContainer, range.startOffset);
+  tail.setEnd(block, block.childNodes.length);
+  const next = block.cloneNode(false) as HTMLElement;
+  next.removeAttribute('data-nk-id');
+  next.appendChild(tail.extractContents());
+  blockId(next);
+  block.after(node);
+  node.after(next);
+  return next;
 }
 
-/** Insert an image as a figure so it can carry a caption. */
-export function insertImage(root: HTMLElement, range: Range, src: string, alt = ''): void {
+export function insertHorizontalRule(root: HTMLElement, range: Range): void {
+  const doc = root.ownerDocument!;
+  setCaret(root, placeObject(root, range, doc.createElement('hr')), 0);
+}
+
+/** Insert an image as a figure so it can carry a caption; writing goes on after it. Returns the figure. */
+export function insertImage(root: HTMLElement, range: Range, src: string, alt = ''): HTMLElement {
   const doc = root.ownerDocument!;
   const figure = el(doc, 'figure');
   const image = el(doc, 'img', { src, alt });
   figure.appendChild(image);
-  insertAfterCaret(root, range, figure);
-
-  const paragraph = emptyParagraph(doc);
-  figure.parentNode?.insertBefore(paragraph, figure.nextSibling);
-  blockId(paragraph);
+  setCaret(root, placeObject(root, range, figure), 0);
+  return figure;
 }
 
 /** Insert a rows × cols table with an empty paragraph in every cell. */
@@ -323,224 +510,27 @@ export function insertTable(root: HTMLElement, range: Range, rows: number, cols:
   }
 
   table.appendChild(body);
-  insertAfterCaret(root, range, table);
+  placeObject(root, range, table);
 
-  const paragraph = emptyParagraph(doc);
-  table.parentNode?.insertBefore(paragraph, table.nextSibling);
-  blockId(paragraph);
+  // Writing goes on in the first cell.
+  const first = table.querySelector<HTMLElement>('th, td');
+  if (first) setCaret(root, first, 0);
 }
 
 /* ------------------------------------------------------------------ tables -- */
 
-export interface TableContext {
-  table: HTMLElement;
-  row: HTMLElement;
-  cell: HTMLElement;
-  /** Index of the caret's row among all rows in the table. */
-  rowIndex: number;
-  /** Index of the caret's cell within its row. */
-  cellIndex: number;
-  rows: number;
-  columns: number;
-}
-
-/** Every `tr` in a table, in visual order across thead/tbody/tfoot. */
-function tableRows(table: HTMLElement): HTMLElement[] {
-  return Array.from(table.querySelectorAll<HTMLElement>(':scope > tr, :scope > * > tr'));
-}
-
-/** Cells of a row, header or body. */
-function rowCells(row: HTMLElement): HTMLElement[] {
-  return Array.from(row.children).filter((child) =>
-    ['td', 'th'].includes(tag(child))
-  ) as HTMLElement[];
-}
-
-/**
- * Where the caret sits inside a table, or null when it is not in one.
- *
- * This is what every table command works from, and what the toolbar uses to
- * decide whether the row/column actions apply.
- */
-export function tableContext(root: HTMLElement, range: Range): TableContext | null {
-  const start = range.startContainer;
-  const element = start.nodeType === Node.ELEMENT_NODE ? (start as HTMLElement) : start.parentElement;
-  const cell = element?.closest<HTMLElement>('td, th');
-  if (!cell || !root.contains(cell)) return null;
-
-  const row = cell.closest<HTMLElement>('tr');
-  const table = cell.closest<HTMLElement>('table');
-  if (!row || !table) return null;
-
-  const rows = tableRows(table);
-  const cells = rowCells(row);
-
-  return {
-    table,
-    row,
-    cell,
-    rowIndex: rows.indexOf(row),
-    cellIndex: cells.indexOf(cell),
-    rows: rows.length,
-    columns: Math.max(...rows.map((r) => rowCells(r).length), 0),
-  };
-}
-
-/** An empty cell, ready for the caret. */
-function makeCell(doc: Document, headerLike: boolean): HTMLElement {
-  const cell = doc.createElement(headerLike ? 'th' : 'td');
-  cell.appendChild(doc.createElement('br'));
-  blockId(cell);
-  return cell;
-}
-
-/** Insert a row above or below the one holding the caret. */
-export function insertTableRow(root: HTMLElement, range: Range, where: 'above' | 'below'): void {
-  const context = tableContext(root, range);
-  if (!context) return;
-
-  const doc = root.ownerDocument!;
-  const width = rowCells(context.row).length || context.columns;
-
-  const row = doc.createElement('tr');
-  for (let i = 0; i < width; i += 1) {
-    // A row added above the header keeps the header styling; everything else
-    // becomes a body row.
-    row.appendChild(makeCell(doc, where === 'above' && context.rowIndex === 0 && tag(context.cell) === 'th'));
-  }
-
-  context.row.parentNode?.insertBefore(row, where === 'above' ? context.row : context.row.nextSibling);
-
-  const first = rowCells(row)[0];
-  if (first) setCaret(root, first, 0);
-}
-
-/** Insert a column left or right of the one holding the caret. */
-export function insertTableColumn(root: HTMLElement, range: Range, where: 'left' | 'right'): void {
-  const context = tableContext(root, range);
-  if (!context) return;
-
-  const doc = root.ownerDocument!;
-  const target = context.cellIndex + (where === 'right' ? 1 : 0);
-
-  for (const row of tableRows(context.table)) {
-    const cells = rowCells(row);
-    // A short row (ragged table from a paste) just gets the cell appended.
-    const reference = cells[target] ?? null;
-    const cell = makeCell(doc, tag(cells[0] ?? row) === 'th');
-    row.insertBefore(cell, reference);
-  }
-
-  const cells = rowCells(context.row);
-  const landing = cells[target] ?? cells[cells.length - 1];
-  if (landing) setCaret(root, landing, 0);
-}
-
-/** Delete the row holding the caret; removes the table when it was the last. */
-export function deleteTableRow(root: HTMLElement, range: Range): void {
-  const context = tableContext(root, range);
-  if (!context) return;
-
-  if (context.rows <= 1) return deleteTable(root, range);
-
-  const rows = tableRows(context.table);
-  const next = rows[context.rowIndex + 1] ?? rows[context.rowIndex - 1];
-  const section = context.row.parentElement;
-  context.row.remove();
-
-  // A thead left with no rows would still take part in layout.
-  if (section && ['thead', 'tbody', 'tfoot'].includes(tag(section)) && !section.firstElementChild) {
-    section.remove();
-  }
-
-  const landing = next ? rowCells(next)[Math.min(context.cellIndex, rowCells(next).length - 1)] : null;
-  if (landing) setCaret(root, landing, 0);
-}
-
-/** Delete the column holding the caret; removes the table when it was the last. */
-export function deleteTableColumn(root: HTMLElement, range: Range): void {
-  const context = tableContext(root, range);
-  if (!context) return;
-
-  if (context.columns <= 1) return deleteTable(root, range);
-
-  for (const row of tableRows(context.table)) {
-    rowCells(row)[context.cellIndex]?.remove();
-  }
-
-  const cells = rowCells(context.row);
-  const landing = cells[Math.min(context.cellIndex, cells.length - 1)];
-  if (landing) setCaret(root, landing, 0);
-}
-
-/** Remove the whole table, leaving a paragraph where it was. */
-export function deleteTable(root: HTMLElement, range: Range): void {
-  const context = tableContext(root, range);
-  if (!context) return;
-
-  const doc = root.ownerDocument!;
-  const paragraph = emptyParagraph(doc);
-  blockId(paragraph);
-
-  context.table.parentNode?.replaceChild(paragraph, context.table);
-  setCaret(root, paragraph, 0);
-}
-
-/** Toggle the first row between header cells and ordinary cells. */
-export function toggleTableHeaderRow(root: HTMLElement, range: Range): void {
-  const context = tableContext(root, range);
-  if (!context) return;
-
-  const first = tableRows(context.table)[0];
-  if (!first) return;
-
-  const doc = root.ownerDocument!;
-  const makeHeader = tag(rowCells(first)[0] ?? first) !== 'th';
-
-  for (const cell of rowCells(first)) {
-    const replacement = doc.createElement(makeHeader ? 'th' : 'td');
-    for (const attr of ['data-nk-id', 'colspan', 'rowspan', 'data-nk-align']) {
-      const value = cell.getAttribute(attr);
-      if (value !== null) replacement.setAttribute(attr, value);
-    }
-    while (cell.firstChild) replacement.appendChild(cell.firstChild);
-    cell.replaceWith(replacement);
-  }
-}
-
-/**
- * Move the caret to the next or previous cell, adding a row when Tab is pressed
- * in the last cell — the behaviour every word processor has.
- */
-export function moveToAdjacentCell(root: HTMLElement, range: Range, forward: boolean): boolean {
-  const context = tableContext(root, range);
-  if (!context) return false;
-
-  const rows = tableRows(context.table);
-  const cells = rowCells(context.row);
-
-  const nextIndex = context.cellIndex + (forward ? 1 : -1);
-  if (nextIndex >= 0 && nextIndex < cells.length) {
-    setCaret(root, cells[nextIndex], forward ? 0 : (cells[nextIndex].textContent ?? '').length);
-    return true;
-  }
-
-  const rowStep = forward ? 1 : -1;
-  const neighbourRow = rows[context.rowIndex + rowStep];
-
-  if (!neighbourRow) {
-    if (!forward) return false;
-    insertTableRow(root, range, 'below');
-    return true;
-  }
-
-  const neighbourCells = rowCells(neighbourRow);
-  const landing = forward ? neighbourCells[0] : neighbourCells[neighbourCells.length - 1];
-  if (!landing) return false;
-
-  setCaret(root, landing, forward ? 0 : (landing.textContent ?? '').length);
-  return true;
-}
+// Row, column and cell commands work on a span-aware model; see tables.ts.
+export {
+  deleteTable,
+  deleteTableColumn,
+  deleteTableRow,
+  insertTableColumn,
+  insertTableRow,
+  moveToAdjacentCell,
+  tableContext,
+  toggleTableHeaderRow,
+  type TableContext,
+} from './tables';
 
 /**
  * Force everything after the caret onto a fresh sheet.
@@ -548,20 +538,23 @@ export function moveToAdjacentCell(root: HTMLElement, range: Range, forward: boo
  * The marker is an empty block the flow engine treats as taller than any
  * remaining space, so the normal overflow pass does the actual page creation.
  */
-export function insertPageBreak(root: HTMLElement, range: Range): void {
-  const doc = root.ownerDocument!;
-  const marker = el(doc, 'div', { 'data-nk-break': 'page' });
-  marker.setAttribute('contenteditable', 'false');
-  insertAfterCaret(root, range, marker);
+export type BreakKind = 'page' | 'odd' | 'even' | 'column';
 
-  const paragraph = emptyParagraph(doc);
-  marker.parentNode?.insertBefore(paragraph, marker.nextSibling);
-  blockId(paragraph);
+/** A break marker: the next page, or the next odd (right) or even (left) page. */
+export function breakMarker(doc: Document, kind: BreakKind): HTMLElement {
+  const marker = el(doc, 'div', { 'data-nk-break': kind });
+  marker.setAttribute('contenteditable', 'false');
+  return marker;
+}
+
+export function insertPageBreak(root: HTMLElement, range: Range, kind: BreakKind = 'page'): void {
+  setCaret(root, placeObject(root, range, breakMarker(root.ownerDocument!, kind)), 0);
 }
 
 /** Drop a block's own formatting, keeping its text. */
 export function clearBlockFormatting(root: HTMLElement, range: Range): void {
   for (const block of blocksInRange(range, root)) {
+    if (!isTextBlock(block)) continue;
     block.removeAttribute('data-nk-align');
     block.removeAttribute('data-nk-indent');
     block.removeAttribute('data-nk-spacing');

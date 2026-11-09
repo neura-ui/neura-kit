@@ -17,6 +17,8 @@ export const ZWSP = '​';
 
 /** True when `element` is the mark `name` — matching value too, if given. */
 export function isMarkElement(element: Element, name: MarkName, value?: string): boolean {
+  // A suggested insertion or deletion is review, not underline or strikethrough.
+  if (element.hasAttribute('data-suggest')) return false;
   const spec = MARKS[name];
   const elementTag = element.tagName.toLowerCase();
 

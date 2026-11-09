@@ -1,0 +1,292 @@
+/*
+ * File manager. The accent — selection, focus, active chips, progress — arrives inline as
+ * --nk-fm-accent (from `color`, the theme's primary by default); soft and edge are washes of
+ * it on the surface, so light and dark follow the tokens. Type badges and preview tiles keep
+ * a hue per kind of file (--nk-fm-hue), whatever the accent. The layout follows the
+ * component's own width (container `fm`), not the screen's.
+ */
+.nk-file-manager {
+    --nk-fm-accent-soft: color-mix(in oklab, var(--nk-fm-accent) 12%, var(--color-surface));
+    --nk-fm-accent-edge: color-mix(in oklab, var(--nk-fm-accent) 38%, var(--color-surface));
+    --nk-fm-accent-ink: color-mix(in oklab, var(--nk-fm-accent) 72%, var(--color-fg));
+    --nk-fm-hue: var(--color-gray-500);
+    container: fm / inline-size;
+}
+
+/* A hue per kind of file, for the badges, tiles and folder icons inside an entry. */
+.nk-file-manager [data-kind='folder'] { --nk-fm-hue: var(--color-blue-500); }
+.nk-file-manager [data-kind='image'] { --nk-fm-hue: var(--color-teal-600); }
+.nk-file-manager [data-kind='video'] { --nk-fm-hue: var(--color-violet-500); }
+.nk-file-manager [data-kind='audio'] { --nk-fm-hue: var(--color-emerald-600); }
+.nk-file-manager [data-kind='pdf'] { --nk-fm-hue: var(--color-red-500); }
+.nk-file-manager [data-kind='sheet'] { --nk-fm-hue: var(--color-green-600); }
+.nk-file-manager [data-kind='doc'] { --nk-fm-hue: var(--color-sky-600); }
+.nk-file-manager [data-kind='archive'] { --nk-fm-hue: var(--color-amber-600); }
+.nk-file-manager [data-kind='code'] { --nk-fm-hue: var(--color-slate-500); }
+.nk-file-manager :is([data-kind='text'], [data-kind='file']) { --nk-fm-hue: var(--color-gray-500); }
+
+/* The type badge: a rounded square washed with the kind's hue, its icon in that hue. */
+.nk-fm-badge {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: 0.5rem;
+    background: color-mix(in oklab, var(--nk-fm-hue) 14%, var(--color-surface));
+    color: color-mix(in oklab, var(--nk-fm-hue) 88%, var(--color-fg));
+}
+
+.nk-fm-badge > img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* A file card's preview area with no picture: a paler wash, a large icon, a label. */
+.nk-fm-tile {
+    background: color-mix(in oklab, var(--nk-fm-hue) 8%, var(--color-surface));
+    color: color-mix(in oklab, var(--nk-fm-hue) 88%, var(--color-fg));
+}
+
+.nk-fm-tile-label {
+    background: color-mix(in oklab, var(--nk-fm-hue) 90%, black);
+    color: white;
+}
+
+/* The grid: as many cards as fit at the chosen size; folders a little narrower. */
+.nk-fm-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--nk-fm-thumb, 180px)), 1fr));
+    gap: 0.75rem;
+}
+
+.nk-fm-grid-folders {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, max(11rem, var(--nk-fm-thumb, 180px))), 1fr));
+}
+
+/* Type chips: outlined, the picked one washed with the accent. */
+.nk-fm-chip {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    border: 1px solid var(--color-edge);
+    border-radius: 999px;
+    background: var(--color-surface);
+    color: var(--color-fg-secondary, var(--color-fg));
+    font-weight: 500;
+    white-space: nowrap;
+    transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.nk-fm-chip:hover {
+    background: var(--color-hover);
+}
+
+.nk-fm-chip[aria-pressed='true'] {
+    border-color: var(--nk-fm-accent-edge);
+    background: var(--nk-fm-accent-soft);
+    color: var(--nk-fm-accent-ink);
+}
+
+.nk-fm-chip-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 0.1875rem;
+    background: var(--nk-fm-hue);
+}
+
+/* Side panel: shortcuts and the folder tree. */
+.nk-fm-side-item,
+.nk-fm-tree-row {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: 0.5rem;
+    color: var(--color-fg-secondary, var(--color-fg));
+    font-size: 0.8125rem;
+}
+
+.nk-fm-side-item {
+    height: 2.125rem;
+    padding-inline: 0.625rem;
+    text-align: start;
+}
+
+.nk-fm-tree-row {
+    height: 1.875rem;
+    padding-inline-end: 0.375rem;
+    gap: 0.125rem;
+}
+
+.nk-fm-side-item:hover,
+.nk-fm-tree-row:hover {
+    background: var(--color-hover);
+    color: var(--color-fg);
+}
+
+.nk-fm-side-item[aria-current='page'],
+.nk-fm-tree-row[data-current] {
+    background: var(--nk-fm-accent-soft);
+    color: var(--nk-fm-accent-ink);
+    font-weight: 500;
+}
+
+.nk-fm-tree-row[data-drop] {
+    outline: 2px dashed var(--nk-fm-accent-edge);
+    outline-offset: -2px;
+}
+
+.nk-fm-scrim {
+    display: none;
+}
+
+/* Narrow: the panel is a drawer over the content, opened from the toolbar. */
+@container fm (width < 40rem) {
+    .nk-fm-sidebar {
+        position: absolute;
+        inset-block: 0;
+        inset-inline-start: 0;
+        z-index: 30;
+        width: min(16rem, 85%);
+        translate: -100% 0;
+        visibility: hidden;
+        background: var(--color-surface);
+        box-shadow: 0 12px 32px rgb(15 18 22 / 0.18);
+        transition: translate 200ms ease, visibility 0s linear 200ms;
+    }
+
+    .nk-fm-sidebar[data-open] {
+        translate: 0 0;
+        visibility: visible;
+        transition: translate 200ms ease, visibility 0s;
+    }
+
+    .nk-fm-scrim {
+        position: absolute;
+        inset: 0;
+        z-index: 25;
+        display: block;
+        background: rgb(15 18 22 / 0.25);
+    }
+}
+
+/* A folder created here, until the app's items include it. */
+.nk-file-manager [data-pending]:not(:has([data-fm-name-input]:focus)) {
+    opacity: 0.6;
+}
+
+/* The selection's actions float at the foot of the files. */
+.nk-fm-selection-bar {
+    position: absolute;
+    inset-inline-start: 50%;
+    bottom: 0.875rem;
+    z-index: 20;
+    display: flex;
+    max-width: calc(100% - 1.5rem);
+    align-items: center;
+    gap: 0.125rem;
+    translate: -50% 0;
+    padding: 0.3125rem;
+    border-radius: 0.75rem;
+    background: color-mix(in oklab, var(--color-fg) 92%, transparent);
+    color: var(--color-surface);
+    box-shadow: 0 14px 30px rgb(15 18 22 / 0.28);
+}
+
+/* Cut, waiting to be pasted. */
+.nk-file-manager [data-cut] {
+    opacity: 0.5;
+}
+
+/* The lasso. */
+.nk-fm-lasso {
+    position: absolute;
+    z-index: 15;
+    border: 1px solid var(--nk-fm-accent);
+    border-radius: 0.25rem;
+    background: color-mix(in oklab, var(--nk-fm-accent) 14%, transparent);
+    pointer-events: none;
+}
+
+.nk-file-manager[data-lassoing] {
+    user-select: none;
+}
+
+/* The upload panel, at the bottom corner. */
+.nk-fm-uploads {
+    position: absolute;
+    inset-inline-end: 0.75rem;
+    bottom: 2.75rem;
+    z-index: 35;
+    width: min(19rem, calc(100% - 1.5rem));
+    overflow: hidden;
+    border: 1px solid var(--color-edge);
+    border-radius: 0.75rem;
+    background: var(--color-surface);
+    box-shadow: 0 16px 36px rgb(15 18 22 / 0.16);
+}
+
+/* The "+" button: only in a narrow file manager. */
+.nk-fm-fab {
+    display: none;
+}
+
+.nk-fm-fab-button {
+    display: inline-flex;
+    width: 3.5rem;
+    height: 3.5rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 1.125rem;
+    background: var(--nk-fm-accent);
+    color: white;
+    box-shadow: 0 10px 24px color-mix(in oklab, var(--nk-fm-accent) 40%, transparent);
+}
+
+/* Narrow: taller rows, "…" always there and big enough for a finger, ticks only while
+   selecting by touch, the selection's actions on top, a "+" for new things. */
+@container fm (width < 32rem) {
+    .nk-file-manager [data-fm-list] [data-entry] {
+        height: 3.5rem;
+    }
+
+    .nk-file-manager [data-fm-list] [data-entry] [data-more] {
+        width: 2.75rem;
+        height: 2.75rem;
+        opacity: 1;
+    }
+
+    .nk-file-manager:not([data-touch-select]) [data-entry] input[type='checkbox'] {
+        display: none;
+    }
+
+    .nk-file-manager .nk-fm-selection-bar {
+        display: none !important;
+    }
+
+    /* New folder and Upload live in the + button. */
+    .nk-file-manager [data-fm-toolbar-add] {
+        display: none;
+    }
+
+    .nk-fm-fab {
+        position: absolute;
+        inset-inline-end: 1rem;
+        bottom: 3rem;
+        z-index: 30;
+        display: block;
+    }
+
+    .nk-fm-search-open {
+        position: absolute;
+        inset-inline: 0.5rem;
+        z-index: 20;
+        display: flex !important;
+    }
+
+    .nk-fm-search-open input {
+        width: 100% !important;
+    }
+}

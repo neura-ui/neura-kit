@@ -1,3 +1,7 @@
+@php
+    $t = fn (string $key, string $fallback) => neura_trans('editor'.$key, null, $fallback);
+@endphp
+
 {{--
     Horizontal ruler.
 
@@ -14,7 +18,7 @@
     x-ref="ruler"
     x-bind:style="`--nk-zoom: ${zoom / 100}; width: ${pageWidth()}px`"
     role="group"
-    aria-label="Page ruler"
+    aria-label="{{ $t('Ruler', 'Page ruler') }}"
 >
     {{-- Shaded bands over the margin areas --}}
     <div class="nk-ruler-margin" x-bind:style="`left: 0; width: ${margins.left}px`"></div>
@@ -33,8 +37,8 @@
         class="nk-ruler-handle nk-ruler-handle-indent"
         x-bind:style="`left: ${margins.left + firstLineIndent()}px`"
         x-on:pointerdown="startRulerDrag('firstLine', $event)"
-        title="First line indent"
-        aria-label="First line indent"
+        title="{{ $t('FirstLineIndent', 'First line indent') }}"
+        aria-label="{{ $t('FirstLineIndent', 'First line indent') }}"
     ></button>
 
     {{-- Left margin (bottom marker) --}}
@@ -43,8 +47,8 @@
         class="nk-ruler-handle nk-ruler-handle-left"
         x-bind:style="`left: ${margins.left}px`"
         x-on:pointerdown="startRulerDrag('left', $event)"
-        title="Left margin"
-        aria-label="Left margin"
+        title="{{ $t('LeftMargin', 'Left margin') }}"
+        aria-label="{{ $t('LeftMargin', 'Left margin') }}"
     ></button>
 
     {{-- Right margin --}}
@@ -53,7 +57,7 @@
         class="nk-ruler-handle nk-ruler-handle-right"
         x-bind:style="`left: ${pageWidth() - margins.right}px`"
         x-on:pointerdown="startRulerDrag('right', $event)"
-        title="Right margin"
-        aria-label="Right margin"
+        title="{{ $t('RightMargin', 'Right margin') }}"
+        aria-label="{{ $t('RightMargin', 'Right margin') }}"
     ></button>
 </div>

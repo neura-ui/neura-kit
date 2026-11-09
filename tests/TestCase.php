@@ -17,6 +17,11 @@ abstract class TestCase extends OrchestraTestCase
 
         $providers[] = NeuraKitServiceProvider::class;
 
+        // The kit's icons fall back to wireui/heroicons (a dependency the app discovers itself).
+        if (class_exists(\WireUi\Heroicons\HeroiconsServiceProvider::class)) {
+            $providers[] = \WireUi\Heroicons\HeroiconsServiceProvider::class;
+        }
+
         if (class_exists(\BladeUI\Icons\BladeIconsServiceProvider::class)) {
             $providers[] = \BladeUI\Icons\BladeIconsServiceProvider::class;
         }

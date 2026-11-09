@@ -1,33 +1,18 @@
-export type FileManagerKind =
-  | 'folder' | 'image' | 'video' | 'audio' | 'pdf' | 'sheet' | 'doc' | 'archive' | 'code' | 'text' | 'file';
+import {
+  decorate as decorateNode,
+  formatSize,
+  ICONS,
+  type FileManagerEntry,
+  type FileManagerKind,
+  type FileManagerNode,
+} from './file-manager/model';
+import { byGroup, groupsPresent } from './file-manager/filters';
+import { allFolderIds, folderRows, type TreeRow } from './file-manager/tree';
+import { boxFrom, hits, type Box } from './file-manager/lasso';
+import { nameError, stemRange, type NameError } from './file-manager/names';
+import { applyUploadEvent, queueFiles, uploadSummary, type Upload } from './file-manager/uploads';
 
-export type FileManagerNode = {
-  id: string;
-  name: string;
-  type?: 'folder' | 'file';
-  size?: number;
-  modified?: string | number;
-  mime?: string;
-  url?: string;
-  thumbnail?: string;
-  children?: FileManagerNode[];
-  [key: string]: any;
-};
-
-export type FileManagerEntry = FileManagerNode & {
-  id: string;
-  name: string;
-  isFolder: boolean;
-  kind: FileManagerKind;
-  extension: string;
-  sizeLabel: string;
-  modifiedLabel: string;
-  modifiedAt: number;
-  count: number;
-  /** Folder chain holding this entry — only filled by a whole-tree search. */
-  pathIds?: string[];
-  pathNames?: string[];
-};
+export type { FileManagerEntry, FileManagerKind, FileManagerNode } from './file-manager/model';
 
 export type FileManagerSort = 'name' | 'size' | 'modified' | 'kind' | 'manual';
 export type FileManagerDropPosition = 'before' | 'after' | 'inside';
@@ -63,6 +48,22 @@ export type FileManagerOptions = {
   rootLabel?: string;
   path?: string[];
   locale?: string;
+  /** Card size in the grid, 1 (small) to 5 (large). */
+  thumbSize?: number;
+  /** Chips that filter the open folder by type. */
+  filters?: boolean;
+  /** The side panel: shortcuts and the folder tree. */
+  sidebar?: boolean;
+  /** Side panel shortcuts the app fills; the first is "home". */
+  shortcuts?: Array<{ id: string; label: string }>;
+  /** "New folder" adds a row being named; off, it only emits `new-folder`. */
+  inlineCreate?: boolean;
+  /** Quick look: opening a file shows it over the file manager; off, it emits `open`. */
+  preview?: boolean;
+  /** Upload opens the browser's file picker; off, it emits `upload-request`. */
+  uploadPicker?: boolean;
+  /** Files can be starred (`starred` on a node), emitting `star`. */
+  starrable?: boolean;
 };
 
 const defaults: Required<Omit<FileManagerOptions, 'items' | 'path' | 'locale'>> & {
@@ -88,9 +89,43 @@ const defaults: Required<Omit<FileManagerOptions, 'items' | 'path' | 'locale'>> 
   renamable: true,
   loading: false,
   rootLabel: 'Home',
+  thumbSize: 3,
+  filters: true,
+  sidebar: false,
+  shortcuts: [],
+  inlineCreate: true,
+  preview: true,
+  uploadPicker: true,
+  starrable: false,
   path: [],
   locale: undefined,
 };
+
+/** How long a finger rests on a file before selecting by touch starts, in ms. */
+const LONG_PRESS_MS = 500;
+
+/** What the app sends back about an upload. */
+const UPLOAD_EVENTS = ['file-manager:progress', 'file-manager:uploaded', 'file-manager:failed'];
+
+/** The most text the viewer reads from a file. */
+const PREVIEW_TEXT_LIMIT = 512 * 1024;
+
+/** The id of a folder row being named, before the app creates it. */
+const NEW_ID = '__new__';
+
+/** Chip labels per group, with their translation keys. */
+const GROUP_LABELS: Record<string, [string, string]> = {
+  folder: ['fmGroupFolder', 'Folders'],
+  image: ['fmGroupImage', 'Images'],
+  document: ['fmGroupDocument', 'Documents'],
+  video: ['fmGroupVideo', 'Videos'],
+  audio: ['fmGroupAudio', 'Audio'],
+  archive: ['fmGroupArchive', 'Archives'],
+  code: ['fmGroupCode', 'Code'],
+};
+
+/** Narrowest card in the grid for each size step, in px. */
+const THUMB_WIDTHS = [120, 150, 180, 220, 280];
 
 /** Breadcrumb entries kept visible before the trail collapses behind an ellipsis. */
 const TRAIL_VISIBLE = 3;
@@ -108,120 +143,63 @@ function t(key: string, fallback: string, params?: Record<string, string>): stri
   return out;
 }
 
-function formatSize(bytes?: number): string {
-  if (bytes === undefined || bytes === null || bytes < 0) return '—';
-  if (bytes === 0) return '0 B';
-
-  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.min(units.length - 1, Math.floor(Math.log(bytes) / Math.log(1024)));
-  const value = bytes / Math.pow(1024, i);
-
-  return `${value >= 100 || i === 0 ? Math.round(value) : Math.round(value * 10) / 10} ${units[i]}`;
-}
-
-function toTimestamp(value?: string | number): number {
-  if (value === undefined || value === null || value === '') return 0;
-  if (typeof value === 'number') return value < 1e12 ? value * 1000 : value;
-
-  const parsed = Date.parse(value);
-
-  return Number.isNaN(parsed) ? 0 : parsed;
-}
-
-function formatDate(value: number, locale?: string): string {
-  if (!value) return '—';
-
-  const date = new Date(value);
-  const now = Date.now();
-  const diff = now - value;
-
-  if (diff >= 0 && diff < 60_000) return t('justNow', 'Just now');
-
-  const sameYear = new Date(now).getFullYear() === date.getFullYear();
-
-  return date.toLocaleDateString(locale || undefined, {
-    day: 'numeric',
-    month: 'short',
-    year: sameYear ? undefined : 'numeric',
-  }) + ', ' + date.toLocaleTimeString(locale || undefined, { hour: '2-digit', minute: '2-digit' });
-}
-
-const KIND_BY_EXTENSION: Record<string, FileManagerKind> = {
-  jpg: 'image', jpeg: 'image', png: 'image', gif: 'image', webp: 'image', avif: 'image',
-  svg: 'image', bmp: 'image', heic: 'image', ico: 'image', tif: 'image', tiff: 'image',
-  mp4: 'video', webm: 'video', mov: 'video', avi: 'video', mkv: 'video',
-  mp3: 'audio', wav: 'audio', ogg: 'audio', flac: 'audio', m4a: 'audio',
-  pdf: 'pdf',
-  xls: 'sheet', xlsx: 'sheet', csv: 'sheet', numbers: 'sheet',
-  doc: 'doc', docx: 'doc', rtf: 'doc', odt: 'doc', pages: 'doc',
-  zip: 'archive', rar: 'archive', '7z': 'archive', tar: 'archive', gz: 'archive',
-  js: 'code', ts: 'code', json: 'code', php: 'code', html: 'code', css: 'code',
-  vue: 'code', blade: 'code', py: 'code', rb: 'code', go: 'code', sh: 'code',
-  txt: 'text', md: 'text', log: 'text',
-};
-
-function extensionOf(name: string): string {
-  const parts = name.split('.');
-
-  return parts.length > 1 ? (parts.pop() || '').toLowerCase() : '';
-}
-
-function detectKind(node: FileManagerNode): FileManagerKind {
-  if (node.type === 'folder' || Array.isArray(node.children)) return 'folder';
-
-  const mime = (node.mime || '').toLowerCase();
-  if (mime.startsWith('image/')) return 'image';
-  if (mime.startsWith('video/')) return 'video';
-  if (mime.startsWith('audio/')) return 'audio';
-  if (mime === 'application/pdf') return 'pdf';
-
-  return KIND_BY_EXTENSION[extensionOf(node.name)] ?? 'file';
-}
-
-/** Icon name resolved against the Heroicons set used by <neura::icon>. */
-const ICONS: Record<FileManagerKind, string> = {
-  folder: 'folder',
-  image: 'photo',
-  video: 'film',
-  audio: 'musical-note',
-  pdf: 'document-text',
-  sheet: 'table-cells',
-  doc: 'document-text',
-  archive: 'archive-box',
-  code: 'code-bracket',
-  text: 'document-text',
-  file: 'document',
-};
-
 function decorate(node: FileManagerNode, locale?: string): FileManagerEntry {
-  const kind = detectKind(node);
-  const isFolder = kind === 'folder';
-  const modifiedAt = toTimestamp(node.modified);
-
-  return {
-    ...node,
-    id: String(node.id ?? node.name),
-    name: node.name,
-    isFolder,
-    kind,
-    extension: isFolder ? '' : extensionOf(node.name).toUpperCase(),
-    sizeLabel: isFolder
-      ? t('itemsCount', '{count} items', { count: String(node.children?.length ?? 0) })
-      : formatSize(node.size),
-    modifiedAt,
-    modifiedLabel: formatDate(modifiedAt, locale),
-    count: node.children?.length ?? 0,
-  };
+  return decorateNode(node, locale, Date.now(), { t });
 }
 
 export function neuraFileManager(options: FileManagerOptions = {}) {
   const config = { ...defaults, ...options };
+  // The files being sent, kept out of Alpine's reactivity, for Retry.
+  const uploadFiles = new Map<string, File>();
+  let onUploadEvent: ((event: Event) => void) | null = null;
 
   return {
     // State
     tree: config.items as FileManagerNode[],
     path: [...config.path] as string[],
     view: config.view as 'list' | 'grid',
+    thumbSize: Math.max(1, Math.min(5, Math.round(config.thumbSize))),
+    kindFilter: null as string | null,
+    searchFocus: false,
+    sidebar: config.sidebar,
+    shortcuts: config.shortcuts as Array<{ id: string; label: string }>,
+    sidebarOpen: false,
+    expanded: [] as string[],
+    activeShortcut: (config.shortcuts[0]?.id ?? null) as string | null,
+    /** The tree the side panel draws: the home items, kept while another shortcut shows. */
+    treeSource: config.items as FileManagerNode[],
+    treeDrop: null as string | null,
+    inlineCreate: config.inlineCreate,
+    /** The name being typed: a rename, or a new folder (`isNew`). */
+    editing: null as null | { id: string; draft: string; error: NameError; isNew: boolean; original: string },
+    /** Copied or cut entries waiting for Paste. */
+    clipboard: null as null | { mode: 'copy' | 'cut'; ids: string[]; items: FileManagerNode[] },
+    movePicker: false,
+    /** Selecting by touch (a long press) — the selection's actions then sit on top. */
+    touchSelect: false,
+    /** The lasso being drawn, in the list's own coordinates. */
+    lasso: null as Box | null,
+    _lassoJust: false,
+    preview: config.preview,
+    /** The file shown in the viewer, by id. */
+    previewing: null as string | null,
+    previewZoom: 1,
+    previewPan: { x: 0, y: 0 },
+    previewText: null as string | null,
+    previewLoading: false,
+    previewFailed: false,
+    _previewAbort: null as AbortController | null,
+    uploadPicker: config.uploadPicker,
+    uploads: [] as Upload[],
+    uploadsOpen: false,
+    uploadsCollapsed: false,
+    starrable: config.starrable,
+    searchExpanded: false,
+    _press: null as null | { timer: number; x: number; y: number },
+    _pressFired: false,
+    _lastPointer: 'mouse' as string,
+    /** A folder created here, shown until the app hands its items back. */
+    pendingCreate: null as null | { name: string; tree: FileManagerNode[]; path: string },
     sort: config.sort as FileManagerSort,
     direction: config.direction as 'asc' | 'desc',
     search: '',
@@ -242,6 +220,7 @@ export function neuraFileManager(options: FileManagerOptions = {}) {
 
     // Configuration
     sortable: config.sortable,
+    filters: config.filters,
     selectable: config.selectable,
     multiple: config.multiple && config.selectable,
     searchable: config.searchable,
@@ -261,6 +240,24 @@ export function neuraFileManager(options: FileManagerOptions = {}) {
     _searchTimer: 0 as any,
 
     init() {
+      // Selecting by touch ends with the selection.
+      (this as any).$watch('selected', (ids: string[]) => {
+        if (ids.length === 0) this.touchSelect = false;
+      });
+
+      // The app reports on uploads with window events; an instance only hears its own ids.
+      onUploadEvent = (event: Event) => {
+        const detail = (event as CustomEvent).detail ?? {};
+        const type = event.type === 'file-manager:progress' ? 'progress' : event.type === 'file-manager:uploaded' ? 'uploaded' : 'failed';
+        const next = applyUploadEvent(this.uploads, { type, id: String(detail.id ?? ''), progress: detail.progress, message: detail.message });
+        if (next === this.uploads) return;
+        this.uploads = next;
+        const upload = next.find((item) => item.id === String(detail.id));
+        if (upload && type === 'uploaded') this.announce(t('uploadedName', '{name} uploaded', { name: upload.name }));
+        if (upload && type === 'failed') this.announce(t('failedName', '{name} failed', { name: upload.name }));
+      };
+      for (const name of UPLOAD_EVENTS) window.addEventListener(name, onUploadEvent);
+
       // A remote search is the host's job: debounce, then hand over the query.
       (this as any).$watch('search', (value: string) => {
         if (this.searchMode !== 'remote') return;
@@ -279,7 +276,619 @@ export function neuraFileManager(options: FileManagerOptions = {}) {
       });
     },
 
+    /* ---------------------------------------------------------------- */
+    /* Naming in place                                                   */
+    /* ---------------------------------------------------------------- */
+
+    /** The new folder's row: while it is named, then until the app's items come back. */
+    get draftFolder(): FileManagerNode | null {
+      if (this.isGlobalSearch) return null;
+      if (this.editing?.isNew) return { id: NEW_ID, name: this.editing.draft || ' ', type: 'folder', children: [] };
+      const pending = this.pendingCreate;
+      if (pending && pending.tree === this.tree && pending.path === this.path.join('/')) {
+        return { id: NEW_ID, name: pending.name, type: 'folder', children: [] };
+      }
+
+      return null;
+    },
+
+    isEditing(id: string): boolean {
+      return this.editing?.id === id;
+    },
+
+    /** Turn an entry's name into a field, its stem selected. */
+    startRename(entry: FileManagerEntry) {
+      if (!this.renamable || entry.id === NEW_ID) return;
+
+      this.closeMenu();
+      this.editing = { id: entry.id, draft: entry.name, error: null, isNew: false, original: entry.name };
+      this.focusNameField(stemRange(entry.name));
+    },
+
+    /** A new folder row at the top, its name selected, ready to type over. */
+    startCreate() {
+      this.closeMenu();
+      // A type filter could hide the new folder: back to everything.
+      this.kindFilter = null;
+
+      const base = t('newFolderName', 'New folder');
+      const taken = this.currentNodes.map((node) => node.name.toLowerCase());
+      let name = base;
+      for (let n = 2; taken.includes(name.toLowerCase()); n++) name = `${base} ${n}`;
+
+      this.clearSelection();
+      this.editing = { id: NEW_ID, draft: name, error: null, isNew: true, original: '' };
+      this.focusNameField([0, name.length]);
+    },
+
+    focusNameField(range: [number, number]) {
+      (this as any).$nextTick(() => {
+        const input = (this as any).$root?.querySelector?.(`[data-entry="${CSS.escape(this.editing?.id ?? '')}"] [data-fm-name-input]`) as HTMLInputElement | null;
+        input?.focus();
+        input?.setSelectionRange(range[0], range[1]);
+        input?.closest('[data-entry]')?.scrollIntoView({ block: 'nearest' });
+      });
+    },
+
+    nameErrorText(): string {
+      const error = this.editing?.error;
+      if (error === 'empty') return t('nameEmpty', 'Type a name');
+      if (error === 'slash') return t('nameSlash', 'A name cannot hold / or \\');
+      if (error === 'taken') return t('nameTaken', 'Something here already has this name');
+
+      return '';
+    },
+
+    /** Enter: check the name, then rename or create — or say what is wrong and stay. */
+    commitName() {
+      const editing = this.editing;
+      if (!editing) return;
+
+      const name = editing.draft.trim();
+      const siblings = this.currentNodes.filter((node) => String(node.id) !== editing.id).map((node) => node.name);
+      const error = nameError(name, siblings, editing.isNew ? undefined : editing.original);
+      if (error) {
+        this.editing = { ...editing, error };
+        return;
+      }
+
+      this.editing = null;
+
+      if (editing.isNew) {
+        this.pendingCreate = { name, tree: this.tree, path: this.path.join('/') };
+        this.emit('new-folder', { path: [...this.path], name });
+        this.announce(t('folderCreated', '{name} created', { name }));
+        return;
+      }
+
+      if (name === editing.original) return;
+
+      const node = this.findNode(this.tree, editing.id);
+      if (!node) return;
+      const before = this.raw(decorate(node, this.locale));
+      node.name = name;
+      this.tree = [...this.tree];
+      if (this.pendingCreate) this.pendingCreate = { ...this.pendingCreate, tree: this.tree };
+      this.emit('rename', { items: [before], name, path: [...this.path] });
+      this.announce(t('renamedTo', 'Renamed to {name}', { name }));
+    },
+
+    cancelName() {
+      this.editing = null;
+    },
+
+    /** Is the side panel showing the home items (first shortcut, or no shortcuts)? */
+    get atHome(): boolean {
+      return this.activeShortcut === null || this.activeShortcut === this.shortcuts[0]?.id;
+    },
+
+    /** Rows of the side panel's folder tree. */
+    get treeRows(): TreeRow[] {
+      return folderRows(this.atHome ? this.tree : this.treeSource, new Set(this.expanded));
+    },
+
+    isOpenFolder(row: TreeRow): boolean {
+      return this.atHome && row.path.join('/') === this.path.join('/');
+    },
+
+    toggleFolder(id: string) {
+      this.expanded = this.expanded.includes(id)
+        ? this.expanded.filter((other) => other !== id)
+        : [...this.expanded, id];
+    },
+
+    /** Open a folder from the tree: back to the home items first if a shortcut was showing. */
+    openFolder(path: string[]) {
+      if (!this.atHome) this.pickShortcut(this.shortcuts[0].id);
+      this.path = [...path];
+      this.sidebarOpen = false;
+      this.afterNavigate();
+    },
+
+    pickShortcut(id: string) {
+      this.sidebarOpen = false;
+      if (this.activeShortcut === id && this.path.length === 0) return;
+
+      // Leaving home: keep its tree for the panel while the app shows other items.
+      if (this.atHome) this.treeSource = this.tree;
+      this.activeShortcut = id;
+      this.path = [];
+      this.emit('shortcut', { id });
+      this.afterNavigate();
+    },
+
+    onTreeDragOver(event: DragEvent, row: TreeRow) {
+      if (!this.drag.active || !this.atHome) return;
+      if (this.drag.ids.some((id) => id === row.id || this.isSelfOrDescendant(id, row.id))) return;
+      event.preventDefault();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+      this.treeDrop = row.id;
+    },
+
+    onTreeDrop(event: DragEvent, row: TreeRow) {
+      event.preventDefault();
+      const ids = this.drag.active ? [...this.drag.ids] : [];
+      this.treeDrop = null;
+      this.onItemDragEnd();
+      if (ids.length) this.moveInto(ids, row.id);
+    },
+
+    /**
+     * Move entries of the open folder into any folder of the tree (null: the top).
+     * Never into themselves or one of their own folders.
+     */
+    moveInto(ids: string[], folderId: string | null) {
+      if (folderId !== null && ids.some((id) => id === folderId || this.isSelfOrDescendant(id, folderId))) return;
+      if (folderId !== null && !this.findNode(this.tree, folderId)) return;
+
+      // Taken from wherever they are in the tree; those already in the target stay put.
+      const moving: FileManagerNode[] = [];
+      const strip = (nodes: FileManagerNode[], parent: string | null): FileManagerNode[] =>
+        nodes.filter((node) => {
+          if (parent !== folderId && ids.includes(String(node.id))) {
+            moving.push(node);
+            return false;
+          }
+          if (Array.isArray(node.children)) node.children = strip(node.children, String(node.id));
+          return true;
+        });
+
+      const next = strip(this.tree, null);
+      if (moving.length === 0) return;
+
+      const target = folderId === null ? null : this.findNode(next, folderId);
+      if (target) target.children = [...(target.children ?? []), ...moving];
+      this.tree = target ? [...next] : [...next, ...moving];
+
+      this.announce(t('itemsMoved', '{count} moved', { count: String(moving.length) }));
+      this.emit('move', {
+        items: moving,
+        target: target ? this.raw(decorate(target, this.locale)) : null,
+        position: 'inside',
+        path: [...this.path],
+      });
+      this.selected = [];
+      this.emitSelection();
+    },
+
+    /* ---------------------------------------------------------------- */
+    /* Move to, copy, cut, paste                                          */
+    /* ---------------------------------------------------------------- */
+
+    /** Every folder, unfolded, for the "Move to" list. */
+    get moveRows(): TreeRow[] {
+      return folderRows(this.tree, new Set(allFolderIds(this.tree)));
+    },
+
+    canMoveTo(folderId: string): boolean {
+      if (folderId === (this.path[this.path.length - 1] ?? null)) return false;
+
+      return !this.selected.some((id) => id === folderId || this.isSelfOrDescendant(id, folderId));
+    },
+
+    moveTo(folderId: string | null) {
+      this.movePicker = false;
+      this.moveInto([...this.selected], folderId);
+    },
+
+    copySelection() {
+      if (this.selected.length === 0) return;
+      this.clipboard = { mode: 'copy', ids: [...this.selected], items: this.selectedEntries.map((entry) => this.raw(entry)) };
+      this.announce(t('itemsCopied', '{count} copied', { count: String(this.selected.length) }));
+    },
+
+    cutSelection() {
+      if (this.selected.length === 0) return;
+      this.clipboard = { mode: 'cut', ids: [...this.selected], items: this.selectedEntries.map((entry) => this.raw(entry)) };
+      this.announce(t('itemsCut', '{count} cut — paste them in another folder', { count: String(this.selected.length) }));
+    },
+
+    isCut(id: string): boolean {
+      return this.clipboard?.mode === 'cut' && this.clipboard.ids.includes(id);
+    },
+
+    /** Into the open folder: a copy is the app's to make; a cut moves at once. */
+    paste() {
+      const clipboard = this.clipboard;
+      if (!clipboard) return;
+
+      const folderId = this.path[this.path.length - 1] ?? null;
+      if (clipboard.mode === 'cut') {
+        this.clipboard = null;
+        this.moveInto(clipboard.ids, folderId);
+        return;
+      }
+
+      const folder = folderId === null ? null : this.findNode(this.tree, folderId);
+      this.emit('copy', {
+        items: clipboard.items,
+        target: folder ? this.raw(decorate(folder, this.locale)) : null,
+        path: [...this.path],
+      });
+    },
+
+    /* ---------------------------------------------------------------- */
+    /* Stars and touch                                                    */
+    /* ---------------------------------------------------------------- */
+
+    toggleStar(entry: FileManagerEntry) {
+      if (!this.starrable) return;
+      const node = this.findNode(this.tree, entry.id);
+      if (!node) return;
+
+      node.starred = !node.starred;
+      this.tree = [...this.tree];
+      this.emit('star', { item: this.raw(decorate(node, this.locale)), starred: node.starred });
+      this.announce(node.starred ? t('addedToFavorites', 'Added to favourites') : t('removedFromFavorites', 'Removed from favourites'));
+    },
+
+    /**
+     * A finger held on a file (half a second, without moving) starts selecting by touch:
+     * then each tap ticks or unticks. Scrolling or moving cancels it.
+     */
+    onPressStart(event: PointerEvent, entry: FileManagerEntry) {
+      this._lastPointer = event.pointerType;
+      if (event.pointerType !== 'touch' || !this.selectable || entry.id === NEW_ID) return;
+
+      const target = event.currentTarget as HTMLElement;
+      const cancel = () => {
+        if (this._press) window.clearTimeout(this._press.timer);
+        this._press = null;
+        target.removeEventListener('pointermove', move);
+        target.removeEventListener('pointerup', cancel);
+        target.removeEventListener('pointercancel', cancel);
+      };
+      const move = (moveEvent: PointerEvent) => {
+        if (this._press && Math.hypot(moveEvent.clientX - this._press.x, moveEvent.clientY - this._press.y) > 8) cancel();
+      };
+
+      this._press = {
+        x: event.clientX,
+        y: event.clientY,
+        timer: window.setTimeout(() => {
+          cancel();
+          this._pressFired = true;
+          this.touchSelect = true;
+          if (!this.isSelected(entry.id)) this.selected = this.multiple ? [...this.selected, entry.id] : [entry.id];
+          this.focusId = entry.id;
+          this.emitSelection();
+          navigator.vibrate?.(10);
+        }, LONG_PRESS_MS),
+      };
+      target.addEventListener('pointermove', move);
+      target.addEventListener('pointerup', cancel);
+      target.addEventListener('pointercancel', cancel);
+    },
+
+    /* ---------------------------------------------------------------- */
+    /* Uploads                                                            */
+    /* ---------------------------------------------------------------- */
+
+    pickFiles() {
+      ((this as any).$refs.filePicker as HTMLInputElement | undefined)?.click();
+    },
+
+    /** Files picked or dropped: listed in the panel, handed to the app with their ids. */
+    startUploads(files: File[]) {
+      if (files.length === 0) return;
+
+      const queued = queueFiles(files, () => `fm-${Math.random().toString(36).slice(2, 10)}`);
+      queued.forEach((upload, index) => uploadFiles.set(upload.id, files[index]));
+      this.uploads = [...this.uploads.filter((upload) => upload.status !== 'cancelled'), ...queued];
+      this.uploadsOpen = true;
+      this.uploadsCollapsed = false;
+
+      this.announce(t('filesAdded', '{count} file(s) added', { count: String(files.length) }));
+      this.emit('upload', {
+        files,
+        path: [...this.path],
+        uploads: queued.map((upload) => ({ id: upload.id, name: upload.name, size: upload.size, file: uploadFiles.get(upload.id) })),
+      });
+    },
+
+    cancelUpload(id: string) {
+      this.uploads = applyUploadEvent(this.uploads, { type: 'cancel', id });
+      this.emit('upload-cancel', { id });
+    },
+
+    retryUpload(id: string) {
+      const next = applyUploadEvent(this.uploads, { type: 'retry', id });
+      if (next === this.uploads) return;
+      this.uploads = next;
+      this.emit('upload-retry', { id, file: uploadFiles.get(id) ?? null });
+    },
+
+    get uploadSummaryNow(): { active: number; done: number; failed: number } {
+      return uploadSummary(this.uploads);
+    },
+
+    get uploadTitle(): string {
+      const summary = this.uploadSummaryNow;
+      return summary.active > 0
+        ? t('uploadingCount', 'Uploading {count} files', { count: String(summary.active) })
+        : t('uploadedCount', '{count} files uploaded', { count: String(summary.done) });
+    },
+
+    /** Only once nothing is still going. */
+    closeUploads() {
+      if (this.uploadSummaryNow.active > 0) return;
+      for (const upload of this.uploads) uploadFiles.delete(upload.id);
+      this.uploads = [];
+      this.uploadsOpen = false;
+    },
+
+    /* ---------------------------------------------------------------- */
+    /* Quick look                                                         */
+    /* ---------------------------------------------------------------- */
+
+    /** The files the viewer steps through: the list's files, in its order. */
+    get previewList(): FileManagerEntry[] {
+      return this.entries.filter((entry) => !entry.isFolder && entry.id !== NEW_ID);
+    },
+
+    get previewEntry(): FileManagerEntry | null {
+      return this.previewing ? this.previewList.find((entry) => entry.id === this.previewing) ?? null : null;
+    },
+
+    /** How the viewer shows the file. */
+    get previewMode(): 'image' | 'thumbnail' | 'video' | 'audio' | 'pdf' | 'text' | 'loading' | 'none' {
+      const entry = this.previewEntry;
+      if (!entry || this.previewFailed) return 'none';
+      if (entry.kind === 'image') return entry.url ? 'image' : entry.thumbnail ? 'thumbnail' : 'none';
+      if (!entry.url) return entry.thumbnail ? 'thumbnail' : 'none';
+      if (entry.kind === 'video') return 'video';
+      if (entry.kind === 'audio') return 'audio';
+      if (entry.kind === 'pdf') return 'pdf';
+      if (entry.kind === 'text' || entry.kind === 'code') return this.previewLoading ? 'loading' : this.previewText !== null ? 'text' : 'none';
+
+      return 'none';
+    },
+
+    previewIndex(): number {
+      return this.previewList.findIndex((entry) => entry.id === this.previewing);
+    },
+
+    previewPosition(): string {
+      return t('positionOf', '{index} of {total}', { index: String(this.previewIndex() + 1), total: String(this.previewList.length) });
+    },
+
+    previewMeta(): string {
+      const entry = this.previewEntry;
+      if (!entry) return '';
+      const size = entry.width && entry.height ? `${entry.width} × ${entry.height}` : null;
+
+      return [entry.typeLabel, entry.sizeLabel, size, entry.modifiedLabel].filter(Boolean).join(' · ');
+    },
+
+    openPreview(entry: FileManagerEntry) {
+      if (entry.isFolder || entry.id === NEW_ID) return;
+
+      const opening = this.previewing === null;
+      this.previewing = entry.id;
+      this.previewZoom = 1;
+      this.previewPan = { x: 0, y: 0 };
+      this.previewFailed = false;
+      this.previewText = null;
+      this.focusId = entry.id;
+      this.loadPreviewText(entry);
+      this.emit('preview', { item: this.raw(entry), path: [...this.path] });
+
+      if (opening) (this as any).$nextTick(() => ((this as any).$refs.preview as HTMLElement | undefined)?.focus());
+    },
+
+    closePreview() {
+      const id = this.previewing;
+      this._previewAbort?.abort();
+      this.previewing = null;
+      this.previewText = null;
+
+      // Focus goes back to the list, on the file it came from (the list carries the focus;
+      // its rows are marked by `focusId`).
+      if (id) this.focusId = id;
+      (this as any).$nextTick(() => {
+        const root = (this as any).$root as HTMLElement;
+        root.querySelector<HTMLElement>('[role="listbox"]')?.focus({ preventScroll: true });
+      });
+    },
+
+    previewStep(delta: 1 | -1) {
+      const next = this.previewList[this.previewIndex() + delta];
+      if (next) this.openPreview(next);
+    },
+
+    /** Text and code are read, at most 512 KB of them. */
+    async loadPreviewText(entry: FileManagerEntry) {
+      this._previewAbort?.abort();
+      if (!(entry.kind === 'text' || entry.kind === 'code') || !entry.url) return;
+
+      const abort = new AbortController();
+      this._previewAbort = abort;
+      this.previewLoading = true;
+
+      try {
+        const response = await fetch(entry.url, { signal: abort.signal, credentials: 'same-origin' });
+        if (!response.ok || !response.body) throw new Error(String(response.status));
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let text = '';
+        let bytes = 0;
+        let cut = false;
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          bytes += value.length;
+          text += decoder.decode(value, { stream: true });
+          if (bytes >= PREVIEW_TEXT_LIMIT) {
+            cut = true;
+            await reader.cancel();
+            break;
+          }
+        }
+        if (this.previewing !== entry.id) return;
+        this.previewText = cut ? `${text.slice(0, PREVIEW_TEXT_LIMIT)}\n…` : text;
+      } catch {
+        if (this.previewing === entry.id && !abort.signal.aborted) this.previewFailed = true;
+      } finally {
+        if (this._previewAbort === abort) this.previewLoading = false;
+      }
+    },
+
+    zoomPreview(direction: 1 | -1) {
+      this.previewZoom = Math.min(5, Math.max(1, Math.round(this.previewZoom * (direction === 1 ? 1.25 : 0.8) * 100) / 100));
+      if (this.previewZoom === 1) this.previewPan = { x: 0, y: 0 };
+    },
+
+    fitPreview() {
+      this.previewZoom = 1;
+      this.previewPan = { x: 0, y: 0 };
+    },
+
+    onPreviewWheel(event: WheelEvent) {
+      if (this.previewMode !== 'image' || !(event.ctrlKey || event.metaKey)) return;
+      event.preventDefault();
+      this.zoomPreview(event.deltaY < 0 ? 1 : -1);
+    },
+
+    /** Drag a zoomed picture around. */
+    startPreviewPan(event: PointerEvent) {
+      if (this.previewZoom <= 1) return;
+      event.preventDefault();
+      const target = event.currentTarget as HTMLElement;
+      const start = { x: event.clientX - this.previewPan.x, y: event.clientY - this.previewPan.y };
+      const move = (moveEvent: PointerEvent) => {
+        this.previewPan = { x: moveEvent.clientX - start.x, y: moveEvent.clientY - start.y };
+      };
+      const end = () => {
+        target.removeEventListener('pointermove', move);
+        target.removeEventListener('pointerup', end);
+        target.removeEventListener('pointercancel', end);
+      };
+      target.setPointerCapture?.(event.pointerId);
+      target.addEventListener('pointermove', move);
+      target.addEventListener('pointerup', end);
+      target.addEventListener('pointercancel', end);
+    },
+
+    /** Keys in the viewer: arrows step, Escape or Space close, + and − zoom, Tab stays inside. */
+    onPreviewKey(event: KeyboardEvent) {
+      const dialog = event.currentTarget as HTMLElement;
+      const onButton = (event.target as HTMLElement)?.closest?.('button, video, audio');
+
+      if (event.key === 'Escape' || (event.key === ' ' && !onButton)) {
+        event.preventDefault();
+        this.closePreview();
+      } else if (event.key === 'ArrowRight' && !onButton) {
+        event.preventDefault();
+        this.previewStep(1);
+      } else if (event.key === 'ArrowLeft' && !onButton) {
+        event.preventDefault();
+        this.previewStep(-1);
+      } else if ((event.key === '+' || event.key === '=') && this.previewMode === 'image') {
+        this.zoomPreview(1);
+      } else if (event.key === '-' && this.previewMode === 'image') {
+        this.zoomPreview(-1);
+      } else if (event.key === 'Tab') {
+        const focusable = Array.from(dialog.querySelectorAll<HTMLElement>('button:not([disabled]), [href], video, audio, iframe, [tabindex]:not([tabindex="-1"])'))
+          .filter((element) => element.offsetParent !== null);
+        if (focusable.length === 0) return event.preventDefault();
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && (document.activeElement === first || document.activeElement === dialog)) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
+    },
+
+    /* ---------------------------------------------------------------- */
+    /* Lasso                                                              */
+    /* ---------------------------------------------------------------- */
+
+    /**
+     * A mouse drag from an empty spot of the list draws a box; what it touches is
+     * selected (Ctrl/⌘ adds to the selection). Never by touch, so fingers scroll.
+     */
+    startLasso(event: PointerEvent) {
+      if (event.pointerType !== 'mouse' || event.button !== 0 || !this.multiple) return;
+      const target = event.target as HTMLElement;
+      if (target.closest('[data-entry], button, input, a, label, [data-fm-selection-bar]')) return;
+
+      const list = event.currentTarget as HTMLElement;
+      const origin = list.getBoundingClientRect();
+      const at = (x: number, y: number) => ({ x: x - origin.left + list.scrollLeft, y: y - origin.top + list.scrollTop });
+
+      // Measured once, at the start: every entry's box in the list's own coordinates.
+      const boxes = Array.from(list.querySelectorAll<HTMLElement>('[data-entry]'))
+        .filter((element) => element.offsetParent !== null && element.dataset.entry !== NEW_ID)
+        .map((element) => {
+          const rect = element.getBoundingClientRect();
+          const corner = at(rect.left, rect.top);
+          return { id: element.dataset.entry!, left: corner.x, top: corner.y, right: corner.x + rect.width, bottom: corner.y + rect.height };
+        });
+
+      const start = at(event.clientX, event.clientY);
+      const before = event.ctrlKey || event.metaKey ? [...this.selected] : [];
+      let moved = false;
+
+      const move = (moveEvent: PointerEvent) => {
+        const now = at(moveEvent.clientX, moveEvent.clientY);
+        if (!moved && Math.hypot(now.x - start.x, now.y - start.y) < 4) return;
+        moved = true;
+        this.lasso = boxFrom(start, now);
+        this.selected = [...new Set([...before, ...hits(this.lasso, boxes)])];
+      };
+      const end = () => {
+        list.removeEventListener('pointermove', move);
+        list.removeEventListener('pointerup', end);
+        list.removeEventListener('pointercancel', end);
+        this.lasso = null;
+        if (moved) {
+          this._lassoJust = true;
+          this.emitSelection();
+        }
+      };
+
+      list.setPointerCapture?.(event.pointerId);
+      list.addEventListener('pointermove', move);
+      list.addEventListener('pointerup', end);
+      list.addEventListener('pointercancel', end);
+    },
+
+    /** A click on an empty spot clears the selection — not the click ending a lasso. */
+    onBodyClick() {
+      if (this._lassoJust) {
+        this._lassoJust = false;
+        return;
+      }
+      this.clearSelection();
+    },
+
     destroy() {
+      if (onUploadEvent) for (const name of UPLOAD_EVENTS) window.removeEventListener(name, onUploadEvent);
       clearTimeout(this._searchTimer);
     },
 
@@ -289,8 +898,9 @@ export function neuraFileManager(options: FileManagerOptions = {}) {
 
     /** Folder nodes matching the current path, from the root down. */
     get trail(): Array<{ id: string | null; name: string }> {
+      const shortcut = this.atHome ? null : this.shortcuts.find((item) => item.id === this.activeShortcut);
       const crumbs: Array<{ id: string | null; name: string }> = [
-        { id: null, name: this.rootLabel },
+        { id: null, name: shortcut?.label ?? this.rootLabel },
       ];
 
       let level = this.tree;
@@ -390,8 +1000,40 @@ export function neuraFileManager(options: FileManagerOptions = {}) {
       return this.searchScope === 'all' && this.query.length > 0 && this.searchMode !== 'remote';
     },
 
-    /** Decorated, filtered and sorted entries shown in the body. */
+    /** The entries the body shows: searched, sorted, then kept to the picked type. */
     get entries(): FileManagerEntry[] {
+      return byGroup(this.baseEntries, this.kindFilter);
+    },
+
+    /** Chips offered: the groups present, when there are at least two. */
+    get filterGroups(): string[] {
+      if (!this.filters) return [];
+      const groups = groupsPresent(this.baseEntries);
+
+      return groups.length > 1 ? groups : [];
+    },
+
+    groupLabel(group: string): string {
+      const [key, fallback] = GROUP_LABELS[group] ?? ['fmGroupDocument', group];
+
+      return t(key, fallback);
+    },
+
+    /** The kind whose hue a group's chip shows. */
+    groupKind(group: string): string {
+      return group === 'document' ? 'doc' : group;
+    },
+
+    setKindFilter(group: string | null) {
+      if (this.kindFilter === group) return;
+
+      this.kindFilter = group;
+      this.clearSelection();
+      this.emit('filter', { kind: group });
+    },
+
+    /** Decorated, searched and sorted entries, before the type filter. */
+    get baseEntries(): FileManagerEntry[] {
       const query = this.query;
       let list: FileManagerEntry[];
 
@@ -401,6 +1043,8 @@ export function neuraFileManager(options: FileManagerOptions = {}) {
         list = all.filter((entry) => this.matches(entry, query));
       } else {
         list = this.currentNodes.map((node) => decorate(node, this.locale));
+        const draft = this.draftFolder;
+        if (draft) list = [decorate(draft, this.locale), ...list];
 
         // In remote mode the host already returned the matching items.
         if (this.searchMode !== 'remote') {
@@ -416,6 +1060,9 @@ export function neuraFileManager(options: FileManagerOptions = {}) {
       }
 
       return list.sort((a, b) => {
+        // A folder being named stays on top until it exists.
+        if (a.id === NEW_ID || b.id === NEW_ID) return a.id === NEW_ID ? -1 : 1;
+
         // Folders always lead, whatever the sort is.
         if (a.isFolder !== b.isFolder) return a.isFolder ? -1 : 1;
 
@@ -446,6 +1093,26 @@ export function neuraFileManager(options: FileManagerOptions = {}) {
 
     isDragged(entryId: string): boolean {
       return this.drag.active && this.drag.ids.includes(entryId);
+    },
+
+    /** Folders as the grid lays them out: their own section, first. */
+    get folderEntries(): FileManagerEntry[] {
+      return this.entries.filter((entry) => entry.isFolder);
+    },
+
+    get fileEntries(): FileManagerEntry[] {
+      return this.entries.filter((entry) => !entry.isFolder);
+    },
+
+    /** Narrowest card for the current size step, in px. */
+    get thumbWidth(): number {
+      return THUMB_WIDTHS[this.thumbSize - 1] ?? THUMB_WIDTHS[2];
+    },
+
+    setThumbSize(size: number) {
+      const next = Math.max(1, Math.min(5, Math.round(Number(size) || 3)));
+      this.thumbSize = next;
+      this.emit('thumb-size', { size: next });
     },
 
     get isEmpty(): boolean {
@@ -564,6 +1231,14 @@ export function neuraFileManager(options: FileManagerOptions = {}) {
       });
     },
 
+    /** The menu of an entry, opened under one of its buttons ("…" on a row or a card). */
+    openMenuAt(entry: FileManagerEntry, anchor: HTMLElement) {
+      const box = anchor.getBoundingClientRect();
+      const event = { preventDefault() {}, clientX: box.left, clientY: box.bottom + 4, target: anchor };
+
+      this.openMenu(event as unknown as MouseEvent, entry);
+    },
+
     /** The component root, whichever element the caller was bound to. */
     rootElement(event?: Event): HTMLElement {
       const fromEvent = (event?.target as HTMLElement | undefined)?.closest?.('[data-nk-file-manager]');
@@ -584,6 +1259,16 @@ export function neuraFileManager(options: FileManagerOptions = {}) {
         return;
       }
 
+      if (name === 'preview' && entry) {
+        this.open(entry);
+        return;
+      }
+
+      if (name === 'rename' && entry && this.selected.length <= 1) {
+        this.startRename(entry);
+        return;
+      }
+
       this.action(name, this.selected.length > 1 ? undefined : entry ?? undefined);
     },
 
@@ -592,6 +1277,8 @@ export function neuraFileManager(options: FileManagerOptions = {}) {
     /* ---------------------------------------------------------------- */
 
     open(entry: FileManagerEntry) {
+      if (entry.id === NEW_ID) return;
+
       // A whole-tree result lives somewhere else: move there first.
       if (entry.pathIds && entry.pathIds.join('/') !== this.path.join('/')) {
         this.path = [...entry.pathIds];
@@ -599,6 +1286,11 @@ export function neuraFileManager(options: FileManagerOptions = {}) {
 
       if (entry.isFolder) {
         this.enter(entry.id);
+        return;
+      }
+
+      if (this.preview) {
+        this.openPreview(entry);
         return;
       }
 
@@ -651,6 +1343,10 @@ export function neuraFileManager(options: FileManagerOptions = {}) {
       this.closeMenu();
       this.clearSelection();
       this.search = '';
+      this.kindFilter = null;
+      // The open folder's parents unfold in the side panel.
+      const parents = this.path.slice(0, -1).filter((id) => !this.expanded.includes(id));
+      if (parents.length) this.expanded = [...this.expanded, ...parents];
       this.focusId = null;
       this._lastIndex = -1;
 
@@ -668,6 +1364,17 @@ export function neuraFileManager(options: FileManagerOptions = {}) {
     },
 
     select(entry: FileManagerEntry, event?: MouseEvent | KeyboardEvent) {
+      if (entry.id === NEW_ID) return;
+      // The tap that ends a long press has already selected.
+      if (this._pressFired) {
+        this._pressFired = false;
+        return;
+      }
+      // By touch: a tap ticks while selecting, and opens otherwise.
+      if (event instanceof MouseEvent && this._lastPointer === 'touch') {
+        if (this.touchSelect) return this.toggle(entry);
+        return this.open(entry);
+      }
       this.focusId = entry.id;
 
       if (!this.selectable) {
@@ -734,11 +1441,13 @@ export function neuraFileManager(options: FileManagerOptions = {}) {
     /* ---------------------------------------------------------------- */
 
     onKeydown(event: KeyboardEvent) {
-      const entries = this.entries;
+      // The grid shows folders, then files, each in its own section: keys follow that order.
+      const grid = this.view === 'grid';
+      const entries = grid ? [...this.folderEntries, ...this.fileEntries] : this.entries;
       if (entries.length === 0) return;
 
-      const columns = this.view === 'grid' ? this.columnCount() : 1;
       const current = entries.findIndex((entry) => entry.id === this.focusId);
+      const folders = this.folderEntries.length;
 
       const move = (delta: number) => {
         event.preventDefault();
@@ -748,9 +1457,42 @@ export function neuraFileManager(options: FileManagerOptions = {}) {
         this.focusEntry(entries[next], event.shiftKey);
       };
 
+      /** Up or down a row of the section the focus is in; past its edge, into the other one. */
+      const vertical = (direction: 1 | -1) => {
+        if (!grid) return move(direction);
+        event.preventDefault();
+        if (current === -1) return this.focusEntry(entries[0], event.shiftKey);
+        const inFolders = current < folders;
+        const start = inFolders ? 0 : folders;
+        const end = inFolders ? folders : entries.length;
+        const target = current + direction * this.columnCount(inFolders ? 'folderGrid' : 'grid');
+        const next = target >= start && target < end
+          ? target
+          : direction === 1
+            ? (inFolders && entries.length > folders ? folders : end - 1)
+            : (!inFolders && folders > 0 ? folders - 1 : start);
+        this.focusEntry(entries[next], event.shiftKey);
+      };
+
+      if ((event.ctrlKey || event.metaKey) && !event.altKey) {
+        const letter = event.key.toLowerCase();
+        if (letter === 'c' && this.selected.length) {
+          event.preventDefault();
+          return this.copySelection();
+        }
+        if (letter === 'x' && this.selected.length) {
+          event.preventDefault();
+          return this.cutSelection();
+        }
+        if (letter === 'v' && this.clipboard) {
+          event.preventDefault();
+          return this.paste();
+        }
+      }
+
       switch (event.key) {
-        case 'ArrowDown': return move(columns);
-        case 'ArrowUp': return move(-columns);
+        case 'ArrowDown': return vertical(1);
+        case 'ArrowUp': return vertical(-1);
         case 'ArrowRight': if (this.view === 'grid') return move(1); break;
         case 'ArrowLeft': if (this.view === 'grid') return move(-1); break;
         case 'Home': return move(-entries.length);
@@ -768,7 +1510,9 @@ export function neuraFileManager(options: FileManagerOptions = {}) {
         case ' ':
           if (this.focused) {
             event.preventDefault();
-            this.toggle(this.focused);
+            // Quick look on a file (Finder, Drive); Ctrl/⌘+Space, or a folder, ticks it.
+            if (this.preview && !this.focused.isFolder && !(event.ctrlKey || event.metaKey)) this.openPreview(this.focused);
+            else this.toggle(this.focused);
           }
           return;
         case 'Escape':
@@ -776,6 +1520,7 @@ export function neuraFileManager(options: FileManagerOptions = {}) {
             this.closeMenu();
             return;
           }
+          if (this.clipboard?.mode === 'cut') this.clipboard = null;
           this.clearSelection();
           return;
         case 'a':
@@ -791,11 +1536,17 @@ export function neuraFileManager(options: FileManagerOptions = {}) {
             this.action('delete');
           }
           return;
+        case 'F2':
+          if (this.focused && this.selected.length <= 1) {
+            event.preventDefault();
+            this.startRename(this.focused);
+          }
+          return;
       }
     },
 
-    columnCount(): number {
-      const grid = (this as any).$refs?.grid as HTMLElement | undefined;
+    columnCount(ref: 'grid' | 'folderGrid' = 'grid'): number {
+      const grid = (this as any).$refs?.[ref] as HTMLElement | undefined;
       if (!grid) return 1;
 
       const styles = getComputedStyle(grid).gridTemplateColumns;
@@ -1112,8 +1863,7 @@ export function neuraFileManager(options: FileManagerOptions = {}) {
       const files = Array.from(event.dataTransfer?.files ?? []);
       if (files.length === 0) return;
 
-      this.announce(t('filesAdded', '{count} file(s) added', { count: String(files.length) }));
-      this.emit('upload', { files, path: [...this.path] });
+      this.startUploads(files);
     },
 
     emit(name: string, detail: Record<string, unknown>) {

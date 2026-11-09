@@ -8,6 +8,8 @@
     'downloadable' => true,
     'deletable' => true,
     'sortable' => true,
+    'starrable' => false,
+    'actionsWidth' => 'w-16',
 ])
 
 @php
@@ -41,17 +43,20 @@
     :data-focused="focusId === entry.id || null"
     :data-dragging="isDragged(entry.id) || null"
     :data-drop="dropHint(entry.id)"
+    :data-pending="entry.id === '__new__' || null"
+    :data-cut="isCut(entry.id) || null"
     :aria-selected="isSelected(entry.id).toString()"
     role="option"
     class="{{ $rowClasses }}"
     @if ($sortable)
-        :draggable="canSortEntries"
+        :draggable="canSortEntries && !editing"
         x-on:dragstart="onItemDragStart($event, entry)"
         x-on:dragend="onItemDragEnd()"
         x-on:dragover.prevent="onItemDragOver($event, entry)"
         x-on:dragleave="onItemDragLeave($event, entry)"
         x-on:drop.prevent.stop="onItemDrop($event, entry)"
     @endif
+    x-on:pointerdown="onPressStart($event, entry)"
     x-on:click="select(entry, $event)"
     x-on:dblclick="open(entry)"
     x-on:contextmenu.prevent.stop="openMenu($event, entry)"
@@ -60,7 +65,7 @@
         <span class="flex w-6 shrink-0 items-center">
             <input
                 type="checkbox"
-                class="size-3.5 rounded border-edge accent-primary-600 transition-opacity focus:ring-primary-500/30"
+                class="size-3.5 rounded border-edge accent-[var(--nk-fm-accent)] transition-opacity"
                 :class="isSelected(entry.id) ? '' : 'opacity-0 group-hover/entry:opacity-100 focus:opacity-100'"
                 :checked="isSelected(entry.id)"
                 x-on:click.stop
@@ -71,24 +76,18 @@
     @endif
 
     <span class="flex min-w-0 flex-1 items-center gap-2.5">
-        <template x-if="entry.thumbnail">
-            <img
-                :src="entry.thumbnail"
-                :alt="entry.name"
-                loading="lazy"
-                decoding="async"
-                class="{{ $sizes['icon'] }} shrink-0 rounded object-cover ring-1 ring-edge"
-                draggable="false"
-            />
-        </template>
+        {{-- The type in a tinted badge; a picture shows itself in it. --}}
+        <span class="nk-fm-badge {{ $sizes['badge'] }}" :data-kind="entry.kind" aria-hidden="true">
+            <template x-if="entry.preview.kind === 'image' && entry.preview.src">
+                <img :src="entry.preview.src" alt="" loading="lazy" decoding="async" draggable="false" />
+            </template>
+            <template x-if="!(entry.preview.kind === 'image' && entry.preview.src)">
+                <svg class="{{ $sizes['badgeIcon'] }}"><use :href="`#{{ $sprite }}-${icon(entry)}`" /></svg>
+            </template>
+        </span>
 
-        <template x-if="!entry.thumbnail">
-            <svg class="{{ $sizes['icon'] }} shrink-0 {{ $colors['kind'] }}" aria-hidden="true">
-                <use :href="`#{{ $sprite }}-${icon(entry)}`" />
-            </svg>
-        </template>
-
-        <span class="flex min-w-0 flex-1 flex-col justify-center">
+        <neura::file-manager.name-field />
+        <span class="flex min-w-0 flex-1 flex-col justify-center" x-show="!isEditing(entry.id)">
             <button
                 type="button"
                 class="min-w-0 truncate text-start {{ $sizes['label'] }} {{ $colors['name'] }}"
@@ -113,11 +112,37 @@
         </span>
     </span>
 
+    <span class="hidden w-28 shrink-0 truncate {{ $sizes['meta'] }} text-fg-muted @[36rem]/list:block" x-text="entry.typeLabel"></span>
+
     <span class="hidden w-24 shrink-0 tabular-nums {{ $sizes['meta'] }} text-fg-muted @[30rem]/list:block" x-text="entry.sizeLabel"></span>
 
-    <span class="hidden w-40 shrink-0 truncate {{ $sizes['meta'] }} text-fg-muted @[44rem]/list:block" x-text="entry.modifiedLabel"></span>
+    <span class="hidden w-36 shrink-0 truncate {{ $sizes['meta'] }} text-fg-muted @[44rem]/list:block" x-text="entry.modifiedLabel" :title="entry.modifiedTitle"></span>
 
-    <span class="flex w-7 shrink-0 items-center justify-end">
+    <span class="flex {{ $actionsWidth }} shrink-0 items-center justify-end gap-0.5">
+        @if ($starrable)
+            <button
+                type="button"
+                class="{{ $actionClasses }}"
+                :class="entry.starred && '!opacity-100 text-amber-500'"
+                x-on:click.stop="toggleStar(entry)"
+                :aria-pressed="(!!entry.starred).toString()"
+                :aria-label="(entry.starred ? @js(neura_trans('removeFromFavorites')) : @js(neura_trans('addToFavorites'))) + ' — ' + entry.name"
+            >
+                <neura::icon name="star" variant="solid" class="{{ $sizes['glyph'] }}" x-show="entry.starred" />
+                <neura::icon name="star" class="{{ $sizes['glyph'] }}" x-show="!entry.starred" />
+            </button>
+        @endif
+        <button
+            type="button"
+            class="{{ $actionClasses }}"
+            data-more
+            x-on:click.stop="openMenuAt(entry, $el)"
+            :aria-label="@js(neura_trans('moreActions')) + ' — ' + entry.name"
+            title="{{ neura_trans('moreActions') }}"
+        >
+            <neura::icon name="ellipsis-horizontal" class="{{ $sizes['glyph'] }}" />
+        </button>
+
         <template x-if="entry.isFolder">
             <button
                 type="button"

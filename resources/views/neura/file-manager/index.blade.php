@@ -25,11 +25,21 @@
     'size' => null,
     'rounded' => null,
     'shadow' => null,
+    'color' => null,
+    'thumbSize' => 3,
+    'filters' => true,
+    'sidebar' => false,
+    'inlineCreate' => true,
+    'preview' => true,
+    'uploadPicker' => true,
+    'starrable' => false,
+    'shortcuts' => [],
 ])
 
 @php
     use Illuminate\Support\Arr;
     use Illuminate\Support\Str;
+    use Neura\Kit\Support\CssColor;
     use Neura\Kit\Support\PackResolver;
 
     $sizes = PackResolver::fileManagerSize($size);
@@ -39,11 +49,15 @@
     $shadowClass = PackResolver::shadow($shadow ?: neura_config('file-manager', 'shadow'));
 
     $view = $view ?: (neura_config('file-manager', 'view') ?: 'list');
+    $thumbSize = max(1, min(5, (int) $thumbSize));
     $selectable = filled($selectable) && $selectable;
     $multiple = $selectable && filled($multiple) && $multiple;
     $details = filled($details) && $details;
 
     $uid = 'nk-fm-'.Str::random(8);
+
+    // The accent everything state-driven is painted with; the type badges keep their own hues.
+    $accent = CssColor::resolve((string) ($color ?: neura_config('file-manager', 'color') ?: 'primary'));
 
     // kind => heroicon name, mirrored from the ICONS map in file-manager.ts
     $kindIcons = [
@@ -100,6 +114,8 @@
         'downloadable' => $downloadable,
         'deletable' => $deletable,
         'sortable' => $sortable,
+        'starrable' => (bool) $starrable,
+        'actionsWidth' => $starrable ? 'w-24' : 'w-16',
     ];
 @endphp
 
@@ -108,6 +124,14 @@
     x-data="neuraFileManager({
         items: @js($items),
         view: @js($view),
+        thumbSize: @js($thumbSize),
+        filters: @js((bool) $filters),
+        sidebar: @js((bool) $sidebar),
+        inlineCreate: @js((bool) $inlineCreate),
+        preview: @js((bool) $preview),
+        uploadPicker: @js((bool) $uploadPicker),
+        starrable: @js((bool) $starrable),
+        shortcuts: @js(array_values(array_map(fn ($shortcut) => ['id' => (string) $shortcut['id'], 'label' => (string) ($shortcut['label'] ?? $shortcut['id'])], $shortcuts))),
         sort: @js($sort),
         direction: @js($direction),
         sortable: @js((bool) $sortable),
@@ -135,14 +159,44 @@
     x-on:keydown.escape="closeMenu()"
     :data-dropping="dropping || null"
     :data-sorting="drag.active || null"
+    :data-lassoing="lasso ? true : null"
+    :data-touch-select="touchSelect || null"
     :data-view="view"
-    {{ $attributes->class(['relative', $shellClasses]) }}
-    @if ($height) style="height: {{ $height }}" @endif
+    {{ $attributes->class(['nk-file-manager relative', $shellClasses])->merge(['style' => "--nk-fm-accent: {$accent};".($height ? " height: {$height};" : '')]) }}
 >
     <neura::file-manager.sprite :id="$uid" :icons="array_values($kindIcons)" />
 
     {{-- Toolbar ------------------------------------------------------------ --}}
-    <div class="{{ $barClasses }}">
+    {{-- Selecting by touch: the selection's actions take the toolbar's place. --}}
+    @if ($selectable)
+        <div data-fm-touch-bar class="{{ $barClasses }} bg-[var(--nk-fm-accent-soft)]" x-show="touchSelect" x-cloak>
+            <button type="button" class="{{ $actionClasses }} size-11" x-on:click="clearSelection()" aria-label="{{ neura_trans('clearSelection') }}">
+                <neura::icon name="x-mark" class="size-5" />
+            </button>
+            <span class="min-w-0 flex-1 truncate text-sm font-semibold text-[var(--nk-fm-accent-ink)]"><span x-text="selected.length"></span> {{ neura_trans('selected') }}</span>
+            @if ($downloadable)
+                <button type="button" class="{{ $actionClasses }} size-11" x-on:click="action('download')" aria-label="{{ neura_trans('download') }}"><neura::icon name="arrow-down-tray" class="size-5" /></button>
+            @endif
+            <button type="button" class="{{ $actionClasses }} size-11" x-on:click="movePicker = true" aria-label="{{ neura_trans('move') }}"><neura::icon name="folder-arrow-down" class="size-5" /></button>
+            @if ($deletable)
+                <button type="button" class="{{ $actionClasses }} size-11 text-danger-600" x-on:click="action('delete')" aria-label="{{ neura_trans('delete') }}"><neura::icon name="trash" class="size-5" /></button>
+            @endif
+        </div>
+    @endif
+
+    <div class="{{ $barClasses }}" x-show="!touchSelect">
+        @if ($sidebar)
+            {{-- Narrow: the side panel opens as a drawer. --}}
+            <button
+                type="button"
+                class="{{ $actionClasses }} @[40rem]/fm:hidden"
+                x-on:click.stop="sidebarOpen = !sidebarOpen"
+                :aria-expanded="sidebarOpen.toString()"
+                aria-label="{{ neura_trans('openSidebar') }}"
+            >
+                <neura::icon name="bars-3" class="{{ $sizes['glyph'] }}" />
+            </button>
+        @endif
         <button
             type="button"
             class="{{ $actionClasses }}"
@@ -181,7 +235,10 @@
 
         <div class="flex shrink-0 items-center gap-1">
             @if ($searchable)
-                <div class="relative hidden items-center sm:flex">
+                <button type="button" class="{{ $actionClasses }} @[32rem]/fm:hidden" x-show="!searchExpanded" x-on:click="searchExpanded = true; $nextTick(() => $refs.search.focus())" aria-label="{{ $searchPlaceholder ?? neura_trans('search') }}">
+                    <neura::icon name="magnifying-glass" class="{{ $sizes['glyph'] }}" />
+                </button>
+                <div class="relative hidden items-center @[32rem]/fm:flex" :class="searchExpanded && 'nk-fm-search-open'">
                     <label class="relative flex items-center">
                         <span class="sr-only">{{ $searchPlaceholder ?? neura_trans('search') }}</span>
                         <neura::icon name="magnifying-glass" class="pointer-events-none absolute left-2 size-3.5 text-fg-muted" x-show="!searching" />
@@ -191,6 +248,9 @@
                         <input
                             type="search"
                             x-model="search"
+                            x-ref="search"
+                            x-on:focus="searchFocus = true"
+                            x-on:blur="searchFocus = false; search === '' && (searchExpanded = false)"
                             placeholder="{{ $searchPlaceholder ?? neura_trans('search') }}"
                             class="h-8 w-36 rounded-lg border border-edge bg-surface pl-7 pr-7 {{ $sizes['meta'] }} text-fg outline-none transition-colors placeholder:text-fg-muted focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 lg:w-52"
                         />
@@ -207,22 +267,22 @@
                     </label>
 
                     @if ($scopeToggle)
-                        {{-- Scope switch: this folder vs the whole tree. --}}
-                        <div class="ms-1 flex items-center gap-0.5 rounded-lg bg-hover p-0.5" role="group"
-                            aria-label="{{ neura_trans('searchScope') }}">
-                            <button type="button" class="{{ $toggleClasses }}"
-                                :class="searchScope === 'folder' && @js($colors['toggle']['active'])"
+                        {{-- Where the search looks, in words; shown while searching. --}}
+                        <div class="ms-1 flex h-8 items-center gap-0.5 rounded-lg bg-hover p-0.5" role="group"
+                            aria-label="{{ neura_trans('searchScope') }}"
+                            x-show="searchFocus || search.length > 0" x-cloak
+                            x-on:mousedown.prevent>
+                            <button type="button" class="h-7 rounded-md px-2 {{ $sizes['meta'] }} font-medium transition-colors"
+                                :class="searchScope === 'folder' ? 'bg-surface text-fg shadow-xs ring-1 ring-edge' : 'text-fg-muted hover:text-fg'"
                                 x-on:click="setScope('folder')"
-                                :aria-pressed="(searchScope === 'folder').toString()"
-                                :aria-label="@js(neura_trans('inThisFolder'))">
-                                <neura::icon name="folder" class="{{ $sizes['glyph'] }}" />
+                                :aria-pressed="(searchScope === 'folder').toString()">
+                                {{ neura_trans('inThisFolder') }}
                             </button>
-                            <button type="button" class="{{ $toggleClasses }}"
-                                :class="searchScope === 'all' && @js($colors['toggle']['active'])"
+                            <button type="button" class="h-7 rounded-md px-2 {{ $sizes['meta'] }} font-medium transition-colors"
+                                :class="searchScope === 'all' ? 'bg-surface text-fg shadow-xs ring-1 ring-edge' : 'text-fg-muted hover:text-fg'"
                                 x-on:click="setScope('all')"
-                                :aria-pressed="(searchScope === 'all').toString()"
-                                :aria-label="@js(neura_trans('everywhere'))">
-                                <neura::icon name="magnifying-glass" class="{{ $sizes['glyph'] }}" />
+                                :aria-pressed="(searchScope === 'all').toString()">
+                                {{ neura_trans('everywhere') }}
                             </button>
                         </div>
                     @endif
@@ -309,6 +369,14 @@
                 </button>
             </div>
 
+            {{-- Card size, in the grid. --}}
+            <label x-show="view === 'grid'" x-cloak class="hidden h-8 shrink-0 items-center gap-1.5 rounded-lg bg-hover px-2 @[48rem]/fm:flex" title="{{ neura_trans('thumbnailSize') }}">
+                <neura::icon name="squares-2x2" class="size-3 text-fg-muted" />
+                <span class="sr-only">{{ neura_trans('thumbnailSize') }}</span>
+                <input type="range" min="1" max="5" step="1" class="w-20 accent-[var(--nk-fm-accent)]" x-model.number="thumbSize" x-on:change="setThumbSize(thumbSize)" />
+                <neura::icon name="stop" class="size-4 text-fg-muted" />
+            </label>
+
             @if ($details)
                 <button
                     type="button"
@@ -330,81 +398,90 @@
                 <button
                     type="button"
                     class="inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 {{ $sizes['meta'] }} font-medium text-fg-secondary transition-colors hover:bg-hover hover:text-fg"
-                    x-on:click="$dispatch('file-manager:new-folder', { path: [...path] })"
+                    data-fm-toolbar-add
+                    @if ($inlineCreate)
+                        x-on:click="startCreate()"
+                    @else
+                        x-on:click="$dispatch('file-manager:new-folder', { path: [...path] })"
+                    @endif
+                    title="{{ neura_trans('newFolder') }}"
                 >
                     <neura::icon name="folder-plus" class="{{ $sizes['glyph'] }}" />
-                    <span class="hidden lg:inline">{{ neura_trans('newFolder') }}</span>
+                    <span class="hidden @[54rem]/fm:inline">{{ neura_trans('newFolder') }}</span>
                 </button>
             @endif
 
             @if ($uploadable)
                 <button
                     type="button"
-                    class="inline-flex h-8 items-center gap-1.5 rounded-lg bg-primary-600 px-2.5 {{ $sizes['meta'] }} font-medium text-white transition-colors hover:bg-primary-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500 dark:bg-primary-500 dark:hover:bg-primary-400"
-                    x-on:click="$dispatch('file-manager:upload-request', { path: [...path] })"
+                    class="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[var(--nk-fm-accent)] px-2.5 {{ $sizes['meta'] }} font-medium text-white transition-[filter] hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--nk-fm-accent)]"
+                    data-fm-toolbar-add
+                    @if ($uploadPicker)
+                        x-on:click="pickFiles()"
+                    @else
+                        x-on:click="$dispatch('file-manager:upload-request', { path: [...path] })"
+                    @endif
                 >
                     <neura::icon name="arrow-up-tray" class="{{ $sizes['glyph'] }}" />
-                    <span class="hidden lg:inline">{{ neura_trans('upload') }}</span>
+                    <span class="hidden @[54rem]/fm:inline">{{ neura_trans('upload') }}</span>
                 </button>
             @endif
         </div>
     </div>
 
-    {{-- Contextual selection bar ------------------------------------------- --}}
-    @if ($selectable)
+    @if ($filters)
+        {{-- Type chips: "All", then each kind of file the open folder holds. --}}
         <div
-            x-show="selected.length > 0"
+            data-fm-filters
+            class="flex shrink-0 items-center gap-1.5 overflow-x-auto border-b border-edge px-3 py-2"
+            role="group"
+            aria-label="{{ neura_trans('filterByType') }}"
+            x-show="filterGroups.length > 1"
             x-cloak
-            class="flex shrink-0 items-center justify-between gap-3 border-b px-2.5 py-2 {{ $colors['selection'] }}"
         >
-            <p class="{{ $sizes['meta'] }} font-medium">
-                <span x-text="selected.length"></span>
-                {{ neura_trans('selected') }}
-                <span class="font-normal opacity-70" x-show="selectionSize !== '0 B'">
-                    <span aria-hidden="true">·</span> <span x-text="selectionSize"></span>
-                </span>
-            </p>
-
-            <div class="flex items-center gap-1">
-                @if ($downloadable)
-                    <button type="button" class="{{ $actionClasses }}" x-on:click="action('download')"
-                        :aria-label="@js(neura_trans('download'))">
-                        <neura::icon name="arrow-down-tray" class="{{ $sizes['glyph'] }}" />
-                    </button>
-                @endif
-
-                @if ($deletable)
-                    <button type="button"
-                        class="inline-flex shrink-0 items-center justify-center rounded-lg text-danger-500 transition-colors hover:bg-danger-100 hover:text-danger-600 dark:hover:bg-danger-900/40 {{ $sizes['action'] }}"
-                        x-on:click="action('delete')" :aria-label="@js(neura_trans('delete'))">
-                        <neura::icon name="trash" class="{{ $sizes['glyph'] }}" />
-                    </button>
-                @endif
-
-                <button type="button" class="{{ $actionClasses }}" x-on:click="clearSelection()"
-                    :aria-label="@js(neura_trans('clearSelection'))">
-                    <neura::icon name="x-mark" class="{{ $sizes['glyph'] }}" />
+            <button type="button" class="nk-fm-chip {{ $sizes['chip'] }}" x-on:click="setKindFilter(null)" :aria-pressed="(kindFilter === null).toString()">
+                {{ neura_trans('fmGroupAll') }}
+            </button>
+            <template x-for="group in filterGroups" :key="group">
+                <button type="button" class="nk-fm-chip {{ $sizes['chip'] }}" x-on:click="setKindFilter(group)" :aria-pressed="(kindFilter === group).toString()">
+                    <span class="nk-fm-chip-dot" :data-kind="groupKind(group)" aria-hidden="true"></span>
+                    <span x-text="groupLabel(group)"></span>
                 </button>
-            </div>
+            </template>
         </div>
     @endif
 
     {{-- Body ---------------------------------------------------------------- --}}
-    <div class="flex min-h-0 flex-1">
+    <div class="relative flex min-h-0 flex-1">
+        @if ($selectable)
+            <neura::file-manager.selection-bar
+                :sizes="$sizes"
+                :downloadable="$downloadable"
+                :deletable="$deletable"
+                :renamable="$renamable"
+            />
+        @endif
+        @if ($sidebar)
+            <neura::file-manager.sidebar :sizes="$sizes" :shortcuts="$shortcuts" />
+            <div class="nk-fm-scrim" x-show="sidebarOpen" x-cloak x-on:click="sidebarOpen = false" aria-hidden="true"></div>
+        @endif
         <div
             {{-- Container query: the metadata columns collapse when the details
                  panel narrows the list, not when the viewport does. --}}
             {{-- The pack min-height is a floor for auto-height usage only: with an
                  explicit `height` it would stop the body shrinking and push the
                  status bar over the last row. --}}
-            class="@container/list min-w-0 flex-1 overflow-y-auto outline-none {{ $height ? '' : $sizes['body'] }}"
+            class="@container/list relative min-w-0 flex-1 overflow-y-auto outline-none {{ $height ? '' : $sizes['body'] }}"
+            :class="selected.length > 0 && !touchSelect && 'pb-16'"
             tabindex="0"
             role="listbox"
             :aria-multiselectable="@js($multiple)"
             aria-label="{{ neura_trans('files') }}"
             x-on:keydown="onKeydown($event)"
-            x-on:click.self="clearSelection()"
+            x-on:click.self="onBodyClick()"
+            x-on:pointerdown="startLasso($event)"
         >
+            <div class="nk-fm-lasso" x-show="lasso" x-cloak :style="lasso && { left: lasso.left + 'px', top: lasso.top + 'px', width: (lasso.right - lasso.left) + 'px', height: (lasso.bottom - lasso.top) + 'px' }"></div>
             {{-- Loading placeholder, sized like real rows to avoid a layout jump --}}
             <ul x-show="loading" x-cloak class="animate-pulse" role="presentation" aria-hidden="true">
                 @for ($i = 0; $i < 6; $i++)
@@ -426,7 +503,7 @@
                         <span class="flex w-6 shrink-0 items-center">
                             <input
                                 type="checkbox"
-                                class="size-3.5 rounded border-edge accent-primary-600 focus:ring-primary-500/30"
+                                class="size-3.5 rounded border-edge accent-[var(--nk-fm-accent)]"
                                 :checked="allSelected"
                                 :indeterminate="someSelected"
                                 x-on:change="toggleAll()"
@@ -443,6 +520,14 @@
                         <neura::icon name="bars-arrow-down" class="size-3" x-show="sortIcon('name') === 'desc'" />
                     </button>
 
+                    <button type="button" class="hidden w-28 shrink-0 items-center gap-1 text-start transition-colors hover:text-fg @[36rem]/list:flex"
+                        x-on:click="sortBy('kind')"
+                        :aria-sort="sort === 'kind' ? (direction === 'asc' ? 'ascending' : 'descending') : 'none'">
+                        {{ neura_trans('type') }}
+                        <neura::icon name="bars-arrow-up" class="size-3" x-show="sortIcon('kind') === 'asc'" />
+                        <neura::icon name="bars-arrow-down" class="size-3" x-show="sortIcon('kind') === 'desc'" />
+                    </button>
+
                     <button type="button" class="hidden w-24 shrink-0 items-center gap-1 text-start transition-colors hover:text-fg @[30rem]/list:flex"
                         x-on:click="sortBy('size')"
                         :aria-sort="sort === 'size' ? (direction === 'asc' ? 'ascending' : 'descending') : 'none'">
@@ -451,7 +536,7 @@
                         <neura::icon name="bars-arrow-down" class="size-3" x-show="sortIcon('size') === 'desc'" />
                     </button>
 
-                    <button type="button" class="hidden w-40 shrink-0 items-center gap-1 text-start transition-colors hover:text-fg @[44rem]/list:flex"
+                    <button type="button" class="hidden w-36 shrink-0 items-center gap-1 text-start transition-colors hover:text-fg @[44rem]/list:flex"
                         x-on:click="sortBy('modified')"
                         :aria-sort="sort === 'modified' ? (direction === 'asc' ? 'ascending' : 'descending') : 'none'">
                         {{ neura_trans('modified') }}
@@ -459,10 +544,10 @@
                         <neura::icon name="bars-arrow-down" class="size-3" x-show="sortIcon('modified') === 'desc'" />
                     </button>
 
-                    <span class="w-7 shrink-0"></span>
+                    <span class="{{ $entryProps['actionsWidth'] }} shrink-0"></span>
                 </div>
 
-                <ul role="list">
+                <ul role="list" data-fm-list>
                     <template x-for="entry in entries" :key="entry.id">
                         <neura::file-manager.row
                             :sizes="$entryProps['sizes']"
@@ -473,24 +558,43 @@
                             :downloadable="$entryProps['downloadable']"
                             :deletable="$entryProps['deletable']"
                             :sortable="$entryProps['sortable']"
+                            :starrable="$entryProps['starrable']"
+                            :actions-width="$entryProps['actionsWidth']"
                         />
                     </template>
                 </ul>
             </div>
 
-            {{-- Grid view --}}
-            <div x-show="view === 'grid' && !loading" x-cloak class="p-3">
-                <ul class="grid {{ $sizes['grid'] }}" role="list" x-ref="grid">
-                    <template x-for="entry in entries" :key="entry.id">
-                        <neura::file-manager.tile
-                            :sizes="$entryProps['sizes']"
-                            :colors="$entryProps['colors']"
-                            :sprite="$entryProps['sprite']"
-                            :selectable="$entryProps['selectable']"
-                            :sortable="$entryProps['sortable']"
-                        />
-                    </template>
-                </ul>
+            {{-- Grid view: folders first, as compact cards; files below, as cards with a preview. --}}
+            <div x-show="view === 'grid' && !loading" x-cloak class="flex flex-col gap-4 p-3" :style="{ '--nk-fm-thumb': thumbWidth + 'px' }">
+                <section x-show="folderEntries.length > 0" aria-label="{{ neura_trans('folders') }}">
+                    <p class="mb-2 px-1 {{ $sizes['meta'] }} font-semibold uppercase tracking-wide text-fg-muted" x-show="fileEntries.length > 0">{{ neura_trans('folders') }}</p>
+                    <ul class="nk-fm-grid nk-fm-grid-folders" role="list" x-ref="folderGrid">
+                        <template x-for="entry in folderEntries" :key="entry.id">
+                            <neura::file-manager.folder-card
+                                :sizes="$entryProps['sizes']"
+                                :colors="$entryProps['colors']"
+                                :sprite="$entryProps['sprite']"
+                                :selectable="$entryProps['selectable']"
+                                :sortable="$entryProps['sortable']"
+                            />
+                        </template>
+                    </ul>
+                </section>
+                <section x-show="fileEntries.length > 0" aria-label="{{ neura_trans('filesTitle') }}">
+                    <p class="mb-2 px-1 {{ $sizes['meta'] }} font-semibold uppercase tracking-wide text-fg-muted" x-show="folderEntries.length > 0">{{ neura_trans('filesTitle') }}</p>
+                    <ul class="nk-fm-grid" role="list" x-ref="grid">
+                        <template x-for="entry in fileEntries" :key="entry.id">
+                            <neura::file-manager.tile
+                                :sizes="$entryProps['sizes']"
+                                :colors="$entryProps['colors']"
+                                :sprite="$entryProps['sprite']"
+                                :selectable="$entryProps['selectable']"
+                                :sortable="$entryProps['sortable']"
+                            />
+                        </template>
+                    </ul>
+                </section>
             </div>
 
             {{-- Empty state --}}
@@ -571,6 +675,32 @@
                     <span>{{ neura_trans('open') }}</span>
                 </button>
 
+                <button type="button" role="menuitem" class="{{ $menuItemClasses }}" x-show="!menuEntry.isFolder" x-on:click="runMenu('preview')">
+                    <neura::icon name="eye" class="size-4" />
+                    <span>{{ neura_trans('preview') }}</span>
+                    <span class="ms-auto {{ $sizes['meta'] }} opacity-60">{{ neura_trans('keySpace') }}</span>
+                </button>
+
+                @if ($starrable)
+                    <button type="button" role="menuitem" class="{{ $menuItemClasses }}" x-on:click="closeMenu(); toggleStar(menuEntry)">
+                        <neura::icon name="star" class="size-4" />
+                        <span x-show="!menuEntry.starred">{{ neura_trans('addToFavorites') }}</span>
+                        <span x-show="menuEntry.starred">{{ neura_trans('removeFromFavorites') }}</span>
+                    </button>
+                @endif
+
+                <div class="my-1 h-px bg-edge/70"></div>
+                <button type="button" role="menuitem" class="{{ $menuItemClasses }}" x-on:click="closeMenu(); copySelection()">
+                    <neura::icon name="document-duplicate" class="size-4" />
+                    <span>{{ neura_trans('copy') }}</span>
+                    <span class="ms-auto {{ $sizes['meta'] }} opacity-60">Ctrl+C</span>
+                </button>
+                <button type="button" role="menuitem" class="{{ $menuItemClasses }}" x-on:click="closeMenu(); cutSelection()">
+                    <neura::icon name="scissors" class="size-4" />
+                    <span>{{ neura_trans('cut') }}</span>
+                    <span class="ms-auto {{ $sizes['meta'] }} opacity-60">Ctrl+X</span>
+                </button>
+
                 @if ($downloadable)
                     <button type="button" role="menuitem" class="{{ $menuItemClasses }}"
                         x-show="!menuEntry.isFolder" x-on:click="runMenu('download')">
@@ -600,9 +730,15 @@
 
         <template x-if="!menuEntry">
             <div>
+                <button type="button" role="menuitem" class="{{ $menuItemClasses }}" x-show="clipboard" x-on:click="closeMenu(); paste()">
+                    <neura::icon name="clipboard-document" class="size-4" />
+                    <span>{{ neura_trans('paste') }}</span>
+                    <span class="ms-auto {{ $sizes['meta'] }} opacity-60">Ctrl+V</span>
+                </button>
+
                 @if ($creatable)
                     <button type="button" role="menuitem" class="{{ $menuItemClasses }}"
-                        x-on:click="closeMenu(); $dispatch('file-manager:new-folder', { path: [...path] })">
+                        x-on:click="closeMenu(); {{ $inlineCreate ? 'startCreate()' : '$dispatch(\'file-manager:new-folder\', { path: [...path] })' }}">
                         <neura::icon name="folder-plus" class="size-4" />
                         <span>{{ neura_trans('newFolder') }}</span>
                     </button>
@@ -610,7 +746,7 @@
 
                 @if ($uploadable)
                     <button type="button" role="menuitem" class="{{ $menuItemClasses }}"
-                        x-on:click="closeMenu(); $dispatch('file-manager:upload-request', { path: [...path] })">
+                        x-on:click="closeMenu(); {{ $uploadPicker ? 'pickFiles()' : '$dispatch(\'file-manager:upload-request\', { path: [...path] })' }}">
                         <neura::icon name="arrow-up-tray" class="size-4" />
                         <span>{{ neura_trans('upload') }}</span>
                     </button>
@@ -626,6 +762,21 @@
             </div>
         </template>
     </div>
+
+    @if ($creatable || $uploadable)
+        <neura::file-manager.fab :creatable="$creatable" :uploadable="$uploadable" :inline-create="$inlineCreate" :upload-picker="$uploadPicker" />
+    @endif
+
+    @if ($uploadable)
+        @if ($uploadPicker)
+            <input type="file" multiple hidden x-ref="filePicker" x-on:change="startUploads([...$event.target.files]); $event.target.value = ''" />
+        @endif
+        <neura::file-manager.uploads />
+    @endif
+
+    @if ($preview)
+        <neura::file-manager.preview :downloadable="$downloadable" :sprite="$uid" />
+    @endif
 
     <span class="sr-only" aria-live="polite" x-text="announcement"></span>
 </div>

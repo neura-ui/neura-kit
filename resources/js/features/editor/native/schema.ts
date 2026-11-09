@@ -111,7 +111,7 @@ export const TAG_TO_MARK: Record<string, MarkName> = (() => {
 })();
 
 /** Container tags that may appear between the page host and a leaf block. */
-export const CONTAINER_TAGS = new Set(['ul', 'ol', 'li', 'table', 'thead', 'tbody', 'tr']);
+export const CONTAINER_TAGS = new Set(['ul', 'ol', 'li', 'table', 'thead', 'tbody', 'tfoot', 'tr', 'colgroup', 'nav']);
 
 /** Leaf block tags — a caret can sit directly inside these. */
 export const BLOCK_TAGS = new Set([
@@ -132,7 +132,7 @@ export const BLOCK_TAGS = new Set([
 ]);
 
 /** Blocks that hold no text and are selected rather than edited. */
-export const VOID_TAGS = new Set(['hr', 'img', 'br']);
+export const VOID_TAGS = new Set(['hr', 'img', 'br', 'col']);
 
 export type Alignment = 'left' | 'center' | 'right' | 'justify';
 
@@ -148,14 +148,43 @@ export const FONT_FAMILIES = [
 
 export const FONT_SIZES = [8, 9, 10, 11, 12, 14, 18, 24, 30, 36, 48, 60, 72, 96];
 
+const BLOCK_SUGGEST_ATTRS = ['data-suggest-split', 'data-suggest-join', 'data-suggest-style'];
+
 /** Attributes each allowed tag may keep after a paste. */
 export const ALLOWED_ATTRS: Record<string, string[]> = {
-  a: ['href', 'target', 'rel', 'title'],
-  img: ['src', 'alt', 'width', 'height'],
-  span: ['style'],
+  // `data-level`: a table of contents entry's heading level.
+  a: ['href', 'target', 'rel', 'title', 'data-level'],
+  // A cropped or turned image keeps its original and what was done to it.
+  img: ['src', 'alt', 'width', 'height', 'data-original', 'data-crop', 'data-rotate'],
+  // A smart chip (a person or a date) and a footnote marker with its note.
+  span: ['style', 'data-chip', 'data-id', 'data-email', 'data-date', 'data-footnote', 'data-note', 'data-comment', 'data-suggest', 'data-author', 'data-time', 'data-format'],
+  // Suggested changes, with who made them and when; the comment threads' store.
+  ins: ['data-suggest', 'data-author', 'data-time'],
+  del: ['data-suggest', 'data-author', 'data-time'],
+  aside: ['data-comments', 'hidden'],
+  sup: ['data-footnote'],
+  // Headings keep the anchor a table of contents links to; text blocks, the
+  // suggestions made to the block itself (a new paragraph, a join, its look).
+  h1: ['id', ...BLOCK_SUGGEST_ATTRS],
+  h2: ['id', ...BLOCK_SUGGEST_ATTRS],
+  h3: ['id', ...BLOCK_SUGGEST_ATTRS],
+  h4: ['id', ...BLOCK_SUGGEST_ATTRS],
+  h5: ['id', ...BLOCK_SUGGEST_ATTRS],
+  h6: ['id', ...BLOCK_SUGGEST_ATTRS],
+  p: [...BLOCK_SUGGEST_ATTRS],
+  blockquote: [...BLOCK_SUGGEST_ATTRS],
+  pre: [...BLOCK_SUGGEST_ATTRS],
+  nav: ['data-toc'],
   td: ['colspan', 'rowspan'],
   th: ['colspan', 'rowspan'],
-  ol: ['start'],
+  // A table's border weight and colour; an image's text wrap and border.
+  table: ['data-border', 'data-border-color'],
+  figure: ['data-wrap', 'data-border', 'data-border-color'],
+  // `data-footnotes`: the list of notes at the end of a saved document.
+  ol: ['start', 'data-footnotes', 'data-numbering'],
+  // A checklist is a bulleted list marked as one; each item says whether it is done.
+  ul: ['data-checklist'],
+  li: ['data-checked', 'data-footnote', ...BLOCK_SUGGEST_ATTRS],
 };
 
 /** CSS properties a pasted `style` attribute may keep. */
@@ -172,6 +201,15 @@ export const ALLOWED_STYLES = new Set([
   'margin-left',
   'line-height',
 ]);
+
+/**
+ * Properties only some tags may keep, beyond `ALLOWED_STYLES`: an image's
+ * width and the table column widths, both in percent.
+ */
+export const TAG_STYLES: Record<string, string[]> = {
+  figure: ['width'],
+  col: ['width'],
+};
 
 /** URL schemes a link or image may point at. */
 export const SAFE_SCHEMES = ['http:', 'https:', 'mailto:', 'tel:'];

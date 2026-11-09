@@ -125,6 +125,8 @@ return [
 
     'navbar' => Config::navbar(),
 
+    'breadcrumbs' => Config::breadcrumbs(),
+
     'tabs' => Config::tabs(),
 
     'link' => Config::link(),
@@ -161,7 +163,17 @@ return [
 
     'date-reel' => Config::dateReel(),
 
+    'calendar' => Config::calendar(),
+
     'time-picker' => Config::timePicker(),
+
+    'time-grid' => Config::timeGrid(),
+
+    'recurrence' => Config::recurrence(),
+
+    'slider' => Config::slider(),
+
+    'rating' => Config::rating(),
 
     'activity-rings' => Config::activityRings(),
 
@@ -170,6 +182,10 @@ return [
     'image-gallery' => Config::imageGallery(),
 
     'popover' => Config::popup(),
+
+    'tooltip' => Config::tooltip(),
+
+    'hover-card' => Config::hoverCard(),
 
     'table' => Config::table(),
 
@@ -242,5 +258,27 @@ return [
         'import_formats' => ['docx', 'html', 'md', 'txt', 'csv', 'pdf'],
         'max_export_bytes' => (int) env('NEURA_KIT_EDITOR_MAX_EXPORT_BYTES', 5_242_880), // 5 MB of HTML
         'max_import_kilobytes' => (int) env('NEURA_KIT_EDITOR_MAX_IMPORT_KB', 20_480), // 20 MB upload
+
+        /*
+         * People "@" can mention, searched as you type: GET {url}?q=…, answering a
+         * JSON list (or { data: [...] }) of { id, name, email?, avatar? }. The
+         * `mentions` prop gives people up front; `mentions-url` overrides this.
+         */
+        'mentions_url' => env('NEURA_KIT_EDITOR_MENTIONS_URL'),
+
+        /*
+         * Version history. Versions are kept in the browser (IndexedDB) unless
+         * `url` names an endpoint of the app (see the editor docs for its JSON
+         * API). A stretch of editing within `interval` seconds is one version;
+         * a pause of `idle` seconds records it; `limit` unnamed versions stay
+         * (named ones always do).
+         */
+        'history' => [
+            'enabled' => (bool) env('NEURA_KIT_EDITOR_HISTORY', true),
+            'url' => env('NEURA_KIT_EDITOR_VERSIONS_URL'),
+            'interval' => 300,
+            'idle' => 20,
+            'limit' => 100,
+        ],
     ],
 ];

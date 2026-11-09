@@ -20,6 +20,9 @@
     'presets' => [],
     'dayLabels' => [],
     'events' => [],
+    'natural' => null,
+    'naturalPlaceholder' => null,
+    'naturalTime' => false,
 ])
 
 @php
@@ -64,6 +67,22 @@
         : 'label';
 
     $hasPresets = filled($presets);
+
+    // An optional field above the months: a date typed in plain words (config: calendar.default.natural).
+    $natural = $natural ?? config('neura-kit.calendar.default.natural', false);
+    $natural = filled($natural) && $natural;
+    $naturalTime = filled($naturalTime) && $naturalTime;
+    $naturalConfig = [
+        'locale' => $locale,
+        'weekStart' => (int) $firstDayOfWeek,
+        'time' => $naturalTime,
+        'placeholder' => $naturalPlaceholder ?? match (true) {
+            $naturalTime => neura_trans('calendarNaturalPlaceholderTime', null, 'e.g. tomorrow at 3pm'),
+            $range => neura_trans('calendarNaturalPlaceholderRange', null, 'e.g. from March 3 to 7, next week'),
+            $multiple => neura_trans('calendarNaturalPlaceholderMultiple', null, 'e.g. Monday and Wednesday, every Friday'),
+            default => neura_trans('calendarNaturalPlaceholder', null, 'Type a date, e.g. next Friday'),
+        },
+    ];
     $hasDayLabels = filled($dayLabels);
     $hasEvents = filled($events);
     $cellSizeClass = $hasDayLabels ? 'h-12 w-12 flex-col gap-0.5' : 'size-9';
@@ -78,6 +97,8 @@
 <div
     x-data="{
         selectedDate: {{ json_encode($value) }},
+        {{-- Dates the natural-language field understood, outlined until applied --}}
+        naturalPreview: [],
         isMultiple: {{ json_encode($multiple) }},
         isRange: {{ json_encode($range) }},
         isDisabled: {{ json_encode($disabled) }},
@@ -135,6 +156,7 @@
                 this.buildMonths();
                 this.$nextTick(() => this.syncSelection(false));
             });
+            this.$watch('naturalPreview', () => this.buildMonths());
 
             // Keep grid in sync; x-modelable handles wire:model / x-model (avoid $wire.set).
             const release = () => {
@@ -294,6 +316,7 @@
                 isRangeStart,
                 isRangeEnd,
                 isDisabled: this.isDateDisabled(dateStr, date.getDay()),
+                isPreview: this.naturalPreview.includes(dateStr),
                 label: date.toLocaleDateString(this.locale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
             };
         },
@@ -372,6 +395,12 @@
             }
 
             if (day.isToday && day.isSelected) classes.push('font-medium');
+
+            {{-- What the natural-language field understood, before it is applied --}}
+            if (day.isPreview && day.inMonth) {
+                classes.push('outline-1 outline-dashed -outline-offset-2 outline-primary-500');
+                if (! day.isSelected) classes.push('bg-primary-500/10 text-primary-700 dark:text-primary-300');
+            }
 
             return classes.join(' ');
         },
@@ -891,6 +920,52 @@
         $calendarRoundedClass,
         $calendarShadowClass,
     ])>
+        @if ($natural)
+            {{-- A date typed in plain words: what was understood is outlined in the months, Enter applies it --}}
+            <div
+                x-data="neuraNaturalDate({{ \Illuminate\Support\Js::from($naturalConfig) }})"
+                @class(['col-span-full flex min-w-0 flex-col gap-1.5', 'mb-3' => ! isset($aside)])
+                data-slot="calendar-natural"
+            >
+                <label class="relative flex items-center">
+                    <span class="sr-only">{{ neura_trans('calendarNaturalLabel', null, 'Type a date') }}</span>
+                    <svg class="pointer-events-none absolute start-2.5 size-4 text-primary-500" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 13 11 5M10 2.5v2M12.5 5h-2M13.5 2.5 12 4M6 2l.6 1.4L8 4l-1.4.6L6 6l-.6-1.4L4 4l1.4-.6zM12 9.5l.4 1 1 .4-1 .4-.4 1-.4-1-1-.4 1-.4z"/></svg>
+                    <input
+                        type="text"
+                        x-model="text"
+                        x-on:keydown.enter.prevent="apply()"
+                        x-on:keydown.escape="if (text) { $event.stopPropagation(); clear(); }"
+                        x-bind:disabled="isDisabled"
+                        x-bind:class="result && ! blocked ? 'border-primary-400 ring-3 ring-primary-500/15' : 'border-edge'"
+                        placeholder="{{ $naturalConfig['placeholder'] }}"
+                        autocomplete="off"
+                        spellcheck="false"
+                        class="h-9 w-full min-w-0 select-text rounded-field border bg-surface-inset ps-8 pe-3 text-sm text-fg outline-none transition-[border-color,box-shadow] duration-fast ease-standard placeholder:text-fg-muted focus:border-edge-focus disabled:opacity-50"
+                    >
+                </label>
+
+                <div class="flex min-h-6 items-center gap-2 text-xs" aria-live="polite">
+                    <template x-if="result && ! blocked">
+                        <div class="flex w-full min-w-0 items-center gap-2">
+                            <svg class="size-3.5 shrink-0 text-primary-600 dark:text-primary-400" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m2.5 6.5 2.5 2.5 4.5-5"/></svg>
+                            <span class="min-w-0 flex-1 truncate font-medium text-fg" x-text="label"></span>
+                            <button
+                                type="button"
+                                class="h-6 shrink-0 cursor-pointer rounded-md bg-fg px-2 text-xs font-medium text-surface transition-opacity duration-fast hover:opacity-85"
+                                x-on:click="apply()"
+                            >{{ neura_trans('calendarNaturalApply', null, 'Apply') }}</button>
+                        </div>
+                    </template>
+                    <template x-if="result && blocked">
+                        <span class="text-fg-muted">{{ neura_trans('calendarNaturalUnavailable', null, 'Some of these dates can’t be picked.') }}</span>
+                    </template>
+                    <template x-if="text.trim() && ! result">
+                        <span class="text-fg-muted">{{ neura_trans('calendarNaturalUnknown', null, 'Not understood. Try “tomorrow” or “March 3 to 7”.') }}</span>
+                    </template>
+                </div>
+            </div>
+        @endif
+
         {{-- Skeleton: reserves the calendar frame before Alpine builds the grid --}}
         <div
             x-show="!ready"

@@ -1,7 +1,7 @@
 # Neura Kit
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-3.0.0-green.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-3.2.0-green.svg)](CHANGELOG.md)
 
 Open-source UI component library for **Laravel**, **Livewire**, and **Alpine.js** — forms, tables, modals, toasts, dark mode, and 60+ Blade components with a consistent design system.
 

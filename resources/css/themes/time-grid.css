@@ -1,0 +1,169 @@
+/*
+ * Time grid, on the design tokens: free cells are inset wells on the field's edge, a level
+ * fills its cells with its own colour (set inline as --nk-tg-level-N, picked per cell as
+ * --nk-tg-fill by the script), previews and partial cells are washes of that colour, and
+ * blocked cells are hatched over whatever fill they hold. The same tokens carry light and
+ * dark themes.
+ */
+.nk-time-grid {
+    --nk-tg-cell: 1.375rem;
+    --nk-tg-scale: 1;
+    --nk-tg-level-0: var(--color-primary-500, var(--color-primary));
+    min-width: 0;
+}
+
+.nk-time-grid-cells {
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    /* The page scrolls over the grid; a long press takes over while a finger draws. */
+    touch-action: pan-x pan-y;
+}
+
+.nk-time-grid-cells [role='gridcell'] {
+    height: calc(var(--nk-tg-cell) * var(--nk-tg-scale));
+    border-radius: 0.1875rem;
+    background-color: var(--color-surface-inset);
+    box-shadow: inset 0 0 0 1px var(--color-edge);
+    cursor: pointer;
+    outline: none;
+    transition:
+        background-color var(--nk-duration-fast) var(--nk-ease-standard),
+        box-shadow var(--nk-duration-fast) var(--nk-ease-standard);
+}
+
+@media (hover: hover) {
+    .nk-time-grid-cells:not([aria-readonly='true'], [aria-disabled='true']) [role='gridcell'][data-state='free']:not([data-blocked]):hover {
+        background-color: var(--color-hover);
+    }
+}
+
+.nk-time-grid-cells [role='gridcell'][data-state='full'] {
+    background-color: var(--nk-tg-fill);
+    box-shadow: none;
+}
+
+.nk-time-grid-cells [role='gridcell'][data-state='partial'] {
+    background-color: color-mix(in oklab, var(--nk-tg-fill) 30%, transparent);
+}
+
+.nk-time-grid-cells [role='gridcell'][data-state='add'] {
+    background-color: color-mix(in oklab, var(--nk-tg-fill) 25%, transparent);
+    box-shadow: inset 0 0 0 1.5px var(--nk-tg-fill);
+}
+
+.nk-time-grid-cells [role='gridcell'][data-state='erase'] {
+    background-color: color-mix(in oklab, var(--nk-tg-fill) 35%, transparent);
+    box-shadow: inset 0 0 0 1px var(--color-edge-focus);
+}
+
+.nk-time-grid-cells [role='gridcell'][data-blocked] {
+    background-image: repeating-linear-gradient(
+        135deg,
+        transparent 0 3px,
+        color-mix(in oklab, var(--color-fg) 22%, transparent) 3px 4px
+    );
+    cursor: not-allowed;
+}
+
+.nk-time-grid-cells[aria-disabled='true'] {
+    opacity: 0.6;
+}
+
+.nk-time-grid-cells[aria-disabled='true'] [role='gridcell'],
+.nk-time-grid-cells[aria-disabled='true'] .nk-time-grid-head {
+    cursor: not-allowed;
+}
+
+/* Set on the root, which Livewire still morphs, so a validation error shows and clears. */
+.nk-time-grid[data-invalid] .nk-time-grid-frame {
+    border-color: var(--color-danger-500);
+}
+
+.nk-time-grid-cells [role='gridcell']:focus-visible {
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 0 0 2px var(--color-edge-focus);
+}
+
+.nk-time-grid-head {
+    display: flex;
+    align-items: center;
+    padding-inline: 0.25rem;
+    color: var(--color-fg-muted);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+    transition: color var(--nk-duration-fast) var(--nk-ease-standard);
+}
+
+.nk-time-grid-head:hover {
+    color: var(--color-fg);
+}
+
+/*
+ * Hours down the grid: a row is exactly one cell tall, so quarter hours line up evenly; the
+ * hour label sits at the top of its row and may spill over the next ones.
+ */
+.nk-time-grid-cells[data-orientation='columns'] [role='rowheader'] {
+    height: calc(var(--nk-tg-cell) * var(--nk-tg-scale));
+    align-items: flex-start;
+    overflow: visible;
+    line-height: 1;
+}
+
+.nk-time-grid-cells[aria-readonly='true'] [role='gridcell'],
+.nk-time-grid-cells[aria-readonly='true'] .nk-time-grid-head {
+    cursor: default;
+}
+
+.nk-time-grid-cells:is([aria-readonly='true'], [aria-disabled='true']) .nk-time-grid-head:hover {
+    color: var(--color-fg-muted);
+}
+
+.nk-time-grid-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    height: 1.75rem;
+    padding-inline: 0.625rem;
+    font-size: 0.75rem;
+    border-radius: 999px;
+    border: 1px solid var(--color-edge);
+    background: var(--color-surface-raised);
+    color: var(--color-fg-muted);
+    cursor: pointer;
+    transition:
+        color var(--nk-duration-fast) var(--nk-ease-standard),
+        background-color var(--nk-duration-fast) var(--nk-ease-standard),
+        border-color var(--nk-duration-fast) var(--nk-ease-standard);
+}
+
+.nk-time-grid-chip:hover {
+    color: var(--color-fg);
+    background: var(--color-hover);
+}
+
+.nk-time-grid-chip[aria-pressed='true'] {
+    color: var(--color-fg);
+    border-color: var(--color-edge-focus);
+}
+
+.nk-time-grid-chip:focus-visible {
+    outline: 2px solid var(--color-edge-focus);
+    outline-offset: 2px;
+}
+
+.nk-time-grid-swatch {
+    width: 0.625rem;
+    height: 0.625rem;
+    border-radius: 999px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .nk-time-grid-cells [role='gridcell'],
+    .nk-time-grid-head,
+    .nk-time-grid-chip {
+        transition: none;
+    }
+}

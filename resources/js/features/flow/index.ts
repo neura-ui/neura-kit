@@ -1,4 +1,23 @@
 import { onAlpineInit } from '../../runtime/alpine';
+import {
+    agentInputs,
+    canConnect,
+    cssColor,
+    isIconName,
+    labelPlacement,
+    nodeLineage,
+    particleCount,
+    portsFor,
+    resolveShape,
+    resolveStatus,
+    resolveVariant,
+    rowLineage,
+    rowPortTop,
+    tableHeight,
+    tableRows,
+    verticalPath,
+} from './shapes';
+import type { FlowChannel, FlowShape, FlowVariant } from './shapes';
 /**
  * NeuraKit Flow — native n8n-style node editor (no third-party graph libs).
  */
@@ -43,6 +62,8 @@ export type FlowEdge = {
     animated?: boolean;
     selected?: boolean;
     label?: string;
+    /** Execution state of the connection: success, error, running (n8n colours it). */
+    status?: string;
 };
 
 export type FlowConfig = {
@@ -71,6 +92,19 @@ export type FlowConfig = {
     nodeWidth?: number;
     nodeHeight?: number;
     markerId?: string;
+    /** Look of the whole flow (Flow\\Theme pack): classic or signal. */
+    theme?: string;
+    /** Shape and card style of nodes that name none. */
+    shape?: FlowShape;
+    variant?: FlowVariant;
+    /** Default size per shape, from the Flow\\Shape pack. */
+    shapes?: Partial<Record<FlowShape, { width: number; height: number }>>;
+    /** Card style => class on the node, from the Flow\\Variant pack. */
+    variants?: Record<string, string>;
+    /** Run, deactivate and delete buttons over a hovered node. */
+    nodeActions?: boolean;
+    /** Hovering a node or a table row lights its pipeline and dims the rest. */
+    trace?: boolean;
 };
 
 type ConnectingState = {
@@ -119,6 +153,10 @@ function uid(prefix = 'e'): string {
     return `${prefix}_${Math.random().toString(36).slice(2, 10)}`;
 }
 
+function escapeHtml(text: string): string {
+    return text.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] as string);
+}
+
 function clamp(n: number, min: number, max: number): number {
     return Math.min(max, Math.max(min, n));
 }
@@ -130,8 +168,9 @@ function snap(value: number, size: number): number {
 function normalizeNode(
     raw: Partial<FlowNode> & { id: string },
     index: number,
-    defaults: { w: number; h: number; colGap: number; rowGap: number },
+    defaults: { w: number; h: number; colGap: number; rowGap: number; size?: (node: Partial<FlowNode>) => { width: number; height: number } | null },
 ): FlowNode {
+    const size = defaults.size?.(raw) ?? null;
     const col = index % 3;
     const row = Math.floor(index / 3);
     const position = raw.position ?? {
@@ -144,8 +183,8 @@ function normalizeNode(
         type: raw.type ?? 'step',
         position: { x: position.x, y: position.y },
         data: { ...(raw.data ?? {}) },
-        width: raw.width ?? defaults.w,
-        height: raw.height ?? defaults.h,
+        width: raw.width ?? size?.width ?? defaults.w,
+        height: raw.height ?? size?.height ?? defaults.h,
         selected: !!raw.selected,
         draggable: raw.draggable,
         selectable: raw.selectable,
@@ -169,6 +208,7 @@ function normalizeEdge(
         animated: !!raw.animated,
         selected: !!raw.selected,
         label: raw.label,
+        status: raw.status,
     };
 }
 
@@ -250,6 +290,28 @@ function smoothstepPath(sx: number, sy: number, tx: number, ty: number): string 
     ].join(' ');
 }
 
+/** One flow per page keeps its zoom across wire:navigate remounts. */
+function flowMemoryKey(el: HTMLElement): string {
+    const nodes = Array.from(document.querySelectorAll('[data-nk-flow]'));
+    const index = Math.max(0, nodes.indexOf(el));
+    return `nk-flow-viewport:${location.pathname}:${index}`;
+}
+
+function readViewport(key: string): FlowViewport | null {
+    try {
+        const raw = sessionStorage.getItem(key);
+        if (!raw) return null;
+        const data = JSON.parse(raw) as Partial<FlowViewport>;
+        if (typeof data.x !== 'number' || typeof data.y !== 'number' || typeof data.zoom !== 'number') {
+            return null;
+        }
+        if (![data.x, data.y, data.zoom].every(Number.isFinite)) return null;
+        return { x: data.x, y: data.y, zoom: data.zoom };
+    } catch {
+        return null;
+    }
+}
+
 function edgePath(
     type: 'bezier' | 'smoothstep',
     sx: number,
@@ -270,8 +332,22 @@ function createNeuraFlow(config: FlowConfig = {}) {
     const edgeType = config.edgeType ?? 'bezier';
     const fitOnInit = config.fitViewOnInit ?? config.autoCenter ?? true;
 
+    const theme = config.theme ?? 'classic';
+    const defaultShape: FlowShape = config.shape ?? 'node';
+    const defaultVariant: FlowVariant = config.variant ?? 'elevated';
+    const variantClasses = config.variants ?? {};
+    // A shape's own size (pack), unless the flow sets one size for every node.
+    const sizeFor = (node: Partial<FlowNode>) => {
+        if (config.nodeWidth || config.nodeHeight) return null;
+        const shape = resolveShape(node, defaultShape);
+        const size = config.shapes?.[shape] ?? null;
+        // A table grows with its rows.
+        if (shape === 'table') return { width: size?.width ?? 240, height: tableHeight(tableRows(node).length) };
+        return size;
+    };
+
     const initialNodes = (config.nodes ?? []).map((n, i) =>
-                normalizeNode(n, i, { w: nodeW, h: nodeH, colGap: 288, rowGap: 120 }),
+        normalizeNode(n, i, { w: nodeW, h: nodeH, colGap: 288, rowGap: 120, size: sizeFor }),
     );
     const initialEdges = (config.edges ?? []).map((e) => normalizeEdge(e as any, edgeType));
 
@@ -301,7 +377,15 @@ function createNeuraFlow(config: FlowConfig = {}) {
         defaultNodeWidth: nodeW,
         defaultNodeHeight: nodeH,
         fitViewOnInit: fitOnInit,
+        _viewportReady: false,
+        _resize: null as ResizeObserver | null,
+        _onNavigated: () => {},
         markerId: config.markerId || `flow-arrow-${Math.random().toString(36).slice(2, 9)}`,
+        nodeActions: config.nodeActions !== false,
+        traceEnabled: config.trace !== false,
+        /** The node or row being hovered and everything it feeds or is fed by. */
+        tracing: null as { nodes: string[]; rows: string[]; edges: string[] } | null,
+        _icons: {} as Record<string, string>,
 
         selectedNodeIds: [] as string[],
         selectedEdgeIds: [] as string[],
@@ -405,6 +489,9 @@ function createNeuraFlow(config: FlowConfig = {}) {
             const src = this.getNode(this.connecting.sourceId);
             if (!src) return '';
             const p = this.handlePoint(src, this.connecting.sourceHandle ?? 'out', 'source');
+            if (this.connecting.sourceHandle === 'ai') {
+                return verticalPath(p.x, p.y, this.connecting.cursor.x, this.connecting.cursor.y);
+            }
             const self = this.connecting.hoverTargetId === this.connecting.sourceId;
             if (self) {
                 const b = this.handlePoint(src, 'in', 'target');
@@ -481,33 +568,71 @@ function createNeuraFlow(config: FlowConfig = {}) {
             window.addEventListener('keyup', this._onKeyUp);
 
             const root = (this as any).$el as HTMLElement;
+
+            // Icons the nodes name, rendered once by the kit in a hidden container.
+            root?.querySelectorAll<HTMLElement>('[data-flow-icon]').forEach((el) => {
+                if (el.dataset.flowIcon) this._icons[el.dataset.flowIcon] = el.innerHTML.trim();
+            });
+
             root?.addEventListener(
                 'alpine:destroying',
                 () => {
                     window.removeEventListener('keydown', this._onKeyDown);
                     window.removeEventListener('keyup', this._onKeyUp);
+                    document.removeEventListener('livewire:navigated', this._onNavigated);
+                    this._resize?.disconnect();
+                    this._resize = null;
                 },
                 { once: true },
             );
 
-            // Wait until x-for nodes exist, fit the view, then draw edges after paint
-            // (getBoundingClientRect was racing the CSS transform → arrows floated above).
+            // wire:navigate mounts the page before it is painted. A requestAnimationFrame
+            // queued here is held until the first click, and that click then runs fitView
+            // (~70%). Settle as soon as the canvas has a size instead.
+            this._onNavigated = () => {
+                if (this._viewportReady) this.refreshEdges();
+            };
+            document.addEventListener('livewire:navigated', this._onNavigated);
+            (this as any).$nextTick(() => this.bootViewport());
+        },
+
+        bootViewport() {
+            const el = (this as any).$refs?.canvas as HTMLElement | undefined;
+            if (!el) return;
+
+            if (el.clientWidth === 0 || el.clientHeight === 0) {
+                if (this._resize) return;
+                this._resize = new ResizeObserver(() => {
+                    if (el.clientWidth === 0 || el.clientHeight === 0) return;
+                    this._resize?.disconnect();
+                    this._resize = null;
+                    this.bootViewport();
+                });
+                this._resize.observe(el);
+                return;
+            }
+
+            if (this._viewportReady) {
+                this.refreshEdges();
+                return;
+            }
+
+            this._viewportReady = true;
+            const root = (this as any).$el as HTMLElement | undefined;
+            const saved = root ? readViewport(flowMemoryKey(root)) : null;
+            if (saved) {
+                this.setViewport(saved, { emit: false, persist: false });
+            } else if (this.fitViewOnInit) {
+                this.fitView({ padding: 0.18 });
+            }
+
             (this as any).$nextTick(() => {
-                requestAnimationFrame(() => {
-                    if (this.fitViewOnInit) {
-                        this.fitView({ padding: 0.18 });
-                    }
-                    (this as any).$nextTick(() => {
-                        requestAnimationFrame(() => {
-                            this.refreshEdges();
-                            this._ready = true;
-                            this.emit('flow-init', {
-                                nodes: this.nodes,
-                                edges: this.edges,
-                                viewport: this.viewport,
-                            });
-                        });
-                    });
+                this.refreshEdges();
+                this._ready = true;
+                this.emit('flow-init', {
+                    nodes: this.nodes,
+                    edges: this.edges,
+                    viewport: this.viewport,
                 });
             });
         },
@@ -535,6 +660,7 @@ function createNeuraFlow(config: FlowConfig = {}) {
                 const tgt = this.getNode(edge.target);
                 if (!src || !tgt) continue;
 
+                const sub = this.edgeChannel(edge) === 'ai';
                 const a = this.edgePortPoint(
                     src,
                     edge.sourceHandle ?? 'out',
@@ -548,43 +674,160 @@ function createNeuraFlow(config: FlowConfig = {}) {
                     edge.targetOffset ?? 0,
                 );
                 const isSelf = edge.source === edge.target;
-                const start = isSelf ? a : offsetPoint(a, b, 4);
-                const end = isSelf ? offsetPoint(b, { x: b.x - 1, y: b.y }, 8) : offsetPoint(b, a, 8);
-                const d = edgePath(edge.type ?? this.edgeType, start.x, start.y, end.x, end.y, {
-                    self: isSelf,
-                });
+                let d: string;
+                if (sub) {
+                    d = verticalPath(a.x, a.y, b.x, b.y);
+                } else {
+                    const start = isSelf ? a : offsetPoint(a, b, 4);
+                    const end = isSelf ? offsetPoint(b, { x: b.x - 1, y: b.y }, 8) : offsetPoint(b, a, 8);
+                    d = edgePath(edge.type ?? this.edgeType, start.x, start.y, end.x, end.y, {
+                        self: isSelf,
+                    });
+                }
                 const selected = this.selectedEdgeIds.includes(edge.id);
                 const dragging =
                     this._reconnect.active &&
                     this._reconnect.edgeId === edge.id &&
                     this._reconnect.sliding;
+                const status = resolveStatus(edge.status);
+
+                const group = document.createElementNS(SVG_NS, 'g');
+                group.setAttribute('class', 'flow-edge-group');
+                group.setAttribute('data-edge-id', edge.id);
+                layer.appendChild(group);
 
                 const hit = document.createElementNS(SVG_NS, 'path');
                 hit.setAttribute('class', 'flow-edge-hit');
                 hit.setAttribute('d', d);
                 hit.setAttribute('data-edge-id', edge.id);
                 hit.setAttribute('fill', 'none');
-                layer.appendChild(hit);
+                group.appendChild(hit);
 
                 const path = document.createElementNS(SVG_NS, 'path');
                 const cls = ['flow-edge'];
                 if (selected || dragging) cls.push('is-on');
-                if (edge.animated) cls.push('is-run');
+                if (edge.animated || status === 'running') cls.push('is-run');
+                if (sub) cls.push('is-sub');
+                if (status) cls.push(`is-${status}`);
+                if (this.tracing?.edges.includes(edge.id)) cls.push('is-traced');
                 path.setAttribute('class', cls.join(' '));
                 path.setAttribute('d', d);
                 path.setAttribute('data-edge-id', edge.id);
                 path.setAttribute('fill', 'none');
-                path.setAttribute(
-                    'marker-end',
-                    selected || dragging ? `url(#${this.markerId}-on)` : `url(#${this.markerId})`,
-                );
-                layer.appendChild(path);
+                if (!sub) {
+                    const marker = selected || dragging ? 'on' : status === 'success' || status === 'error' ? status : '';
+                    path.setAttribute('marker-end', `url(#${this.markerId}${marker ? `-${marker}` : ''})`);
+                }
+                group.appendChild(path);
 
-                if ((selected || dragging) && this.nodesConnectable) {
+                // Midpoint of the drawn path, for the label and the hover tools.
+                let mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+                try {
+                    const point = path.getPointAtLength(path.getTotalLength() / 2);
+                    mid = { x: point.x, y: point.y };
+                } catch {
+                    // Not laid out yet: the straight midpoint will do.
+                }
+
+                // Signal: data dots travelling along a connection that is running.
+                const dots = particleCount(theme, edge);
+                if (dots && !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+                    for (let i = 0; i < dots; i++) {
+                        const dot = document.createElementNS(SVG_NS, 'circle');
+                        dot.setAttribute('class', 'flow-particle');
+                        dot.setAttribute('r', '3');
+                        const motion = document.createElementNS(SVG_NS, 'animateMotion');
+                        motion.setAttribute('dur', '1.3s');
+                        motion.setAttribute('repeatCount', 'indefinite');
+                        motion.setAttribute('path', d);
+                        motion.setAttribute('begin', `${(-1.3 * i) / dots}s`);
+                        dot.appendChild(motion);
+                        group.appendChild(dot);
+                    }
+                }
+
+                if (edge.label) this.appendEdgeLabel(group, edge.label, mid.x, mid.y, status);
+                if (this.nodesConnectable) this.appendEdgeTools(group, edge.id, mid.x, mid.y);
+
+                if ((selected || dragging) && this.nodesConnectable && !sub) {
                     this.appendEdgeEndpoint(layer, edge.id, 'source', a.x, a.y);
                     this.appendEdgeEndpoint(layer, edge.id, 'target', b.x, b.y);
                 }
             }
+        },
+
+        /** n8n's "1 item" pill, just above the middle of the connection. */
+        appendEdgeLabel(group: SVGGElement, label: string, x: number, y: number, status: string | null) {
+            const g = document.createElementNS(SVG_NS, 'g');
+            g.setAttribute('class', `flow-edge-label${status ? ` is-${status}` : ''}`);
+            g.setAttribute('transform', `translate(${x}, ${y - 14})`);
+
+            const rect = document.createElementNS(SVG_NS, 'rect');
+            const text = document.createElementNS(SVG_NS, 'text');
+            text.textContent = label;
+            text.setAttribute('text-anchor', 'middle');
+            text.setAttribute('dominant-baseline', 'central');
+            g.appendChild(rect);
+            g.appendChild(text);
+            group.appendChild(g);
+
+            let width = label.length * 6.2;
+            try {
+                width = text.getComputedTextLength() || width;
+            } catch {
+                // Not laid out yet.
+            }
+            rect.setAttribute('x', String(-(width / 2) - 7));
+            rect.setAttribute('y', '-9');
+            rect.setAttribute('width', String(width + 14));
+            rect.setAttribute('height', '18');
+            rect.setAttribute('rx', '9');
+        },
+
+        /** Hover tools on a connection: insert a step, or delete it. */
+        appendEdgeTools(group: SVGGElement, edgeId: string, x: number, y: number) {
+            const tools = document.createElementNS(SVG_NS, 'g');
+            tools.setAttribute('class', 'flow-edge-tools');
+            tools.setAttribute('transform', `translate(${x}, ${y})`);
+
+            const button = (action: 'insert' | 'delete', dx: number, icon: string) => {
+                const g = document.createElementNS(SVG_NS, 'g');
+                g.setAttribute('class', `flow-edge-tool is-${action}`);
+                g.setAttribute('data-edge-action', action);
+                g.setAttribute('data-edge-id', edgeId);
+                g.setAttribute('transform', `translate(${dx}, 0)`);
+                const circle = document.createElementNS(SVG_NS, 'rect');
+                circle.setAttribute('x', '-10');
+                circle.setAttribute('y', '-10');
+                circle.setAttribute('width', '20');
+                circle.setAttribute('height', '20');
+                circle.setAttribute('rx', '6');
+                const glyph = document.createElementNS(SVG_NS, 'path');
+                glyph.setAttribute('d', icon);
+                g.appendChild(circle);
+                g.appendChild(glyph);
+                tools.appendChild(g);
+            };
+
+            button('insert', -12, 'M 0 -4.5 V 4.5 M -4.5 0 H 4.5');
+            button('delete', 12, 'M -4 -3.5 H 4 M -2 -3.5 V -5 H 2 V -3.5 M -3 -3.5 L -2.5 4.5 H 2.5 L 3 -3.5');
+            group.appendChild(tools);
+        },
+
+        /** The page decides what to insert (n8n opens its node picker): it gets the edge and the spot. */
+        insertOnEdge(id: string) {
+            const edge = this.edges.find((e) => e.id === id);
+            const layer = (this as any).$refs?.edgeLayer as SVGGElement | undefined;
+            const path = layer?.querySelector(`path.flow-edge[data-edge-id="${CSS.escape(id)}"]`) as SVGPathElement | null;
+            if (!edge) return;
+            let position: FlowPoint | null = null;
+            try {
+                const point = path?.getPointAtLength(path.getTotalLength() / 2);
+                if (point) position = { x: point.x, y: point.y };
+            } catch {
+                position = null;
+            }
+            this.emit('flow-edge-insert', { edge, position });
         },
 
         appendEdgeEndpoint(
@@ -625,7 +868,7 @@ function createNeuraFlow(config: FlowConfig = {}) {
             offset = 0,
         ): FlowPoint {
             const p = this.portPoint(node, handleId, kind);
-            if (!offset) return p;
+            if (!offset || (kind === 'source' ? handleId === 'ai' : handleId !== 'in')) return p;
             const h = node.height ?? this.defaultNodeHeight;
             return {
                 x: p.x,
@@ -659,15 +902,23 @@ function createNeuraFlow(config: FlowConfig = {}) {
             ) as HTMLElement | null;
 
             if (nodeEl) {
+                const side = kind === 'target' ? 'in' : 'out';
                 const port =
-                    kind === 'target'
-                        ? (nodeEl.querySelector('.flow-port.in') as HTMLElement | null)
-                        : ((nodeEl.querySelector(
-                              `.flow-port.out[data-handle-id="${CSS.escape(handleId)}"]`,
-                          ) as HTMLElement | null) ??
-                          (nodeEl.querySelector('.flow-port.out') as HTMLElement | null));
+                    (nodeEl.querySelector(
+                        `.flow-port.${side}[data-handle-id="${CSS.escape(handleId)}"]`,
+                    ) as HTMLElement | null) ??
+                    (nodeEl.querySelector(`.flow-port.${side}`) as HTMLElement | null);
 
-                if (port) {
+                // A hidden port (a trigger's input, say) has no layout to measure.
+                if (port && port.offsetParent !== null && (port.classList.contains('is-top') || port.classList.contains('is-bottom'))) {
+                    // Centred with translateX(-50%) on the node's top or bottom edge.
+                    return {
+                        x: node.position.x + port.offsetLeft,
+                        y: node.position.y + port.offsetTop + port.offsetHeight / 2,
+                    };
+                }
+
+                if (port && port.offsetParent !== null) {
                     // Ports use transform: translateY(-50%), so visual center Y ≈ offsetTop.
                     return {
                         x: node.position.x + port.offsetLeft + port.offsetWidth / 2,
@@ -738,8 +989,156 @@ function createNeuraFlow(config: FlowConfig = {}) {
             return String(node.data?.label || node.type || 'S').slice(0, 1).toUpperCase();
         },
 
+        /** A kit icon when the node names one the page rendered, else its glyph or initial as text. */
+        iconHtml(node: FlowNode): string {
+            const icon = node.data?.icon;
+            if (isIconName(icon) && this._icons[icon]) return this._icons[icon];
+            return escapeHtml(isIconName(icon) ? this.nodeLabel(node).slice(0, 1).toUpperCase() : this.nodeIcon(node));
+        },
+
         nodeAccent(node: FlowNode): string {
-            return (node.data?.color as string) || 'var(--color-primary-500)';
+            return cssColor(node.data?.color) ?? 'var(--color-primary-500)';
+        },
+
+        nodeLabel(node: FlowNode): string {
+            return String(node.data?.label || node.type || 'Step');
+        },
+
+        shapeOf(node: FlowNode): FlowShape {
+            return resolveShape(node, defaultShape);
+        },
+
+        portsOf(node: FlowNode) {
+            return portsFor(this.shapeOf(node));
+        },
+
+        statusOf(node: FlowNode): string | null {
+            return resolveStatus(node.data?.status);
+        },
+
+        isDisabled(node: FlowNode): boolean {
+            return node.data?.disabled === true;
+        },
+
+        nodeClasses(node: FlowNode): string[] {
+            const variant = resolveVariant(node, defaultVariant, Object.keys(variantClasses));
+            const classes = [variantClasses[variant] ?? `flow-v-${variant}`];
+            if (this.isNodeSelected(node.id)) classes.push('is-on');
+            if (this.isSourceActive(node.id)) classes.push('is-from');
+            if (this.isDropTarget(node.id)) classes.push('is-drop');
+            if (this.isDisabled(node)) classes.push('is-disabled');
+            if (this.tracing && !this.tracing.nodes.includes(node.id)) classes.push('is-dim');
+            if (this.isTrigger(node)) classes.push('is-trigger');
+            return classes;
+        },
+
+        /** Inside agents and cards (and Signal's capsules), below tiles and sub-nodes. */
+        labelInside(node: FlowNode): boolean {
+            return labelPlacement(this.shapeOf(node), theme) === 'inside';
+        },
+
+        labelBelow(node: FlowNode): boolean {
+            return labelPlacement(this.shapeOf(node), theme) === 'below';
+        },
+
+        tableRows(node: FlowNode) {
+            return this.shapeOf(node) === 'table' ? tableRows(node) : [];
+        },
+
+        rowPortStyle(index: number): string {
+            return `top: ${rowPortTop(index)}px`;
+        },
+
+        /** Not while a node is dragged, a connection drawn or the canvas panned. */
+        canTrace(): boolean {
+            return this.traceEnabled && !this._drag.active && !this.connecting.active && !this._reconnect.active && !this._pan.active;
+        },
+
+        setTracing(next: { nodes: string[]; rows: string[]; edges: string[] } | null) {
+            if (!next && !this.tracing) return;
+            this.tracing = next;
+            this.refreshEdges();
+        },
+
+        /** Hovering a node lights its pipeline, upstream and downstream, and dims the rest. */
+        traceNode(nodeId: string | null) {
+            if (!nodeId || !this.canTrace() || !this.edges.length) {
+                this.setTracing(null);
+                return;
+            }
+            const lineage = nodeLineage(this.edges, nodeId);
+            this.setTracing({ nodes: [...lineage.nodes], rows: [], edges: [...lineage.edges] });
+        },
+
+        /** Hovering a table row lights its lineage, row to row. */
+        traceRow(nodeId: string | null, rowId?: string) {
+            if (!nodeId || !rowId || !this.canTrace()) {
+                this.setTracing(null);
+                return;
+            }
+            const lineage = rowLineage(this.edges, nodeId, rowId);
+            const rows = [...lineage.rows];
+            const nodes = [...new Set(rows.map((key) => key.slice(0, key.lastIndexOf(':'))))];
+            this.setTracing({ nodes, rows, edges: [...lineage.edges] });
+        },
+
+        rowClasses(node: FlowNode, row: { id: string; key: string | null }): string[] {
+            const classes: string[] = [];
+            if (row.key) classes.push(`is-${row.key}`);
+            if (this.tracing?.rows.includes(`${node.id}:${row.id}`)) classes.push('is-traced');
+            return classes;
+        },
+
+        /** An agent's steps (`data.steps`), shown as chips. */
+        nodeSteps(node: FlowNode): string[] {
+            const steps = node.data?.steps;
+            return Array.isArray(steps) ? steps.map(String).slice(0, 4) : [];
+        },
+
+        mainOutputs(node: FlowNode): Array<{ id: string; label?: string }> {
+            return this.portsOf(node).mainOut ? this.nodeOutputs(node) : [];
+        },
+
+        aiInputs(node: FlowNode) {
+            return this.portsOf(node).aiIn ? agentInputs(node) : [];
+        },
+
+        aiInputStyle(node: FlowNode, index: number): string {
+            const count = this.aiInputs(node).length;
+            return `left: ${((index + 1) / (count + 1)) * 100}%`;
+        },
+
+        /** Sub-connections (sub-node into agent) run vertically, without arrows or offsets. */
+        edgeChannel(edge: FlowEdge): FlowChannel {
+            return edge.sourceHandle === 'ai' ? 'ai' : 'main';
+        },
+
+        hasActions(node: FlowNode): boolean {
+            return this.nodeActions && (this.nodesDraggable || this.nodesConnectable) && this.shapeOf(node) !== 'note';
+        },
+
+        runNode(id: string) {
+            const node = this.getNode(id);
+            if (node) this.emit('flow-node-run', { node });
+        },
+
+        toggleNode(id: string) {
+            const node = this.getNode(id);
+            if (!node) return;
+            const disabled = !this.isDisabled(node);
+            node.data = { ...(node.data ?? {}), disabled };
+            this.emit('flow-node-toggle', { node, disabled });
+            this.emitChange();
+        },
+
+        removeNode(id: string) {
+            this.removeNodes([id]);
+        },
+
+        /** Double-click: the page opens its own settings for the node. */
+        openNode(id: string) {
+            const node = this.getNode(id);
+            if (node) this.emit('flow-node-open', { node });
         },
 
         isTrigger(node: FlowNode): boolean {
@@ -759,6 +1158,26 @@ function createNeuraFlow(config: FlowConfig = {}) {
             const w = node.width ?? this.defaultNodeWidth;
             const h = node.height ?? this.defaultNodeHeight;
             const outputs = this.nodeOutputs(node);
+
+            // A table row's connectors sit at the row's middle, on either side.
+            if (handleId !== 'in' && handleId !== 'out' && this.shapeOf(node) === 'table') {
+                const rowIndex = tableRows(node).findIndex((row) => row.id === handleId);
+                if (rowIndex >= 0) {
+                    return { x: node.position.x + (kind === 'source' ? w : 0), y: node.position.y + rowPortTop(rowIndex) };
+                }
+            }
+
+            // A sub-node's connector sits on its top edge, an agent's on its bottom edge.
+            if (kind === 'source' && handleId === 'ai') {
+                return { x: node.position.x + w / 2, y: node.position.y };
+            }
+            if (kind === 'target' && handleId !== 'in') {
+                const inputs = agentInputs(node);
+                const idx = inputs.findIndex((input) => input.id === handleId);
+                if (idx >= 0) {
+                    return { x: node.position.x + (w * (idx + 1)) / (inputs.length + 1), y: node.position.y + h };
+                }
+            }
 
             if (kind === 'target' || handleId === 'in') {
                 return { x: node.position.x, y: node.position.y + h / 2 };
@@ -784,12 +1203,25 @@ function createNeuraFlow(config: FlowConfig = {}) {
             };
         },
 
-        setViewport(viewport: Partial<FlowViewport>, options: { emit?: boolean } = {}) {
+        setViewport(
+            viewport: Partial<FlowViewport>,
+            options: { emit?: boolean; persist?: boolean } = {},
+        ) {
             this.viewport = {
                 x: viewport.x ?? this.viewport.x,
                 y: viewport.y ?? this.viewport.y,
                 zoom: clamp(viewport.zoom ?? this.viewport.zoom, this.minZoom, this.maxZoom),
             };
+            if (options.persist !== false) {
+                const root = (this as any).$el as HTMLElement | undefined;
+                if (root) {
+                    try {
+                        sessionStorage.setItem(flowMemoryKey(root), JSON.stringify(this.viewport));
+                    } catch {
+                        // Private mode or a full store: the zoom simply is not remembered.
+                    }
+                }
+            }
             if (options.emit !== false) this.emitChange();
         },
 
@@ -849,7 +1281,7 @@ function createNeuraFlow(config: FlowConfig = {}) {
             const node = normalizeNode(
                 { ...input, id, position: input.position ?? { x: 120, y: 120 } },
                 this.nodes.length,
-                { w: this.defaultNodeWidth, h: this.defaultNodeHeight, colGap: 300, rowGap: 120 },
+                { w: this.defaultNodeWidth, h: this.defaultNodeHeight, colGap: 300, rowGap: 120, size: sizeFor },
             );
             this.nodes.push(node);
             this.emit('flow-node-add', { node });
@@ -996,6 +1428,7 @@ function createNeuraFlow(config: FlowConfig = {}) {
                     type: e.type,
                     animated: e.animated,
                     label: e.label,
+                    status: e.status,
                 })),
                 viewport: { ...this.viewport },
             };
@@ -1163,18 +1596,34 @@ function createNeuraFlow(config: FlowConfig = {}) {
                     ? (document.elementsFromPoint(clientX, clientY) as Element[])
                     : ([document.elementFromPoint(clientX, clientY)].filter(Boolean) as Element[]);
 
+            // Main outputs join main inputs; a sub-node's connector joins an agent's.
+            const channel: FlowChannel = this.connecting.sourceHandle === 'ai' ? 'ai' : 'main';
+
             for (const el of stack) {
                 if (!(el instanceof Element)) continue;
-                if (el.closest?.('.flow-edge-hit') || el.closest?.('.flow-edge-end')) continue;
+                if (el.closest?.('.flow-edge-hit') || el.closest?.('.flow-edge-end') || el.closest?.('.flow-edge-tools')) continue;
                 const port = el.closest?.('.flow-port.in') as HTMLElement | null;
                 const nodeEl = (port?.closest('.flow-node') || el.closest?.('.flow-node')) as HTMLElement | null;
                 const nodeId = nodeEl?.dataset?.nodeId;
                 if (!nodeId) continue;
-                return {
-                    nodeId,
-                    handleId: port?.dataset?.handleId ?? 'in',
-                    viaPort: !!port,
-                };
+                const node = this.getNode(nodeId);
+                if (!node) return null;
+
+                if (port) {
+                    const portChannel = (port.dataset.channel as FlowChannel | undefined) ?? 'main';
+                    if (!canConnect(channel, portChannel)) return null;
+                    return { nodeId, handleId: port.dataset.handleId ?? 'in', viaPort: true };
+                }
+
+                // Dropped on the node itself: its main input, or an agent's first free sub-connector.
+                const ports = this.portsOf(node);
+                if (channel === 'main') {
+                    return ports.mainIn ? { nodeId, handleId: 'in', viaPort: false } : null;
+                }
+                if (!ports.aiIn) return null;
+                const inputs = agentInputs(node);
+                const free = inputs.find((input) => !this.edges.some((e) => e.target === nodeId && e.targetHandle === input.id));
+                return { nodeId, handleId: (free ?? inputs[0]).id, viaPort: false };
             }
             return null;
         },
@@ -1363,6 +1812,8 @@ function createNeuraFlow(config: FlowConfig = {}) {
             if (e.button !== 0) return;
             if ((e.target as HTMLElement).closest('.flow-port')) return;
 
+            // Moving a node: the pipeline lights up again on the next hover.
+            this.setTracing(null);
             e.stopPropagation();
             const node = this.getNode(nodeId);
             if (!node) return;
@@ -1411,6 +1862,11 @@ function createNeuraFlow(config: FlowConfig = {}) {
 
         onEdgesSvgPointerDown(e: PointerEvent) {
             const el = e.target as Element | null;
+            // Hover tools act on click; the canvas must not start a pan under them.
+            if (el?.closest?.('[data-edge-action]')) {
+                e.stopPropagation();
+                return;
+            }
             const end = el?.getAttribute?.('data-edge-end') as 'source' | 'target' | null;
             const id = el?.getAttribute?.('data-edge-id');
             if (end && id && (end === 'source' || end === 'target')) {
@@ -1420,6 +1876,15 @@ function createNeuraFlow(config: FlowConfig = {}) {
 
         onEdgesSvgClick(e: MouseEvent) {
             const el = e.target as Element | null;
+            const tool = el?.closest?.('[data-edge-action]');
+            if (tool) {
+                e.stopPropagation();
+                const id = tool.getAttribute('data-edge-id');
+                if (!id) return;
+                if (tool.getAttribute('data-edge-action') === 'delete') this.removeEdges([id]);
+                else this.insertOnEdge(id);
+                return;
+            }
             if (el?.getAttribute?.('data-edge-end')) return;
             const id = el?.getAttribute?.('data-edge-id');
             if (!id) return;

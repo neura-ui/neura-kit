@@ -180,6 +180,13 @@
   outline: none;
 }
 
+/* Text in columns: each fills to the foot of the page before the next. */
+.nk-pages[data-nk-columns] .nk-page-body {
+  column-count: var(--nk-columns, 2);
+  column-gap: 0.5in;
+  column-fill: auto;
+}
+
 /* Margin guides, shown while the ruler is open. */
 .nk-native[data-guides='on'] .nk-page::before {
   content: '';
@@ -231,12 +238,12 @@
 
 /* An empty header invites a double-click rather than looking broken. */
 .nk-page:first-of-type .nk-page-header:empty::before {
-  content: 'Double-click to add a header';
+  content: attr(data-nk-hint);
   color: color-mix(in srgb, var(--nk-paper-ink) 28%, transparent);
 }
 
 .nk-page:first-of-type .nk-page-footer:empty::before {
-  content: 'Double-click to add a footer';
+  content: attr(data-nk-hint);
   color: color-mix(in srgb, var(--nk-paper-ink) 28%, transparent);
 }
 
@@ -358,6 +365,41 @@
   list-style: none;
 }
 
+.nk-page-body li[data-nk-continued]::marker {
+  content: none;
+}
+
+/* Numbering styles, three levels deep. */
+.nk-page-body ol[data-numbering='paren'] > li::marker { content: counter(list-item) ') '; }
+.nk-page-body ol[data-numbering='paren'] ol > li::marker { content: counter(list-item, lower-alpha) ') '; }
+.nk-page-body ol[data-numbering='paren'] ol ol > li::marker { content: counter(list-item, lower-roman) ') '; }
+
+.nk-page-body ol[data-numbering='outline'],
+.nk-page-body ol[data-numbering='outline'] ol {
+  list-style-type: decimal;
+}
+
+.nk-page-body ol[data-numbering='outline'] li::marker {
+  content: counters(list-item, '.') '. ';
+}
+
+.nk-page-body ol[data-numbering='outline'] ol {
+  padding-left: 2.25em;
+}
+
+.nk-page-body ol[data-numbering='upper-alpha'] { list-style-type: upper-alpha; }
+.nk-page-body ol[data-numbering='upper-alpha'] ol { list-style-type: lower-alpha; }
+.nk-page-body ol[data-numbering='upper-alpha'] ol ol { list-style-type: lower-roman; }
+.nk-page-body ol[data-numbering='lower-alpha'] { list-style-type: lower-alpha; }
+.nk-page-body ol[data-numbering='lower-alpha'] ol { list-style-type: lower-roman; }
+.nk-page-body ol[data-numbering='lower-alpha'] ol ol { list-style-type: decimal; }
+.nk-page-body ol[data-numbering='upper-roman'] { list-style-type: upper-roman; }
+.nk-page-body ol[data-numbering='upper-roman'] ol { list-style-type: upper-alpha; }
+.nk-page-body ol[data-numbering='upper-roman'] ol ol { list-style-type: decimal; }
+.nk-page-body ol[data-numbering='lower-roman'] { list-style-type: lower-roman; }
+.nk-page-body ol[data-numbering='lower-roman'] ol { list-style-type: lower-alpha; }
+.nk-page-body ol[data-numbering='lower-roman'] ol ol { list-style-type: decimal; }
+
 .nk-page-body blockquote {
   border-left: 3px solid color-mix(in srgb, var(--nk-paper-ink) 25%, transparent);
   padding-left: 1em;
@@ -420,7 +462,9 @@
 
 .nk-page-body th,
 .nk-page-body td {
-  border: 1px solid color-mix(in srgb, var(--nk-paper-ink) 30%, transparent);
+  /* A table's own border weight and colour arrive as custom properties. */
+  border: var(--nk-table-border-width, 1px) solid
+    var(--nk-table-border-color, color-mix(in srgb, var(--nk-paper-ink) 30%, transparent));
   padding: 0.35em 0.5em;
   vertical-align: top;
   text-align: left;
@@ -431,10 +475,45 @@
   font-weight: 700;
 }
 
-/* A manual page break has no height of its own; it only forces the flow. */
+/* A manual page break has no height of its own; it only forces the flow. Its
+   name shows faintly in the top margin of the page where the text goes on —
+   placed against the page, so the body's clipping does not hide it. */
 .nk-page-body [data-nk-break] {
   height: 0;
-  overflow: hidden;
+  overflow: visible;
+}
+
+.nk-page-body [data-nk-break]::before {
+  content: attr(data-nk-label);
+  position: absolute;
+  top: calc(var(--nk-margin-top, 96px) - 1.9em);
+  right: var(--nk-margin-right, 96px);
+  left: var(--nk-margin-left, 96px);
+  padding-bottom: 0.2em;
+  border-bottom: 1px dashed color-mix(in srgb, var(--nk-paper-ink) 22%, transparent);
+  color: color-mix(in srgb, var(--nk-paper-ink) 40%, transparent);
+  font-family: system-ui, sans-serif;
+  font-size: 0.7rem;
+  text-align: center;
+  pointer-events: none;
+}
+
+@media print {
+  .nk-page-body [data-nk-break]::before {
+    display: none;
+  }
+}
+
+/* A column break: the text after it starts the next column; its label sits at that column's top. */
+.nk-page-body [data-nk-break='column'] {
+  height: auto;
+  break-before: column;
+}
+
+.nk-page-body [data-nk-break='column']::before {
+  position: static;
+  display: block;
+  margin-bottom: 0.4em;
 }
 
 /* ------------------------------------------------- block-level modifiers -- */
@@ -735,6 +814,13 @@
   filter: brightness(1.06);
 }
 
+/* Restore on the current version, Comment with nothing written: plainly off. */
+.nk-editor-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+  filter: none;
+}
+
 .nk-editor-menu {
   border: 1px solid var(--color-edge, var(--nk-canvas-edge));
   border-radius: 0.625rem;
@@ -743,6 +829,75 @@
   box-shadow:
     0 10px 30px rgb(15 18 22 / 0.14),
     0 2px 6px rgb(15 18 22 / 0.06);
+}
+
+/*
+ * The menubar's one panel. Going to another menu, it slides under the new
+ * title and takes that menu's size; only the items change, the old ones
+ * fading out one way while the new ones come in from the other.
+ */
+.nk-menubar-frame.nk-menu-motion {
+  box-sizing: border-box;
+  padding: 0;
+  transition:
+    opacity 580ms var(--nk-ease-enter),
+    filter 580ms var(--nk-ease-enter),
+    translate 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    width 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    height 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Opened from shut, it starts where it belongs: only the popup motion plays. */
+.nk-menubar-frame.nk-menu-motion.is-placing {
+  transition-property: opacity, filter;
+}
+
+.nk-menubar-frame.nk-menu-motion.nk-menu-leaving {
+  transition-duration: 180ms;
+}
+
+/* What slides out stays inside while the frame moves; after, submenus may overflow. */
+.nk-menubar-frame.is-moving {
+  overflow: hidden;
+}
+
+.nk-menubar-list {
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  width: max-content;
+  min-width: 14rem;
+  max-width: 22rem;
+  padding: 0.3rem;
+  transition:
+    opacity 140ms ease-out,
+    translate 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s linear 140ms;
+}
+
+.nk-menubar-list:is([data-at='before'], [data-at='after']) {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.nk-menubar-list[data-at='before'] { translate: -1.5rem 0; }
+.nk-menubar-list[data-at='after'] { translate: 1.5rem 0; }
+
+.nk-menubar-list[data-at='current'] {
+  transition:
+    opacity 200ms ease-out 60ms,
+    translate 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nk-menubar-frame.nk-menu-motion,
+  .nk-menubar-list {
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+  }
 }
 
 .nk-editor-menu-item {
@@ -837,5 +992,2271 @@
 
   .nk-page-footer {
     color: #666;
+  }
+}
+
+/* ------------------------------------------------- writing tools (phase 1) -- */
+
+/* The canvas sits in a stage so panels can float over the pages without scrolling with them. */
+.nk-native-stage {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Find and replace. */
+.nk-find {
+  position: absolute;
+  top: 0.75rem;
+  right: 1.25rem;
+  z-index: 35;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  width: min(27rem, calc(100% - 2rem));
+  padding: 0.5rem;
+  border: 1px solid var(--color-edge, var(--nk-canvas-edge));
+  border-radius: 0.75rem;
+  background: var(--color-surface, var(--nk-paper));
+  box-shadow:
+    0 10px 30px rgb(15 18 22 / 0.16),
+    0 2px 6px rgb(15 18 22 / 0.06);
+}
+
+.nk-find-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.nk-find-field {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  height: 2rem;
+  padding: 0 0.55rem;
+  border: 1px solid var(--color-edge, var(--nk-canvas-edge));
+  border-radius: 0.5rem;
+  background: var(--color-surface, var(--nk-paper));
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.nk-find-field:focus-within {
+  border-color: var(--color-primary, #1a73e8);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary, #1a73e8) 20%, transparent);
+}
+
+.nk-find-field:has(input[aria-invalid='true']) {
+  border-color: #dc2626;
+}
+
+.nk-find-field svg {
+  width: 0.9rem;
+  height: 0.9rem;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  color: var(--color-fg-muted, #5f6368);
+}
+
+.nk-find-field input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-fg, #202124);
+  font-size: 0.875rem;
+  outline: none;
+}
+
+.nk-find-count {
+  flex: none;
+  color: var(--color-fg-muted, #5f6368);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.nk-find-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.9rem;
+  padding: 0 0.25rem 0.125rem;
+  color: var(--color-fg-muted, #5f6368);
+  font-size: 0.75rem;
+}
+
+.nk-find-options label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+}
+
+.nk-find-options input {
+  accent-color: var(--color-primary, #1a73e8);
+}
+
+.nk-find-notice {
+  margin-left: auto;
+  color: #15803d;
+}
+
+.dark .nk-find-notice {
+  color: #4ade80;
+}
+
+.nk-find .nk-editor-btn {
+  height: 2rem;
+  padding: 0 0.7rem;
+  font-size: 0.8125rem;
+}
+
+.nk-find .nk-editor-btn:disabled {
+  opacity: 0.45;
+}
+
+/* Matches are painted by the CSS Custom Highlight API: the document itself never changes. */
+::highlight(nk-find) {
+  background-color: color-mix(in srgb, #facc15 42%, transparent);
+}
+
+::highlight(nk-find-current) {
+  background-color: #f59e0b;
+  color: #111827;
+}
+
+/* "/" menu. */
+.nk-slash {
+  position: absolute;
+  z-index: 45;
+  width: 18rem;
+  max-height: 20rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.nk-slash-group {
+  margin: 0;
+  padding: 0.5rem 0.6rem 0.2rem;
+  color: var(--color-fg-muted, #5f6368);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.nk-slash-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.3rem 0.45rem;
+  border-radius: 0.45rem;
+  color: var(--color-fg, #202124);
+  font-size: 0.875rem;
+  text-align: left;
+}
+
+.nk-slash-item[aria-selected='true'] {
+  background: color-mix(in srgb, var(--color-primary, #1a73e8) 11%, transparent);
+}
+
+.nk-slash-icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.4rem;
+  background: var(--color-surface, var(--nk-paper));
+  box-shadow: inset 0 0 0 1px var(--color-edge, var(--nk-canvas-edge));
+}
+
+.nk-slash-icon svg {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.nk-slash-empty {
+  margin: 0;
+  padding: 0.6rem;
+  color: var(--color-fg-muted, #5f6368);
+  font-size: 0.8125rem;
+}
+
+/* Checklists: a box before each item, ticked items struck through. */
+.nk-page-body ul[data-checklist] {
+  padding-left: 0;
+  list-style: none;
+}
+
+.nk-page-body ul[data-checklist] > li {
+  position: relative;
+  padding-left: 1.7em;
+  list-style: none;
+}
+
+.nk-page-body ul[data-checklist] > li::before {
+  content: '';
+  position: absolute;
+  left: 0.15em;
+  top: calc(0.5lh - 0.55em);
+  width: 1.05em;
+  height: 1.05em;
+  box-sizing: border-box;
+  border: 1.5px solid color-mix(in srgb, var(--nk-paper-ink) 45%, transparent);
+  border-radius: 0.25em;
+  background: center / 78% no-repeat;
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.nk-page-body ul[data-checklist] > li[data-checked='true']::before {
+  border-color: var(--color-primary, #1a73e8);
+  background-color: var(--color-primary, #1a73e8);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3.5 8.5 3 3 6-7'/%3E%3C/svg%3E");
+}
+
+.nk-page-body ul[data-checklist] > li[data-checked='true'] {
+  color: color-mix(in srgb, var(--nk-paper-ink) 50%, transparent);
+  text-decoration: line-through;
+}
+
+/* An item cut by a page break shows its box once. */
+.nk-page-body ul[data-checklist] > li[data-nk-part]:not([data-nk-part='0'])::before {
+  visibility: hidden;
+}
+
+/* Paint format armed. */
+.nk-native[data-nk-painting] .nk-pages {
+  cursor: copy;
+}
+
+/* Word count. */
+.nk-wordcount {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.45rem 1rem;
+  margin: 0 0 0.9rem;
+  font-size: 0.875rem;
+}
+
+.nk-wordcount dt {
+  color: var(--color-fg-muted, #5f6368);
+}
+
+.nk-wordcount dd {
+  margin: 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* ---------------------------------------------- images and tables (phase 2) -- */
+
+/* Images: text wrap, width, caption. */
+.nk-page-body figure[data-wrap='left'] {
+  float: left;
+  margin: 0.25em 1em 0.5em 0;
+}
+
+.nk-page-body figure[data-wrap='right'] {
+  float: right;
+  margin: 0.25em 0 0.5em 1em;
+}
+
+.nk-page-body figure[style*='width'] > img {
+  width: 100%;
+}
+
+.nk-page-body figure[style*='width']:not([data-wrap]) {
+  margin-inline: auto;
+}
+
+.nk-page-body figure[style*='width']:not([data-wrap])[data-nk-align='left'] {
+  margin-left: 0;
+}
+
+.nk-page-body figure[style*='width']:not([data-wrap])[data-nk-align='right'] {
+  margin-right: 0;
+}
+
+.nk-page-body figcaption {
+  position: relative;
+  margin-top: 0.35em;
+  font-size: 0.85em;
+  color: color-mix(in srgb, var(--nk-paper-ink) 68%, transparent);
+  text-align: center;
+}
+
+.nk-page-body figcaption[data-nk-empty]::before {
+  content: attr(data-nk-hint);
+  position: absolute;
+  inset-inline: 0;
+  color: color-mix(in srgb, var(--nk-paper-ink) 38%, transparent);
+  pointer-events: none;
+}
+
+/* An image being sent, or still on its way: veiled, with a spinner over it. */
+.nk-page-body figure:is([data-nk-uploading], [data-nk-loading]) {
+  position: relative;
+  min-height: 3rem;
+}
+
+.nk-page-body figure:is([data-nk-uploading], [data-nk-loading]) > img {
+  opacity: 0.55;
+  filter: saturate(0.6);
+}
+
+.nk-page-body figure:is([data-nk-uploading], [data-nk-loading])::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2rem;
+  height: 2rem;
+  margin: -1rem 0 0 -1rem;
+  box-sizing: border-box;
+  border: 3px solid color-mix(in srgb, var(--color-primary, #1a73e8) 18%, var(--color-surface, #fff));
+  border-top-color: var(--color-primary, #1a73e8);
+  border-radius: 999px;
+  /* On a white disc, so it reads over any picture. */
+  background: var(--color-surface, #fff);
+  box-shadow: 0 2px 8px rgb(15 18 22 / 0.25);
+  animation: nk-image-spin 0.8s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes nk-image-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nk-page-body figure:is([data-nk-uploading], [data-nk-loading])::after {
+    animation-duration: 2.4s;
+  }
+}
+
+/* A border round the picture, inside its width. */
+.nk-page-body figure[data-border] > img {
+  box-sizing: border-box;
+  border: 1px solid var(--nk-image-border-color, #000);
+}
+
+.nk-page-body figure[data-border='medium'] > img { border-width: 2px; }
+.nk-page-body figure[data-border='thick'] > img { border-width: 4px; }
+
+/* A picked image shows its frame instead of a caret, and can be dragged elsewhere. */
+.nk-pages[data-nk-image-picked] {
+  caret-color: transparent;
+}
+
+.nk-page-body figure[data-nk-picked] > img {
+  cursor: grab;
+}
+
+.nk-pages[data-nk-image-dragging],
+.nk-pages[data-nk-image-dragging] * {
+  cursor: grabbing !important;
+  user-select: none;
+}
+
+.nk-pages[data-nk-image-dragging] figure[data-nk-picked] > img {
+  opacity: 0.45;
+}
+
+.nk-image-drop {
+  position: absolute;
+  height: 3px;
+  margin-top: -1.5px;
+  border-radius: 2px;
+  background: var(--color-primary, #1a73e8);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary, #1a73e8) 22%, transparent);
+  pointer-events: none;
+}
+
+/* Cropping: the whole picture, dimmed outside the part kept. */
+.nk-crop {
+  position: absolute;
+  overflow: hidden;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.nk-crop-picture {
+  display: block;
+  width: 100%;
+  height: 100%;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.nk-crop-window {
+  position: absolute;
+  box-sizing: border-box;
+  border: 2px solid var(--color-primary, #1a73e8);
+  box-shadow: 0 0 0 100vmax rgb(15 18 22 / 0.55);
+  cursor: move;
+  /* Thirds, to frame by. */
+  background:
+    linear-gradient(to right, transparent calc(33.33% - 0.5px), rgb(255 255 255 / 0.45) calc(33.33% - 0.5px), rgb(255 255 255 / 0.45) calc(33.33% + 0.5px), transparent calc(33.33% + 0.5px), transparent calc(66.66% - 0.5px), rgb(255 255 255 / 0.45) calc(66.66% - 0.5px), rgb(255 255 255 / 0.45) calc(66.66% + 0.5px), transparent calc(66.66% + 0.5px)),
+    linear-gradient(to bottom, transparent calc(33.33% - 0.5px), rgb(255 255 255 / 0.45) calc(33.33% - 0.5px), rgb(255 255 255 / 0.45) calc(33.33% + 0.5px), transparent calc(33.33% + 0.5px), transparent calc(66.66% - 0.5px), rgb(255 255 255 / 0.45) calc(66.66% - 0.5px), rgb(255 255 255 / 0.45) calc(66.66% + 0.5px), transparent calc(66.66% + 0.5px));
+}
+
+.nk-crop-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  box-sizing: border-box;
+  border: 2px solid var(--color-primary, #1a73e8);
+  border-radius: 2px;
+  background: var(--color-surface, #fff);
+}
+
+.nk-crop-handle[data-handle='nw'] { top: 0; left: 0; cursor: nwse-resize; }
+.nk-crop-handle[data-handle='n'] { top: 0; left: 50%; cursor: ns-resize; }
+.nk-crop-handle[data-handle='ne'] { top: 0; left: 100%; cursor: nesw-resize; }
+.nk-crop-handle[data-handle='e'] { top: 50%; left: 100%; cursor: ew-resize; }
+.nk-crop-handle[data-handle='se'] { top: 100%; left: 100%; cursor: nwse-resize; }
+.nk-crop-handle[data-handle='s'] { top: 100%; left: 50%; cursor: ns-resize; }
+.nk-crop-handle[data-handle='sw'] { top: 100%; left: 0; cursor: nesw-resize; }
+.nk-crop-handle[data-handle='w'] { top: 50%; left: 0; cursor: ew-resize; }
+
+.nk-image-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 25;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.nk-image-frame {
+  position: absolute;
+  box-sizing: border-box;
+  border: 2px solid var(--color-primary, #1a73e8);
+  pointer-events: none;
+}
+
+.nk-image-handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  box-sizing: border-box;
+  border: 2px solid var(--color-primary, #1a73e8);
+  border-radius: 2px;
+  background: var(--color-surface, #fff);
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.nk-image-handle[data-corner='nw'] { top: -6px; left: -6px; cursor: nwse-resize; }
+.nk-image-handle[data-corner='ne'] { top: -6px; right: -6px; cursor: nesw-resize; }
+.nk-image-handle[data-corner='sw'] { bottom: -6px; left: -6px; cursor: nesw-resize; }
+.nk-image-handle[data-corner='se'] { right: -6px; bottom: -6px; cursor: nwse-resize; }
+
+.nk-image-size {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgb(15 18 22 / 0.7);
+  color: #fff;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.nk-image-bar {
+  position: absolute;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.125rem;
+  max-width: calc(100% - 16px);
+  padding: 0.25rem;
+  border: 1px solid var(--color-edge, var(--nk-canvas-edge));
+  border-radius: 0.625rem;
+  background: var(--color-surface, var(--nk-paper));
+  box-shadow:
+    0 10px 30px rgb(15 18 22 / 0.14),
+    0 2px 6px rgb(15 18 22 / 0.08);
+  pointer-events: auto;
+}
+
+.nk-image-tools,
+.nk-image-crop-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+.nk-image-crop-bar {
+  gap: 0.375rem;
+  padding-inline-start: 0.375rem;
+}
+
+.nk-image-crop-hint {
+  margin-inline-end: 0.25rem;
+  font-size: 12px;
+  color: var(--color-fg-muted, #5f6368);
+}
+
+.nk-image-notice {
+  flex-basis: 100%;
+  max-width: 22rem;
+  margin: 0.125rem 0.25rem;
+  font-size: 12px;
+  color: #b42318;
+}
+
+.nk-image-sizes {
+  display: inline-flex;
+  gap: 0.125rem;
+}
+
+.nk-image-preset {
+  padding: 0 0.4rem;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.nk-image-delete:hover {
+  color: #dc2626 !important;
+}
+
+.nk-image-alt,
+.nk-image-border {
+  position: absolute;
+  width: min(20rem, calc(100% - 16px));
+  pointer-events: auto;
+}
+
+.nk-image-border {
+  width: min(15rem, calc(100% - 16px));
+}
+
+/* A table cut by a page shows its header again on the next one: a copy, not editable. */
+.nk-page-body tr[data-nk-repeat] {
+  cursor: default;
+  user-select: none;
+}
+
+/* Tables: picked cells, column resize, borderless guides. */
+.nk-page-body [data-nk-cell-picked] {
+  box-shadow: inset 0 0 0 100vmax color-mix(in srgb, var(--color-primary, #1a73e8) 16%, transparent);
+}
+
+.nk-pages[data-nk-cells] *::selection {
+  background: transparent;
+}
+
+.nk-pages[data-nk-col-resize],
+.nk-pages[data-nk-col-resize] *,
+.nk-pages[data-nk-col-dragging],
+.nk-pages[data-nk-col-dragging] * {
+  cursor: col-resize;
+}
+
+.nk-pages[data-nk-col-dragging] {
+  user-select: none;
+}
+
+.nk-page-body table[data-border='none'] :is(td, th) {
+  border: 1px dashed color-mix(in srgb, var(--nk-paper-ink) 14%, transparent);
+}
+
+@media print {
+  .nk-page-body table[data-border='none'] :is(td, th) {
+    border-color: transparent;
+  }
+
+  .nk-image-layer {
+    display: none !important;
+  }
+}
+
+/* The table menu: actions, cell colour, borders. */
+.nk-table-menu {
+  width: 15rem;
+  max-height: min(34rem, calc(100% - 16px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Where a panel with no button of its own grows from: the pointer for the
+   right-click menu, the link editor's own foot for the link editor. */
+.nk-menu-anchor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+.nk-menu-anchor.is-link {
+  left: 50%;
+  bottom: 3rem;
+}
+
+/* A context menu answers at once: a short fade, not the panels' slow one. */
+.nk-table-menu.nk-menu-motion,
+.nk-slash.nk-menu-motion {
+  transition-duration: 140ms;
+}
+
+.nk-table-unfold svg {
+  width: 0.9rem;
+  height: 0.9rem;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: rotate 140ms ease;
+}
+
+.nk-table-unfold[aria-expanded='true'] svg {
+  rotate: 180deg;
+}
+
+.nk-table-menu-note {
+  padding: 0.35rem 0.65rem;
+  font-size: 11px;
+  color: var(--color-fg-muted, #5f6368);
+}
+
+.nk-table-menu-divider {
+  margin: 0.25rem 0;
+  border-top: 1px solid var(--color-edge, var(--nk-canvas-edge));
+}
+
+.nk-table-menu .nk-editor-menu-item:disabled {
+  opacity: 0.4;
+  cursor: default;
+  background: none;
+}
+
+.nk-table-menu-section {
+  padding: 0.3rem 0.65rem 0.45rem;
+}
+
+.nk-table-menu-title {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 11px;
+  color: var(--color-fg-muted, #5f6368);
+}
+
+.nk-table-swatches {
+  display: grid;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.nk-table-swatch {
+  aspect-ratio: 1;
+  border: 1px solid var(--color-edge, var(--nk-canvas-edge));
+  border-radius: 4px;
+}
+
+.nk-table-swatch[aria-pressed='true'] {
+  outline: 2px solid var(--color-primary, #1a73e8);
+  outline-offset: 1px;
+}
+
+.nk-table-swatch.is-none {
+  background:
+    linear-gradient(to top right, transparent calc(50% - 1px), #dc2626 50%, transparent calc(50% + 1px)),
+    var(--color-surface, #fff);
+}
+
+.nk-table-weights {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  margin-bottom: 0.45rem;
+}
+
+.nk-table-weight {
+  display: flex;
+  height: 1.6rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-edge, var(--nk-canvas-edge));
+  border-radius: 0.375rem;
+  color: var(--color-fg, #202124);
+}
+
+.nk-table-weight span {
+  width: 60%;
+  border-top: 1px solid currentColor;
+}
+
+.nk-table-weight[data-weight='none'] span { border-top-style: dashed; opacity: 0.5; }
+.nk-table-weight[data-weight='medium'] span { border-top-width: 2px; }
+.nk-table-weight[data-weight='thick'] span { border-top-width: 3px; }
+
+.nk-table-weight[aria-pressed='true'] {
+  border-color: var(--color-primary, #1a73e8);
+  color: var(--color-primary, #1a73e8);
+}
+
+/* ------------------------------------- chips, contents, footnotes (phase 3) -- */
+
+/* "@" menu: people with their initials (or photo) and email. */
+.nk-slash-avatar {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-primary, #1a73e8) 14%, transparent);
+  color: var(--color-primary, #1a73e8);
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+.nk-slash-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.nk-slash-text {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.nk-slash-text small {
+  overflow: hidden;
+  color: var(--color-fg-muted, #5f6368);
+  font-size: 0.75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Smart chips: a person or a date as one rounded unit. */
+.nk-page-body [data-chip] {
+  display: inline-block;
+  padding: 0 0.45em;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--nk-paper-ink) 7%, transparent);
+  line-height: 1.4;
+  white-space: nowrap;
+  text-indent: 0;
+  cursor: pointer;
+}
+
+.nk-page-body [data-chip='person'] {
+  background: color-mix(in srgb, var(--color-primary, #1a73e8) 11%, transparent);
+  color: var(--color-primary, #1a73e8);
+}
+
+.nk-page-body [data-chip='date']::before {
+  content: '';
+  display: inline-block;
+  width: 0.85em;
+  height: 0.85em;
+  margin-right: 0.3em;
+  vertical-align: -0.08em;
+  background: currentColor;
+  opacity: 0.7;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='M2.5 3.5h11v10h-11zM2.5 6.5h11M5.5 2v3M10.5 2v3'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='M2.5 3.5h11v10h-11zM2.5 6.5h11M5.5 2v3M10.5 2v3'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.nk-chip-card {
+  position: absolute;
+  z-index: 46;
+  width: min(18rem, calc(100% - 16px));
+  padding: 0.85rem;
+  border: 1px solid var(--color-edge, var(--nk-canvas-edge));
+  border-radius: 0.75rem;
+  background: var(--color-surface, var(--nk-paper));
+  box-shadow:
+    0 10px 30px rgb(15 18 22 / 0.14),
+    0 2px 6px rgb(15 18 22 / 0.08);
+}
+
+.nk-chip-person {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.nk-chip-avatar {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-primary, #1a73e8) 14%, transparent);
+  color: var(--color-primary, #1a73e8);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.nk-chip-name {
+  margin: 0;
+  color: var(--color-fg, #202124);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.nk-chip-sub {
+  margin: 0;
+  overflow: hidden;
+  color: var(--color-fg-muted, #5f6368);
+  font-size: 0.75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nk-chip-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.35rem;
+  margin-top: 0.75rem;
+}
+
+/* Footnotes: a raised number in the text, the notes at the foot of the page. */
+.nk-page-body [data-footnote] {
+  padding: 0 0.08em;
+  color: var(--color-primary, #1a73e8);
+  font-size: 0.7em;
+  line-height: 0;
+  vertical-align: super;
+  cursor: pointer;
+}
+
+.nk-page-notes {
+  position: absolute;
+  right: var(--nk-margin-right, 96px);
+  bottom: var(--nk-margin-bottom, 96px);
+  left: var(--nk-margin-left, 96px);
+  font-size: 0.8em;
+  line-height: 1.3;
+}
+
+.nk-page-notes::before {
+  content: '';
+  display: block;
+  width: 33%;
+  margin-bottom: 0.4em;
+  border-top: 1px solid color-mix(in srgb, var(--nk-paper-ink) 35%, transparent);
+}
+
+.nk-note {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35em;
+}
+
+.nk-note + .nk-note {
+  margin-top: 0.2em;
+}
+
+.nk-note-number {
+  position: relative;
+  top: -0.35em;
+  min-width: 0.9em;
+  font-size: 0.8em;
+}
+
+.nk-note-text {
+  flex: 1;
+  min-width: 0;
+  min-height: 1.3em;
+  border-radius: 2px;
+  outline: none;
+  cursor: text;
+}
+
+.nk-note-text:empty::before {
+  content: attr(data-nk-hint);
+  color: color-mix(in srgb, var(--nk-paper-ink) 35%, transparent);
+}
+
+.nk-note-text[contenteditable='true'] {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary, #1a73e8) 45%, transparent);
+}
+
+/* Tables of contents: one line per heading, indented by level. */
+.nk-page-body nav[data-toc] {
+  margin: 0 0 1em;
+  padding: 0.35em 0.5em;
+  border-radius: 4px;
+  cursor: default;
+}
+
+.nk-page-body nav[data-toc]:hover,
+.nk-page-body nav[data-toc][data-nk-picked] {
+  background: color-mix(in srgb, var(--nk-paper-ink) 4%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--nk-paper-ink) 12%, transparent);
+}
+
+.nk-page-body nav[data-toc][data-nk-picked] {
+  box-shadow: inset 0 0 0 2px var(--color-primary, #1a73e8);
+}
+
+.nk-page-body nav[data-toc]:empty::before {
+  content: attr(data-nk-hint);
+  color: color-mix(in srgb, var(--nk-paper-ink) 45%, transparent);
+  font-style: italic;
+}
+
+.nk-page-body nav[data-toc] a {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4em;
+  padding: 0.12em 0;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.nk-page-body nav[data-toc] a[data-level='2'] { padding-left: 1.5em; }
+.nk-page-body nav[data-toc] a[data-level='3'] { padding-left: 3em; }
+.nk-page-body nav[data-toc] a[data-level='4'] { padding-left: 4.5em; }
+
+.nk-page-body nav[data-toc='pages'] a::before {
+  content: '';
+  flex: 1;
+  order: 1;
+  min-width: 1em;
+  border-bottom: 1px dotted color-mix(in srgb, var(--nk-paper-ink) 45%, transparent);
+}
+
+.nk-page-body nav[data-toc='pages'] a::after {
+  content: attr(data-nk-toc-page);
+  order: 2;
+  font-variant-numeric: tabular-nums;
+}
+
+.nk-page-body nav[data-toc='links'] a {
+  color: var(--color-primary, #1a73e8);
+  text-decoration: underline;
+}
+
+.nk-page-body nav[data-toc] a:hover {
+  color: var(--color-primary, #1a73e8);
+}
+
+.nk-toc-bar {
+  position: absolute;
+  z-index: 26;
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  padding: 0.25rem;
+  border: 1px solid var(--color-edge, var(--nk-canvas-edge));
+  border-radius: 0.625rem;
+  background: var(--color-surface, var(--nk-paper));
+  box-shadow:
+    0 10px 30px rgb(15 18 22 / 0.14),
+    0 2px 6px rgb(15 18 22 / 0.08);
+}
+
+@media print {
+  .nk-chip-card,
+  .nk-toc-bar {
+    display: none !important;
+  }
+
+  .nk-page-body nav[data-toc] {
+    background: none;
+    box-shadow: none;
+  }
+}
+
+/* --------------------------------------- comments and suggestions (phase 4) -- */
+
+.nk-native {
+  --nk-suggest-add: #188038;
+  --nk-suggest-remove: #c5221f;
+  --nk-comment: #f9ab00;
+}
+
+/* Suggested changes: added text underlined in green, removed text struck in red. */
+.nk-page-body ins[data-suggest] {
+  color: var(--nk-suggest-add);
+  text-decoration: underline;
+  text-decoration-color: currentColor;
+  background: color-mix(in srgb, var(--nk-suggest-add) 7%, transparent);
+}
+
+.nk-page-body del[data-suggest] {
+  color: var(--nk-suggest-remove);
+  text-decoration: line-through;
+}
+
+.nk-page-body [data-suggest][data-nk-active] {
+  background: color-mix(in srgb, currentColor 16%, transparent);
+  border-radius: 2px;
+}
+
+.nk-pages[data-nk-suggesting] {
+  caret-color: var(--nk-suggest-add);
+}
+
+/* A suggested formatting change: the text as it would be, a green dotted line under it. */
+.nk-page-body span[data-suggest][data-format] {
+  border-bottom: 2px dotted var(--nk-suggest-add);
+}
+
+.nk-page-body span[data-suggest][data-format][data-nk-active] {
+  background: color-mix(in srgb, var(--nk-suggest-add) 14%, transparent);
+}
+
+/* A suggested new paragraph starts with a green pilcrow; two to be joined, a struck red one. */
+.nk-page-body [data-suggest-split]::before,
+.nk-page-body [data-suggest-join]::before {
+  content: '¶';
+  margin-inline-end: 0.2em;
+  font-weight: 600;
+  color: var(--nk-suggest-add);
+}
+
+.nk-page-body [data-suggest-join]::before {
+  color: var(--nk-suggest-remove);
+  text-decoration: line-through;
+}
+
+.nk-page-body [data-suggest-split][data-suggest-join]::before {
+  content: none;
+}
+
+/* A paragraph whose style, alignment or spacing a suggestion changed: framed in green. */
+.nk-page-body [data-suggest-style] {
+  outline: 1px dashed color-mix(in srgb, var(--nk-suggest-add) 65%, transparent);
+  outline-offset: 3px;
+  border-radius: 1px;
+}
+
+.nk-page-body :is([data-suggest-split], [data-suggest-join], [data-suggest-style])[data-nk-active] {
+  background: color-mix(in srgb, var(--nk-suggest-add) 8%, transparent);
+}
+
+@media print {
+  .nk-page-body span[data-suggest][data-format] {
+    border-bottom: 0;
+  }
+
+  .nk-page-body :is([data-suggest-split], [data-suggest-join])::before {
+    content: none;
+  }
+
+  .nk-page-body [data-suggest-style] {
+    outline: 0;
+  }
+}
+
+.nk-review-what {
+  display: block;
+  font-weight: 500;
+}
+
+.nk-review-subject {
+  display: -webkit-box;
+  overflow: hidden;
+  margin-top: 0.15rem;
+  color: var(--color-fg-muted, #5f6368);
+  font-size: 0.75rem;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+/* Commented text: a soft highlight, stronger while its card is open, none once resolved. */
+.nk-page-body [data-comment] {
+  background: color-mix(in srgb, var(--nk-comment) 22%, transparent);
+  border-bottom: 2px solid color-mix(in srgb, var(--nk-comment) 70%, transparent);
+}
+
+.nk-page-body [data-comment][data-nk-active] {
+  background: color-mix(in srgb, var(--nk-comment) 45%, transparent);
+}
+
+.nk-page-body [data-comment][data-nk-resolved]:not([data-nk-active]) {
+  background: none;
+  border-bottom: 0;
+}
+
+/* The panel: beside the pages on a wide editor, over them on a narrow one. */
+.nk-native-stage {
+  --nk-review-width: 19rem;
+  container-type: inline-size;
+}
+
+.nk-native-stage.has-review .nk-native-canvas {
+  margin-right: var(--nk-review-width);
+}
+
+.nk-review {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 24;
+  display: flex;
+  width: var(--nk-review-width);
+  flex-direction: column;
+  border-left: 1px solid var(--color-edge, var(--nk-canvas-edge));
+  background: var(--color-surface, var(--nk-paper));
+}
+
+/* Beside a page that would shrink to a stamp, the panel covers the pages instead. */
+@container (max-width: 1000px) {
+  .nk-native-stage.has-review .nk-native-canvas {
+    margin-right: 0;
+  }
+
+  .nk-review {
+    width: min(100%, 21rem);
+    box-shadow: -12px 0 30px rgb(15 18 22 / 0.16);
+  }
+}
+
+.nk-review-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 0.75rem 0.4rem;
+}
+
+.nk-review-title {
+  color: var(--color-fg, #202124);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.nk-review-count,
+.nk-review-badge {
+  display: inline-flex;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: var(--color-primary, #1a73e8);
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.nk-review-close {
+  margin-left: auto;
+  padding: 0 0.35rem;
+  border-radius: 0.375rem;
+  color: var(--color-fg-muted, #5f6368);
+  font-size: 1.1rem;
+  line-height: 1.4;
+}
+
+.nk-review-close:hover {
+  background: var(--color-hover, rgb(0 0 0 / 0.05));
+  color: var(--color-fg, #202124);
+}
+
+.nk-review-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+  padding: 0 0.75rem 0.55rem;
+  border-bottom: 1px solid var(--color-edge, var(--nk-canvas-edge));
+  font-size: 0.75rem;
+}
+
+.nk-review-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--color-fg-muted, #5f6368);
+}
+
+.nk-review-all {
+  display: inline-flex;
+  gap: 0.5rem;
+}
+
+.nk-review-link {
+  color: var(--color-primary, #1a73e8);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.nk-review-link:hover {
+  text-decoration: underline;
+}
+
+.nk-review-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.6rem;
+}
+
+.nk-review-card {
+  margin-bottom: 0.5rem;
+  padding: 0.65rem 0.7rem;
+  border: 1px solid var(--color-edge, var(--nk-canvas-edge));
+  border-radius: 0.65rem;
+  background: var(--color-surface, var(--nk-paper));
+  cursor: pointer;
+  transition:
+    box-shadow 120ms ease,
+    border-color 120ms ease;
+}
+
+.nk-review-card:hover {
+  border-color: color-mix(in srgb, var(--color-fg, #202124) 22%, transparent);
+}
+
+.nk-review-card.is-active {
+  border-color: transparent;
+  box-shadow:
+    0 6px 18px rgb(15 18 22 / 0.12),
+    0 1px 3px rgb(15 18 22 / 0.1);
+  cursor: default;
+}
+
+.nk-review-card.is-resolved {
+  opacity: 0.7;
+}
+
+.nk-review-quote {
+  margin: 0 0 0.45rem;
+  padding-left: 0.5rem;
+  overflow: hidden;
+  border-left: 3px solid var(--nk-comment);
+  color: var(--color-fg-muted, #5f6368);
+  font-size: 0.75rem;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.nk-review-orphan {
+  margin: 0 0 0.45rem;
+  color: var(--color-fg-muted, #5f6368);
+  font-size: 0.75rem;
+  font-style: italic;
+}
+
+.nk-review-comment + .nk-review-comment {
+  margin-top: 0.6rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--color-edge, var(--nk-canvas-edge));
+}
+
+.nk-review-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.nk-review-avatar {
+  display: inline-flex;
+  flex: none;
+  width: 1.6rem;
+  height: 1.6rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-primary, #1a73e8) 14%, transparent);
+  color: var(--color-primary, #1a73e8);
+  font-size: 0.625rem;
+  font-weight: 600;
+}
+
+.nk-review-avatar.is-suggestion {
+  background: color-mix(in srgb, var(--nk-suggest-add) 14%, transparent);
+  color: var(--nk-suggest-add);
+}
+
+.nk-review-name {
+  overflow: hidden;
+  color: var(--color-fg, #202124);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nk-review-time {
+  flex: none;
+  margin-left: auto;
+  color: var(--color-fg-muted, #5f6368);
+  font-size: 0.6875rem;
+}
+
+.nk-review-text,
+.nk-review-change {
+  margin: 0.35rem 0 0;
+  color: var(--color-fg, #202124);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+/* A comment keeps the line breaks it was written with. */
+.nk-review-text {
+  white-space: pre-wrap;
+}
+
+/* A person a comment mentions. */
+.nk-review-mention {
+  border-radius: 0.25rem;
+  padding: 0 0.15rem;
+  background: color-mix(in srgb, var(--color-primary, #1a73e8) 12%, transparent);
+  color: var(--color-primary, #1a73e8);
+  font-weight: 500;
+}
+
+.nk-review-edited {
+  flex: none;
+  color: var(--color-fg-muted, #5f6368);
+  font-size: 0.6875rem;
+}
+
+/* Changing or deleting one's own comment: on hover, or when the card is open. */
+.nk-review-own {
+  display: inline-flex;
+  flex: none;
+  gap: 0.1rem;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.nk-review-comment:hover .nk-review-own,
+.nk-review-card.is-active .nk-review-own,
+.nk-review-own:focus-within {
+  opacity: 1;
+}
+
+.nk-review-mini {
+  display: inline-flex;
+  width: 1.375rem;
+  height: 1.375rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.3rem;
+  color: var(--color-fg-muted, #5f6368);
+}
+
+.nk-review-mini:hover {
+  background: color-mix(in srgb, var(--color-fg, #202124) 8%, transparent);
+  color: var(--color-fg, #202124);
+}
+
+.nk-review-mini svg {
+  width: 0.875rem;
+  height: 0.875rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.nk-review-edit {
+  margin-top: 0.35rem;
+}
+
+/* The people an "@" in a comment box offers. */
+.nk-comment-people {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  margin-top: 0.3rem;
+  padding: 0.25rem;
+  border: 1px solid var(--color-edge, var(--nk-canvas-edge));
+  border-radius: 0.5rem;
+  background: var(--color-surface, #fff);
+  box-shadow: 0 6px 18px rgb(15 18 22 / 0.12);
+}
+
+.nk-comment-person {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+  padding: 0.3rem 0.4rem;
+  border-radius: 0.35rem;
+  text-align: left;
+  font-size: 0.8125rem;
+}
+
+.nk-comment-person:hover,
+.nk-comment-person[aria-selected='true'] {
+  background: color-mix(in srgb, var(--color-primary, #1a73e8) 10%, transparent);
+}
+
+.nk-comment-person-name {
+  flex: none;
+  font-weight: 500;
+}
+
+.nk-comment-person-email {
+  overflow: hidden;
+  color: var(--color-fg-muted, #5f6368);
+  font-size: 0.75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nk-review-change ins {
+  color: var(--nk-suggest-add);
+  font-weight: 500;
+}
+
+.nk-review-change del {
+  color: var(--nk-suggest-remove);
+}
+
+.nk-review-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.4rem;
+}
+
+.nk-review-icon {
+  display: inline-flex;
+  width: 1.75rem;
+  height: 1.75rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: var(--color-fg-muted, #5f6368);
+}
+
+.nk-review-icon:hover {
+  background: var(--color-hover, rgb(0 0 0 / 0.05));
+  color: var(--color-fg, #202124);
+}
+
+.nk-review-icon.is-accept:hover {
+  color: var(--nk-suggest-add);
+}
+
+.nk-review-icon.is-reject:hover {
+  color: var(--nk-suggest-remove);
+}
+
+.nk-review-icon svg {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.nk-review-reply {
+  margin-top: 0.5rem;
+}
+
+.nk-review-input {
+  display: block;
+  width: 100%;
+  margin-top: 0.45rem;
+  resize: vertical;
+  font-size: 0.8125rem;
+}
+
+.nk-review-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.35rem;
+  margin-top: 0.45rem;
+}
+
+.nk-review-empty {
+  margin: 1.5rem 0.5rem;
+  color: var(--color-fg-muted, #5f6368);
+  font-size: 0.8125rem;
+  text-align: center;
+}
+
+/* The "add a comment" button beside a selection. */
+.nk-comment-fab {
+  position: absolute;
+  z-index: 23;
+  display: inline-flex;
+  width: 2.1rem;
+  height: 2.1rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-edge, var(--nk-canvas-edge));
+  border-radius: 999px;
+  background: var(--color-surface, var(--nk-paper));
+  color: var(--color-primary, #1a73e8);
+  box-shadow:
+    0 4px 14px rgb(15 18 22 / 0.14),
+    0 1px 3px rgb(15 18 22 / 0.1);
+}
+
+.nk-comment-fab:hover {
+  background: color-mix(in srgb, var(--color-primary, #1a73e8) 8%, var(--color-surface, #fff));
+}
+
+.nk-comment-fab svg {
+  width: 1.05rem;
+  height: 1.05rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The toolbar's review group sits at its end; the mode switch shows its name. */
+.nk-review-group {
+  margin-left: auto;
+}
+
+.nk-review-toggle {
+  position: relative;
+}
+
+.nk-review-toggle .nk-review-badge {
+  position: absolute;
+  top: -0.2rem;
+  right: -0.25rem;
+  min-width: 1rem;
+  height: 1rem;
+  font-size: 0.625rem;
+}
+
+.nk-mode-button {
+  gap: 0.3rem;
+  padding: 0 0.45rem;
+  font-size: 0.8125rem;
+}
+
+.nk-mode-button[data-mode='suggesting'] {
+  color: var(--nk-suggest-add);
+}
+
+.nk-mode-chevron {
+  width: 0.75rem !important;
+  height: 0.75rem !important;
+}
+
+.nk-mode-menu {
+  width: 16rem;
+}
+
+.nk-mode-item {
+  justify-content: flex-start;
+  gap: 0.65rem;
+}
+
+.nk-mode-item svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.nk-mode-item small {
+  display: block;
+  color: var(--color-fg-muted, #5f6368);
+  font-size: 0.75rem;
+}
+
+.nk-mode-item[aria-checked='true'] {
+  color: var(--color-primary, #1a73e8);
+}
+
+@media (max-width: 640px) {
+  .nk-mode-label {
+    display: none;
+  }
+}
+
+@media print {
+  .nk-review,
+  .nk-comment-fab {
+    display: none !important;
+  }
+
+  .nk-native-stage.has-review .nk-native-canvas {
+    margin-right: 0;
+  }
+
+  .nk-page-body [data-comment] {
+    background: none;
+    border-bottom: 0;
+  }
+}
+
+/* ------------------------------------------------- version history (phase 5) -- */
+
+.nk-native {
+  --nk-diff-add-bg: #dcfce7;
+  --nk-diff-add: #166534;
+  --nk-diff-remove-bg: #fee2e2;
+  --nk-diff-remove: #b91c1c;
+}
+
+.dark .nk-native {
+  --nk-diff-add-bg: rgb(34 197 94 / 0.18);
+  --nk-diff-add: #86efac;
+  --nk-diff-remove-bg: rgb(239 68 68 / 0.18);
+  --nk-diff-remove: #fca5a5;
+}
+
+/* Over the whole editor: the bar, the version, the list of versions. */
+.nk-history {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  background: var(--nk-canvas);
+  container-type: inline-size;
+}
+
+.nk-history-bar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3.5rem;
+  padding: 0.4rem 1rem;
+  border-bottom: 1px solid var(--color-edge, var(--nk-canvas-edge));
+  background: var(--color-surface, var(--nk-paper));
+}
+
+.nk-history-back {
+  display: inline-flex;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  color: var(--color-fg, #202124);
+}
+
+.nk-history-back:hover {
+  background: var(--color-hover, rgb(0 0 0 / 0.05));
+}
+
+.nk-history-back svg,
+.nk-history-rename svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.nk-history-heading {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.nk-history-title {
+  overflow: hidden;
+  color: var(--color-fg, #202124);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nk-history-subtitle {
+  overflow: hidden;
+  color: var(--color-fg-muted, #5f6368);
+  font-size: 0.75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nk-history-toggle {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--color-fg, #202124);
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.nk-history-main {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.nk-history-canvas {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  padding: 1.5rem 1rem 2.5rem;
+}
+
+/* A sheet as wide as the page, flowing as long as the version is. */
+.nk-history-sheet {
+  box-sizing: border-box;
+  width: min(100%, var(--nk-page-width, 794px));
+  margin: 0 auto;
+  padding: min(4.5rem, 8%) min(4.5rem, 9%);
+  border-radius: 2px;
+  background: var(--nk-paper);
+  box-shadow: var(--nk-paper-shadow);
+  color: var(--nk-paper-ink);
+  font-family: var(--nk-doc-font);
+  font-size: var(--nk-doc-size);
+  line-height: 1.15;
+}
+
+.nk-history-doc.nk-page-body {
+  height: auto;
+  overflow: visible;
+}
+
+.nk-history-doc[aria-busy='true'] {
+  opacity: 0.55;
+}
+
+.nk-diff-ins {
+  border-radius: 2px;
+  background: var(--nk-diff-add-bg);
+  color: var(--nk-diff-add);
+}
+
+.nk-diff-del {
+  border-radius: 2px;
+  background: var(--nk-diff-remove-bg);
+  color: var(--nk-diff-remove);
+  text-decoration: line-through;
+}
+
+.nk-history-doc .nk-diff-block-ins {
+  box-shadow: -0.75rem 0 0 -0.5rem var(--nk-diff-add);
+  background: var(--nk-diff-add-bg);
+}
+
+.nk-history-doc .nk-diff-block-del {
+  box-shadow: -0.75rem 0 0 -0.5rem var(--nk-diff-remove);
+  background: var(--nk-diff-remove-bg);
+  color: var(--nk-diff-remove);
+  text-decoration: line-through;
+}
+
+.nk-history-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1.25rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid color-mix(in srgb, var(--nk-paper-ink) 10%, transparent);
+  color: color-mix(in srgb, var(--nk-paper-ink) 70%, transparent);
+  font-family: system-ui, sans-serif;
+  font-size: 0.75rem;
+}
+
+.nk-history-legend .nk-diff-ins,
+.nk-history-legend .nk-diff-del {
+  padding: 0 0.25rem;
+}
+
+.nk-history-side {
+  display: flex;
+  width: 20.5rem;
+  flex: none;
+  flex-direction: column;
+  border-left: 1px solid var(--color-edge, var(--nk-canvas-edge));
+  background: var(--color-surface, var(--nk-paper));
+}
+
+.nk-history-side-head {
+  padding: 1rem 1rem 0.6rem;
+  color: var(--color-fg, #202124);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.nk-history-filter {
+  display: flex;
+  gap: 0.25rem;
+  margin: 0 1rem 0.5rem;
+  padding: 3px;
+  border-radius: 0.6rem;
+  background: var(--color-surface-inset, var(--nk-canvas));
+  box-shadow: inset 0 0 0 1px var(--color-edge, var(--nk-canvas-edge));
+}
+
+.nk-history-filter button {
+  flex: 1;
+  height: 1.75rem;
+  border-radius: 0.45rem;
+  color: var(--color-fg-muted, #5f6368);
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.nk-history-filter button[aria-pressed='true'] {
+  background: var(--color-surface, var(--nk-paper));
+  color: var(--color-fg, #202124);
+  box-shadow: 0 1px 2px rgb(15 18 22 / 0.12);
+}
+
+.nk-history-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 0.5rem 0.75rem;
+}
+
+.nk-history-day {
+  display: block;
+  padding: 0.75rem 0.65rem 0.35rem;
+  color: var(--color-fg-muted, #5f6368);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.nk-history-item {
+  position: relative;
+  border-radius: 0.65rem;
+}
+
+.nk-history-item.is-selected {
+  background: color-mix(in srgb, var(--color-primary, #1a73e8) 9%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-primary, #1a73e8) 30%, transparent);
+}
+
+.nk-history-pick {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.6rem 2.75rem 0.6rem 0.75rem;
+  border-radius: 0.65rem;
+  text-align: left;
+}
+
+.nk-history-item:not(.is-selected) .nk-history-pick:hover {
+  background: var(--color-hover, rgb(0 0 0 / 0.04));
+}
+
+.nk-history-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.nk-history-name {
+  overflow: hidden;
+  color: var(--color-fg, #202124);
+  font-size: 0.84rem;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nk-history-name.is-named {
+  font-weight: 600;
+}
+
+.nk-history-current {
+  display: inline-flex;
+  height: 1.15rem;
+  flex: none;
+  align-items: center;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-primary, #1a73e8) 12%, transparent);
+  color: var(--color-primary, #1a73e8);
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+.nk-history-when {
+  color: var(--color-fg-muted, #5f6368);
+  font-size: 0.75rem;
+}
+
+.nk-history-authors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.6rem;
+  color: var(--color-fg-muted, #5f6368);
+  font-size: 0.75rem;
+}
+
+.nk-history-authors > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.nk-history-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+}
+
+.nk-history-rename {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.5rem;
+  display: inline-flex;
+  width: 1.75rem;
+  height: 1.75rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.4rem;
+  color: var(--color-fg-muted, #5f6368);
+}
+
+.nk-history-rename:hover {
+  background: var(--color-hover, rgb(0 0 0 / 0.05));
+  color: var(--color-fg, #202124);
+}
+
+.nk-history-rename svg {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.nk-history-naming {
+  display: flex;
+  gap: 0.35rem;
+  padding: 0 0.6rem 0.6rem;
+}
+
+.nk-history-naming input {
+  flex: 1;
+  min-width: 0;
+}
+
+.nk-history-empty {
+  margin: 1.5rem 0.75rem;
+  color: var(--color-fg-muted, #5f6368);
+  font-size: 0.8125rem;
+  text-align: center;
+}
+
+/* Narrow: the list goes on top, the version below it. */
+@container (max-width: 760px) {
+  .nk-history-main {
+    flex-direction: column-reverse;
+  }
+
+  .nk-history-side {
+    width: auto;
+    max-height: 42%;
+    border-bottom: 1px solid var(--color-edge, var(--nk-canvas-edge));
+    border-left: 0;
+  }
+
+  .nk-history-bar {
+    flex-wrap: wrap;
+  }
+
+  .nk-history-heading {
+    flex-basis: calc(100% - 3rem);
+  }
+}
+
+@media print {
+  .nk-history {
+    display: none !important;
+  }
+}
+
+/* --------------------------------------- characters, voice, shortcuts (tools) -- */
+
+/* Special characters: beside the pages, so the text stays in sight. */
+.nk-chars {
+  position: absolute;
+  top: 0.75rem;
+  right: 1.25rem;
+  z-index: 36;
+  display: flex;
+  width: min(21rem, calc(100% - 1.5rem));
+  max-height: calc(100% - 1.5rem);
+  flex-direction: column;
+  padding: 0.75rem;
+  border: 1px solid var(--color-edge, var(--nk-canvas-edge));
+  border-radius: 0.75rem;
+  background: var(--color-surface, var(--nk-paper));
+  box-shadow:
+    0 12px 32px rgb(15 18 22 / 0.16),
+    0 2px 6px rgb(15 18 22 / 0.08);
+}
+
+.nk-chars-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  color: var(--color-fg, #202124);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.nk-chars-head h3 {
+  margin: 0;
+}
+
+.nk-chars-search {
+  width: 100%;
+}
+
+.nk-chars-groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+}
+
+.nk-chars-groups button {
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--color-edge, var(--nk-canvas-edge));
+  border-radius: 999px;
+  color: var(--color-fg-muted, #5f6368);
+  font-size: 0.72rem;
+}
+
+.nk-chars-groups button[aria-pressed='true'] {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--color-primary, #1a73e8) 12%, transparent);
+  color: var(--color-primary, #1a73e8);
+}
+
+.nk-chars-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(2.25rem, 1fr));
+  gap: 0.25rem;
+  min-height: 0;
+  margin-top: 0.6rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.nk-chars-key {
+  display: flex;
+  height: 2.25rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.45rem;
+  color: var(--color-fg, #202124);
+  font-size: 1.15rem;
+}
+
+.nk-chars-key:hover {
+  background: var(--color-hover, rgb(0 0 0 / 0.06));
+}
+
+.nk-chars-empty {
+  grid-column: 1 / -1;
+  margin: 1rem 0;
+  color: var(--color-fg-muted, #5f6368);
+  font-size: 0.8125rem;
+  text-align: center;
+}
+
+/* Voice typing: a microphone at the foot of the pages. */
+.nk-voice {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  z-index: 36;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: calc(100% - 2rem);
+  padding: 0.6rem 0.6rem 0.6rem 0.7rem;
+  border: 1px solid var(--color-edge, var(--nk-canvas-edge));
+  border-radius: 1rem;
+  background: var(--color-surface, var(--nk-paper));
+  box-shadow:
+    0 12px 32px rgb(15 18 22 / 0.16),
+    0 2px 6px rgb(15 18 22 / 0.08);
+}
+
+.nk-voice-mic {
+  display: inline-flex;
+  width: 3rem;
+  height: 3rem;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-fg, #202124) 8%, transparent);
+  color: var(--color-fg, #202124);
+}
+
+.nk-voice-mic[aria-pressed='true'] {
+  background: #d93025;
+  color: #fff;
+  animation: nk-voice-pulse 1.6s ease-in-out infinite;
+}
+
+.nk-voice-mic:disabled {
+  opacity: 0.4;
+}
+
+.nk-voice-mic svg {
+  width: 1.35rem;
+  height: 1.35rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+@keyframes nk-voice-pulse {
+  50% {
+    box-shadow: 0 0 0 0.45rem rgb(217 48 37 / 0.18);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nk-voice-mic[aria-pressed='true'] {
+    animation: none;
+  }
+}
+
+.nk-voice-body {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.nk-voice-state {
+  color: var(--color-fg, #202124);
+  font-size: 0.8125rem;
+}
+
+.nk-voice-heard {
+  overflow: hidden;
+  color: var(--color-fg-muted, #5f6368);
+  font-size: 0.75rem;
+  font-style: italic;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nk-voice-lang {
+  align-self: flex-start;
+  padding: 0.1rem 0.25rem;
+  border: 1px solid var(--color-edge, var(--nk-canvas-edge));
+  border-radius: 0.4rem;
+  background: var(--color-surface, var(--nk-paper));
+  color: var(--color-fg, #202124);
+  font-size: 0.75rem;
+}
+
+/* Keyboard shortcuts. */
+.nk-shortcuts {
+  display: flex;
+  width: min(100% - 2rem, 34rem);
+  max-height: min(80vh, 40rem);
+  flex-direction: column;
+}
+
+.nk-shortcuts-list {
+  min-height: 0;
+  margin-top: 0.75rem;
+  overflow-y: auto;
+}
+
+.nk-shortcuts-list h4 {
+  margin: 0.9rem 0 0.35rem;
+  color: var(--color-fg-muted, #5f6368);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.nk-shortcut {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-edge, #dadce0) 60%, transparent);
+  color: var(--color-fg, #202124);
+  font-size: 0.8125rem;
+}
+
+.nk-shortcut-keys {
+  display: inline-flex;
+  flex: none;
+  gap: 0.25rem;
+}
+
+.nk-shortcut kbd {
+  min-width: 1.5rem;
+  padding: 0.05rem 0.4rem;
+  border: 1px solid var(--color-edge, var(--nk-canvas-edge));
+  border-bottom-width: 2px;
+  border-radius: 0.35rem;
+  background: var(--color-surface, var(--nk-paper));
+  font-family: inherit;
+  font-size: 0.72rem;
+  text-align: center;
+}
+
+@media print {
+  .nk-chars,
+  .nk-voice {
+    display: none !important;
   }
 }

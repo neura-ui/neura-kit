@@ -102,6 +102,19 @@ export class History {
     return next;
   }
 
+  /**
+   * Swap a piece of text in every recorded state: an image's preview address
+   * for the one it was uploaded to, so undo never brings back a dead preview.
+   */
+  replaceText(from: string, to: string): void {
+    if (!from || from === to) return;
+    const swap = (entry: HistoryEntry): HistoryEntry =>
+      entry.html.includes(from) ? { ...entry, html: entry.html.split(from).join(to) } : entry;
+    this.past = this.past.map(swap);
+    this.future = this.future.map(swap);
+    this.present = swap(this.present);
+  }
+
   /** Drop all history and restart from `entry`. */
   reset(entry: HistoryEntry): void {
     this.past = [];

@@ -196,8 +196,10 @@ export function normalizeInline(container: HTMLElement): void {
     const next = child.nextSibling;
 
     if (isElement(child)) {
-      // Drop inline wrappers that ended up with nothing in them.
-      if (!isVoid(child) && !isBlock(child) && !isContainer(child) && !child.firstChild) {
+      // Drop inline wrappers that ended up with nothing in them — not a page
+      // break, which is empty on purpose.
+      const isBreak = child.hasAttribute('data-break') || child.hasAttribute('data-nk-break');
+      if (!isBreak && !isVoid(child) && !isBlock(child) && !isContainer(child) && !child.firstChild) {
         container.removeChild(child);
         child = next;
         continue;
@@ -206,7 +208,9 @@ export function normalizeInline(container: HTMLElement): void {
       // Only *inline* debris may be merged. Two adjacent `<p>` elements look
       // identical once their ids are stripped, and folding those together
       // would silently collapse the whole document into one paragraph.
-      const mergeable = !isBlock(child) && !isContainer(child) && !isVoid(child);
+      // Chips and footnote markers are units, never merged with a twin beside them.
+      const atom = isBreak || child.hasAttribute('data-chip') || child.hasAttribute('data-footnote');
+      const mergeable = !atom && !isBlock(child) && !isContainer(child) && !isVoid(child);
 
       if (mergeable && next && isElement(next) && sameElement(child, next)) {
         while (next.firstChild) child.appendChild(next.firstChild);
@@ -255,7 +259,7 @@ export function emptyParagraph(doc: Document): HTMLElement {
 
 /** True when a block holds no user text (only a placeholder `<br>`). */
 export function isEmptyBlock(block: HTMLElement): boolean {
-  if (block.querySelector('img, hr, table')) return false;
+  if (block.matches('nav, table, figure, hr') || block.querySelector('img, hr, table, nav')) return false;
   const text = block.textContent ?? '';
   return text.replace(/​/g, '').trim().length === 0;
 }

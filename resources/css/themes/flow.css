@@ -120,6 +120,81 @@
     animation: flow-dash 0.75s linear infinite;
 }
 
+/* Sub-connections (sub-node into agent): dashed, no arrow. */
+.flow-edge.is-sub {
+    stroke-dasharray: 4 4;
+}
+
+/* Execution state of a connection, n8n-style. */
+.flow-edge.is-success { stroke: var(--color-success-500, #16a34a); }
+.flow-edge.is-error { stroke: var(--color-danger-500, #dc2626); }
+.flow-edge.is-running { stroke: var(--color-warning-500, #f59e0b); }
+.flow-arrow.is-success { fill: var(--color-success-500, #16a34a); }
+.flow-arrow.is-error { fill: var(--color-danger-500, #dc2626); }
+
+.flow-edge-label {
+    pointer-events: none;
+}
+
+.flow-edge-label rect {
+    fill: var(--flow-canvas);
+    stroke: var(--flow-card-border);
+}
+
+.flow-edge-label text {
+    fill: var(--flow-muted);
+    font-size: 10.5px;
+    font-weight: 500;
+}
+
+.flow-edge-label.is-success text { fill: var(--color-success-600, #16a34a); }
+.flow-edge-label.is-error text { fill: var(--color-danger-600, #dc2626); }
+
+/* Hover tools on a connection: insert a step, delete it. */
+.flow-edge-tools {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 120ms ease;
+}
+
+.flow-edge-group:hover .flow-edge-tools {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.flow.is-connecting .flow-edge-tools {
+    display: none;
+}
+
+.flow-edge-tool {
+    cursor: pointer;
+}
+
+.flow-edge-tool rect {
+    fill: var(--flow-card);
+    stroke: var(--flow-card-border);
+}
+
+.flow-edge-tool path {
+    fill: none;
+    stroke: var(--flow-muted);
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.flow-edge-tool:hover rect {
+    stroke: var(--flow-line-active);
+}
+
+.flow-edge-tool:hover path {
+    stroke: var(--flow-line-active);
+}
+
+.flow-edge-tool.is-delete:hover path {
+    stroke: var(--color-danger-600, #dc2626);
+}
+
 .flow-edge-end {
     pointer-events: auto;
     cursor: grab;
@@ -191,7 +266,8 @@
     box-shadow: var(--flow-shadow);
     transition:
         box-shadow 160ms var(--nk-ease-standard, ease),
-        border-color 160ms var(--nk-ease-standard, ease);
+        border-color 160ms var(--nk-ease-standard, ease),
+        background-color 160ms var(--nk-ease-standard, ease);
 }
 
 .flow-node:hover .flow-card {
@@ -225,6 +301,26 @@
     line-height: 1;
     color: var(--flow-accent, var(--color-primary-600));
     background: color-mix(in oklab, var(--flow-accent, var(--color-primary-500)) 14%, var(--flow-card));
+    pointer-events: none;
+}
+
+.flow-glyph {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.flow-glyph svg {
+    width: 58%;
+    height: 58%;
+}
+
+.flow-icon img {
+    width: 62%;
+    height: 62%;
+    object-fit: contain;
 }
 
 .flow-meta {
@@ -267,14 +363,341 @@
     background: color-mix(in oklab, var(--color-fg) 6%, transparent);
 }
 
-.flow-badge[data-status="ok"] {
+.flow-badge[data-status="success"] {
     color: var(--color-success-700, var(--color-fg));
     background: color-mix(in oklab, var(--color-success-500, var(--color-fg)) 14%, transparent);
 }
 
-.flow-badge[data-status="fail"] {
+.flow-badge[data-status="error"] {
     color: var(--color-danger-700, var(--color-fg));
     background: color-mix(in oklab, var(--color-danger-500, var(--color-fg)) 14%, transparent);
+}
+
+.flow-badge[data-status="running"],
+.flow-badge[data-status="waiting"] {
+    color: var(--color-warning-700, var(--color-fg));
+    background: color-mix(in oklab, var(--color-warning-500, var(--color-fg)) 16%, transparent);
+}
+
+/*
+ * Shapes, n8n-style. Tiles (node, trigger, sub) show a large icon and carry their name
+ * below; agents and cards carry it inside.
+ */
+.flow-node[data-shape="node"] .flow-card,
+.flow-node[data-shape="trigger"] .flow-card,
+.flow-node[data-shape="sub"] .flow-card {
+    justify-content: center;
+    padding: 0;
+    border-radius: 0.875rem;
+}
+
+.flow-node[data-shape="trigger"] .flow-card {
+    border-radius: 2.75rem 0.875rem 0.875rem 2.75rem;
+}
+
+.flow-node[data-shape="sub"] .flow-card {
+    border-radius: 999px;
+}
+
+/* Tiles and agents show the icon itself, large, in the node's colour (n8n's logo spot). */
+.flow-node[data-shape="node"] .flow-icon,
+.flow-node[data-shape="trigger"] .flow-icon,
+.flow-node[data-shape="agent"] .flow-icon {
+    width: 3rem;
+    height: 3rem;
+    font-size: 1.75rem;
+    background: transparent;
+}
+
+.flow-node[data-shape="sub"] .flow-icon {
+    width: 2.25rem;
+    height: 2.25rem;
+    font-size: 1.25rem;
+    background: transparent;
+}
+
+.flow-node[data-shape="node"] .flow-glyph svg,
+.flow-node[data-shape="trigger"] .flow-glyph svg,
+.flow-node[data-shape="agent"] .flow-glyph svg,
+.flow-node[data-shape="sub"] .flow-glyph svg {
+    width: 82%;
+    height: 82%;
+}
+
+.flow-node[data-shape="agent"] .flow-card {
+    gap: 0.85rem;
+    padding: 0 1rem;
+    border-radius: 0.875rem;
+}
+
+.flow-node[data-shape="agent"] .flow-title {
+    font-size: 0.875rem;
+}
+
+.flow-caption {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    left: 50%;
+    width: 10rem;
+    transform: translateX(-50%);
+    text-align: center;
+    pointer-events: none;
+}
+
+.flow-caption .flow-title {
+    font-size: 0.78rem;
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.flow-caption .flow-sub {
+    font-size: 0.7rem;
+}
+
+/* Where a flow starts: a bolt left of the trigger (tile or card). */
+.flow-bolt {
+    position: absolute;
+    top: 50%;
+    left: -1.35rem;
+    width: 0.9rem;
+    height: 0.9rem;
+    color: var(--color-warning-500, #f59e0b);
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.flow-bolt svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* Sticky note: behind the steps, never connected. */
+.flow-node[data-shape="note"] {
+    z-index: 1;
+}
+
+.flow-node[data-shape="note"] .flow-card {
+    align-items: stretch;
+    padding: 0.85rem 0.95rem;
+    border-radius: 0.5rem;
+    border-color: color-mix(in oklab, var(--flow-note) 55%, var(--flow-card-border));
+    background: color-mix(in oklab, var(--flow-note) 26%, var(--flow-card));
+    box-shadow: none;
+    --flow-note: var(--flow-accent-note, var(--color-warning-400, #facc15));
+}
+
+.flow-note {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.flow-note-title {
+    margin: 0;
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+.flow-note-text {
+    margin: 0;
+    font-size: 0.75rem;
+    line-height: 1.45;
+    color: color-mix(in oklab, var(--color-fg) 78%, transparent);
+    white-space: pre-line;
+}
+
+/*
+ * Card styles (Flow\Variant pack): elevated by default, outline, soft (tinted with the
+ * node's colour) and solid (filled with it).
+ */
+.flow-node.flow-v-outline .flow-card {
+    border-width: 1.5px;
+    border-color: color-mix(in oklab, var(--color-fg) 22%, var(--flow-card-border));
+    box-shadow: none;
+}
+
+.flow-node.flow-v-outline:hover .flow-card {
+    border-color: color-mix(in oklab, var(--color-fg) 36%, var(--flow-card-border));
+    box-shadow: none;
+}
+
+.flow-node.flow-v-soft .flow-card {
+    border-color: color-mix(in oklab, var(--flow-accent) 38%, var(--flow-card-border));
+    background: color-mix(in oklab, var(--flow-accent) 9%, var(--flow-card));
+    box-shadow: none;
+}
+
+.flow-node.flow-v-soft[data-shape="card"] .flow-icon {
+    background: color-mix(in oklab, var(--flow-accent) 16%, transparent);
+}
+
+.flow-node.flow-v-solid .flow-card {
+    border-color: var(--flow-accent);
+    background: var(--flow-accent);
+    color: #fff;
+}
+
+.flow-node.flow-v-solid .flow-icon {
+    color: #fff;
+}
+
+.flow-node.flow-v-solid[data-shape="card"] .flow-icon {
+    background: color-mix(in oklab, #fff 18%, transparent);
+}
+
+.flow-node.flow-v-solid .flow-card .flow-sub {
+    color: color-mix(in oklab, #fff 78%, transparent);
+}
+
+/* Execution states, n8n-style: a coloured edge and a mark in the corner. */
+.flow-mark {
+    position: absolute;
+    right: -0.45rem;
+    bottom: -0.45rem;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 999px;
+    color: #fff;
+    box-shadow: 0 0 0 2px var(--flow-canvas);
+    pointer-events: none;
+}
+
+.flow-mark svg {
+    display: none;
+    width: 0.8rem;
+    height: 0.8rem;
+}
+
+.flow-node[data-status] .flow-mark {
+    display: flex;
+}
+
+.flow-node[data-status="success"] .flow-mark {
+    background: var(--color-success-500, #16a34a);
+}
+
+.flow-node[data-status="success"] .flow-mark-success,
+.flow-node[data-status="error"] .flow-mark-error,
+.flow-node[data-status="running"] .flow-mark-running,
+.flow-node[data-status="waiting"] .flow-mark-waiting {
+    display: block;
+}
+
+.flow-node[data-status="error"] .flow-mark {
+    background: var(--color-danger-500, #dc2626);
+}
+
+.flow-node[data-status="running"] .flow-mark,
+.flow-node[data-status="waiting"] .flow-mark {
+    background: var(--color-warning-500, #f59e0b);
+}
+
+.flow-node[data-status="running"] .flow-mark-running {
+    animation: flow-spin 0.9s linear infinite;
+}
+
+.flow-node[data-status="success"]:not(.is-on) .flow-card {
+    border-color: color-mix(in oklab, var(--color-success-500, #16a34a) 70%, var(--flow-card-border));
+}
+
+.flow-node[data-status="error"]:not(.is-on) .flow-card {
+    border-color: color-mix(in oklab, var(--color-danger-500, #dc2626) 75%, var(--flow-card-border));
+    box-shadow:
+        0 0 0 3px color-mix(in oklab, var(--color-danger-500, #dc2626) 14%, transparent),
+        var(--flow-shadow);
+}
+
+.flow-node[data-status="running"]:not(.is-on) .flow-card {
+    border-color: var(--color-warning-500, #f59e0b);
+    animation: flow-running 1.4s ease-in-out infinite;
+}
+
+/* Deactivated: greyed out, name struck through. */
+.flow-node.is-disabled .flow-card {
+    filter: grayscale(1);
+    opacity: 0.55;
+}
+
+.flow-node.is-disabled .flow-caption .flow-title,
+.flow-node.is-disabled .flow-meta .flow-title {
+    text-decoration: line-through;
+    color: var(--flow-muted);
+}
+
+/* Hover actions above the node: run, deactivate, delete. */
+.flow-actions {
+    position: absolute;
+    bottom: calc(100% + 0.4rem);
+    left: 50%;
+    z-index: 6;
+    display: flex;
+    gap: 0.15rem;
+    padding: 0.2rem;
+    border-radius: 0.6rem;
+    background: var(--flow-card);
+    border: 1px solid var(--flow-card-border);
+    box-shadow: var(--flow-shadow);
+    opacity: 0;
+    transform: translate(-50%, 0.25rem);
+    pointer-events: none;
+    transition:
+        opacity 140ms var(--nk-ease-standard, ease),
+        transform 140ms var(--nk-ease-standard, ease);
+}
+
+.flow-node:hover .flow-actions,
+.flow-node.is-on .flow-actions {
+    opacity: 1;
+    transform: translate(-50%, 0);
+    pointer-events: auto;
+}
+
+.flow.is-connecting .flow-actions {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.flow-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 0.4rem;
+    color: var(--flow-muted);
+    cursor: pointer;
+    transition: color 120ms ease, background-color 120ms ease;
+}
+
+.flow-action:hover {
+    color: var(--color-fg);
+    background: color-mix(in oklab, var(--color-fg) 8%, transparent);
+}
+
+.flow-action:last-child:hover {
+    color: var(--color-danger-600, #dc2626);
+}
+
+.flow-action svg {
+    width: 0.9rem;
+    height: 0.9rem;
+}
+
+@keyframes flow-spin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes flow-running {
+    0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-warning-500, #f59e0b) 35%, transparent), var(--flow-shadow); }
+    50% { box-shadow: 0 0 0 5px transparent, var(--flow-shadow); }
 }
 
 /* Ports */
@@ -330,6 +753,75 @@
     top: 50%;
     opacity: 0.72;
     transform: translateY(-50%);
+}
+
+.flow-port.is-top,
+.flow-port.is-bottom {
+    left: 50%;
+    width: 12px;
+    height: 12px;
+    border: 0;
+    background: transparent;
+    opacity: 1;
+    transform: translateX(-50%);
+}
+
+/* A sub-node's connector on its top, an agent's sub-connectors on its bottom: diamonds. */
+.flow-port.is-top::after,
+.flow-port.is-bottom::after {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    border-radius: 2px;
+    border: 1.5px solid color-mix(in oklab, var(--color-fg) 28%, var(--flow-card-border));
+    background: var(--flow-card);
+    transform: rotate(45deg);
+    transition: border-color 0.14s ease, background 0.14s ease;
+}
+
+.flow-port.is-top {
+    top: -6px;
+    right: auto;
+}
+
+.flow-port.is-bottom {
+    top: auto;
+    bottom: -6px;
+    cursor: default;
+}
+
+.flow-port.is-bottom.is-required::after {
+    border-color: color-mix(in oklab, var(--color-fg) 55%, var(--flow-card-border));
+}
+
+.flow-port.is-top:hover,
+.flow-port.is-top:focus-visible,
+.flow-port.is-bottom:hover {
+    transform: translateX(-50%);
+    background: transparent;
+    box-shadow: none;
+}
+
+.flow-port.is-top:hover::after,
+.flow-port.is-top:focus-visible::after,
+.flow.is-connecting .flow-port.is-bottom::after {
+    border-color: var(--flow-line-active);
+}
+
+.flow-port.is-top:hover::after {
+    background: var(--flow-line-active);
+}
+
+.flow-port.is-bottom .flow-port-label {
+    left: 50%;
+    top: calc(100% + 6px);
+    padding: 0 4px;
+    border-radius: 4px;
+    font-size: 10px;
+    opacity: 1;
+    /* The sub-connection runs behind its label */
+    background: var(--flow-canvas);
+    transform: translateX(-50%);
 }
 
 .flow-port-plus {
@@ -504,4 +996,450 @@
     border-radius: 3px;
     background: color-mix(in oklab, var(--color-fg) 8%, transparent);
     pointer-events: none;
+}
+
+/* Agent steps, as chips (both themes) */
+.flow-steps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 6px;
+}
+
+.flow-step {
+    padding: 1px 6px;
+    border-radius: 5px;
+    font-family: ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, monospace;
+    font-size: 10px;
+    line-height: 1.5;
+    color: var(--flow-accent);
+    background: color-mix(in oklab, var(--flow-accent) 14%, transparent);
+}
+
+/*
+ * Table: a header and its rows (columns, fields). Each row has its own connectors, so a
+ * pipeline links row to row; hovering a row lights its lineage and dims the rest.
+ */
+.flow {
+    --flow-trace: var(--color-primary-500);
+}
+
+.flow-node[data-shape="table"] .flow-card {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-rows: 44px auto;
+    align-items: center;
+    align-content: start;
+    /* Rows sit right under the 44 px header: the connectors are placed by that geometry */
+    gap: 0 0.6rem;
+    padding: 0 0.75rem 0 0.5rem;
+    border-radius: 0.75rem;
+}
+
+.flow-node[data-shape="table"] .flow-icon { grid-row: 1; grid-column: 1; }
+.flow-node[data-shape="table"] .flow-meta { grid-row: 1; grid-column: 2; }
+.flow-node[data-shape="table"] .flow-led { grid-row: 1; grid-column: 3; }
+
+.flow-node[data-shape="table"] .flow-icon {
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.85rem;
+}
+
+/* The table's own connectors sit on its header */
+.flow-node[data-shape="table"] > .flow-port:not(.is-row):not(.is-top):not(.is-bottom) {
+    top: 23px;
+}
+
+.flow-rows {
+    grid-row: 2;
+    grid-column: 1 / -1;
+    align-self: stretch;
+    margin: 0 -0.75rem 0 -0.5rem;
+}
+
+.flow-row {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    height: 28px;
+    padding: 0 0.75rem 0 0.6rem;
+    font-size: 0.72rem;
+    box-sizing: border-box;
+    border-top: 1px solid color-mix(in oklab, var(--flow-card-border) 70%, transparent);
+    cursor: default;
+    transition: background-color 120ms ease;
+}
+
+.flow-row:hover {
+    background: color-mix(in oklab, var(--color-fg) 5%, transparent);
+}
+
+.flow-row-key {
+    display: flex;
+    flex: none;
+    width: 0.8rem;
+    height: 0.8rem;
+    color: var(--flow-muted);
+}
+
+.flow-row-key svg {
+    width: 100%;
+    height: 100%;
+}
+
+.flow-row.is-pk .flow-row-key {
+    color: var(--color-amber-500, #f59e0b);
+}
+
+.flow-row.is-fk .flow-row-key {
+    color: var(--flow-accent);
+}
+
+.flow-row-label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.flow-row-type {
+    flex: none;
+    font-family: ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, monospace;
+    font-size: 0.62rem;
+    color: var(--flow-muted);
+}
+
+.flow-port.is-row {
+    width: 9px;
+    height: 9px;
+}
+
+.flow-port.in.is-row {
+    left: -5px;
+}
+
+.flow-port.out.is-row {
+    right: -5px;
+}
+
+.flow-row.is-traced {
+    background: color-mix(in oklab, var(--flow-trace) 14%, transparent);
+}
+
+.flow-row.is-traced .flow-row-label {
+    font-weight: 600;
+}
+
+.flow-node {
+    transition: opacity 160ms var(--nk-ease-standard, ease);
+}
+
+.flow.is-tracing .flow-node.is-dim {
+    opacity: 0.35;
+}
+
+.flow.is-tracing .flow-edge {
+    transition: opacity 160ms var(--nk-ease-standard, ease);
+}
+
+.flow.is-tracing .flow-edge:not(.is-traced) {
+    opacity: 0.18;
+}
+
+.flow.is-tracing .flow-edge-group:not(:has(.is-traced)) .flow-edge-label {
+    opacity: 0.3;
+}
+
+.flow-edge.is-traced {
+    stroke: var(--flow-trace);
+    stroke-width: 2;
+}
+
+.flow.flow-t-signal {
+    --flow-trace: var(--flow-ok);
+}
+
+.flow-t-signal .flow-node[data-shape="table"] .flow-card {
+    border-radius: 0.875rem;
+}
+
+.flow-t-signal .flow-row {
+    font-family: var(--flow-mono);
+    font-size: 0.68rem;
+}
+
+/* The status light belongs to Signal */
+.flow-led {
+    display: none;
+}
+
+/*
+ * Signal theme (Flow\Theme pack): capsules with a status light, circuit-like traces with
+ * rounded corners, monospaced details, and data dots travelling along a running connection.
+ */
+.flow.flow-t-signal {
+    --flow-ok: var(--color-teal-500, #14b8a6);
+    --flow-run: var(--color-amber-500, #f59e0b);
+    --flow-err: var(--color-red-500, #ef4444);
+    --flow-idle: color-mix(in oklab, var(--color-fg) 24%, transparent);
+    --flow-line: color-mix(in oklab, var(--color-fg) 26%, transparent);
+    --flow-dot: color-mix(in oklch, var(--color-fg) 13%, transparent);
+    --flow-mono: ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, monospace;
+}
+
+.dark .flow.flow-t-signal {
+    --flow-ok: var(--color-teal-400, #2dd4bf);
+    --flow-run: var(--color-amber-400, #fbbf24);
+    --flow-err: var(--color-red-400, #f87171);
+}
+
+.flow.flow-t-signal .flow-canvas.dots {
+    background-size: 20px 20px;
+}
+
+/* Capsules: icon in a round well, name and detail inside, light on the right */
+.flow-t-signal .flow-node[data-shape="node"] .flow-card,
+.flow-t-signal .flow-node[data-shape="trigger"] .flow-card {
+    justify-content: flex-start;
+    gap: 0.6rem;
+    padding: 0 0.85rem 0 0.375rem;
+    border-radius: 999px;
+}
+
+.flow-t-signal .flow-node[data-shape="node"] .flow-icon,
+.flow-t-signal .flow-node[data-shape="trigger"] .flow-icon,
+.flow-t-signal .flow-node[data-shape="agent"] .flow-icon {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 999px;
+    font-size: 0.95rem;
+    background: color-mix(in oklab, var(--flow-accent) 14%, transparent);
+}
+
+.flow-t-signal .flow-node[data-shape="agent"] .flow-icon {
+    border-radius: 0.625rem;
+}
+
+/* A trigger's well is filled: where the flow starts */
+.flow-t-signal .flow-node[data-shape="trigger"] .flow-icon {
+    color: #fff;
+    background: var(--flow-accent);
+}
+
+.flow-t-signal .flow-node[data-shape="node"] .flow-glyph svg,
+.flow-t-signal .flow-node[data-shape="trigger"] .flow-glyph svg,
+.flow-t-signal .flow-node[data-shape="agent"] .flow-glyph svg {
+    width: 58%;
+    height: 58%;
+}
+
+.flow-t-signal .flow-node[data-shape="sub"] .flow-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    font-size: 0.9rem;
+}
+
+.flow-t-signal .flow-bolt,
+.flow-t-signal .flow-badge {
+    display: none;
+}
+
+.flow-t-signal .flow-title {
+    font-size: 0.78rem;
+}
+
+.flow-t-signal .flow-meta .flow-sub {
+    font-family: var(--flow-mono);
+    font-size: 0.66rem;
+}
+
+.flow-t-signal .flow-node[data-shape="agent"] .flow-card {
+    align-items: flex-start;
+    gap: 0.6rem;
+    padding: 0.75rem 0.85rem 0 0.75rem;
+    border-radius: 1.125rem;
+}
+
+/* Status light */
+.flow-t-signal .flow-led {
+    display: block;
+    flex: none;
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: var(--flow-idle);
+}
+
+.flow-t-signal .flow-node[data-shape="agent"] .flow-led {
+    margin-top: 0.75rem;
+}
+
+.flow-t-signal .flow-node[data-status="success"] .flow-led {
+    background: var(--flow-ok);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--flow-ok) 18%, transparent);
+}
+
+.flow-t-signal .flow-node[data-status="error"] .flow-led {
+    background: var(--flow-err);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--flow-err) 18%, transparent);
+}
+
+.flow-t-signal .flow-node[data-status="running"] .flow-led {
+    background: var(--flow-run);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--flow-run) 20%, transparent);
+    animation: flow-led-pulse 1s ease-in-out infinite;
+}
+
+.flow-t-signal .flow-node[data-status="waiting"] .flow-led {
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--flow-run) 16%, transparent);
+}
+
+/* The light tells the state; the corner marks are classic's */
+.flow.flow-t-signal .flow-node .flow-mark {
+    display: none;
+}
+
+.flow.flow-t-signal .flow-node[data-status="success"]:not(.is-on) .flow-card {
+    border-color: var(--flow-card-border);
+}
+
+.flow.flow-t-signal .flow-node[data-status="error"]:not(.is-on) .flow-card {
+    border-color: color-mix(in oklab, var(--flow-err) 45%, var(--flow-card-border));
+    box-shadow: var(--flow-shadow);
+}
+
+.flow.flow-t-signal .flow-node[data-status="running"]:not(.is-on) .flow-card {
+    border-color: var(--flow-run);
+    box-shadow:
+        0 0 0 4px color-mix(in oklab, var(--flow-run) 14%, transparent),
+        var(--flow-shadow);
+    animation: none;
+}
+
+.flow-t-signal .flow-node.is-on .flow-card,
+.flow-t-signal .flow-node.is-from .flow-card {
+    border-color: var(--flow-ok);
+    box-shadow:
+        0 0 0 3px color-mix(in oklab, var(--flow-ok) 18%, transparent),
+        var(--flow-shadow-hover);
+}
+
+.flow-t-signal .flow-node.is-disabled .flow-card {
+    filter: none;
+    opacity: 0.5;
+    border-style: dashed;
+}
+
+/* Sticky note: dashed outline, monospaced title */
+.flow-t-signal .flow-node[data-shape="note"] .flow-card {
+    border: 1px dashed color-mix(in oklab, var(--color-fg) 24%, transparent);
+    border-radius: 0.75rem;
+    background: color-mix(in oklab, var(--flow-note) 7%, var(--flow-card));
+}
+
+.flow-t-signal .flow-note-title {
+    font-family: var(--flow-mono);
+    font-size: 0.66rem;
+    font-weight: 500;
+    color: color-mix(in oklab, var(--flow-note) 75%, var(--color-fg));
+}
+
+.flow-t-signal .flow-note-title::before {
+    content: '// ';
+}
+
+/* Ports: small rings, always visible */
+.flow-t-signal .flow-port:not(.is-top):not(.is-bottom) {
+    width: 9px;
+    height: 9px;
+    opacity: 1;
+    border-color: var(--flow-idle);
+    background: var(--flow-canvas);
+}
+
+.flow-t-signal .flow-port.in:not(.is-bottom) {
+    left: -5px;
+}
+
+.flow-t-signal .flow-port.out:not(.is-top) {
+    right: -5px;
+}
+
+.flow-t-signal .flow-port-plus {
+    display: none;
+}
+
+/* Traces: no arrowheads, state in colour, data dots while running */
+.flow-t-signal .flow-edge {
+    stroke-width: 1.6;
+    marker-end: none;
+}
+
+.flow-t-signal .flow-edge.is-run {
+    stroke: var(--flow-ok);
+    stroke-dasharray: none;
+    animation: none;
+}
+
+.flow-t-signal .flow-edge.is-success {
+    stroke: var(--flow-ok);
+}
+
+.flow-t-signal .flow-edge.is-error {
+    stroke: var(--flow-err);
+    stroke-dasharray: 4 3;
+}
+
+.flow-t-signal .flow-edge.is-running {
+    stroke: var(--flow-ok);
+}
+
+.flow-t-signal .flow-edge.is-on,
+.flow-t-signal .flow-edge-hit:hover + .flow-edge {
+    stroke: var(--flow-line-active);
+}
+
+.flow-particle {
+    fill: var(--flow-ok, var(--color-primary-500));
+    filter: drop-shadow(0 0 3px var(--flow-ok, var(--color-primary-500)));
+    pointer-events: none;
+}
+
+.flow-t-signal .flow-edge-label text {
+    font-family: var(--flow-mono);
+    fill: var(--flow-ok);
+}
+
+.flow-t-signal .flow-edge-label rect {
+    fill: var(--flow-card);
+    stroke: color-mix(in oklab, var(--flow-ok) 40%, transparent);
+}
+
+.flow-t-signal .flow-edge-label.is-error text {
+    fill: var(--flow-err);
+}
+
+.flow-t-signal .flow-edge-label.is-error rect {
+    stroke: color-mix(in oklab, var(--flow-err) 45%, transparent);
+}
+
+.flow-t-signal .flow-edge-label:not(.is-success):not(.is-error) text {
+    fill: var(--flow-muted);
+}
+
+.flow-t-signal .flow-edge-label:not(.is-success):not(.is-error) rect {
+    stroke: var(--flow-card-border);
+}
+
+@keyframes flow-led-pulse {
+    50% { opacity: 0.35; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .flow-t-signal .flow-led {
+        animation: none;
+    }
 }

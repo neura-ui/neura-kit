@@ -6,11 +6,14 @@ use Illuminate\Support\Facades\Config;
 use Neura\Kit\Packs\Alert;
 use Neura\Kit\Packs\Avatar;
 use Neura\Kit\Packs\Badge;
+use Neura\Kit\Packs\Breadcrumbs;
 use Neura\Kit\Packs\Button;
 use Neura\Kit\Packs\Dropzone;
 use Neura\Kit\Packs\EventCalendar;
 use Neura\Kit\Packs\FileManager;
 use Neura\Kit\Packs\Filters;
+use Neura\Kit\Packs\Flow;
+use Neura\Kit\Packs\HoverCard;
 use Neura\Kit\Packs\RuleBuilder;
 use Neura\Kit\Packs\Icon;
 use Neura\Kit\Packs\IconStack;
@@ -20,10 +23,14 @@ use Neura\Kit\Packs\Link;
 use Neura\Kit\Packs\Map;
 use Neura\Kit\Packs\Navlist;
 use Neura\Kit\Packs\Orb;
+use Neura\Kit\Packs\Rating;
+use Neura\Kit\Packs\Recurrence;
 use Neura\Kit\Packs\Navbar;
 use Neura\Kit\Packs\Rounded;
 use Neura\Kit\Packs\Shadow;
+use Neura\Kit\Packs\Slider;
 use Neura\Kit\Packs\Tabs;
+use Neura\Kit\Packs\TimeGrid;
 use Neura\Kit\Packs\TimePicker;
 use Neura\Kit\Packs\Wizard;
 
@@ -543,6 +550,102 @@ class PackResolver
     {
         $size = $size ?: self::componentDefault('time-picker', 'size') ?: 'md';
         $sizes = self::packAll('time-picker', 'sizes') ?: TimePicker\Size::all();
+
+        return $sizes[$size] ?? $sizes['md'];
+    }
+
+    /** Looks of the flow: name => class, connection drawing and shape sizes. */
+    public static function flowThemes(): array
+    {
+        return self::packAll('flow', 'themes') ?: Flow\Theme::all();
+    }
+
+    /** A known theme, else the configured default, else `classic`. */
+    public static function flowTheme(?string $theme): string
+    {
+        $themes = self::flowThemes();
+        $default = self::componentDefault('flow', 'theme');
+        $default = is_string($default) && isset($themes[$default]) ? $default : 'classic';
+
+        return $theme !== null && isset($themes[$theme]) ? $theme : $default;
+    }
+
+    /** Node shapes of the flow and their default sizes. */
+    public static function flowShapes(): array
+    {
+        return self::packAll('flow', 'shapes') ?: Flow\Shape::all();
+    }
+
+    /** Card styles of the flow: name => class on the node. */
+    public static function flowVariants(): array
+    {
+        return self::packAll('flow', 'variants') ?: Flow\Variant::all();
+    }
+
+    /** A known shape, else the configured default, else `card`. */
+    public static function flowShape(?string $shape): string
+    {
+        $shapes = self::flowShapes();
+        $default = self::componentDefault('flow', 'shape');
+        $default = is_string($default) && isset($shapes[$default]) ? $default : 'card';
+
+        return $shape !== null && isset($shapes[$shape]) ? $shape : $default;
+    }
+
+    /** A known card style, else the configured default, else `elevated`. */
+    public static function flowVariant(?string $variant): string
+    {
+        $variants = self::flowVariants();
+        $default = self::componentDefault('flow', 'variant');
+        $default = is_string($default) && isset($variants[$default]) ? $default : 'elevated';
+
+        return $variant !== null && isset($variants[$variant]) ? $variant : $default;
+    }
+
+    public static function timeGridSize(?string $size): array
+    {
+        $size = $size ?: self::componentDefault('time-grid', 'size') ?: 'md';
+        $sizes = self::packAll('time-grid', 'sizes') ?: TimeGrid\Size::all();
+
+        return $sizes[$size] ?? $sizes['md'];
+    }
+
+    public static function breadcrumbsSize(?string $size): array
+    {
+        $size = $size ?: self::componentDefault('breadcrumbs', 'size') ?: 'md';
+        $sizes = self::packAll('breadcrumbs', 'sizes') ?: Breadcrumbs\Size::all();
+
+        return $sizes[$size] ?? $sizes['md'];
+    }
+
+    public static function sliderSize(?string $size): array
+    {
+        $size = $size ?: self::componentDefault('slider', 'size') ?: 'md';
+        $sizes = self::packAll('slider', 'sizes') ?: Slider\Size::all();
+
+        return $sizes[$size] ?? $sizes['md'];
+    }
+
+    public static function ratingSize(?string $size): array
+    {
+        $size = $size ?: self::componentDefault('rating', 'size') ?: 'md';
+        $sizes = self::packAll('rating', 'sizes') ?: Rating\Size::all();
+
+        return $sizes[$size] ?? $sizes['md'];
+    }
+
+    public static function hoverCardSize(?string $size): array
+    {
+        $size = $size ?: self::componentDefault('hover-card', 'size') ?: 'md';
+        $sizes = self::packAll('hover-card', 'sizes') ?: HoverCard\Size::all();
+
+        return $sizes[$size] ?? $sizes['md'];
+    }
+
+    public static function recurrenceSize(?string $size): array
+    {
+        $size = $size ?: self::componentDefault('recurrence', 'size') ?: 'md';
+        $sizes = self::packAll('recurrence', 'sizes') ?: Recurrence\Size::all();
 
         return $sizes[$size] ?? $sizes['md'];
     }

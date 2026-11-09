@@ -19,6 +19,8 @@ import {
 } from './dom';
 import { toggleMark } from './marks';
 import * as blocks from './blocks';
+import * as images from './images';
+import * as review from './review';
 import { blockId, currentRange, setCaret } from './selection';
 import { sanitizeHtml, textToFragment, isSafeUrl } from './sanitize';
 import type { BlockName } from './schema';
@@ -31,6 +33,11 @@ export interface InputContext {
   promptLink(): void;
   undo(): void;
   redo(): void;
+  /**
+   * In Suggesting mode, who is suggesting: a new paragraph or two joined
+   * become suggestions instead of happening at once.
+   */
+  suggesting?: { author: string } | null;
 }
 
 /** The leaf block before `block` in document order, across page hosts. */
@@ -103,6 +110,11 @@ function splitBlockAtCaret(root: HTMLElement, range: Range): HTMLElement | null 
   const next = block.cloneNode(false) as HTMLElement;
   next.removeAttribute('data-nk-id');
   next.removeAttribute('data-nk-part');
+  // A suggested join or new paragraph belongs to where the block started, not to its new half.
+  next.removeAttribute('data-suggest-join');
+  next.removeAttribute('data-suggest-split');
+  // A new checklist item starts unticked.
+  if (next.hasAttribute('data-checked')) next.setAttribute('data-checked', 'false');
   next.appendChild(rest);
 
   if (!next.textContent?.length && !next.querySelector('img, br')) {
@@ -127,6 +139,12 @@ function splitBlockAtCaret(root: HTMLElement, range: Range): HTMLElement | null 
   return next;
 }
 
+/** A new paragraph at the caret, as Enter makes one (voice typing's "new paragraph"). */
+export function breakParagraph(root: HTMLElement, range: Range): void {
+  const next = splitBlockAtCaret(root, range);
+  if (next) setCaret(root, next, 0);
+}
+
 /** Enter: split the block, or lift out of an empty list item. */
 function handleEnter(context: InputContext, range: Range): boolean {
   const { root } = context;
@@ -138,6 +156,22 @@ function handleEnter(context: InputContext, range: Range): boolean {
     range.collapse(true);
   }
 
+  // A cell is one block of its own: Enter starts a new line in it rather than
+  // splitting it into two cells side by side.
+  if (tag(block) === 'td' || tag(block) === 'th') {
+    insertLineBreak(range);
+    context.changed();
+    return true;
+  }
+
+  // Enter in a caption, or beside an image, starts a paragraph below the figure.
+  const figure = block.closest('figure');
+  if (figure && figure.querySelector('img')) {
+    setCaret(root, images.paragraphAfter(figure as HTMLElement), 0);
+    context.changed();
+    return true;
+  }
+
   // Enter on an empty list item leaves the list instead of adding a bullet.
   if (tag(block) === 'li' && isEmptyBlock(block)) {
     blocks.outdent(root, range);
@@ -147,10 +181,30 @@ function handleEnter(context: InputContext, range: Range): boolean {
 
   const next = splitBlockAtCaret(root, range);
   if (!next) return false;
+  if (context.suggesting) review.suggestSplit(next, context.suggesting.author);
 
   setCaret(root, next, 0);
   context.changed();
   return true;
+}
+
+/** A `<br>` at the caret, with the second one a line needs when it ends the block. */
+export function insertLineBreak(range: Range): void {
+  const doc = range.startContainer.ownerDocument!;
+  const lineBreak = doc.createElement('br');
+  range.insertNode(lineBreak);
+
+  const block = lineBreak.parentElement;
+  let after = lineBreak.nextSibling;
+  while (after && after.nodeType === Node.TEXT_NODE && !after.nodeValue) after = after.nextSibling;
+  if (!after && block) block.appendChild(doc.createElement('br'));
+
+  const caret = doc.createRange();
+  caret.setStartAfter(lineBreak);
+  caret.collapse(true);
+  const selection = doc.defaultView?.getSelection();
+  selection?.removeAllRanges();
+  selection?.addRange(caret);
 }
 
 /** Backspace at the very start of a block merges it into the previous one. */
@@ -196,6 +250,12 @@ function handleBackspaceAtStart(context: InputContext, range: Range): boolean {
   // A rule, table or image sitting directly above is deleted rather than
   // merged into — there is nothing to merge text with.
   const sibling = block.previousElementSibling;
+  // At the top of a page a break started, Backspace takes the break away.
+  if (sibling && sibling.hasAttribute('data-nk-break')) {
+    sibling.remove();
+    context.changed();
+    return true;
+  }
   if (sibling && ['hr', 'table', 'figure'].includes(tag(sibling))) {
     removeBlock(sibling as HTMLElement);
     context.changed();
@@ -217,6 +277,14 @@ function handleBackspaceAtStart(context: InputContext, range: Range): boolean {
 
   if (tag(previous) === 'figure') {
     removeBlock(previous);
+    context.changed();
+    return true;
+  }
+
+  // Suggesting: the two paragraphs are marked to be joined, the caret goes up.
+  if (context.suggesting) {
+    const joined = review.suggestJoin(root, block, context.suggesting.author);
+    setCaret(root, previous, joined ? previousLength : (previous.textContent ?? '').length);
     context.changed();
     return true;
   }
@@ -251,6 +319,14 @@ function handleDeleteAtEnd(context: InputContext, range: Range): boolean {
 
   if (['hr', 'figure', 'table'].includes(tag(next))) {
     removeBlock(next);
+    context.changed();
+    return true;
+  }
+
+  // The next part of this very paragraph (a page cut it) is no paragraph to join.
+  if (context.suggesting && next.getAttribute('data-nk-id') !== block.getAttribute('data-nk-id')) {
+    review.suggestJoin(root, next, context.suggesting.author);
+    setCaret(root, block, offset);
     context.changed();
     return true;
   }
@@ -310,6 +386,8 @@ const AUTOFORMAT: Array<{ pattern: RegExp; apply: (root: HTMLElement, range: Ran
   { pattern: /^>$/, apply: (r, g) => blocks.setBlockType(r, g, 'blockquote') },
   { pattern: /^[-*+]$/, apply: (r, g) => blocks.toggleList(r, g, 'ul') },
   { pattern: /^1\.$/, apply: (r, g) => blocks.toggleList(r, g, 'ol') },
+  { pattern: /^\[\s?\]$/, apply: (r, g) => blocks.toggleChecklist(r, g) },
+  { pattern: /^\[[xX]\]$/, apply: (r, g) => blocks.toggleChecklist(r, g, true) },
 ];
 
 function tryAutoformat(context: InputContext, range: Range): boolean {
@@ -368,7 +446,12 @@ export function handleKeydown(event: KeyboardEvent, context: InputContext): bool
     }
     if (key === 'b' || key === 'i' || key === 'u') {
       event.preventDefault();
-      toggleMark(root, range, key === 'b' ? 'bold' : key === 'i' ? 'italic' : 'underline');
+      const mark = key === 'b' ? 'bold' : key === 'i' ? 'italic' : 'underline';
+      if (context.suggesting && !range.collapsed) {
+        review.suggestFormat(root, range, mark, false, () => toggleMark(root, range, mark), context.suggesting.author);
+      } else {
+        toggleMark(root, range, mark);
+      }
       context.changed();
       return true;
     }
@@ -385,7 +468,15 @@ export function handleKeydown(event: KeyboardEvent, context: InputContext): bool
     }
     if (event.altKey && HEADING_KEYS[event.key]) {
       event.preventDefault();
-      blocks.setBlockType(root, range, HEADING_KEYS[event.key]);
+      const apply = () => blocks.setBlockType(root, range, HEADING_KEYS[event.key]);
+      if (context.suggesting) review.suggestStyle(root, blocksInRange(range, root), apply, context.suggesting.author);
+      else apply();
+      context.changed();
+      return true;
+    }
+    if (event.shiftKey && (key === '9' || event.code === 'Digit9')) {
+      event.preventDefault();
+      blocks.toggleChecklist(root, range);
       context.changed();
       return true;
     }
@@ -419,8 +510,11 @@ export function handleKeydown(event: KeyboardEvent, context: InputContext): bool
       return true;
     }
 
-    if (event.shiftKey) blocks.outdent(root, range);
-    else blocks.indent(root, range);
+    const apply = () => (event.shiftKey ? blocks.outdent(root, range) : blocks.indent(root, range));
+    // A paragraph's indent is part of its look; list items change level, which applies at once.
+    const touched = blocksInRange(range, root);
+    if (context.suggesting && touched.every((block) => tag(block) !== 'li')) review.suggestStyle(root, touched, apply, context.suggesting.author);
+    else apply();
     context.changed();
     return true;
   }
@@ -495,6 +589,8 @@ export function handlePaste(event: ClipboardEvent, context: InputContext): void 
   }
 
   const fragment = html ? sanitizeHtml(html) : textToFragment(text);
+  // Comment threads stay with their own document.
+  fragment.querySelectorAll('aside[data-comments]').forEach((aside) => aside.remove());
   insertFragment(context, target, fragment);
 }
 

@@ -29,6 +29,12 @@ const FEATURE_CHUNKS: ReadonlyArray<{ name: string; match: (path: string) => boo
     match: (path) => path.includes('/shared/') || path.includes('/runtime/'),
   },
   {
+    // The date parser has no imports and serves both the date fields and the
+    // editor's "@" menu; on its own, the editor need not load the forms chunk.
+    name: 'neura-natural-date',
+    match: (path) => path.includes('/features/forms/natural-date/parse'),
+  },
+  {
     name: 'neura-editor',
     match: (path) => path.includes('/features/editor/'),
   },
@@ -45,7 +51,9 @@ const FEATURE_CHUNKS: ReadonlyArray<{ name: string; match: (path: string) => boo
     name: 'neura-overlays',
     match: (path) =>
       path.includes('/features/overlays/command') ||
-      path.includes('/features/overlays/context-menu'),
+      path.includes('/features/overlays/context-menu') ||
+      path.includes('/features/overlays/hover') ||
+      path.includes('/features/overlays/breadcrumbs'),
   },
   {
     name: 'neura-widgets',

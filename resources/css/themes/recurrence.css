@@ -1,0 +1,420 @@
+/*
+ * Recurrence editor, on the design tokens: the editor and its preview share one frame, side
+ * by side when the component is wide enough (a container query, so it adapts to a sidebar
+ * or a dialog as well as to the page) and stacked below that.
+ */
+.nk-recurrence {
+    container-type: inline-size;
+    min-width: 0;
+}
+
+.nk-recurrence-body {
+    display: grid;
+    overflow: hidden;
+    border: 1px solid var(--color-edge);
+    background: var(--color-surface-raised);
+    color: var(--color-fg);
+}
+
+.nk-recurrence-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-width: 0;
+    padding: 1.25rem;
+}
+
+.nk-recurrence-aside {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    min-width: 0;
+    padding: 1.25rem;
+    border-top: 1px solid var(--color-edge);
+    background: var(--color-surface-inset);
+}
+
+@container (min-width: 46rem) {
+    .nk-recurrence-body.has-aside {
+        grid-template-columns: minmax(0, 1fr) minmax(15rem, 18rem);
+    }
+
+    .nk-recurrence-aside {
+        border-top: 0;
+        border-left: 1px solid var(--color-edge);
+    }
+}
+
+.nk-recurrence-natural {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.nk-recurrence-search {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 0.75rem;
+    border-width: 1px;
+    border-style: solid;
+    background: var(--color-surface);
+    cursor: text;
+    transition:
+        border-color var(--nk-duration-fast) var(--nk-ease-standard),
+        box-shadow var(--nk-duration-fast) var(--nk-ease-standard);
+}
+
+.nk-recurrence-search:focus-within {
+    border-color: var(--color-primary-500);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-primary-500) 22%, transparent);
+}
+
+.nk-recurrence-search-icon {
+    width: 1em;
+    height: 1em;
+    flex: none;
+    color: var(--color-fg-muted);
+}
+
+.nk-recurrence-search input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    outline: none;
+}
+
+.nk-recurrence-search input::placeholder {
+    color: var(--color-fg-muted);
+}
+
+.nk-recurrence-hint {
+    min-height: 1.75rem;
+}
+
+.nk-recurrence-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+}
+
+.nk-recurrence-chip {
+    padding: 0.25rem 0.625rem;
+    border: 1px solid var(--color-edge);
+    background: var(--color-surface);
+    color: var(--color-fg-secondary);
+    font-size: 0.92em;
+    cursor: pointer;
+    transition:
+        background-color var(--nk-duration-fast) var(--nk-ease-standard),
+        color var(--nk-duration-fast) var(--nk-ease-standard);
+}
+
+.nk-recurrence-chip:hover {
+    background: var(--color-hover);
+    color: var(--color-fg);
+}
+
+.nk-recurrence-understood {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--color-fg-secondary);
+}
+
+.nk-recurrence-apply {
+    padding: 0.25rem 0.625rem;
+    font-size: 0.92em;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.nk-recurrence-unknown {
+    color: var(--color-fg-muted);
+}
+
+.nk-recurrence-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.nk-recurrence-row {
+    display: grid;
+    gap: 0.375rem;
+    align-items: center;
+}
+
+/* A label beside a stack of lines sits by the first one. */
+.nk-recurrence-row:has(> .nk-recurrence-options) {
+    align-items: start;
+}
+
+.nk-recurrence-row:has(> .nk-recurrence-options) > .nk-recurrence-label {
+    padding-top: 0.375em;
+}
+
+.nk-recurrence-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+@container (min-width: 30rem) {
+    .nk-recurrence-row {
+        grid-template-columns: 7.5rem minmax(0, 1fr);
+        gap: 0.75rem;
+    }
+}
+
+.nk-recurrence-label {
+    color: var(--color-fg-secondary);
+    font-weight: 500;
+}
+
+.nk-recurrence-muted {
+    color: var(--color-fg-muted);
+}
+
+.nk-recurrence-inline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.nk-recurrence-segmented {
+    display: inline-flex;
+    flex-wrap: wrap;
+    justify-self: start;
+    gap: 0.125rem;
+    padding: 0.1875rem;
+    background: var(--color-surface-inset);
+    box-shadow: inset 0 0 0 1px var(--color-edge);
+}
+
+.nk-recurrence-segmented > button {
+    padding: 0 0.75rem;
+    border: 0;
+    background: transparent;
+    color: var(--color-fg-muted);
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+        background-color var(--nk-duration-fast) var(--nk-ease-standard),
+        color var(--nk-duration-fast) var(--nk-ease-standard);
+}
+
+/* The inner segments sit inside the track's padding, so they round a little less. */
+.nk-recurrence-segmented > button {
+    border-radius: max(0px, calc(var(--nk-recurrence-radius, 0.5rem) - 0.1875rem));
+}
+
+.nk-recurrence-segmented > button:hover {
+    color: var(--color-fg);
+}
+
+.nk-recurrence-segmented > button[aria-pressed='true'] {
+    background: var(--color-surface-raised);
+    color: var(--color-fg);
+    box-shadow: 0 1px 2px color-mix(in oklab, var(--color-fg) 14%, transparent);
+}
+
+.nk-recurrence-stepper {
+    display: inline-flex;
+    align-items: stretch;
+    overflow: hidden;
+    border-width: 1px;
+    border-style: solid;
+    background: var(--color-surface);
+}
+
+.nk-recurrence-stepper > button {
+    width: 2em;
+    border: 0;
+    background: transparent;
+    color: var(--color-fg-secondary);
+    font-size: 1.1em;
+    cursor: pointer;
+}
+
+.nk-recurrence-stepper > button:hover:not(:disabled) {
+    background: var(--color-hover);
+    color: var(--color-fg);
+}
+
+.nk-recurrence-stepper > button:disabled {
+    color: var(--color-fg-disabled, var(--color-fg-muted));
+    cursor: default;
+}
+
+.nk-recurrence-stepper > span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.25em;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.nk-recurrence-days {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+}
+
+/* The selected look is the kit's selection classes, bound by the script; only the rest is drawn here. */
+.nk-recurrence-day,
+.nk-recurrence-pill {
+    border: 1px solid var(--color-edge);
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        background-color var(--nk-duration-fast) var(--nk-ease-standard),
+        border-color var(--nk-duration-fast) var(--nk-ease-standard),
+        color var(--nk-duration-fast) var(--nk-ease-standard);
+}
+
+.nk-recurrence-day {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.nk-recurrence-pill {
+    min-width: 4.5rem;
+    padding: 0 0.75rem;
+    font-weight: 500;
+}
+
+.nk-recurrence-day:not([aria-pressed='true']),
+.nk-recurrence-pill:not([aria-pressed='true']) {
+    background: var(--color-surface);
+    color: var(--color-fg-secondary);
+}
+
+.nk-recurrence-day:not([aria-pressed='true']):hover,
+.nk-recurrence-pill:not([aria-pressed='true']):hover {
+    background: var(--color-hover);
+    color: var(--color-fg);
+}
+
+.nk-recurrence-day[aria-pressed='true'],
+.nk-recurrence-pill[aria-pressed='true'] {
+    border-color: transparent;
+}
+
+.nk-recurrence-day:focus-visible,
+.nk-recurrence-pill:focus-visible,
+.nk-recurrence-segmented > button:focus-visible,
+.nk-recurrence-stepper > button:focus-visible,
+.nk-recurrence-chip:focus-visible,
+.nk-recurrence-apply:focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
+}
+
+.nk-recurrence-select {
+    max-width: 100%;
+    padding: 0 1.75rem 0 0.625rem;
+    border-width: 1px;
+    border-style: solid;
+    background-color: var(--color-surface);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23737373' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.5 6.5 8 10l3.5-3.5'/%3E%3C/svg%3E");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 0.875rem;
+    color: var(--color-fg);
+    appearance: none;
+    cursor: pointer;
+}
+
+.nk-recurrence-picker {
+    min-width: 0;
+    max-width: 12rem;
+}
+
+.nk-recurrence-until {
+    width: 12rem;
+}
+
+.nk-recurrence-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.nk-recurrence-caption {
+    color: var(--color-fg-muted);
+    font-size: 0.78em;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.nk-recurrence-summary {
+    font-size: 1.07em;
+    font-weight: 600;
+    line-height: 1.45;
+    text-wrap: pretty;
+}
+
+.nk-recurrence-dates {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.nk-recurrence-dates > li {
+    display: grid;
+    grid-template-columns: 3em minmax(0, 1fr) auto;
+    gap: 0.5rem;
+    align-items: baseline;
+    padding: 0.4375rem 0;
+    border-top: 1px solid var(--color-edge);
+}
+
+.nk-recurrence-dates > li:first-child {
+    border-top: 0;
+}
+
+.nk-recurrence-weekday {
+    color: var(--color-fg-muted);
+    font-size: 0.85em;
+    text-transform: capitalize;
+}
+
+.nk-recurrence-time {
+    color: var(--color-fg-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.nk-recurrence-code {
+    display: block;
+    padding: 0.5rem 0.625rem;
+    overflow-wrap: anywhere;
+    border-radius: 0.375rem;
+    background: var(--color-surface);
+    box-shadow: inset 0 0 0 1px var(--color-edge);
+    font: 0.8em/1.5 var(--font-mono, ui-monospace, monospace);
+}
+
+.nk-recurrence[data-disabled] .nk-recurrence-body {
+    opacity: 0.6;
+}
+
+/* Set on the root, which Livewire still morphs, so a validation error shows and clears. */
+.nk-recurrence[data-invalid] .nk-recurrence-body {
+    border-color: var(--color-danger-500);
+}

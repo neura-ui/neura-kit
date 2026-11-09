@@ -14,6 +14,8 @@
     'hourCycle' => null,
     'minuteStep' => 5,
     'defaultTime' => null,
+    'natural' => null,
+    'naturalPlaceholder' => null,
 ])
 
 @php
@@ -256,6 +258,9 @@
                 :disabled-dates="$disabledDates"
                 :locale="$locale"
                 :first-day-of-week="$firstDayOfWeek"
+                :natural="$natural"
+                :natural-placeholder="$naturalPlaceholder"
+                :natural-time="true"
                 @date-selected="onDatePicked($event.detail.date)"
                 @time-selected="onTimePicked($event.detail.time)"
             >
@@ -280,6 +285,8 @@
                 :first-day-of-week="$firstDayOfWeek"
                 :multiple="$multiple"
                 :range="$range"
+                :natural="$natural"
+                :natural-placeholder="$naturalPlaceholder"
                 @date-selected="if(!range && !multiple) hide()"
             />
         @endif

@@ -7,6 +7,9 @@
  * block's text. That survives the block being re-parented, and — because a
  * block split across a page boundary keeps its id on every part — it survives
  * the block being cut in half too.
+ *
+ * Text offsets cannot tell the two sides of a line break apart, so a point
+ * also counts the `<br>`s between the last text before it and itself.
  */
 
 import { isText, isVoid } from './dom';
@@ -15,6 +18,8 @@ export interface CaretPoint {
   blockId: string;
   /** Character offset within the block's text, counting every part. */
   offset: number;
+  /** Line breaks between the text at `offset` and the caret. */
+  breaks?: number;
 }
 
 export interface SavedSelection {
@@ -37,9 +42,15 @@ export function blockId(block: HTMLElement): string {
   return id;
 }
 
-/** Give every top-level block under each page host an id. */
+/**
+ * Give every block a caret can sit in an id: the top-level blocks under each
+ * page host, and the leaves inside lists, tables and figures. Without one, a
+ * caret in a cell would be kept relative to the whole table.
+ */
 export function assignIds(root: HTMLElement): void {
-  root.querySelectorAll<HTMLElement>('[data-nk-content] > *').forEach(blockId);
+  root
+    .querySelectorAll<HTMLElement>('[data-nk-content] > *, [data-nk-content] :is(li, td, th, figcaption)')
+    .forEach(blockId);
 }
 
 /**
@@ -113,11 +124,67 @@ function toPoint(root: HTMLElement, container: Node, offset: number): CaretPoint
   let preceding = 0;
   for (let i = 0; i < index; i += 1) preceding += parts[i].textContent?.length ?? 0;
 
-  return { blockId: id, offset: preceding + offsetInBlock(owner, container, offset) };
+  const point: CaretPoint = { blockId: id, offset: preceding + offsetInBlock(owner, container, offset) };
+  const breaks = breaksBefore(owner, container, offset);
+  if (breaks) point.breaks = breaks;
+  return point;
+}
+
+const isBreak = (node: Node): boolean => node.nodeType === Node.ELEMENT_NODE && (node as Element).tagName === 'BR';
+
+/** The `<br>`s between the last text before (container, offset) and that point. */
+function breaksBefore(block: HTMLElement, container: Node, offset: number): number {
+  const doc = block.ownerDocument!;
+  const caret = doc.createRange();
+  try {
+    caret.setStart(container, offset);
+  } catch {
+    return 0;
+  }
+
+  const walker = doc.createTreeWalker(block, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT);
+  let count = 0;
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    if (node === container) {
+      if (isText(node) && offset > 0) count = 0;
+      break;
+    }
+    if (caret.comparePoint(node, 0) >= 0) break;
+    if (isText(node) && node.nodeValue) count = 0;
+    else if (isBreak(node)) count += 1;
+  }
+  return count;
+}
+
+/** Step forward from a resolved point over `count` line breaks, stopping at any text. */
+function skipBreaks(part: HTMLElement, point: { node: Node; offset: number }, count: number): { node: Node; offset: number } {
+  const doc = part.ownerDocument!;
+  const start = doc.createRange();
+  start.setStart(point.node, point.offset);
+
+  const walker = doc.createTreeWalker(part, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT);
+  let result = point;
+  let left = count;
+  for (let node = walker.nextNode(); node && left > 0; node = walker.nextNode()) {
+    if (node === point.node || start.comparePoint(node, 0) < 0) continue;
+    if (isText(node) && node.nodeValue) break;
+    if (isBreak(node) && node.parentNode) {
+      result = { node: node.parentNode, offset: Array.from(node.parentNode.childNodes).indexOf(node as ChildNode) + 1 };
+      left -= 1;
+    }
+  }
+  return result;
 }
 
 /** Resolve a logical caret point back to a concrete DOM position. */
 function toDom(root: HTMLElement, point: CaretPoint): { node: Node; offset: number } | null {
+  const found = toText(root, point);
+  if (!found || !point.breaks) return found?.position ?? null;
+  return skipBreaks(found.part, found.position, point.breaks);
+}
+
+/** The DOM position of a point's text offset, and the part it is in. */
+function toText(root: HTMLElement, point: CaretPoint): { part: HTMLElement; position: { node: Node; offset: number } } | null {
   const parts = blockParts(root, point.blockId);
   if (parts.length === 0) return null;
 
@@ -137,7 +204,7 @@ function toDom(root: HTMLElement, point: CaretPoint): { node: Node; offset: numb
       while (node) {
         const size = node.nodeValue?.length ?? 0;
         if (seen + size >= remaining) {
-          return { node, offset: Math.max(0, Math.min(size, remaining - seen)) };
+          return { part, position: { node, offset: Math.max(0, Math.min(size, remaining - seen)) } };
         }
         seen += size;
         node = walker.nextNode();
@@ -146,9 +213,9 @@ function toDom(root: HTMLElement, point: CaretPoint): { node: Node; offset: numb
       // No text at all (an empty block, or one holding only a `<br>`).
       const voidChild = Array.from(part.childNodes).find(isVoid);
       if (voidChild) {
-        return { node: part, offset: Array.from(part.childNodes).indexOf(voidChild) };
+        return { part, position: { node: part, offset: Array.from(part.childNodes).indexOf(voidChild) } };
       }
-      return { node: part, offset: 0 };
+      return { part, position: { node: part, offset: 0 } };
     }
 
     remaining -= length;

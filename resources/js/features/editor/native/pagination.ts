@@ -17,7 +17,8 @@
  */
 
 import { isEmptyBlock, isVoid, tag } from './dom';
-import { blockId, PART_ATTR, save as saveSelection, restore as restoreSelection } from './selection';
+import { assignIds, blockId, PART_ATTR, save as saveSelection, restore as restoreSelection } from './selection';
+import { joinTableParts, splitTable } from './tables';
 
 export type PageSize = 'a4' | 'letter' | 'legal';
 export type Orientation = 'portrait' | 'landscape';
@@ -43,6 +44,8 @@ export interface PageOptions {
   size: PageSize;
   orientation: Orientation;
   margins: Margins;
+  /** Text columns on each page, 1 to 3. */
+  columns?: number;
 }
 
 /** Blocks that can be cut mid-way across a page boundary. */
@@ -83,6 +86,13 @@ export class PageFlow {
   /** Shape of the document as of the last completed reflow. */
   private settledSignature = '';
 
+  /**
+   * Lays out what sits at the foot of a page (its footnotes) and sizes the
+   * body to what is left. Called before a page is measured, and again whenever
+   * a block that may change it comes or goes.
+   */
+  layoutFoot: ((page: HTMLElement, body: HTMLElement) => void) | null = null;
+
   constructor(
     /** The contenteditable region holding every page. */
     private readonly root: HTMLElement,
@@ -113,6 +123,11 @@ export class PageFlow {
     return { width: width - left - right, height: height - top - bottom };
   }
 
+  /** How many columns the text flows in on each page. */
+  get columns(): number {
+    return Math.max(1, Math.min(3, Math.round(this.options.columns ?? 1)));
+  }
+
   setOptions(options: Partial<PageOptions>): void {
     this.options = { ...this.options, ...options };
     this.applyGeometry();
@@ -134,6 +149,10 @@ export class PageFlow {
     style.setProperty('--nk-margin-right', `${right}px`);
     style.setProperty('--nk-margin-bottom', `${bottom}px`);
     style.setProperty('--nk-margin-left', `${left}px`);
+    style.setProperty('--nk-columns', String(this.columns));
+    // Only a page in columns is a multi-column box: one column would send
+    // what does not fit off to the right instead of below.
+    this.root.toggleAttribute('data-nk-columns', this.columns > 1);
   }
 
   /** Schedule a reflow on the next frame, collapsing bursts into one pass. */
@@ -185,7 +204,9 @@ export class PageFlow {
       // to settle must degrade into a wrong-looking page count, never into a
       // frozen tab.
       while (index < this.pages.length && index < MAX_PAGES) {
+        this.fitFoot(index);
         this.pushOverflow(index);
+        this.fitFoot(index);
         this.pullBack(index);
         index += 1;
         this.stats.pagesVisited = index;
@@ -218,6 +239,19 @@ export class PageFlow {
     return this.reflowing;
   }
 
+  /** Whether a break marker may start page `number`: odd breaks on odd pages, even on even. */
+  private fitsParity(marker: HTMLElement, number: number): boolean {
+    const kind = marker.getAttribute('data-nk-break');
+    if (kind === 'odd') return number % 2 === 1;
+    if (kind === 'even') return number % 2 === 0;
+    return true;
+  }
+
+  private fitFoot(index: number): void {
+    const page = this.pages[index];
+    if (page && this.layoutFoot) this.layoutFoot(page, this.bodyOf(page));
+  }
+
   private bodyOf(page: HTMLElement): HTMLElement {
     return page.querySelector<HTMLElement>('[data-nk-content]') ?? page;
   }
@@ -233,7 +267,86 @@ export class PageFlow {
    */
   private overflows(body: HTMLElement): boolean {
     if (body.clientHeight === 0) return false;
-    return this.contentBottom(body) > body.clientHeight + SLACK;
+    if (this.columns === 1) return this.contentBottom(body) > this.visibleHeight(body) + SLACK;
+    const last = body.lastElementChild as HTMLElement | null;
+    return Boolean(last) && this.outside(this.endRect(last!), body.getBoundingClientRect());
+  }
+
+  /*
+   * In columns, text that does not fit runs on into further columns, past the
+   * body's right edge where it is clipped: "outside" is below the bottom or
+   * beyond the right edge. A block cut by a column has a box per column
+   * (`getClientRects`), its first and last say where it starts and ends.
+   */
+
+  /** Whether a box drawn at `rect` falls outside the page body `area`. */
+  private outside(rect: DOMRect, area: DOMRect): boolean {
+    return rect.bottom > area.bottom + SLACK || (this.columns > 1 && rect.left >= area.right - SLACK);
+  }
+
+  /** Where a block ends: its last box in columns, its whole box otherwise. */
+  private endRect(element: HTMLElement): DOMRect {
+    const rects = this.columns > 1 ? element.getClientRects() : null;
+    return rects && rects.length ? rects[rects.length - 1] : element.getBoundingClientRect();
+  }
+
+  /** Where a block starts. */
+  private startRect(element: HTMLElement): DOMRect {
+    const rects = this.columns > 1 ? element.getClientRects() : null;
+    return rects && rects.length ? rects[0] : element.getBoundingClientRect();
+  }
+
+  /** Whether a block starting at `rect` begins inside the body, with room for part of it. */
+  private startsInside(rect: DOMRect, area: DOMRect): boolean {
+    return rect.top < area.bottom - SLACK && !(this.columns > 1 && rect.left >= area.right - SLACK);
+  }
+
+  /**
+   * Whether `candidate`, needing `need` drawn pixels, fits after what the body
+   * holds. In columns the room is what is left of the column the text ends in
+   * plus the columns after it — less a line for each column change, which a
+   * paragraph may waste. Something that cannot be cut must fit in one column.
+   */
+  private roomFor(body: HTMLElement, candidate: HTMLElement, need: number): boolean {
+    if (this.columns === 1) {
+      const remaining = this.visibleHeight(body) - this.contentBottom(body);
+      return remaining > SLACK && need <= remaining;
+    }
+    const area = body.getBoundingClientRect();
+    const last = body.lastElementChild as HTMLElement | null;
+    const scale = this.scaleOf(body);
+    const view = this.root.ownerDocument!.defaultView!;
+    const gap = (parseFloat(view.getComputedStyle(body).columnGap) || 0) * scale;
+    const width = (area.width - gap * (this.columns - 1)) / this.columns;
+
+    let column = 0;
+    let here = area.height;
+    if (last) {
+      const end = this.endRect(last);
+      column = Math.max(0, Math.min(this.columns - 1, Math.floor((end.left - area.left + gap / 2) / (width + gap))));
+      here = Math.max(0, area.bottom - end.bottom);
+    }
+    const later = this.columns - 1 - column;
+    if (!SPLITTABLE.has(tag(candidate))) return need <= here || (later > 0 && need <= area.height);
+    const line = (parseFloat(view.getComputedStyle(candidate).lineHeight) || 20) * scale;
+    return need <= here + later * (area.height - line);
+  }
+
+  /**
+   * The body's height as drawn, in the same pixels as the rects measured
+   * against it.
+   *
+   * Under a zoom (fit-to-width shrinks the page on narrow screens) the rects
+   * are zoomed while `clientHeight` is not: comparing the two let a page fill
+   * past its bottom edge, where `overflow: hidden` clipped the text away.
+   */
+  private visibleHeight(body: HTMLElement): number {
+    return body.getBoundingClientRect().height;
+  }
+
+  /** Drawn pixels per CSS pixel inside the pages: the zoom. */
+  private scaleOf(body: HTMLElement): number {
+    return body.clientHeight ? this.visibleHeight(body) / body.clientHeight : 1;
   }
 
   /**
@@ -336,8 +449,12 @@ export class PageFlow {
         continue;
       }
 
-      while (part.firstChild) owner.appendChild(part.firstChild);
-      part.remove();
+      // A table's parts give back their rows, not the copy of the header.
+      if (tag(owner) === 'table') joinTableParts(owner, part);
+      else {
+        while (part.firstChild) owner.appendChild(part.firstChild);
+        part.remove();
+      }
     }
 
     for (const owner of owners.values()) {
@@ -353,9 +470,13 @@ export class PageFlow {
 
     const body = this.bodyOf(page);
 
-    // A manual break sends everything from the marker onwards to a new sheet.
-    const marker = body.querySelector<HTMLElement>(':scope > [data-nk-break]');
-    if (marker && marker !== body.firstElementChild) {
+    // A manual break sends everything from the marker onwards to a new sheet:
+    // the next one, or for an odd / even break the next one of that parity,
+    // leaving a blank sheet between when it has to.
+    const marker = Array.from(body.querySelectorAll<HTMLElement>(':scope > [data-nk-break]:not([data-nk-break="column"])')).find(
+      (candidate) => candidate !== body.firstElementChild || !this.fitsParity(candidate, index + 1)
+    );
+    if (marker) {
       const next = this.bodyOf(this.pageAfter(index));
       const moving: Element[] = [];
       let node: Element | null = marker;
@@ -377,20 +498,19 @@ export class PageFlow {
       const children = Array.from(body.children) as HTMLElement[];
       if (children.length === 0) break;
 
-      const limit = body.clientHeight;
-      const bodyTop = body.getBoundingClientRect().top;
+      const area = body.getBoundingClientRect();
 
-      // Find the first block that crosses the bottom edge. Every measurement
-      // happens before any node moves, so the whole page costs one layout —
-      // moving blocks one at a time and re-measuring after each was what made
-      // long documents blow the reflow budget and stop paginating half way.
+      // Find the first block that crosses the bottom edge (or, in columns,
+      // runs past the last one). Every measurement happens before any node
+      // moves, so the whole page costs one layout — moving blocks one at a
+      // time and re-measuring after each was what made long documents blow
+      // the reflow budget and stop paginating half way.
       let cut = -1;
-      let cutTop = 0;
+      let startsInside = false;
       for (let i = 0; i < children.length; i += 1) {
-        const rect = children[i].getBoundingClientRect();
-        if (rect.bottom - bodyTop > limit + SLACK) {
+        if (this.outside(this.endRect(children[i]), area)) {
           cut = i;
-          cutTop = rect.top - bodyTop;
+          startsInside = this.startsInside(this.startRect(children[i]), area);
           break;
         }
       }
@@ -413,7 +533,7 @@ export class PageFlow {
       // *bottom* edge — a paragraph taller than a whole page starts at offset
       // zero, and that is exactly the case that most needs splitting.
       const crossing = children[cut];
-      if (cutTop < limit - SLACK && this.splitBlock(crossing, body)) continue;
+      if (startsInside && this.splitBlock(crossing, body)) continue;
 
       // It could not be split (an image, a table, or it starts past the edge):
       // move it whole, unless it is the only thing here and would loop.
@@ -452,27 +572,75 @@ export class PageFlow {
       const candidate = nextBody.firstElementChild as HTMLElement | null;
       if (!candidate) return;
 
-      // A manual break must stay at the top of its page.
-      if (candidate.hasAttribute('data-nk-break')) return;
+      // A page break must stay at the top of its page; a column break may come back.
+      if (candidate.hasAttribute('data-nk-break') && candidate.getAttribute('data-nk-break') !== 'column') return;
 
       // A page that cannot be measured (hidden, not yet styled) must be left
       // alone rather than guessed at.
       if (body.clientHeight === 0) return;
 
-      const remaining = body.clientHeight - this.contentBottom(body);
-      if (remaining <= SLACK) return;
-      if (this.spaceNeededFor(candidate) > remaining) return;
+      if (!this.roomFor(body, candidate, this.spaceNeededFor(candidate, this.scaleOf(body)))) {
+        // In columns, a paragraph too long for what is left comes back anyway
+        // and is cut where the last column ends, rather than leaving that
+        // column short; the rest goes back to the next page.
+        if (this.columns > 1 && this.pullAndCut(body, candidate, nextBody)) continue;
+        return;
+      }
 
       body.appendChild(candidate);
       this.stats.pulls += 1;
+
+      // A block bringing footnotes along brings their room at the foot too.
+      const footChanges = Boolean(this.layoutFoot && candidate.querySelector('[data-footnote]'));
+      if (footChanges) this.fitFoot(index);
 
       // The estimate ignores margin collapsing, so confirm and undo if it was
       // optimistic. This should be rare; the pre-check carries the common case.
       if (this.overflows(body)) {
         nextBody.insertBefore(candidate, nextBody.firstChild);
+        if (footChanges) this.fitFoot(index);
         return;
       }
     }
+  }
+
+  /**
+   * Bring a paragraph back from the next page and cut it at the end of the
+   * last column, when there are at least a couple of lines' room there.
+   * True when part of it came back.
+   */
+  private pullAndCut(body: HTMLElement, candidate: HTMLElement, nextBody: HTMLElement): boolean {
+    // A paragraph bringing footnotes would change the room at the foot as well: left whole.
+    if (!SPLITTABLE.has(tag(candidate)) || candidate.querySelector('[data-footnote]')) return false;
+    const area = body.getBoundingClientRect();
+    const last = body.lastElementChild as HTMLElement | null;
+    const view = this.root.ownerDocument!.defaultView!;
+    const scale = this.scaleOf(body);
+    const line = (parseFloat(view.getComputedStyle(candidate).lineHeight) || 20) * scale;
+    const gap = (parseFloat(view.getComputedStyle(body).columnGap) || 0) * scale;
+    const width = (area.width - gap * (this.columns - 1)) / this.columns;
+    const end = last ? this.endRect(last) : null;
+    // Hardly a line left at the foot of the last column: nothing to fill.
+    if (end && end.left >= area.right - width - SLACK && area.bottom - end.bottom < line * 2.5) return false;
+
+    body.appendChild(candidate);
+    if (!this.overflows(body)) {
+      this.stats.pulls += 1;
+      return true;
+    }
+    if (this.splitBlock(candidate, body) && !this.overflows(body)) {
+      this.stats.pulls += 1;
+      return true;
+    }
+    // It could not be cut to fit: everything goes back as it was.
+    const continuation = nextBody.firstElementChild as HTMLElement | null;
+    if (continuation && candidate.getAttribute('data-nk-id') && continuation.getAttribute('data-nk-id') === candidate.getAttribute('data-nk-id')) {
+      while (continuation.firstChild) candidate.appendChild(continuation.firstChild);
+      continuation.remove();
+      candidate.normalize();
+    }
+    nextBody.insertBefore(candidate, nextBody.firstChild);
+    return false;
   }
 
   /**
@@ -489,7 +657,7 @@ export class PageFlow {
     const { width, height } = this.geometry;
     const { top, right, bottom, left } = this.options.margins;
 
-    return `${blocks}|${elements}|${chars}|${width}x${height}|${top},${right},${bottom},${left}|${this.root.clientWidth}`;
+    return `${blocks}|${elements}|${chars}|${width}x${height}|${top},${right},${bottom},${left}|${this.columns}|${this.root.clientWidth}`;
   }
 
   /** Force the next reflow to run even if the document looks unchanged. */
@@ -497,13 +665,14 @@ export class PageFlow {
     this.settledSignature = '';
   }
 
-  /** Vertical space a block would occupy, margins included. */
-  private spaceNeededFor(element: HTMLElement): number {
+  /** Vertical space a block would occupy, margins included, in drawn pixels. */
+  private spaceNeededFor(element: HTMLElement, scale = 1): number {
     const rect = element.getBoundingClientRect();
     const style = this.root.ownerDocument!.defaultView!.getComputedStyle(element);
     const top = parseFloat(style.marginTop) || 0;
     const bottom = parseFloat(style.marginBottom) || 0;
-    return rect.height + top + bottom;
+    // Computed margins are CSS pixels; the rect is already zoomed.
+    return rect.height + (top + bottom) * scale;
   }
 
   /**
@@ -515,6 +684,7 @@ export class PageFlow {
    * line already taller than the page).
    */
   private splitBlock(block: HTMLElement, body: HTMLElement): boolean {
+    if (tag(block) === 'table') return this.splitTableBlock(block, body);
     if (!SPLITTABLE.has(tag(block))) return false;
 
     const text = block.textContent ?? '';
@@ -524,9 +694,7 @@ export class PageFlow {
     // Measure against the rendered bottom edge, not `top + clientHeight`: under
     // a zoom the two are in different coordinate spaces, and `getClientRects`
     // below reports the zoomed one.
-    const limit = body.getBoundingClientRect().bottom;
-
-    const offset = this.findFitOffset(block, limit);
+    const offset = this.findFitOffset(block, body.getBoundingClientRect());
     if (offset <= 0 || offset >= text.length) return false;
 
     const point = this.resolveOffset(block, offset);
@@ -560,12 +728,29 @@ export class PageFlow {
   }
 
   /**
-   * Largest character offset whose line still ends above `limit`.
+   * Cut a table between two rows at the foot of the page; the rest goes on the
+   * next page under its header again. Measured on the drawn bottom edge, like
+   * paragraphs, so a zoom does not move the cut.
+   */
+  private splitTableBlock(table: HTMLElement, body: HTMLElement): boolean {
+    const area = body.getBoundingClientRect();
+    const part = splitTable(table, (row) => !this.outside(row.getBoundingClientRect(), area));
+    if (!part) return false;
+
+    const index = this.pages.indexOf(body.closest('[data-nk-page]') as HTMLElement);
+    const nextBody = this.bodyOf(this.pageAfter(index));
+    nextBody.insertBefore(part, nextBody.firstChild);
+    this.stats.splits += 1;
+    return true;
+  }
+
+  /**
+   * Largest character offset whose line still ends inside `area`.
    *
    * Binary search over `Range` rects: measuring a range's bottom edge is the
    * only way to ask the browser where a line actually broke.
    */
-  private findFitOffset(block: HTMLElement, limit: number): number {
+  private findFitOffset(block: HTMLElement, area: DOMRect): number {
     const doc = this.root.ownerDocument!;
     const total = (block.textContent ?? '').length;
 
@@ -587,9 +772,9 @@ export class PageFlow {
       }
 
       const rects = range.getClientRects();
-      const bottom = rects.length ? rects[rects.length - 1].bottom : 0;
+      const last = rects.length ? rects[rects.length - 1] : null;
 
-      if (bottom <= limit) {
+      if (!last || (last.bottom <= area.bottom && !(this.columns > 1 && last.left >= area.right - SLACK))) {
         best = mid;
         low = mid + 1;
       } else {
@@ -719,7 +904,7 @@ export class PageFlow {
     }
 
     body.appendChild(fragment);
-    Array.from(body.children).forEach((child) => blockId(child as HTMLElement));
+    assignIds(this.root);
 
     this.invalidate();
     this.reflow();
