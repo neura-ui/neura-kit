@@ -15,6 +15,14 @@ class ComponentRenderingTest extends TestCase
         $this->assertStringContainsString('button', $html);
     }
 
+    public function test_the_layout_main_pane_keeps_absolute_children_inside_its_scroll()
+    {
+        $html = Blade::render('<x-neura::layout.main>Content</x-neura::layout.main>');
+
+        $this->assertMatchesRegularExpression('/data-slot="main"/', $html);
+        $this->assertMatchesRegularExpression('/class="[^"]*\brelative\b[^"]*overflow-y-auto/', $html);
+    }
+
     public function test_button_component_with_attributes()
     {
         $html = Blade::render('<x-neura::button variant="outline" size="lg" class="custom-class">Button</x-neura::button>');

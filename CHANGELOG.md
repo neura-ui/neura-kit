@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.2.2] - 2026-11-10
+### Fixed
+- **Recurrence: the end not chosen looked chosen**: "Pick a date" and the count (`10 times`) showed at full strength while the rule never ended, so the count read as part of the rule. The date and count of the end not chosen are now dimmed; picking a date or stepping the count still chooses that end, and hovering or focusing them brings them back
+- **Layout: an absolute element could lengthen the page behind the layout**: `neura::layout.main` scrolls but was not positioned, so an absolute descendant whose own parents are not positioned either (the recurrence editor's screen-reader label, for one) took the page as its frame and escaped the pane's scroll — the window then scrolled past the layout onto an empty background. The pane is now `relative`
+
 ## [3.2.1] - 2026-11-09
 ### Fixed
 - **Translations with an apostrophe broke Alpine expressions**: the spotlight's label ("Demander à l'IA"), the flow's output port and activate / deactivate titles, the emoji picker's "No selection" and the event calendar's view names were echoed between single quotes in a script string; the browser turns Blade's `&#039;` back into `'` before Alpine reads the attribute, so the string ended early — "Uncaught SyntaxError: Unexpected identifier 'IA'" on every page with `@neuraKit`, in French. They now go through `@js()`, and a test keeps translations out of quoted script strings in the kit's views

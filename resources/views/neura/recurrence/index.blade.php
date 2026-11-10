@@ -291,7 +291,7 @@
                             <div class="nk-recurrence-inline">
                                 <button type="button" @class(['nk-recurrence-pill', $control, $roundedClass]) aria-pressed="false" x-bind:aria-pressed="rule.end === 'never'" x-bind:class="rule.end === 'never' && @js($selected)" x-on:click="setEnd('never')">{{ $t('recurrenceNever', 'Never') }}</button>
                             </div>
-                            <div class="nk-recurrence-inline">
+                            <div class="nk-recurrence-inline" x-bind:data-idle="rule.end !== 'until'">
                                 <button type="button" @class(['nk-recurrence-pill', $control, $roundedClass]) aria-pressed="false" x-bind:aria-pressed="rule.end === 'until'" x-bind:class="rule.end === 'until' && @js($selected)" x-on:click="setEnd('until')">{{ $t('recurrenceOn', 'On') }}</button>
                                 <div class="nk-recurrence-picker nk-recurrence-until">
                                     <neura::date-picker
@@ -303,7 +303,7 @@
                                     />
                                 </div>
                             </div>
-                            <div class="nk-recurrence-inline">
+                            <div class="nk-recurrence-inline" x-bind:data-idle="rule.end !== 'count'">
                                 <button type="button" @class(['nk-recurrence-pill', $control, $roundedClass]) aria-pressed="false" x-bind:aria-pressed="rule.end === 'count'" x-bind:class="rule.end === 'count' && @js($selected)" x-on:click="setEnd('count')">{{ $t('recurrenceAfter', 'After') }}</button>
                                 <div @class(['nk-recurrence-stepper', $control, $roundedClass, $field['border']])>
                                     <button type="button" aria-label="{{ $t('recurrenceFewer', 'Fewer') }}" x-on:click="stepCount(-1)" x-bind:disabled="rule.count <= 1">−</button>

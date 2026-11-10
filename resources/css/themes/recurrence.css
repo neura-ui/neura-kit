@@ -191,6 +191,20 @@
     min-width: 0;
 }
 
+/* An end that is not chosen dims its date or count, which still choose it when used. */
+.nk-recurrence-inline > :not(.nk-recurrence-pill) {
+    transition: opacity var(--nk-duration-fast) var(--nk-ease-standard);
+}
+
+.nk-recurrence-inline[data-idle] > :not(.nk-recurrence-pill) {
+    opacity: 0.45;
+}
+
+.nk-recurrence-inline[data-idle]:hover > :not(.nk-recurrence-pill),
+.nk-recurrence-inline[data-idle]:focus-within > :not(.nk-recurrence-pill) {
+    opacity: 1;
+}
+
 .nk-recurrence-segmented {
     display: inline-flex;
     flex-wrap: wrap;

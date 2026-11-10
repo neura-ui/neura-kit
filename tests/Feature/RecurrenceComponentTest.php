@@ -30,6 +30,9 @@ class RecurrenceComponentTest extends TestCase
         $this->assertStringContainsString('>novembre</option>', $html);
         $this->assertStringContainsString('x-model="rule.time"', $html);
         $this->assertStringContainsString('x-model="rule.until"', $html);
+        // The end not chosen dims its date or its count.
+        $this->assertStringContainsString('x-bind:data-idle="rule.end !== \'until\'"', $html);
+        $this->assertStringContainsString('x-bind:data-idle="rule.end !== \'count\'"', $html);
     }
 
     public function test_an_english_week_starts_on_sunday()
